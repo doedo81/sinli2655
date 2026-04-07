@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🌟 5학년 5반 스마트 교실 올인원 🌟</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        * { box-sizing: border-box; } 
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: #2c3e50; color: #333; margin: 0; padding: 15px; text-align: center; }
+        h1 { color: #fff; font-size: 32px; margin-top: 5px; margin-bottom: 20px;}
+        
+        .tab-container { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn { font-size: 18px; padding: 10px 20px; border: none; border-radius: 10px; cursor: pointer; background-color: #7f8c8d; color: white; font-weight: bold; transition: 0.2s; flex: 1; min-width: 130px; }
+        .tab-btn.active { background-color: #f39c12; transform: scale(1.05); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        
+        .content-section { display: none; max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .content-section.active { display: block; }
+        #score-tab { background: transparent; box-shadow: none; max-width: 1200px; padding: 0; }
+        
+        .action-btn { font-size: 16px; padding: 10px 15px; background-color: #2ecc71; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .reset-btn { font-size: 14px; padding: 8px 15px; background-color: #95a5a6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        
+        /* 🌟 1. 점수판 스타일 */
+        #ranking-board { font-size: 24px; font-weight: bold; background-color: #f39c12; color: #fff; padding: 15px 20px; border-radius: 15px; margin: 0 auto 20px auto; max-width: 1000px; word-break: keep-all; }
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; } 
+        .group-card { background-color: #34495e; border-radius: 15px; padding: 20px 15px; color: white; box-shadow: 0 6px 12px rgba(0,0,0,0.2); }
+        .group-name { font-size: 26px; margin: 0; font-weight: bold; }
+        .score-wrapper { height: 100px; display: flex; align-items: center; justify-content: center; }
+        .score { font-size: 65px; font-weight: bold; color: #f1c40f; margin: 0; }
+        .button-group { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
+        .score-btn { font-size: 22px; font-weight: bold; width: 50px; height: 50px; border: none; border-radius: 12px; cursor: pointer; }
+        .btn-plus { background-color: #2ecc71; color: white; } .btn-zero { background-color: #3498db; color: white; } .btn-minus { background-color: #e74c3c; color: white; }
+        .btn-reset-score { margin-top: 30px; font-size: 18px; padding: 12px 30px; border-radius: 10px; border: none; background-color: #95a5a6; color: white; cursor: pointer; width: 100%; max-width: 300px; }
+
+        /* 🎲 2. 뽑기 & 미니점수판 스타일 */
+        .picker-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .picker-box { background-color: #ecf0f1; padding: 15px; border-radius: 15px; text-align: center; }
+        .picker-box h2 { margin-top: 0; font-size: 22px; color: #2c3e50; }
+        .timer-display { font-size: 50px; font-weight: bold; color: #e67e22; margin: 5px 0 10px 0; font-variant-numeric: tabular-nums; }
+        .timer-input { font-size: 16px; padding: 8px; border: 2px solid #e67e22; border-radius: 8px; width: 70px; text-align: center; font-weight: bold; margin-right: 5px; }
+        .timer-controls { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 8px; }
+        
+        /* 🚨 미니점수판 그리드 고정 (찌그러짐 방지) */
+        .mini-score-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-top: 15px; } 
+        .mini-card { background: white; border-radius: 10px; padding: 10px; border: 2px solid #bdc3c7; }
+        .mini-score-val { font-size: 28px; font-weight: bold; color: #16a085; margin: 5px 0; }
+        .mini-btn { width: 30px; height: 30px; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white;}
+        
+        /* 🃏 3D 카드 애니메이션 스타일 */
+        .card-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 15px 0; min-height: 100px; align-items: center; }
+        #group-cards-container { display: grid; grid-template-columns: repeat(3, 65px); justify-content: center; gap: 10px; margin: 15px auto; }
+        .flip-card { background-color: transparent; perspective: 1000px; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .flip-card-front { background-color: #34495e; color: white; border: 2px solid #2c3e50; }
+        .group-card-size { width: 65px; height: 90px; font-size: 26px; } .group-card-size .flip-card-back { background-color: #3498db; color: white; transform: rotateY(180deg); border: 2px solid #2980b9; }
+        .student-card-size { width: 45px; height: 65px; font-size: 20px; } .student-card-size .flip-card-back { background-color: #9b59b6; color: white; transform: rotateY(180deg); border: 2px solid #8e44ad; }
+        .history-list { font-size: 15px; color: #7f8c8d; min-height: 22px; margin-bottom: 10px; word-break: keep-all; }
+
+        /* 📝 3. 과제 관리 스타일 */
+        .hw-input-area { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; background: #ecf0f1; padding: 15px; border-radius: 10px;}
+        .hw-input-area input { flex: 1; min-width: 100px; font-size: 15px; padding: 8px; border: 1px solid #ccc; border-radius: 8px; }
+        .hw-input-area .hw-total-input { width: 60px; flex: none; } 
+        .hw-input-area .hw-category-input { width: 80px; flex: none; font-weight: bold; color: #2980b9; } 
+        .hw-list { display: flex; flex-direction: column; gap: 15px; text-align: left;}
+        .hw-card { border: 1px solid #ddd; padding: 15px; border-radius: 10px; background-color: #fafafa; position: relative; }
+        .hw-card.archived { opacity: 0.6; background-color: #eee; }
+        .hw-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+        .hw-title { font-size: 18px; font-weight: bold; color: #2c3e50; margin:0; }
+        .hw-category-badge { display: inline-block; background-color: #3498db; color: white; font-size: 12px; padding: 3px 8px; border-radius: 12px; margin-right: 5px; vertical-align: middle;}
+        .hw-date { color: #7f8c8d; font-size: 13px; margin-top: 5px; display: block;}
+        .hw-action-group { display: flex; gap: 5px; }
+        .hw-archive-btn, .hw-delete-btn { color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-weight:bold; font-size: 14px;}
+        .hw-archive-btn { background-color: #f39c12; } .hw-delete-btn { background-color: #e74c3c; }
+        .student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 6px; text-align: center;}
+        .student-btn { font-size: 15px; font-weight: bold; padding: 8px 0; border: none; border-radius: 8px; cursor: pointer; background-color: #e74c3c; color: white; transition: background 0.2s; }
+        .student-btn.done { background-color: #2ecc71; } .student-btn.excused { background-color: #95a5a6; color: #ecf0f1; text-decoration: line-through; border: 2px solid #7f8c8d; }
+
+        /* 📊 4. 통계 화면 스타일 */
+        .stat-controls { display: flex; gap: 8px; justify-content: center; align-items: center; background: #e8f8f5; padding: 15px; border-radius: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .stat-controls input { padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 15px; width: 130px; }
+        .quick-btn { background-color: #34495e; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px;}
+        .stat-section-title { font-size: 20px; font-weight: bold; color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 5px; margin: 25px 0 15px 0; display: inline-block; }
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px; }
+        .stat-card { background: #fff; border: 2px solid #bdc3c7; border-radius: 10px; padding: 15px; text-align: left; }
+        .stat-num { font-size: 18px; font-weight: bold; color: #34495e; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-bottom: 10px; }
+        .graph-container { display: flex; align-items: center; margin-top: 8px; margin-bottom: 12px; }
+        .graph-bg { flex-grow: 1; background-color: #ecf0f1; height: 14px; border-radius: 7px; overflow: hidden; margin-right: 10px; }
+        .graph-fill { height: 100%; border-radius: 7px; transition: width 0.8s ease-in-out; }
+        .graph-text { font-weight: bold; font-size: 14px; color: #2980b9; min-width: 40px; text-align: right; }
+        .stat-missing-list { font-size: 13px; color: #555; margin: 5px 0 0 0; padding-left: 20px; }
+        .stat-summary { text-align: center; font-size: 16px; font-weight: bold; color: #7f8c8d; margin-bottom: 10px; }
+
+        @keyframes popAnimation { 0% { transform: scale(1); color: #f1c40f; } 50% { transform: scale(1.4); color: #ff9f43; } 100% { transform: scale(1); color: #f1c40f; } }
+        .pop { animation: popAnimation 0.4s ease-in-out; display: inline-block; }
+
+        /* 모바일 최적화 */
+        @media (max-width: 768px) { 
+            .picker-grid { grid-template-columns: 1fr; } 
+            /* 🚨 스마트폰에서는 미니점수판이 3개씩 2줄로 고정되도록 수정 */
+            .mini-score-grid { grid-template-columns: repeat(3, 1fr); } 
+            .tab-btn { font-size: 16px; padding: 10px 15px; } 
+            .score-btn { width: 45px; height: 45px; font-size: 18px; } 
+            .score { font-size: 60px; } 
+            .mini-score-val { font-size: 24px; }
+            .mini-card div:first-child { font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1 style="margin-top:0;">🌟 스마트 교실 올인원 🌟</h1>
+
+    <div class="tab-container">
+        <button class="tab-btn active" onclick="switchTab('score')">🌟 점수판</button>
+        <button class="tab-btn" onclick="switchTab('picker')">🎲 활동&뽑기</button>
+        <button class="tab-btn" onclick="switchTab('homework')">📝 과제관리</button>
+        <button class="tab-btn" onclick="switchTab('stats')">📊 통계</button>
+    </div>
+
+    <div id="score-tab" class="content-section active">
+        <div id="ranking-board">🏆 실시간 순위 계산 중...</div>
+        <div class="grid-container" id="scoreboard"></div>
+        <button class="btn-reset-score" onclick="resetAllScores()">전체 점수 0점으로 초기화</button>
+    </div>
+
+    <div id="picker-tab" class="content-section">
+        
+        <div class="picker-box" style="border-top-color: #e67e22; margin-bottom: 20px;">
+            <h2>⏱️ 활동 타이머</h2>
+            <div id="timer-display" class="timer-display">00:00</div>
+            <div class="timer-controls">
+                <button class="action-btn" style="background-color: #f39c12; padding: 8px 12px;" onclick="setTimer(1)">1분</button>
+                <button class="action-btn" style="background-color: #f39c12; padding: 8px 12px;" onclick="setTimer(3)">3분</button>
+                <button class="action-btn" style="background-color: #f39c12; padding: 8px 12px;" onclick="setTimer(5)">5분</button>
+                <input type="number" id="custom-timer-input" class="timer-input" placeholder="분" onkeypress="if(event.key === 'Enter') startCustomTimer()">
+                <button class="action-btn" style="background-color: #e74c3c; padding: 8px 15px;" onclick="toggleTimer()" id="timer-toggle-btn">시작/정지</button>
+                <button class="reset-btn" onclick="setTimer(0)">초기화</button>
+            </div>
+        </div>
+
+        <div class="picker-grid">
+            <div class="picker-box" style="border-top-color: #3498db;">
+                <h2>👥 모둠 뽑기</h2>
+                <div class="history-list" id="group-history">뽑힌 모둠: 없음</div>
+                <div id="group-cards-container"></div>
+                <div><button class="action-btn" onclick="drawGroupCard()">카드 뽑기!</button> <button class="reset-btn" onclick="resetGroupDraw()">다시 섞기</button></div>
+            </div>
+            
+            <div class="picker-box" style="border-top-color: #9b59b6;">
+                <h2>👤 개인 뽑기</h2>
+                <div style="margin-bottom: 10px; font-size: 14px; font-weight: bold; color: #34495e;">
+                    총 <input type="number" id="picker-total" value="23" min="1" style="width:45px; padding:3px; text-align:center;"> 명 | 결석: <input type="text" id="picker-absent" placeholder="예: 3" style="width:50px; padding: 3px; border-radius: 5px; border: 1px solid #ccc; text-align: center;">
+                    <button class="reset-btn" style="padding: 3px 8px;" onclick="initStudentPicker()">적용</button>
+                </div>
+                <div class="history-list" id="student-history">뽑힌 번호: 없음</div>
+                <div id="student-cards-container" class="card-container"></div>
+                <div><button class="action-btn" style="background-color: #9b59b6;" onclick="drawStudentCard()">카드 뽑기!</button> <button class="reset-btn" onclick="initStudentPicker()">다시 섞기</button></div>
+            </div>
+        </div>
+
+        <div class="picker-box" style="border-top-color: #16a085; margin-top: 20px;">
+            <h2>🕹️ 미니 점수판</h2>
+            <div class="mini-score-grid" id="mini-scoreboard"></div>
+            <button class="reset-btn" style="margin-top:15px;" onclick="resetMiniScores()">미니 점수 0점 초기화</button>
+        </div>
+    </div>
+
+    <div id="homework-tab" class="content-section">
+        <div class="hw-input-area">
+            <input type="date" id="hw-date"> 
+            <label style="font-size: 14px;"><strong>총:</strong></label> <input type="number" id="hw-total" class="hw-total-input" value="23" min="1">
+            <input type="text" id="hw-category" class="hw-category-input" list="category-list" placeholder="과목">
+            <datalist id="category-list"><option value="수학"></option><option value="국어"></option><option value="일기"></option></datalist>
+            <input type="text" id="hw-title" placeholder="내용 (예: 10쪽)"> 
+            <input type="text" id="hw-absent" placeholder="결석 (예: 3)" style="width: 80px; flex: none;">
+            <button class="action-btn" onclick="addHomework()" style="width:100%;">과제 추가</button>
+        </div>
+        <div style="text-align: right; margin-bottom: 10px; font-weight: bold; color: #7f8c8d; font-size:14px;">
+            <label><input type="checkbox" id="show-archived" onchange="renderHomeworkList()"> 📦 보관된 과제 보기</label>
+        </div>
+        <div class="hw-list" id="homework-list"></div>
+    </div>
+
+    <div id="stats-tab" class="content-section">
+        <div class="stat-controls">
+            <button class="quick-btn" onclick="setQuickDate('week')">이번 주</button>
+            <button class="quick-btn" onclick="setQuickDate('month')">이번 달</button>
+            <button class="quick-btn" onclick="setQuickDate('semester1')">1학기</button>
+            <span style="color:#ccc; display:none;">|</span>
+            <div style="width:100%; display:flex; gap:5px; justify-content:center; align-items:center;">
+                <input type="date" id="stat-start-date"> ~ <input type="date" id="stat-end-date">
+            </div>
+            <button class="action-btn" style="background-color: #1abc9c; width:100%;" onclick="calculateStats()">통계 계산</button>
+        </div>
+        <div id="stat-summary" class="stat-summary">기간을 설정하고 통계 계산 버튼을 눌러주세요.</div>
+        <div id="stat-results-area"></div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 🚨 파이어베이스 연동 (선생님 주소 넣기!)
+        // ==========================================
+        const firebaseConfig = {
+          apiKey: "AIzaSyCrEfpzVS1YvORiM4HYRCryytj6Y-kG2fI",
+          authDomain: "classscore-sinli.firebaseapp.com",
+          databaseURL: "https://classscore-sinli-default-rtdb.firebaseio.com/", // 🚨 필수 수정!
+          projectId: "classscore-sinli",
+          storageBucket: "classscore-sinli.firebasestorage.app",
+          messagingSenderId: "566976944507",
+          appId: "1:566976944507:web:84f7518d7fce10035dc5de"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.database(); 
+
+        const dingSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
+        document.getElementById('hw-date').valueAsDate = new Date();
+
+        const scoresRef = db.ref('groupScores');
+        const miniScoresRef = db.ref('miniScores');
+        const timerRef = db.ref('timerState');
+        const hwRef = db.ref('homeworks');
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+            event.target.classList.add('active'); document.getElementById(tabName + '-tab').classList.add('active');
+            if(tabName === 'stats' && document.getElementById('stat-start-date').value === "") setQuickDate('week');
+        }
+
+        // ==========================================
+        // 🌟 1. 메인 모둠 점수판
+        // ==========================================
+        const numberOfGroups = 6;
+        let currentScores = Array(numberOfGroups).fill(0);
+        let isFirstLoad = true; 
+
+        function buildScoreboardHTML() {
+            const div = document.getElementById('scoreboard'); div.innerHTML = ''; 
+            for (let i = 0; i < numberOfGroups; i++) { 
+                div.innerHTML += `<div class="group-card"><div class="group-name">${i + 1}모둠</div><div class="score-wrapper"><div class="score" id="score-${i}">0</div></div><div class="button-group"><button class="score-btn btn-plus" onclick="changeScore(${i}, 1)">+1</button><button class="score-btn btn-zero" onclick="setScoreToZero(${i})">0</button><button class="score-btn btn-minus" onclick="changeScore(${i}, -1)">-1</button></div></div>`; 
+            }
+        }
+        buildScoreboardHTML(); 
+
+        function updateRankings() {
+            let rankList = currentScores.map((score, index) => ({ group: index + 1, score: score }));
+            rankList.sort((a, b) => b.score === a.score ? a.group - b.group : b.score - a.score);
+            document.getElementById('ranking-board').innerHTML = '🏆 ' + rankList.map(item => `${item.group}모둠`).join(' - ');
+        }
+
+        // 🚨 undefined 방지: data[i] || 0
+        scoresRef.on('value', (snapshot) => {
+            const data = snapshot.val() || {};
+            for (let i = 0; i < numberOfGroups; i++) {
+                const newScore = data[i] || 0; // 데이터가 없으면 무조건 0으로 처리
+                const el = document.getElementById(`score-${i}`);
+                if (el) {
+                    if (!isFirstLoad && currentScores[i] !== newScore) {
+                        el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+                        dingSound.currentTime = 0; dingSound.play().catch(e=>console.log(e));
+                    }
+                    el.innerText = newScore;
+                }
+                currentScores[i] = newScore;
+            }
+            updateRankings(); isFirstLoad = false; 
+        });
+
+        function changeScore(i, amount) { scoresRef.child(i.toString()).set(currentScores[i] + amount); }
+        function setScoreToZero(i) { scoresRef.child(i.toString()).set(0); }
+        function resetAllScores() { if (confirm("메인 점수를 0점으로 초기화할까요?")) scoresRef.set(Array(numberOfGroups).fill(0)); }
+
+        // ==========================================
+        // ⏱️ 2. 타이머 & 미니점수판
+        // ==========================================
+        let timerInterval;
+        let currentTimer = { isRunning: false, endTime: 0, pausedRemaining: 0 };
+
+        timerRef.on('value', snap => {
+            if(snap.val()) {
+                currentTimer = snap.val();
+                updateTimerDisplay();
+                const btn = document.getElementById('timer-toggle-btn');
+                btn.innerText = currentTimer.isRunning ? '일시정지' : '시작/정지';
+                btn.style.backgroundColor = currentTimer.isRunning ? '#95a5a6' : '#e74c3c';
+                clearInterval(timerInterval);
+                if(currentTimer.isRunning) timerInterval = setInterval(updateTimerDisplay, 200);
+            }
+        });
+
+        function updateTimerDisplay() {
+            let secs = currentTimer.pausedRemaining;
+            if (currentTimer.isRunning) {
+                secs = Math.max(0, Math.ceil((currentTimer.endTime - Date.now()) / 1000));
+                if (secs === 0) { clearInterval(timerInterval); timerRef.update({ isRunning: false, pausedRemaining: 0 }); dingSound.currentTime = 0; dingSound.play().catch(e=>console.log(e)); }
+            }
+            document.getElementById('timer-display').innerText = String(Math.floor(secs / 60)).padStart(2, '0') + ':' + String(secs % 60).padStart(2, '0');
+        }
+        function setTimer(m) { timerRef.set({ isRunning: false, endTime: 0, pausedRemaining: m * 60 }); document.getElementById('custom-timer-input').value = ''; }
+        function toggleTimer() {
+            if (currentTimer.isRunning) { timerRef.set({ isRunning: false, endTime: 0, pausedRemaining: Math.max(0, Math.ceil((currentTimer.endTime - Date.now()) / 1000)) }); } 
+            else {
+                if (currentTimer.pausedRemaining > 0) timerRef.set({ isRunning: true, endTime: Date.now() + currentTimer.pausedRemaining * 1000, pausedRemaining: currentTimer.pausedRemaining });
+                else startCustomTimer();
+            }
+        }
+        function startCustomTimer() {
+            const val = parseFloat(document.getElementById('custom-timer-input').value);
+            if(val > 0) { timerRef.set({ isRunning: true, endTime: Date.now() + Math.floor(val * 60) * 1000, pausedRemaining: Math.floor(val * 60) }); document.getElementById('custom-timer-input').value = ''; }
+        }
+
+        // --- 미니 점수판 ---
+        let currentMiniScores = Array(6).fill(0);
+        function buildMiniScoreboard() {
+            const div = document.getElementById('mini-scoreboard'); div.innerHTML = '';
+            for(let i=0; i<6; i++) { 
+                div.innerHTML += `<div class="mini-card"><div style="font-weight:bold; color:#2c3e50; font-size:13px;">${i+1}모둠</div><div class="mini-score-val" id="mini-score-${i}">0</div><div style="display:flex; justify-content:center; gap:5px;"><button class="mini-btn btn-plus" onclick="changeMiniScore(${i}, 1)">+</button><button class="mini-btn btn-minus" onclick="changeMiniScore(${i}, -1)">-</button></div></div>`; 
+            }
+        }
+        buildMiniScoreboard();
+
+        // 🚨 undefined 방지: data[i] || 0
+        miniScoresRef.on('value', snap => {
+            const data = snap.val() || {};
+            for(let i=0; i<6; i++) { 
+                currentMiniScores[i] = data[i] || 0; // 데이터가 없으면 무조건 0
+                const el = document.getElementById(`mini-score-${i}`); 
+                if(el) el.innerText = currentMiniScores[i]; 
+            }
+        });
+        function changeMiniScore(i, amount) { miniScoresRef.child(i.toString()).set(currentMiniScores[i] + amount); }
+        function resetMiniScores() { if(confirm("미니 점수판을 0점으로 초기화할까요?")) miniScoresRef.set(Array(6).fill(0)); }
+
+        // --- 3D 카드 뽑기 ---
+        let remainingGroups = [1, 2, 3, 4, 5, 6]; let drawnGroups = []; let groupDrawCount = 0; 
+        function resetGroupDraw() {
+            remainingGroups = [1, 2, 3, 4, 5, 6]; drawnGroups = []; groupDrawCount = 0; document.getElementById('group-history').innerText = '뽑힌 모둠: 없음';
+            const container = document.getElementById('group-cards-container'); container.innerHTML = '';
+            for(let i=0; i<6; i++) { container.innerHTML += `<div class="flip-card group-card-size" id="group-card-${i}"><div class="flip-card-inner"><div class="flip-card-front">❓</div><div class="flip-card-back" id="group-card-back-${i}"></div></div></div>`; }
+        }
+        function drawGroupCard() {
+            if (remainingGroups.length === 0) return alert("모두 뽑았습니다!");
+            const picked = remainingGroups.splice(Math.floor(Math.random() * remainingGroups.length), 1)[0]; drawnGroups.push(picked);
+            document.getElementById(`group-card-back-${groupDrawCount}`).innerText = picked;
+            document.getElementById(`group-card-${groupDrawCount}`).classList.add('flipped');
+            groupDrawCount++; document.getElementById('group-history').innerText = `뽑힌 모둠: ${drawnGroups.join(', ')}`;
+        }
+
+        let remainingStudents = []; let drawnStudents = []; let studentDrawCount = 0;
+        function initStudentPicker() {
+            const total = parseInt(document.getElementById('picker-total').value) || 23; const absentInput = document.getElementById('picker-absent').value;
+            let absentees = absentInput.trim() !== "" ? absentInput.split(',').map(n => parseInt(n.trim())) : [];
+            remainingStudents = []; for (let i = 1; i <= total; i++) { if (!absentees.includes(i)) remainingStudents.push(i); }
+            drawnStudents = []; studentDrawCount = 0; document.getElementById('student-history').innerText = '뽑힌 번호: 없음';
+            const container = document.getElementById('student-cards-container'); container.innerHTML = '';
+            for(let i=0; i<remainingStudents.length; i++) { container.innerHTML += `<div class="flip-card student-card-size" id="student-card-${i}"><div class="flip-card-inner"><div class="flip-card-front">👤</div><div class="flip-card-back" id="student-card-back-${i}"></div></div></div>`; }
+        }
+        function drawStudentCard() {
+            if (remainingStudents.length === 0 && studentDrawCount === 0) initStudentPicker();
+            if (remainingStudents.length === 0) return alert("모두 뽑았습니다!");
+            const picked = remainingStudents.splice(Math.floor(Math.random() * remainingStudents.length), 1)[0]; drawnStudents.push(picked);
+            document.getElementById(`student-card-back-${studentDrawCount}`).innerText = picked;
+            document.getElementById(`student-card-${studentDrawCount}`).classList.add('flipped');
+            studentDrawCount++; document.getElementById('student-history').innerText = `뽑힌 번호: ${drawnStudents.join(', ')}`;
+        }
+        resetGroupDraw();
+
+        // ==========================================
+        // 📝 3. 과제 관리 & 4. 통계 
+        // ==========================================
+        let allHomeworks = []; 
+        function addHomework() {
+            const date = document.getElementById('hw-date').value; const category = document.getElementById('hw-category').value || '미분류'; const title = document.getElementById('hw-title').value; const totalStudents = parseInt(document.getElementById('hw-total').value) || 23; const absentInput = document.getElementById('hw-absent').value;
+            let absentees = absentInput.trim() !== "" ? absentInput.split(',').map(n => parseInt(n.trim())) : [];
+            if(!title) return alert("상세 내용을 입력해주세요!");
+            let initialChecklist = {}; for(let i=1; i<=totalStudents; i++) initialChecklist[i] = absentees.includes(i) ? 'excused' : false; 
+            hwRef.push({ date: date, category: category, title: title, total: totalStudents, checklist: initialChecklist, isArchived: false, createdAt: firebase.database.ServerValue.TIMESTAMP });
+            document.getElementById('hw-title').value = ''; document.getElementById('hw-absent').value = '';
+        }
+
+        hwRef.orderByChild('date').on('value', (snapshot) => {
+            allHomeworks = [];
+            if (snapshot.exists()) { snapshot.forEach(child => { allHomeworks.push({ id: child.key, ...child.val() }); }); allHomeworks.reverse(); }
+            renderHomeworkList();
+            if(document.getElementById('stats-tab').classList.contains('active')) calculateStats();
+        });
+
+        function renderHomeworkList() {
+            const listDiv = document.getElementById('homework-list'); listDiv.innerHTML = '';
+            const showArchived = document.getElementById('show-archived').checked;
+            if (allHomeworks.length === 0) { listDiv.innerHTML = '<p style="text-align:center;">등록된 과제가 없습니다.</p>'; return; }
+            allHomeworks.forEach(hw => {
+                if (hw.isArchived && !showArchived) return;
+                let buttonsHTML = ''; let doneCount = 0; let activeTotal = hw.total;
+                for(let i=1; i<=hw.total; i++) {
+                    const state = hw.checklist ? hw.checklist[i] : false; let btnClass = '';
+                    if(state === true) { btnClass = 'done'; doneCount++; } else if(state === 'excused') { btnClass = 'excused'; activeTotal--; }
+                    buttonsHTML += `<button class="student-btn ${btnClass}" onclick="cycleHomework('${hw.id}', ${i})">${i}</button>`;
+                }
+                const archiveBtnText = hw.isArchived ? '📦 꺼내기' : '📦 보관'; const cardClass = hw.isArchived ? 'hw-card archived' : 'hw-card'; const catBadge = hw.category ? `<span class="hw-category-badge">${hw.category}</span>` : '';
+                listDiv.innerHTML += `<div class="${cardClass}"><div class="hw-header"><div><p class="hw-title">${catBadge}${hw.title}</p><span class="hw-date">📅 ${hw.date} | 완료: ${doneCount}/${activeTotal}명</span></div><div class="hw-action-group"><button class="hw-archive-btn" onclick="toggleArchive('${hw.id}', ${hw.isArchived || false})">${archiveBtnText}</button><button class="hw-delete-btn" onclick="deleteHomework('${hw.id}')">삭제</button></div></div><div class="student-grid">${buttonsHTML}</div></div>`;
+            });
+        }
+        function cycleHomework(hwId, studentNum) { 
+            const hw = allHomeworks.find(h => h.id === hwId); if(!hw) return;
+            const currentState = hw.checklist ? hw.checklist[studentNum] : false; let newState = currentState === false || currentState === undefined ? true : currentState === true ? 'excused' : false; 
+            hwRef.child(hwId).child('checklist').child(studentNum.toString()).set(newState); 
+        }
+        function deleteHomework(hwId) { if(confirm("삭제하시겠습니까?")) hwRef.child(hwId).remove(); }
+        function toggleArchive(hwId, currentStatus) { hwRef.child(hwId).child('isArchived').set(!currentStatus); }
+
+        function setQuickDate(type) {
+            const start = document.getElementById('stat-start-date'); const end = document.getElementById('stat-end-date'); const d = new Date();
+            if(type === 'week') { const lastWeek = new Date(d); lastWeek.setDate(d.getDate() - 6); start.valueAsDate = lastWeek; end.valueAsDate = d; } 
+            else if(type === 'month') { start.valueAsDate = new Date(d.getFullYear(), d.getMonth(), 1); end.valueAsDate = new Date(d.getFullYear(), d.getMonth() + 1, 0); } 
+            else if(type === 'semester1') { start.valueAsDate = new Date(d.getFullYear(), 2, 1); end.valueAsDate = new Date(d.getFullYear(), 7, 31); }
+            calculateStats(); 
+        }
+        function createProgressBar(percent, color = '#3498db') { return `<div class="graph-container"><div class="graph-bg"><div class="graph-fill" style="width: ${percent}%; background-color: ${color};"></div></div><div class="graph-text">${percent}%</div></div>`; }
+        
+        function calculateStats() {
+            const startDate = document.getElementById('stat-start-date').value; const endDate = document.getElementById('stat-end-date').value;
+            const resultArea = document.getElementById('stat-results-area'); const summaryDiv = document.getElementById('stat-summary');
+            resultArea.innerHTML = '';
+            const filteredHW = allHomeworks.filter(hw => hw.date >= startDate && hw.date <= endDate);
+            if(filteredHW.length === 0) { summaryDiv.innerText = `검색된 기간 내에 등록된 과제가 없습니다.`; return; }
+            let maxStudents = 23; filteredHW.forEach(hw => { if(hw.total > maxStudents) maxStudents = hw.total; });
+            summaryDiv.innerText = `총 ${filteredHW.length}개의 과제가 검색되었습니다. (${startDate} ~ ${endDate})`;
+            
+            let categoryStats = {};
+            filteredHW.forEach(hw => {
+                let cat = hw.category || '미분류'; if(!categoryStats[cat]) categoryStats[cat] = { totalAssigned: 0, completedCount: 0, taskCount: 0 };
+                categoryStats[cat].taskCount++;
+                for(let i=1; i<=hw.total; i++) { const state = hw.checklist ? hw.checklist[i] : false; if(state !== 'excused') { categoryStats[cat].totalAssigned++; if(state === true) categoryStats[cat].completedCount++; } }
+            });
+            let catStatsHTML = '<div class="stat-section-title">📂 과제 종류별 종합 그래프</div><div class="stat-grid">';
+            for (const [catName, data] of Object.entries(categoryStats)) {
+                let catPercent = Math.round((data.completedCount / data.totalAssigned) * 100) || 0; let barColor = catPercent >= 80 ? '#2ecc71' : (catPercent <= 50 ? '#e74c3c' : '#3498db');
+                catStatsHTML += `<div class="stat-card"><div class="stat-num" style="color:#2980b9;">${catName} 과제</div><div style="font-size:13px; color:#7f8c8d; margin-bottom:5px;">해당 기간 총 ${data.taskCount}건 출제됨</div>${createProgressBar(catPercent, barColor)}<div style="font-size:12px; text-align:right; color:#7f8c8d;">누적 검사: ${data.completedCount}/${data.totalAssigned}건</div></div>`;
+            }
+            catStatsHTML += '</div>';
+            
+            let studentStatsHTML = '<div class="stat-section-title" style="margin-top:40px;">👤 학생별 진행 상황</div><div class="stat-grid">';
+            for(let i = 1; i <= maxStudents; i++) {
+                let totalAssigned = 0; let completedCount = 0; let missingList = [];
+                filteredHW.forEach(hw => { if(i <= hw.total) { const state = hw.checklist ? hw.checklist[i] : false; if(state !== 'excused') { totalAssigned++; if(state === true) completedCount++; else { const catBadge = hw.category ? `[${hw.category}] ` : ''; missingList.push(`- ${catBadge}${hw.title} (${hw.date.substring(5)})`); } } } });
+                if(totalAssigned > 0) {
+                    const percent = Math.round((completedCount / totalAssigned) * 100); let cardClass = "stat-card"; let barColor = '#3498db';
+                    if(percent === 100) { cardClass += " perfect"; barColor = '#2ecc71'; } else if(percent <= 50) { cardClass += " danger"; barColor = '#e74c3c'; }
+                    studentStatsHTML += `<div class="${cardClass}"><div class="stat-num">${i}번 학생</div>${createProgressBar(percent, barColor)}${missingList.length > 0 ? `<div class="stat-missing-title">🚨 미제출 (${missingList.length}개)</div><ul class="stat-missing-list"><li>${missingList.join('</li><li>')}</li></ul>` : `<div style="color:#2ecc71; font-weight:bold; margin-top:10px;">🎉 배정된 모든 과제 완료!</div>`}</div>`;
+                }
+            }
+            studentStatsHTML += '</div>'; resultArea.innerHTML = catStatsHTML + studentStatsHTML;
+        }
+    </script>
+</body>
+</html>
