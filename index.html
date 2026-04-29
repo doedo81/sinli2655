@@ -28,20 +28,20 @@
         .reset-btn { font-size: 14px; padding: 8px 15px; background-color: #95a5a6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .setting-input { font-size: 16px; width: 50px; text-align: center; border-radius: 5px; border: 1px solid #ccc; padding: 5px; margin: 0 5px; }
         
-        /* ⏱️ 중앙 고정 타이머 (겹침 현상 해결) */
-        #global-timer { background: #fff; border: 3px solid #f39c12; border-radius: 15px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin: 0 auto 20px auto; max-width: 800px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 20px; }
+        /* ⏱️ 중앙 고정 타이머 (겹침 현상 완벽 해결) */
+        #global-timer { background: #fff; border: 3px solid #f39c12; border-radius: 15px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin: 0 auto 20px auto; max-width: 900px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 20px; }
         .timer-display { font-size: 45px; font-weight: bold; color: #e67e22; margin: 0; font-variant-numeric: tabular-nums; line-height: 1; }
         .timer-input { font-size: 16px; padding: 5px; border: 2px solid #e67e22; border-radius: 5px; width: 60px; text-align: center; font-weight: bold; }
 
         /* 📋 아침 칠판 스타일 (간격 및 줄바꿈 완벽 해결) */
         .board-container { background: #2f3640; border: 6px solid #8c7ae6; border-radius: 15px; padding: 25px; text-align: left; color: #ecf0f1; box-shadow: 0 8px 15px rgba(0,0,0,0.3); }
-        .board-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #7f8fa6; padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;}
-        .board-clock { font-size: 24px; font-weight: bold; color: #4cd137; background: rgba(0,0,0,0.4); padding: 8px 15px; border-radius: 10px; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
-        .board-title { font-size: 28px; font-weight: bold; text-align: center; color: #fbc531; width: 100%; margin-bottom: 20px;}
+        .board-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #7f8fa6; padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;}
+        .board-clock { font-size: 26px; font-weight: bold; color: #4cd137; background: rgba(0,0,0,0.4); padding: 8px 15px; border-radius: 10px; font-variant-numeric: tabular-nums; letter-spacing: 1px; margin: 0;}
+        .board-title { font-size: 30px; font-weight: bold; text-align: center; color: #fbc531; width: 100%; margin-bottom: 25px;}
         
         .board-item { display: flex; align-items: flex-start; font-size: 20px; margin-bottom: 18px; line-height: 1.5; }
-        .board-item strong { color: #4cd137; min-width: 140px; flex-shrink: 0; } /* 제목 칸을 넉넉하게 주어 줄바꿈 방지 */
-        .board-item span { flex-grow: 1; word-break: break-word; }
+        .board-item strong { color: #4cd137; min-width: 130px; flex-shrink: 0; white-space: nowrap; } /* 넉넉한 너비 지정으로 줄바꿈 방지 */
+        .board-item span { flex-grow: 1; word-break: keep-all; }
         
         .board-input-group { display: flex; align-items: flex-start; margin-bottom: 15px; font-size: 16px; }
         .board-input-group label { min-width: 120px; font-weight: bold; color: #fbc531; margin-top: 8px; flex-shrink: 0;}
@@ -119,6 +119,7 @@
             .mini-score-grid { grid-template-columns: repeat(3, 1fr); } 
             .tab-btn { font-size: 14px; padding: 8px; } 
             .score { font-size: 50px; }
+            #global-timer { flex-direction: column; gap: 10px; }
         }
     </style>
 </head>
@@ -151,17 +152,17 @@
 
         <div id="global-timer">
             <div style="display:flex; align-items:center; gap: 15px;">
-                <h3 style="margin:0; color:#e67e22; font-size:18px;">⏱️ 타이머</h3>
+                <h3 style="margin:0; color:#e67e22; font-size:20px;">⏱️ 타이머</h3>
                 <div id="timer-display" class="timer-display">00:00</div>
             </div>
-            <div style="display:flex; gap:5px; align-items:center;">
-                <button class="action-btn" style="padding:6px 12px; font-size:14px; background:#f39c12;" onclick="setTimer(1)">1분</button>
-                <button class="action-btn" style="padding:6px 12px; font-size:14px; background:#f39c12;" onclick="setTimer(3)">3분</button>
-                <button class="action-btn" style="padding:6px 12px; font-size:14px; background:#f39c12;" onclick="setTimer(5)">5분</button>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <button class="action-btn" style="padding:8px 15px; font-size:16px; background:#f39c12;" onclick="setTimer(1)">1분</button>
+                <button class="action-btn" style="padding:8px 15px; font-size:16px; background:#f39c12;" onclick="setTimer(3)">3분</button>
+                <button class="action-btn" style="padding:8px 15px; font-size:16px; background:#f39c12;" onclick="setTimer(5)">5분</button>
                 <span style="color:#bdc3c7; margin:0 5px;">|</span>
                 <input type="number" id="custom-timer-input" class="timer-input" placeholder="분" onkeypress="if(event.key === 'Enter') startCustomTimer()">
-                <button class="action-btn" style="background-color: #e74c3c; padding:6px 12px; font-size:14px;" onclick="toggleTimer()" id="timer-toggle-btn">시작</button>
-                <button class="reset-btn" style="padding:6px 12px; font-size:14px;" onclick="setTimer(0)">초기화</button>
+                <button class="action-btn" style="background-color: #e74c3c; padding:8px 15px; font-size:16px;" onclick="toggleTimer()" id="timer-toggle-btn">시작/정지</button>
+                <button class="reset-btn" style="padding:8px 15px; font-size:16px;" onclick="setTimer(0)">초기화</button>
             </div>
         </div>
 
@@ -170,7 +171,7 @@
             <div id="board-view" class="board-container">
                 <div class="board-header">
                     <div id="board-realtime-clock" class="board-clock">00:00:00</div>
-                    <button class="action-btn" style="background:#3498db; padding:8px 15px; font-size:16px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);" onclick="toggleBoardEdit()">✏️ 칠판 내용 수정하기</button>
+                    <button class="action-btn" style="background:#3498db; padding:10px 20px; font-size:18px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);" onclick="toggleBoardEdit()">✏️ 칠판 내용 수정하기</button>
                 </div>
                 
                 <div class="board-title" id="bv-date">날짜와 날씨를 입력해주세요</div>
@@ -181,7 +182,7 @@
                 <div class="board-item"><strong>🎂 생 일:</strong> <span id="bv-birthday"></span></div>
                 <div class="board-item" style="margin-top:25px; border-top: 1px dashed #7f8fa6; padding-top: 20px;">
                     <strong>📚 시 간 표:</strong>
-                    <span id="bv-timetable" style="white-space: pre-wrap; font-size: 22px; color: #fff; line-height: 1.6;"></span>
+                    <span id="bv-timetable" style="white-space: pre-wrap; font-size: 22px; color: #fff; line-height: 1.6; display: block; margin-top: 10px;"></span>
                 </div>
             </div>
 
@@ -288,7 +289,7 @@
 
     <script>
         // ==========================================
-        // 🗓️ 요일별 기본 시간표 세팅 (선생님 반에 맞게 여기서 수정하세요!)
+        // 🗓️ 요일별 기본 시간표 세팅
         // ==========================================
         const baseTimetable = {
             "월": ["국어", "수학", "영어", "과학", "과학", "체육"],
@@ -372,7 +373,7 @@
                     date: '', safety: '', birthday: '', morning: '', duty: '', announcement: '', timetable: ''
                 };
                 
-                document.getElementById('bv-date').innerText = data.date || '날짜를 입력해주세요';
+                document.getElementById('bv-date').innerText = data.date || '날짜와 날씨를 입력해주세요';
                 document.getElementById('bv-safety').innerText = data.safety || '';
                 document.getElementById('bv-birthday').innerText = data.birthday || '';
                 document.getElementById('bv-morning').innerText = data.morning || '';
@@ -455,3 +456,100 @@
         }
 
         // ==========================================
+        // 📋 0. 아침 칠판 로직 & 🪄 마법의 버튼
+        // ==========================================
+        let isBoardEditing = false;
+        function toggleBoardEdit() {
+            isBoardEditing = !isBoardEditing;
+            document.getElementById('board-view').style.display = isBoardEditing ? 'none' : 'block';
+            document.getElementById('board-edit').style.display = isBoardEditing ? 'block' : 'none';
+        }
+
+        function autoFillBoard() {
+            const today = new Date();
+            const days = ['일','월','화','수','목','금','토'];
+            const dayStr = days[today.getDay()];
+            
+            document.getElementById('be-date').value = `${today.getFullYear()}년 ${today.getMonth()+1}월 ${today.getDate()}일 ${dayStr}요일 맑음`;
+            
+            const safetyMsgs = [
+                "복도에서는 우측통행하며 사뿐사뿐 걷기!", 
+                "스마트폰은 주머니에 넣고 앞을 보며 걷기!", 
+                "친구의 말을 끝까지 경청하고 존중하기!", 
+                "쉬는 시간에 창문 밖으로 몸을 내밀지 않기!", 
+                "바르고 고운 말, 긍정적인 말 사용하기!"
+            ];
+            document.getElementById('be-safety').value = safetyMsgs[Math.floor(Math.random() * safetyMsgs.length)];
+            
+            if(baseTimetable[dayStr]) {
+                let ttStr = "";
+                baseTimetable[dayStr].forEach((subj, idx) => {
+                    ttStr += `${idx+1}교시 ${subj} : \n`;
+                });
+                document.getElementById('be-timetable').value = ttStr;
+            } else {
+                document.getElementById('be-timetable').value = "오늘은 주말입니다! 🎉";
+            }
+
+            db.ref('rooms/' + currentRoom + '/settings/lastDutyIndex').once('value').then(snap => {
+                let lastIdx = snap.val() || 0;
+                let totalStudents = parseInt(document.getElementById('picker-total').value) || 24; 
+                
+                let n1 = (lastIdx % totalStudents) + 1;
+                let n2 = ((lastIdx + 1) % totalStudents) + 1;
+                
+                document.getElementById('be-duty').value = `${n1}번, ${n2}번 창문 열기 및 뒷정리`;
+                
+                window.tempNextDutyIndex = lastIdx + 2; 
+            });
+        }
+
+        function saveBoard() {
+            const data = {
+                date: document.getElementById('be-date').value,
+                safety: document.getElementById('be-safety').value,
+                birthday: document.getElementById('be-birthday').value,
+                morning: document.getElementById('be-morning').value,
+                duty: document.getElementById('be-duty').value,
+                announcement: document.getElementById('be-announcement').value,
+                timetable: document.getElementById('be-timetable').value
+            };
+            boardRef.set(data); 
+
+            if (window.tempNextDutyIndex !== undefined) {
+                db.ref('rooms/' + currentRoom + '/settings/lastDutyIndex').set(window.tempNextDutyIndex);
+                window.tempNextDutyIndex = undefined; 
+            }
+
+            toggleBoardEdit(); 
+        }
+
+        // ==========================================
+        // 🌟 1. 점수판 및 체크판 
+        // ==========================================
+        function buildScoreboardHTML() {
+            const div = document.getElementById('scoreboard'); 
+            div.innerHTML = ''; 
+            for (let i = 0; i < numberOfGroups; i++) { 
+                div.innerHTML += `
+                    <div class="group-card">
+                        <div class="group-name">${i+1}모둠</div>
+                        <div class="score-wrapper"><div class="score" id="score-${i}">${currentScores[i]||0}</div></div>
+                        <div class="button-group">
+                            <button class="score-btn btn-plus" onclick="changeScore(${i},1)">+1</button>
+                            <button class="score-btn btn-zero" onclick="setScoreToZero(${i})">0</button>
+                            <button class="score-btn btn-minus" onclick="changeScore(${i},-1)">-1</button>
+                        </div>
+                    </div>`;
+            }
+            updateRankings();
+        }
+
+        function updateRankings() {
+            let rank = []; 
+            for(let i=0; i<numberOfGroups; i++) rank.push({g: i+1, s: currentScores[i]||0});
+            rank.sort((a,b) => b.s - a.s || a.g - b.g);
+            document.getElementById('ranking-board').innerHTML = '🏆 ' + rank.map(r => `${r.g}모둠`).join(' - ');
+        }
+        
+        function changeScore(i, a) { scoresRef.child(String(i
