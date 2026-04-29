@@ -41,19 +41,19 @@
         .content-section.active { display: block; }
         #board-tab, #score-tab { background: transparent; padding: 0; }
 
-        /* 📋 3분할 대시보드 레이아웃 */
+        /* 📋 대시보드 레이아웃 */
         .dashboard-grid { display: grid; grid-template-columns: 1fr 1.6fr 1fr; gap: 15px; margin: 0 auto; align-items: start;}
         .column-card { background: var(--white); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; border-top: 5px solid var(--accent-blue); height: 100%;}
         .card-header { display: flex; align-items: center; justify-content: center; margin-bottom: 15px; padding-bottom: 10px; font-size: 19px; font-weight: 800; color: var(--dark-blue); border-bottom: 2px solid var(--main-sky);}
         .info-box { background: #ffffff; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #e1e8ed; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
         .info-label { font-weight: 800; font-size: 14px; margin-bottom: 8px; display: block; color: var(--accent-blue); }
+        
         [contenteditable="true"] { outline: none; white-space: pre-wrap; min-height: 25px; transition: 0.2s; border-radius: 8px; padding: 4px; font-weight: 500; font-size: var(--board-font-size); line-height: 1.6;}
         [contenteditable="true"]:focus { background: #f9fdff; box-shadow: 0 0 0 2px var(--sub-sky) inset; }
 
         .info-content { font-size: var(--board-font-size); line-height: 1.6; color: #333; flex-grow: 1; font-weight: 500;}
         .large-text { font-size: var(--board-title-size); font-weight: 700; color: var(--dark-blue); }
 
-        /* 시간표 */
         .tt-row { display: flex; margin-bottom: 12px; align-items: baseline; border-bottom: 1px solid #f0f4f8; padding-bottom: 10px;}
         .tt-label { font-weight: 800; color: #f57c00; width: 4.5em; flex-shrink: 0; font-size: var(--board-font-size); transition: 0.2s;}
         .tt-val { flex-grow: 1; color: #333; font-size: var(--board-font-size); transition: 0.2s;}
@@ -70,9 +70,9 @@
         .cal-date.selected { background: var(--accent-blue) !important; color: white !important; }
 
         /* 공통 버튼 */
-        .action-btn { font-size: 15px; padding: 10px 15px; background-color: var(--accent-blue); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.2s; font-family: 'Pretendard', sans-serif;}
+        .action-btn { font-size: 15px; padding: 10px 15px; background-color: var(--accent-blue); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; font-family: 'Pretendard', sans-serif;}
         .action-btn:active { transform: scale(0.95); }
-        .reset-btn { font-size: 14px; padding: 8px 15px; background-color: #90a4ae; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; font-family: 'Pretendard', sans-serif;}
+        .reset-btn { font-size: 14px; padding: 8px 15px; background-color: #90a4ae; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; font-family: 'Pretendard', sans-serif;}
 
         /* 🔐 로그인 & 방 입장 오버레이 */
         .full-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--main-sky); display:flex; justify-content:center; align-items:center; z-index:9999; flex-direction: column;}
@@ -89,16 +89,24 @@
         .timer-btn { padding: 10px; border: none; border-radius: 10px; background: var(--main-sky); cursor: pointer; font-weight: bold; font-family: 'Pretendard'; }
         .timer-start { background: #ff5252; color: white; grid-column: span 2; }
 
-        /* 기타 (기존 기능) */
+        /* 🌟 점수판 디자인 (버튼 색상 최적화) */
         .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; } 
-        .group-card { background-color: var(--white); border-radius: 15px; padding: 15px; border: 1px solid var(--sub-sky); text-align: center; }
-        .score { font-size: 55px; font-weight: 800; color: var(--accent-blue); margin: 10px 0; font-variant-numeric: tabular-nums;}
-        .score-btn { width: 40px; height: 40px; border: none; border-radius: 10px; cursor: pointer; color: white; font-weight: bold; font-size: 18px; }
-        .task-grid { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 20px; background: #f8f9fa; padding: 20px; border-radius: 15px; }
-        .task-card { background: #eceff1; padding: 12px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #cfd8dc; transition: 0.2s;}
-        .task-card.done { background: var(--accent-blue); color: white; border-color: var(--dark-blue); box-shadow: 0 4px 10px rgba(2,155,229,0.3);}
-        .picker-box { background: white; padding: 25px; border-radius: 20px; box-shadow: var(--shadow); border-top: 5px solid var(--accent-blue); text-align: center; }
+        .group-card { background-color: var(--white); border-radius: 15px; padding: 20px 15px; border: 2px solid var(--sub-sky); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.03);}
+        .score { font-size: 60px; font-weight: 800; color: var(--accent-blue); margin: 15px 0; font-variant-numeric: tabular-nums; line-height: 1;}
+        .button-group { display: flex; justify-content: center; gap: 10px; margin-top: 10px;}
         
+        /* + - 버튼 입체감 및 색상 수정 */
+        .score-btn { width: 50px; height: 45px; border: none; border-radius: 10px; cursor: pointer; color: white; font-weight: bold; font-size: 24px; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
+        .score-btn:active { transform: translateY(3px); box-shadow: none !important; }
+        .btn-plus { background-color: #039be5; box-shadow: 0 4px 0 #0277bd; }
+        .btn-minus { background-color: #ff5252; box-shadow: 0 4px 0 #d32f2f; }
+
+        .task-grid { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 20px; background: #f8f9fa; padding: 20px; border-radius: 15px; }
+        .task-card { background: #eceff1; padding: 12px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #cfd8dc; transition: 0.2s; color:#546e7a;}
+        .task-card.done { background: var(--accent-blue); color: white; border-color: var(--dark-blue); box-shadow: 0 4px 10px rgba(2,155,229,0.3);}
+        
+        /* 🎲 뽑기 */
+        .picker-box { background: white; padding: 25px; border-radius: 20px; box-shadow: var(--shadow); border-top: 5px solid var(--accent-blue); text-align: center; }
         .card-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 15px 0; min-height: 80px; align-items: center; }
         .flip-card { background-color: transparent; perspective: 1000px; }
         .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.4s; transform-style: preserve-3d; }
@@ -112,20 +120,22 @@
         .mini-score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 8px; margin-top: 15px; } 
         .mini-card { background: #f8f9fa; border-radius: 8px; padding: 10px; border: 1px solid #eceff1; }
         .mini-val { font-size: 22px; font-weight: bold; color: var(--accent-blue); margin: 5px 0; font-variant-numeric: tabular-nums;}
-        .mini-btn { width: 26px; height: 26px; font-size: 14px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; background: #90a4ae;}
-        
+        .mini-btn { width: 28px; height: 28px; font-size: 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s;}
+        .mini-btn-plus { background: #039be5; } .mini-btn-minus { background: #ff5252; }
+
+        /* 기타 스타일 */
         .hw-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid #eee; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); text-align: left;}
         .student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 6px; text-align: center; margin-top: 12px;}
         .student-btn { font-size: 14px; font-weight: bold; padding: 8px 0; border: none; border-radius: 6px; cursor: pointer; background-color: #eceff1; color: #546e7a; transition: 0.2s;}
         .student-btn.done { background-color: var(--accent-blue); color: white; } 
         .student-btn.excused { background-color: white; border: 1px dashed #ccc; color: #b0bec5; text-decoration: line-through; }
+        .setting-input { font-size: 16px; width: 60px; text-align: center; border-radius: 5px; border: 1px solid #b0bec5; padding: 5px; margin: 0 5px; font-family: 'Pretendard', sans-serif;}
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; justify-content: center; align-items: center; }
         .modal-box { background: white; width: 90%; max-width: 800px; border-radius: 20px; padding: 30px; max-height: 90vh; overflow-y: auto; }
         .setting-group { margin-bottom: 15px; }
         .setting-group label { display: block; font-weight: 700; margin-bottom: 5px; color: var(--accent-blue); }
         .setting-group textarea, .setting-group input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-family: 'Pretendard'; }
-        .setting-input { font-size: 16px; width: 60px; text-align: center; border-radius: 5px; border: 1px solid #b0bec5; padding: 5px; margin: 0 5px; font-family: 'Pretendard', sans-serif;}
 
         @media (max-width: 1100px) { .dashboard-grid { grid-template-columns: 1fr; } }
     </style>
@@ -147,7 +157,7 @@
             <p style="color:#7f8c8d; font-size:14px; margin-bottom:20px;">접속할 방 이름을 입력하세요.<br>(예: 신리초5학년5반)</p>
             <input type="text" id="room-name-input" style="width:100%; padding:15px; font-size:18px; border:2px solid var(--sub-sky); border-radius:12px; margin-bottom:15px; text-align:center; font-family:'Pretendard';" placeholder="방 이름" onkeypress="if(event.key === 'Enter') enterRoom()">
             <button class="action-btn" style="width:100%; padding: 15px; font-size: 16px;" onclick="enterRoom()">교실 입장하기</button>
-            <button class="reset-btn" style="width:100%; margin-top:10px; background:transparent; color:#999;" onclick="logout()">로그아웃</button>
+            <button class="reset-btn" style="width:100%; margin-top:10px; background:transparent; color:#999; box-shadow:none;" onclick="logout()">로그아웃</button>
         </div>
     </div>
 
@@ -171,43 +181,26 @@
 
         <div id="board-tab" class="content-section active">
             <div style="display: flex; justify-content: space-between; margin-bottom: 12px; gap:8px; align-items: center; flex-wrap: wrap;">
-                
                 <div style="display:flex; align-items:center; gap:5px; background:white; padding:5px 10px; border-radius:10px; border:1px solid #cfd8dc; box-shadow:var(--shadow);">
                     <span style="font-size:14px; font-weight:bold; color:#546e7a; margin-right:5px;">🔍 칠판 글씨 크기</span>
-                    <button class="reset-btn" style="padding:4px 10px; background:#e1f5fe; color:#0288d1; border:1px solid #b3e5fc;" onclick="changeFontSize(2)">➕ 확대</button>
-                    <button class="reset-btn" style="padding:4px 10px; background:#fff3e0; color:#e65100; border:1px solid #ffe0b2;" onclick="changeFontSize(-2)">➖ 축소</button>
+                    <button class="reset-btn" style="padding:4px 10px; background:#e1f5fe; color:#0288d1; border:1px solid #b3e5fc; box-shadow:none;" onclick="changeFontSize(2)">➕ 확대</button>
+                    <button class="reset-btn" style="padding:4px 10px; background:#fff3e0; color:#e65100; border:1px solid #ffe0b2; box-shadow:none;" onclick="changeFontSize(-2)">➖ 축소</button>
                 </div>
-
                 <div style="display:flex; gap:8px;">
                     <button class="action-btn" style="background:#5c6bc0;" onclick="autoFillDashboard()">🪄 오늘 아침 자동 완성</button>
-                    <button class="action-btn" style="background:#0288d1;" onclick="saveDashboard()">💾 현재 칠판 기록 저장</button>
+                    <button class="action-btn" style="background:#0288d1;" onclick="saveDashboard()">💾 현재 칠판 자동기록 저장</button>
                     <button class="reset-btn" onclick="openSettingsModal()">⚙️ 기초 세팅</button>
                 </div>
             </div>
 
             <div class="dashboard-grid">
-                
                 <div class="column-card">
                     <div class="card-header">🌱 오늘의 시작</div>
-                    <div class="info-box">
-                        <span class="info-label">📅 날짜 및 날씨</span>
-                        <div class="info-content large-text" id="view-date" contenteditable="true"></div>
-                    </div>
-                    <div class="info-box">
-                        <span class="info-label" style="color:#d32f2f;">❗️ 안전 수칙</span>
-                        <div class="info-content" id="view-safety" contenteditable="true" style="font-weight:700;"></div>
-                    </div>
-                    <div class="info-box">
-                        <span class="info-label" style="color:#f57c00;">⭐ 아침 자습</span>
-                        <div class="info-content" id="view-morning" contenteditable="true"></div>
-                    </div>
-                    <div class="info-box" style="margin-bottom:0;">
-                        <span class="info-label" style="color:#7b1fa2;">🧹 당번 (& 할 일)</span>
-                        <div class="info-content large-text" id="view-duty-nums" contenteditable="true"></div>
-                        <div class="info-content" id="view-duty-tasks" contenteditable="true" style="font-size:calc(var(--board-font-size) - 2px); margin-top:5px; border-top:1px dashed #eee; padding-top:5px;"></div>
-                    </div>
+                    <div class="info-box"><span class="info-label">📅 날짜 및 날씨</span><div class="info-content large-text" id="view-date" contenteditable="true"></div></div>
+                    <div class="info-box"><span class="info-label" style="color:#d32f2f;">❗️ 안전 수칙</span><div class="info-content" id="view-safety" contenteditable="true" style="font-weight:700;"></div></div>
+                    <div class="info-box"><span class="info-label" style="color:#f57c00;">⭐ 아침 자습</span><div class="info-content" id="view-morning" contenteditable="true"></div></div>
+                    <div class="info-box" style="margin-bottom:0;"><span class="info-label" style="color:#7b1fa2;">🧹 당번 (& 할 일)</span><div class="info-content large-text" id="view-duty-nums" contenteditable="true"></div><div class="info-content" id="view-duty-tasks" contenteditable="true" style="font-size:calc(var(--board-font-size) - 2px); margin-top:5px; border-top:1px dashed #eee; padding-top:5px;"></div></div>
                 </div>
-
                 <div class="column-card">
                     <div class="card-header">📚 배움 시간표 & 학습 목표</div>
                     <div class="info-box" style="flex:1; padding: 25px;">
@@ -219,30 +212,13 @@
                         <div class="tt-row" style="border-bottom:none;"><span class="tt-label">6교시</span><span class="tt-val" id="view-tt-6" contenteditable="true"></span></div>
                     </div>
                 </div>
-
                 <div class="column-card">
                     <div class="card-header">📢 알림 및 마무리</div>
-                    <div class="info-box">
-                        <span class="info-label">📢 전달 사항</span>
-                        <div class="info-content" id="view-notices" contenteditable="true"></div>
-                    </div>
-                    <div class="info-box" style="border-left: 5px solid #4caf50;">
-                        <span class="info-label" style="color:#2e7d32;">📝 알림장</span>
-                        <div class="info-content" id="view-allim" contenteditable="true" style="font-weight:700;"></div>
-                    </div>
-                    <div class="info-box" style="background:#fff5f8;">
-                        <span class="info-label" style="color: #e91e63;">🎂 생일 축하해요!</span>
-                        <div class="info-content" id="view-birthday" contenteditable="true"></div>
-                    </div>
-                    
+                    <div class="info-box"><span class="info-label">📢 전달 사항</span><div class="info-content" id="view-notices" contenteditable="true"></div></div>
+                    <div class="info-box" style="border-left: 5px solid #4caf50;"><span class="info-label" style="color:#2e7d32;">📝 알림장</span><div class="info-content" id="view-allim" contenteditable="true" style="font-weight:700;"></div></div>
+                    <div class="info-box" style="background:#fff5f8;"><span class="info-label" style="color: #e91e63;">🎂 생일 축하해요!</span><div class="info-content" id="view-birthday" contenteditable="true"></div></div>
                     <div class="calendar-card" id="calendar-widget">
-                        <div class="cal-header">
-                            <span id="cal-month-title"></span>
-                            <div>
-                                <i class="fa-solid fa-chevron-left" style="cursor:pointer; margin-right:15px;" onclick="changeMonth(-1)"></i>
-                                <i class="fa-solid fa-chevron-right" style="cursor:pointer;" onclick="changeMonth(1)"></i>
-                            </div>
-                        </div>
+                        <div class="cal-header"><span id="cal-month-title"></span><div><i class="fa-solid fa-chevron-left" style="cursor:pointer; margin-right:15px;" onclick="changeMonth(-1)"></i><i class="fa-solid fa-chevron-right" style="cursor:pointer;" onclick="changeMonth(1)"></i></div></div>
                         <div class="cal-grid" id="cal-dates"></div>
                     </div>
                 </div>
@@ -255,15 +231,17 @@
                     모둠 수: <input type="number" id="group-count-score" value="6" min="2" max="12" class="setting-input"> <button class="reset-btn" onclick="changeGroupCount('group-count-score')">적용</button>
                 </div>
                 <div id="ranking-board" style="text-align:center; font-size:20px; font-weight:bold; background:#eceff1; padding:15px; border-radius:10px; margin-bottom:20px; color:var(--dark-blue);">🏆 순위 계산 중...</div>
+                
                 <div class="grid-container" id="scoreboard"></div>
                 
                 <div style="margin-top: 30px; background: #f8f9fa; padding: 20px; border-radius: 15px; text-align:center;">
-                    <h3 style="margin-top:0; color:var(--dark-blue);">🤝 모둠 활동 확인 (클릭하여 체크)</h3>
+                    <h3 style="margin-top:0; color:var(--dark-blue); font-size:16px;">🤝 모둠 활동 확인 (클릭하여 체크)</h3>
                     <div id="task-board" class="task-grid"></div>
-                    <button class="reset-btn" style="margin-top: 15px;" onclick="resetTasks()">🔄 전체 해제</button>
+                    <button class="reset-btn" style="margin-top: 15px;" onclick="resetTasks()">🔄 체크 전체 해제</button>
                 </div>
+
                 <div style="text-align:center; margin-top:25px; border-top:1px solid #eee; padding-top:20px;">
-                    <button class="reset-btn" style="background:#e53935; padding:12px 30px; font-size:16px;" onclick="resetAllScores()">⚠️ 모둠 점수 0점 초기화</button>
+                    <button id="master-reset-btn" class="reset-btn" style="background:#e53935; padding:12px 30px; font-size:16px; transition:0.3s;" onclick="resetAllScores()">⚠️ 모둠 점수 0점 초기화</button>
                 </div>
             </div>
         </div>
@@ -287,7 +265,7 @@
             <div class="picker-box" style="margin-top:20px;">
                 <h2 style="color:#2e7d32;">🕹️ 미니 점수판</h2>
                 <div class="mini-score-grid" id="mini-scoreboard"></div>
-                <button class="reset-btn" style="margin-top:15px;" onclick="resetMiniScores()">미니 점수 초기화</button>
+                <button id="mini-reset-btn" class="reset-btn" style="margin-top:20px; background:#78909c; transition:0.3s;" onclick="resetMiniScores()">미니 점수 전체 초기화</button>
             </div>
         </div>
 
@@ -426,7 +404,7 @@
             currentRoom = roomInput.replace(/[^a-zA-Z0-9가-힣]/g, "");
             localStorage.setItem('classRoomName', currentRoom);
             
-            // 모든 참조 세팅
+            // 참조 세팅
             groupSettingsRef = db.ref('rooms/' + currentRoom + '/settings/groupCount');
             settingsRef = db.ref('rooms/' + currentRoom + '/settings/dashboardDefaults');
             scoresRef = db.ref('rooms/' + currentRoom + '/groupScores');
@@ -442,13 +420,11 @@
             
             setInterval(() => { document.getElementById('real-clock').innerText = new Date().toLocaleTimeString('ko-KR', {hour12: false}); }, 1000);
             
-            // 칠판 글씨 치는 도중 리프레시 방지
             document.querySelectorAll('[contenteditable="true"]').forEach(el => {
                 el.addEventListener('focus', () => { isDashboardFocused = true; });
                 el.addEventListener('blur', () => { isDashboardFocused = false; });
             });
 
-            // 화면 초기 빌드
             groupSettingsRef.once('value').then(snap => {
                 numberOfGroups = snap.val() || 6;
                 document.getElementById('group-count-score').value = numberOfGroups;
@@ -465,14 +441,10 @@
             boardRef.on('value', snap => {
                 if(isDashboardFocused) return; 
                 const data = snap.val() || {};
-                document.getElementById('view-date').innerText = data.date || "";
-                document.getElementById('view-morning').innerText = data.morning || "";
-                document.getElementById('view-duty-nums').innerText = data.dutyNums || "";
-                document.getElementById('view-duty-tasks').innerText = data.dutyTasks || "";
-                document.getElementById('view-notices').innerText = data.notices || "";
-                document.getElementById('view-allim').innerText = data.allim || "";
-                document.getElementById('view-safety').innerText = data.safety || "";
-                document.getElementById('view-birthday').innerText = data.birthday || "";
+                document.getElementById('view-date').innerText = data.date || ""; document.getElementById('view-morning').innerText = data.morning || "";
+                document.getElementById('view-duty-nums').innerText = data.dutyNums || ""; document.getElementById('view-duty-tasks').innerText = data.dutyTasks || "";
+                document.getElementById('view-notices').innerText = data.notices || ""; document.getElementById('view-allim').innerText = data.allim || "";
+                document.getElementById('view-safety').innerText = data.safety || ""; document.getElementById('view-birthday').innerText = data.birthday || "";
                 for(let i=1; i<=6; i++) document.getElementById(`view-tt-${i}`).innerText = data[`tt${i}`] || "";
             });
             historyRef.on('value', snap => { historyCheck = snap.val() || {}; renderCalendar(); });
@@ -519,14 +491,10 @@
             historyRef.child(todayKey).once('value').then(snap => {
                 if(snap.exists()) {
                     const data = snap.val();
-                    document.getElementById('view-date').innerText = data.date || "";
-                    document.getElementById('view-morning').innerText = data.morning || "";
-                    document.getElementById('view-duty-nums').innerText = data.dutyNums || "";
-                    document.getElementById('view-duty-tasks').innerText = data.dutyTasks || "";
-                    document.getElementById('view-notices').innerText = data.notices || "";
-                    document.getElementById('view-allim').innerText = data.allim || "";
-                    document.getElementById('view-safety').innerText = data.safety || "";
-                    document.getElementById('view-birthday').innerText = data.birthday || "";
+                    document.getElementById('view-date').innerText = data.date || ""; document.getElementById('view-morning').innerText = data.morning || "";
+                    document.getElementById('view-duty-nums').innerText = data.dutyNums || ""; document.getElementById('view-duty-tasks').innerText = data.dutyTasks || "";
+                    document.getElementById('view-notices').innerText = data.notices || ""; document.getElementById('view-allim').innerText = data.allim || "";
+                    document.getElementById('view-safety').innerText = data.safety || ""; document.getElementById('view-birthday').innerText = data.birthday || "";
                     for(let i=1; i<=6; i++) document.getElementById(`view-tt-${i}`).innerText = data[`tt${i}`] || "";
                 } else {
                     autoFillDashboard(true);
@@ -562,11 +530,7 @@
                 document.getElementById('view-date').innerText = `${viewDate.getMonth()+1}월 ${viewDate.getDate()}일 ${dayStr}요일 ☀️ 날씨입력`;
                 document.getElementById('view-duty-tasks').innerText = def.duty || "";
                 let targetM = "", targetT = "";
-                if(dayStr === '월') { targetM = def.monM; targetT = def.monT; }
-                else if(dayStr === '화') { targetM = def.tueM; targetT = def.tueT; }
-                else if(dayStr === '수') { targetM = def.wedM; targetT = def.wedT; }
-                else if(dayStr === '목') { targetM = def.thuM; targetT = def.thuT; }
-                else if(dayStr === '금') { targetM = def.friM; targetT = def.friT; }
+                if(dayStr === '월') { targetM = def.monM; targetT = def.monT; } else if(dayStr === '화') { targetM = def.tueM; targetT = def.tueT; } else if(dayStr === '수') { targetM = def.wedM; targetT = def.wedT; } else if(dayStr === '목') { targetM = def.thuM; targetT = def.thuT; } else if(dayStr === '금') { targetM = def.friM; targetT = def.friT; }
                 document.getElementById('view-morning').innerText = targetM || "";
                 const lines = targetT ? targetT.split('\n') : [];
                 for(let i=1; i<=6; i++) document.getElementById(`view-tt-${i}`).innerText = lines[i-1] || "";
@@ -615,7 +579,7 @@
         }
 
         // ==========================================
-        // 🌟 기타 기능들 
+        // 🌟 1. 점수판 및 스마트 초기화 로직
         // ==========================================
         function switchTab(t) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -625,21 +589,41 @@
         }
         function changeGroupCount(id) { const v = parseInt(document.getElementById(id).value); if(v>=2 && v<=12) groupSettingsRef.set(v); }
 
-        // 점수판
         function buildScoreboardHTML() {
             const div = document.getElementById('scoreboard'); div.innerHTML = ''; 
             for (let i = 0; i < numberOfGroups; i++) { 
                 div.innerHTML += `<div class="group-card"><div class="group-name">${i+1}모둠</div><div class="score" id="score-${i}">${currentScores[i]||0}</div><div class="button-group"><button class="score-btn btn-plus" onclick="changeScore(${i},1)">+</button><button class="score-btn btn-minus" onclick="changeScore(${i},-1)">-</button></div></div>`;
             }
         }
-        function changeScore(i, a) { pointSound.play().catch(e=>e); scoresRef.child(String(i)).set((currentScores[i]||0) + a); }
+        function changeScore(i, a) { pointSound.currentTime=0; pointSound.play().catch(e=>e); scoresRef.child(String(i)).set((currentScores[i]||0) + a); }
         function updateRankings() {
             let r = []; for(let i=0; i<numberOfGroups; i++) r.push({g: i+1, s: currentScores[i]||0});
             r.sort((a,b) => b.s - a.s); document.getElementById('ranking-board').innerHTML = '🏆 ' + r.map(x => `${x.g}모둠`).join(' - ');
         }
-        function resetAllScores() { if(confirm("모든 모둠 점수를 0점으로 싹 초기화하시겠습니까? (미니 점수는 제외)")) scoresRef.set({}); }
 
-        // 체크판
+        // ✨ 메인 점수판 스마트 초기화
+        let resetConfirmState = false;
+        let resetTimer;
+        function resetAllScores() {
+            const btn = document.getElementById('master-reset-btn');
+            if (!resetConfirmState) {
+                resetConfirmState = true;
+                btn.innerText = "정말 0점으로 초기화 시키겠습니까?";
+                btn.style.backgroundColor = "#c62828"; // 더 진한 빨간색
+                resetTimer = setTimeout(() => {
+                    resetConfirmState = false;
+                    btn.innerText = "⚠️ 모둠 점수 0점 초기화";
+                    btn.style.backgroundColor = "#e53935"; // 원래 빨간색
+                }, 3000); // 3초 대기
+            } else {
+                clearTimeout(resetTimer);
+                scoresRef.set({}); // 진짜로 초기화!
+                resetConfirmState = false;
+                btn.innerText = "⚠️ 모둠 점수 0점 초기화";
+                btn.style.backgroundColor = "#e53935";
+            }
+        }
+
         function buildTaskBoard() {
             const div = document.getElementById('task-board'); div.innerHTML = '';
             for(let i=0; i<numberOfGroups; i++) div.innerHTML += `<div class="task-card ${currentTasks[i]?'done':''}" onclick="toggleTask(${i})">${i+1}모둠</div>`;
@@ -647,19 +631,43 @@
         function toggleTask(i) { tasksRef.child(String(i)).set(!currentTasks[i]); }
         function resetTasks() { tasksRef.set({}); }
 
-        // 뽑기 & 미니점수
+        // ==========================================
+        // 🎲 뽑기 & 미니 점수판
+        // ==========================================
         let remG = [], remS = [];
         function resetGroupDraw() { remG = Array.from({length:numberOfGroups}, (_, i) => i+1); document.getElementById('group-cards-container').innerHTML = remG.map(n => `<div class="flip-card group-card-size"><div class="flip-card-inner"><div class="flip-card-front">?</div><div class="flip-card-back">${n}</div></div></div>`).join(''); }
-        function drawGroupCard() { const c = document.querySelectorAll('#group-cards-container .flip-card:not(.flipped)'); if(c.length>0) { c[Math.floor(Math.random()*c.length)].classList.add('flipped'); pickSound.play().catch(e=>e); } }
+        function drawGroupCard() { const c = document.querySelectorAll('#group-cards-container .flip-card:not(.flipped)'); if(c.length>0) { c[Math.floor(Math.random()*c.length)].classList.add('flipped'); pickSound.currentTime=0; pickSound.play().catch(e=>e); } }
         function initStudentPicker() { const tot = parseInt(document.getElementById('picker-total').value)||24; const abs = document.getElementById('picker-absent').value.split(',').map(n=>parseInt(n.trim())); remS = []; for(let i=1;i<=tot;i++){if(!abs.includes(i))remS.push(i);} document.getElementById('student-cards-container').innerHTML = remS.map(n => `<div class="flip-card student-card-size"><div class="flip-card-inner"><div class="flip-card-front">👤</div><div class="flip-card-back">${n}</div></div></div>`).join(''); }
-        function drawStudentCard() { const c = document.querySelectorAll('#student-cards-container .flip-card:not(.flipped)'); if(c.length>0) { c[Math.floor(Math.random()*c.length)].classList.add('flipped'); pickSound.play().catch(e=>e); } }
+        function drawStudentCard() { const c = document.querySelectorAll('#student-cards-container .flip-card:not(.flipped)'); if(c.length>0) { c[Math.floor(Math.random()*c.length)].classList.add('flipped'); pickSound.currentTime=0; pickSound.play().catch(e=>e); } }
         
         function buildMiniScoreboard() {
             const div = document.getElementById('mini-scoreboard'); div.innerHTML = '';
-            for(let i=0; i<numberOfGroups; i++) div.innerHTML += `<div class="mini-card"><div style="font-weight:bold;font-size:14px;color:var(--dark-blue);">${i+1}모둠</div><div class="mini-val" id="mini-score-${i}">0</div><div style="display:flex;justify-content:center;gap:5px;"><button class="mini-btn" onclick="changeMiniS(${i},1)">+</button><button class="mini-btn" onclick="changeMiniS(${i},-1)">-</button></div></div>`;
+            for(let i=0; i<numberOfGroups; i++) div.innerHTML += `<div class="mini-card"><div style="font-weight:bold;font-size:14px;color:var(--dark-blue);">${i+1}모둠</div><div class="mini-val" id="mini-score-${i}">0</div><div style="display:flex;justify-content:center;gap:5px;"><button class="mini-btn mini-btn-plus" onclick="changeMiniS(${i},1)">+</button><button class="mini-btn mini-btn-minus" onclick="changeMiniS(${i},-1)">-</button></div></div>`;
         }
         function changeMiniS(i, a) { miniScoresRef.child(String(i)).set((currentMiniScores[i]||0) + a); }
-        function resetMiniScores() { if(confirm("미니 점수를 모두 초기화할까요?")) miniScoresRef.set({}); }
+        
+        // ✨ 미니 점수판 스마트 초기화
+        let miniResetConfirmState = false;
+        let miniResetTimer;
+        function resetMiniScores() {
+            const btn = document.getElementById('mini-reset-btn');
+            if (!miniResetConfirmState) {
+                miniResetConfirmState = true;
+                btn.innerText = "정말 초기화 시키겠습니까?";
+                btn.style.backgroundColor = "#c62828";
+                miniResetTimer = setTimeout(() => {
+                    miniResetConfirmState = false;
+                    btn.innerText = "미니 점수 전체 초기화";
+                    btn.style.backgroundColor = "#78909c";
+                }, 3000); 
+            } else {
+                clearTimeout(miniResetTimer);
+                miniScoresRef.set({}); 
+                miniResetConfirmState = false;
+                btn.innerText = "미니 점수 전체 초기화";
+                btn.style.backgroundColor = "#78909c";
+            }
+        }
 
         // 타이머
         function toggleTimerBox() { const b = document.getElementById('timer-box'); b.style.display = (b.style.display==='block')?'none':'block'; }
