@@ -21,19 +21,30 @@
         
         .content-section { display: none; max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         .content-section.active { display: block; }
-        #score-tab { background: transparent; box-shadow: none; max-width: 1100px; padding: 0; }
+        #score-tab, #board-tab { background: transparent; box-shadow: none; max-width: 1100px; padding: 0; }
         
         /* 공통 버튼 */
         .action-btn { font-size: 16px; padding: 10px 15px; background-color: #2ecc71; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .reset-btn { font-size: 14px; padding: 8px 15px; background-color: #95a5a6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .setting-input { font-size: 16px; width: 50px; text-align: center; border-radius: 5px; border: 1px solid #ccc; padding: 5px; margin: 0 5px; }
         
-        /* ⏱️ 플로팅 타이머 (우측 고정) */
+        /* ⏱️ 플로팅 타이머 */
         #floating-timer { position: fixed; top: 20px; right: 20px; background: #fff; border: 3px solid #f39c12; border-radius: 15px; padding: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 1000; width: 200px; }
         .timer-display { font-size: 45px; font-weight: bold; color: #e67e22; margin: 0; font-variant-numeric: tabular-nums; line-height: 1; }
         .timer-input { font-size: 14px; padding: 4px; border: 2px solid #e67e22; border-radius: 5px; width: 45px; text-align: center; font-weight: bold; }
 
-        /* 🌟 1. 점수판 스타일 */
+        /* 📋 아침 칠판 스타일 */
+        .board-container { position: relative; background: #2f3640; border: 6px solid #8c7ae6; border-radius: 15px; padding: 25px; text-align: left; color: #ecf0f1; box-shadow: 0 8px 15px rgba(0,0,0,0.3); }
+        .board-title { font-size: 28px; font-weight: bold; text-align: center; border-bottom: 2px dashed #7f8fa6; padding-bottom: 15px; margin-bottom: 20px; color: #fbc531; padding-right: 150px; padding-left: 150px;}
+        .board-clock { position: absolute; top: 20px; right: 25px; font-size: 24px; font-weight: bold; color: #4cd137; background: rgba(0,0,0,0.4); padding: 5px 15px; border-radius: 10px; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
+        .board-item { font-size: 20px; margin-bottom: 18px; line-height: 1.5; }
+        .board-item strong { color: #4cd137; display: inline-block; width: 110px; }
+        .board-input-group { display: flex; align-items: flex-start; margin-bottom: 15px; font-size: 16px; }
+        .board-input-group label { width: 100px; font-weight: bold; color: #fbc531; margin-top: 8px; }
+        .board-input { flex: 1; font-size: 16px; padding: 10px; border-radius: 5px; border: none; font-family: 'Malgun Gothic', sans-serif; }
+        textarea.board-input { height: 160px; resize: vertical; line-height: 1.5; }
+
+        /* 🌟 점수판 */
         #ranking-board { font-size: 22px; font-weight: bold; background-color: #f39c12; color: #fff; padding: 12px 15px; border-radius: 15px; margin: 0 auto 15px auto; max-width: 1000px; word-break: keep-all; }
         .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; } 
         .group-card { background-color: #34495e; border-radius: 15px; padding: 15px 10px; color: white; box-shadow: 0 6px 12px rgba(0,0,0,0.2); }
@@ -44,15 +55,15 @@
         .score-btn { font-size: 18px; font-weight: bold; width: 42px; height: 42px; border: none; border-radius: 10px; cursor: pointer; }
         .btn-plus { background-color: #2ecc71; color: white; } .btn-zero { background-color: #3498db; color: white; } .btn-minus { background-color: #e74c3c; color: white; }
         
-        /* 🤝 협동학습 체크판 스타일 (버튼 삭제 및 깔끔화) */
-        .task-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; }
-        .task-card { background: #7f8c8d; padding: 15px 10px; border-radius: 10px; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 80px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: 0.3s; cursor: pointer; }
+        /* 🤝 협동학습 체크판 */
+        .task-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; }
+        .task-card { background: #7f8c8d; padding: 10px; border-radius: 10px; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 80px; min-height: 50px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: 0.3s; cursor: pointer; }
         .task-card.done { background: #2ecc71; transform: scale(1.05); }
         .task-toggle { font-weight: bold; font-size: 16px; width: 100%; text-align: center; margin: 0; line-height: 1.4; }
         .task-reset-icon { background: none; border: none; font-size: 28px; cursor: pointer; transition: 0.3s; margin-left: 10px; }
         .task-reset-icon:active { transform: rotate(180deg) scale(0.9); }
 
-        /* 🎲 2. 뽑기 스타일 */
+        /* 🎲 뽑기 및 미니점수판 */
         .picker-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
         .picker-box { background-color: #ecf0f1; padding: 15px; border-radius: 15px; text-align: center; }
         .picker-box h2 { margin-top: 0; font-size: 20px; color: #2c3e50; }
@@ -61,7 +72,7 @@
         .mini-score-val { font-size: 22px; font-weight: bold; color: #16a085; margin: 3px 0; }
         .mini-btn { width: 25px; height: 25px; font-size: 14px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white;}
         
-        /* 🃏 카드 애니메이션 */
+        /* 🃏 카드 */
         .card-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 10px 0; min-height: 80px; align-items: center; }
         #group-cards-container { display: grid; grid-template-columns: repeat(3, 60px); justify-content: center; gap: 8px; margin: 10px auto; }
         .flip-card { background-color: transparent; perspective: 1000px; }
@@ -73,7 +84,7 @@
         .student-card-size { width: 40px; height: 60px; font-size: 18px; } .student-card-size .flip-card-back { background-color: #9b59b6; color: white; transform: rotateY(180deg); }
         .history-list { font-size: 14px; color: #7f8c8d; min-height: 20px; margin-bottom: 10px; word-break: keep-all; }
 
-        /* 📝 3. 과제 관리 & 📊 4. 통계 */
+        /* 📝 과제 및 📊 통계 */
         .hw-input-area { display: flex; gap: 5px; margin-bottom: 15px; flex-wrap: wrap; background: #ecf0f1; padding: 10px; border-radius: 10px; align-items: center;}
         .hw-input-area input { flex: 1; min-width: 80px; font-size: 14px; padding: 6px; border: 1px solid #ccc; border-radius: 8px; }
         .hw-list { display: flex; flex-direction: column; gap: 10px; text-align: left;}
@@ -90,18 +101,22 @@
         @keyframes popAnimation { 0% { transform: scale(1); color: #f1c40f; } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
         .pop { animation: popAnimation 0.4s ease-in-out; display: inline-block; }
 
-        /* 🚨 방 입장(로그인) 화면 */
+        /* 🚨 방 입장 */
         #room-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(44, 62, 80, 0.95); display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .room-box { background: white; padding: 25px 15px; border-radius: 20px; text-align: center; width: 90%; max-width: 350px; }
         .room-input { width: 100%; padding: 12px; font-size: 18px; border: 2px solid #3498db; border-radius: 10px; margin: 15px 0; text-align: center; }
         #main-app { display: none; } 
         .room-info-bar { background-color: #34495e; color: #f1c40f; padding: 8px; text-align: right; font-weight: bold; border-radius: 10px; margin-bottom: 15px; font-size: 13px; }
 
-        /* 📱 모바일 최적화 */
+        /* 모바일 대응 */
         @media (max-width: 1100px) { 
             #floating-timer { position: static; width: 100%; max-width: 1000px; margin: 0 auto 15px auto; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; border-width: 2px; padding: 8px; }
             #floating-timer h3 { display: none; }
             .timer-display { font-size: 35px; }
+            .board-title { padding-right: 0; padding-left: 0; font-size: 22px; }
+            .board-clock { position: static; display: inline-block; margin-bottom: 15px; }
+            .board-input-group { flex-direction: column; }
+            .board-input-group label { margin-bottom: 5px; }
         }
         @media (max-width: 600px) { 
             .mini-score-grid { grid-template-columns: repeat(3, 1fr); } 
@@ -115,7 +130,7 @@
     <div id="room-overlay">
         <div class="room-box">
             <h2 style="margin:0; font-size:22px; color:#2c3e50;">🏫 스마트 교실 접속</h2>
-            <p style="color:#7f8c8d; font-size:13px; margin:10px 0;">방 이름을 입력하세요 (예: 부산초5학년1반)</p>
+            <p style="color:#7f8c8d; font-size:13px; margin:10px 0;">방 이름을 입력하세요 (예: 아산초5학년1반)</p>
             <input type="text" id="room-name-input" class="room-input" placeholder="방 이름 입력" onkeypress="if(event.key === 'Enter') enterRoom()">
             <button class="action-btn" style="background-color:#3498db; width:100%; padding:12px;" onclick="enterRoom()">교실 입장하기</button>
         </div>
@@ -130,7 +145,8 @@
         <h1>🌟 스마트 교실 올인원 🌟</h1>
 
         <div class="tab-container">
-            <button class="tab-btn active" onclick="switchTab('score')">🌟 점수판</button>
+            <button class="tab-btn active" onclick="switchTab('board')">📋 아침 칠판</button>
+            <button class="tab-btn" onclick="switchTab('score')">🌟 점수판</button>
             <button class="tab-btn" onclick="switchTab('picker')">🎲 활동&뽑기</button>
             <button class="tab-btn" onclick="switchTab('homework')">📝 과제관리</button>
             <button class="tab-btn" onclick="switchTab('stats')">📊 통계</button>
@@ -151,7 +167,46 @@
             <button class="reset-btn" style="width:100%; margin-top:8px; padding:4px; font-size:12px;" onclick="setTimer(0)">초기화</button>
         </div>
 
-        <div id="score-tab" class="content-section active">
+        <div id="board-tab" class="content-section active">
+            
+            <div id="board-view" class="board-container">
+                <div id="board-realtime-clock" class="board-clock">00:00:00</div> <div style="text-align:right; margin-bottom: 10px;">
+                    <button class="action-btn" style="background:#3498db; padding:6px 12px; font-size:14px;" onclick="toggleBoardEdit()">✏️ 칠판 수정하기</button>
+                </div>
+                <div class="board-title" id="bv-date">날짜와 날씨를 입력해주세요</div>
+                <div class="board-item"><strong>❗️ 안 전:</strong> <span id="bv-safety"></span></div>
+                <div class="board-item"><strong>⭐ 아침 자습:</strong> <span id="bv-morning"></span></div>
+                <div class="board-item"><strong>🧹 당 번:</strong> <span id="bv-duty"></span></div>
+                <div class="board-item"><strong>📢 안내 사항:</strong> <span id="bv-announcement"></span></div>
+                <div class="board-item"><strong>🎂 생 일:</strong> <span id="bv-birthday"></span></div>
+                <div class="board-item" style="margin-top:25px; border-top: 1px dashed #7f8fa6; padding-top: 20px;">
+                    <strong>📚 시 간 표:</strong><br>
+                    <span id="bv-timetable" style="white-space: pre-wrap; font-size: 22px; color: #fff; line-height: 1.6; display: block; margin-top: 10px;"></span>
+                </div>
+            </div>
+
+            <div id="board-edit" class="board-container" style="display:none; background: #1e272e;">
+                <h2 style="text-align:center; color:#fbc531; margin-top:0;">✏️ 칠판 내용 수정</h2>
+                
+                <button class="action-btn" style="width:100%; background-color:#9b59b6; margin-bottom: 20px; font-size: 18px;" onclick="autoFillBoard()">🪄 오늘 아침 자동 완성하기!</button>
+
+                <div class="board-input-group"><label>날짜/날씨</label><input type="text" id="be-date" class="board-input" placeholder="예: 4월 29일 수요일 맑음"></div>
+                <div class="board-input-group"><label>❗️ 안 전</label><input type="text" id="be-safety" class="board-input" placeholder="예: 길을 걸으며 스마트폰 보지 않기"></div>
+                <div class="board-input-group"><label>⭐ 아침 자습</label><input type="text" id="be-morning" class="board-input" placeholder="예: 독서하기"></div>
+                <div class="board-input-group"><label>🧹 당 번</label><input type="text" id="be-duty" class="board-input" placeholder="예: 7번, 8번"></div>
+                <div class="board-input-group"><label>📢 안내 사항</label><input type="text" id="be-announcement" class="board-input" placeholder="예: 통신문 제출"></div>
+                <div class="board-input-group"><label>🎂 생 일</label><input type="text" id="be-birthday" class="board-input" placeholder="예: 김다은"></div>
+                <div class="board-input-group"><label>📚 시 간 표<br><small style="color:#bdc3c7; font-weight:normal;">(줄바꿈 가능)</small></label>
+                    <textarea id="be-timetable" class="board-input" placeholder="1교시 국어 : &#10;2교시 수학 : "></textarea>
+                </div>
+                <div style="display:flex; gap:10px; margin-top: 20px;">
+                    <button class="reset-btn" style="flex:1; padding: 12px; font-size:16px;" onclick="toggleBoardEdit()">취소</button>
+                    <button class="action-btn" style="flex:2; padding: 12px; font-size:16px;" onclick="saveBoard()">저장하고 칠판 띄우기</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="score-tab" class="content-section">
             <div style="margin-bottom: 12px; color: white;">
                 <span style="font-size: 15px; font-weight: bold;">모둠 수:</span>
                 <input type="number" id="group-count-score" value="6" min="2" max="12" class="setting-input">
@@ -185,7 +240,7 @@
                 <div class="picker-box" style="border-top-color: #9b59b6;">
                     <h2>👤 개인 뽑기</h2>
                     <div style="margin-bottom:10px; font-size:13px; font-weight:bold;">
-                        총 <input type="number" id="picker-total" value="23" min="1" class="setting-input" style="width:40px;"> 명 | 결석: <input type="text" id="picker-absent" placeholder="예: 3" style="width:40px; padding:3px; border-radius:5px; border:1px solid #ccc; text-align:center;"> 
+                        총 <input type="number" id="picker-total" value="24" min="1" class="setting-input" style="width:40px;"> 명 | 결석: <input type="text" id="picker-absent" placeholder="예: 3" style="width:40px; padding:3px; border-radius:5px; border:1px solid #ccc; text-align:center;"> 
                         <button class="reset-btn" style="padding:3px 8px;" onclick="initStudentPicker()">적용</button>
                     </div>
                     <div class="history-list" id="student-history">뽑힌 번호: 없음</div>
@@ -204,7 +259,7 @@
         <div id="homework-tab" class="content-section">
             <div class="hw-input-area">
                 <input type="date" id="hw-date"> 
-                <label style="font-size:12px;"><strong>총:</strong></label> <input type="number" id="hw-total" value="23" style="width:40px;">
+                <label style="font-size:12px;"><strong>총:</strong></label> <input type="number" id="hw-total" value="24" style="width:40px;">
                 <input type="text" id="hw-category" list="category-list" placeholder="과목" style="width:60px;">
                 <datalist id="category-list"><option value="수학"></option><option value="국어"></option><option value="일기"></option></datalist>
                 <input type="text" id="hw-title" placeholder="내용 (예: 10쪽)"> 
@@ -233,7 +288,18 @@
 
     <script>
         // ==========================================
-        // 🚨 파이어베이스 연동 (자동 셋팅됨)
+        // 🗓️ 요일별 기본 시간표 세팅 (선생님 반에 맞게 여기서 수정하세요!)
+        // ==========================================
+        const baseTimetable = {
+            "월": ["국어", "수학", "영어", "과학", "과학", "체육"],
+            "화": ["국어", "국어", "수학", "사회", "음악", "미술"],
+            "수": ["창체", "창체", "과학", "과학", "음악"], // 5교시인 날
+            "목": ["수학", "사회", "국어", "체육", "영어", "실과"],
+            "금": ["국어", "수학", "사회", "실과", "실과", "창체"]
+        };
+
+        // ==========================================
+        // 🚨 파이어베이스 연동 
         // ==========================================
         const firebaseConfig = {
           apiKey: "AIzaSyCrEfpzVS1YvORiM4HYRCryytj6Y-kG2fI",
@@ -255,7 +321,7 @@
         document.getElementById('hw-date').valueAsDate = new Date();
 
         let currentRoom = "";
-        let groupSettingsRef, scoresRef, miniScoresRef, timerRef, hwRef, tasksRef;
+        let groupSettingsRef, scoresRef, miniScoresRef, timerRef, hwRef, tasksRef, boardRef;
         let listenersSet = false, isFirstLoad = true, numberOfGroups = 6;
         let currentScores = [], currentMiniScores = [], currentTasks = [], allHomeworks = [];
 
@@ -277,18 +343,52 @@
             timerRef = db.ref('rooms/' + currentRoom + '/timerState');
             hwRef = db.ref('rooms/' + currentRoom + '/homeworks');
             tasksRef = db.ref('rooms/' + currentRoom + '/groupTasks');
+            boardRef = db.ref('rooms/' + currentRoom + '/dailyBoard');
 
             document.getElementById('room-overlay').style.display = 'none';
             document.getElementById('main-app').style.display = 'block';
             
             buildScoreboardHTML(); buildMiniScoreboard(); resetGroupDraw(); initStudentPicker(); buildTaskBoard();
             
+            setInterval(updateClock, 1000);
+            updateClock();
+
             if(!listenersSet) { startFirebaseListeners(); listenersSet = true; }
         }
 
         function exitRoom() { localStorage.removeItem('classRoomName'); location.reload(); }
 
+        function updateClock() {
+            const now = new Date();
+            let h = String(now.getHours()).padStart(2, '0');
+            let m = String(now.getMinutes()).padStart(2, '0');
+            let s = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('board-realtime-clock').innerText = `${h}:${m}:${s}`;
+        }
+
         function startFirebaseListeners() {
+            boardRef.on('value', snap => {
+                const data = snap.val() || {
+                    date: '', safety: '', birthday: '', morning: '', duty: '', announcement: '', timetable: ''
+                };
+                
+                document.getElementById('bv-date').innerText = data.date || '날짜를 입력해주세요';
+                document.getElementById('bv-safety').innerText = data.safety || '';
+                document.getElementById('bv-birthday').innerText = data.birthday || '';
+                document.getElementById('bv-morning').innerText = data.morning || '';
+                document.getElementById('bv-duty').innerText = data.duty || '';
+                document.getElementById('bv-announcement').innerText = data.announcement || '';
+                document.getElementById('bv-timetable').innerText = data.timetable || '';
+
+                document.getElementById('be-date').value = data.date || '';
+                document.getElementById('be-safety').value = data.safety || '';
+                document.getElementById('be-birthday').value = data.birthday || '';
+                document.getElementById('be-morning').value = data.morning || '';
+                document.getElementById('be-duty').value = data.duty || '';
+                document.getElementById('be-announcement').value = data.announcement || '';
+                document.getElementById('be-timetable').value = data.timetable || '';
+            });
+
             groupSettingsRef.on('value', snap => {
                 const newCount = snap.val() ? parseInt(snap.val()) : 6;
                 if(numberOfGroups !== newCount) {
@@ -355,242 +455,47 @@
         }
 
         // ==========================================
-        // 🌟 1. 점수판 및 체크판 
+        // 📋 0. 아침 칠판 로직 & 🪄 마법의 버튼
         // ==========================================
-        function buildScoreboardHTML() {
-            const div = document.getElementById('scoreboard'); 
-            div.innerHTML = ''; 
-            for (let i = 0; i < numberOfGroups; i++) { 
-                div.innerHTML += `
-                    <div class="group-card">
-                        <div class="group-name">${i+1}모둠</div>
-                        <div class="score-wrapper"><div class="score" id="score-${i}">${currentScores[i]||0}</div></div>
-                        <div class="button-group">
-                            <button class="score-btn btn-plus" onclick="changeScore(${i},1)">+1</button>
-                            <button class="score-btn btn-zero" onclick="setScoreToZero(${i})">0</button>
-                            <button class="score-btn btn-minus" onclick="changeScore(${i},-1)">-1</button>
-                        </div>
-                    </div>`;
-            }
-            updateRankings();
+        let isBoardEditing = false;
+        function toggleBoardEdit() {
+            isBoardEditing = !isBoardEditing;
+            document.getElementById('board-view').style.display = isBoardEditing ? 'none' : 'block';
+            document.getElementById('board-edit').style.display = isBoardEditing ? 'block' : 'none';
         }
 
-        function updateRankings() {
-            let rank = []; 
-            for(let i=0; i<numberOfGroups; i++) rank.push({g: i+1, s: currentScores[i]||0});
-            rank.sort((a,b) => b.s - a.s || a.g - b.g);
-            document.getElementById('ranking-board').innerHTML = '🏆 ' + rank.map(r => `${r.g}모둠`).join(' - ');
-        }
-        
-        function changeScore(i, a) { scoresRef.child(String(i)).set((currentScores[i]||0) + a); }
-        function setScoreToZero(i) { scoresRef.child(String(i)).set(0); }
-        function resetAllScores() { if(confirm("점수를 초기화할까요?")) scoresRef.set({}); }
-
-        // 🤝 클릭하면 바로 색이 변하는 깔끔한 체크판 (버튼 제거됨)
-        function buildTaskBoard() {
-            const div = document.getElementById('task-board'); 
-            div.innerHTML = '';
-            for(let i=0; i<numberOfGroups; i++){
-                const done = currentTasks[i] || false;
-                div.innerHTML += `
-                    <div class="task-card ${done ? 'done' : ''}" onclick="toggleTask(${i})">
-                        <div class="task-toggle">${i+1}모둠<br>${done ? '✅' : '⬜'}</div>
-                    </div>`;
-            }
-        }
-        function toggleTask(i) { tasksRef.child(String(i)).set(!currentTasks[i]); }
-        function resetTasks() { if(confirm("모둠 체크판을 모두 비울까요?")) tasksRef.set({}); }
-
-        // ==========================================
-        // ⏱️ 2. 타이머 & 미니 점수판
-        // ==========================================
-        let localTimerState = { isRunning: false, endTime: 0, pausedRemaining: 0 };
-        let timerInterval;
-        
-        function updateTimerUI(state) {
-            localTimerState = state;
-            clearInterval(timerInterval);
-            if(state.isRunning) timerInterval = setInterval(refreshTimerDisplay, 200);
-            refreshTimerDisplay();
-            const btn = document.getElementById('timer-toggle-btn');
-            btn.innerText = state.isRunning ? '정지' : '시작'; 
-            btn.style.background = state.isRunning ? '#95a5a6' : '#e74c3c';
-        }
-
-        function refreshTimerDisplay() {
-            let secs = localTimerState.pausedRemaining;
-            if(localTimerState.isRunning) {
-                secs = Math.max(0, Math.ceil((localTimerState.endTime - Date.now())/1000));
-                if(secs === 0) { 
-                    clearInterval(timerInterval); 
-                    timerRef.update({isRunning:false, pausedRemaining:0}); 
-                    timerSound.currentTime = 0; 
-                    timerSound.play().catch(e=>e); 
-                }
-            }
-            document.getElementById('timer-display').innerText = String(Math.floor(secs/60)).padStart(2,'0') + ':' + String(secs%60).padStart(2,'0');
-        }
-
-        function setTimer(m) { timerRef.set({isRunning:false, endTime:0, pausedRemaining: m*60}); document.getElementById('custom-timer-input').value='';}
-        function toggleTimer() {
-            if(localTimerState.isRunning) timerRef.set({isRunning:false, endTime:0, pausedRemaining: Math.max(0, Math.ceil((localTimerState.endTime - Date.now())/1000))});
-            else if(localTimerState.pausedRemaining > 0) timerRef.set({isRunning:true, endTime: Date.now() + localTimerState.pausedRemaining*1000, pausedRemaining: localTimerState.pausedRemaining});
-            else startCustomTimer();
-        }
-        function startCustomTimer() {
-            const v = parseFloat(document.getElementById('custom-timer-input').value);
-            if(v > 0) { timerRef.set({isRunning:true, endTime: Date.now() + v*60*1000, pausedRemaining: v*60}); document.getElementById('custom-timer-input').value=''; }
-        }
-
-        function buildMiniScoreboard() {
-            const div = document.getElementById('mini-scoreboard'); 
-            div.innerHTML = '';
-            for(let i=0; i<numberOfGroups; i++) {
-                div.innerHTML += `
-                <div class="mini-card">
-                    <div style="font-weight:bold; font-size:12px;">${i+1}모둠</div>
-                    <div class="mini-score-val" id="mini-score-${i}">0</div>
-                    <div style="display:flex; justify-content:center; gap:3px;">
-                        <button class="mini-btn btn-plus" onclick="miniS(${i},1)">+</button>
-                        <button class="mini-btn btn-minus" onclick="miniS(${i},-1)">-</button>
-                    </div>
-                </div>`;
-            }
-        }
-        function miniS(i, a) { miniScoresRef.child(String(i)).set((currentMiniScores[i]||0) + a); }
-        function resetMiniScores() { if(confirm("초기화할까요?")) miniScoresRef.set({}); }
-
-        // ==========================================
-        // 🎲 3. 뽑기
-        // ==========================================
-        let remG = [], grpCount = 0;
-        function resetGroupDraw() {
-            remG = Array.from({length:numberOfGroups}, (_, i) => i+1); 
-            grpCount = 0;
-            const con = document.getElementById('group-cards-container'); 
-            con.innerHTML = '';
-            for(let i=0; i<numberOfGroups; i++) {
-                con.innerHTML += `<div class="flip-card group-card-size" id="gc-${i}"><div class="flip-card-inner"><div class="flip-card-front">❓</div><div class="flip-card-back" id="gcb-${i}"></div></div></div>`;
-            }
-            document.getElementById('group-history').innerText = '뽑힌 모둠: 없음';
-        }
-        function drawGroupCard() {
-            if(remG.length === 0) return alert("모든 카드를 뽑았습니다!");
-            const index = Math.floor(Math.random()*remG.length);
-            const p = remG.splice(index, 1)[0]; 
+        function autoFillBoard() {
+            const today = new Date();
+            const days = ['일','월','화','수','목','금','토'];
+            const dayStr = days[today.getDay()];
             
-            pickSound.currentTime=0; 
-            pickSound.play().catch(e=>e);
-
-            const backEl = document.getElementById(`gcb-${grpCount}`);
-            const cardEl = document.getElementById(`gc-${grpCount}`);
-            if(backEl && cardEl) {
-                backEl.innerText = p; 
-                cardEl.classList.add('flipped');
-                grpCount++; 
-                document.getElementById('group-history').innerText = `뽑은 카드 수: ${grpCount}개`;
+            document.getElementById('be-date').value = `${today.getFullYear()}년 ${today.getMonth()+1}월 ${today.getDate()}일 ${dayStr}요일 맑음`;
+            
+            const safetyMsgs = [
+                "복도에서는 우측통행하며 사뿐사뿐 걷기!", 
+                "스마트폰은 주머니에 넣고 앞을 보며 걷기!", 
+                "친구의 말을 끝까지 경청하고 존중하기!", 
+                "쉬는 시간에 창문 밖으로 몸을 내밀지 않기!", 
+                "바르고 고운 말, 긍정적인 말 사용하기!"
+            ];
+            document.getElementById('be-safety').value = safetyMsgs[Math.floor(Math.random() * safetyMsgs.length)];
+            
+            if(baseTimetable[dayStr]) {
+                let ttStr = "";
+                baseTimetable[dayStr].forEach((subj, idx) => {
+                    ttStr += `${idx+1}교시 ${subj} : \n`;
+                });
+                document.getElementById('be-timetable').value = ttStr;
+            } else {
+                document.getElementById('be-timetable').value = "오늘은 주말입니다! 🎉";
             }
-        }
 
-        let remS = [], stuCount = 0;
-        function initStudentPicker() {
-            const t = parseInt(document.getElementById('picker-total').value) || 23;
-            const a = document.getElementById('picker-absent').value.split(',').map(n=>parseInt(n.trim()));
-            remS = []; 
-            for(let i=1; i<=t; i++) { if(!a.includes(i)) remS.push(i); }
-            stuCount = 0; 
-            const con = document.getElementById('student-cards-container'); 
-            con.innerHTML = '';
-            for(let i=0; i<remS.length; i++) {
-                con.innerHTML += `<div class="flip-card student-card-size" id="sc-${i}"><div class="flip-card-inner"><div class="flip-card-front">👤</div><div class="flip-card-back" id="scb-${i}"></div></div></div>`;
-            }
-            document.getElementById('student-history').innerText = '뽑힌 번호: 없음';
-        }
-        function drawStudentCard() {
-            if(remS.length === 0) return alert("출석한 모든 학생을 뽑았습니다!");
-            const p = remS.splice(Math.floor(Math.random()*remS.length), 1)[0]; 
-            
-            pickSound.currentTime=0; 
-            pickSound.play().catch(e=>e);
-
-            const backEl = document.getElementById(`scb-${stuCount}`);
-            const cardEl = document.getElementById(`sc-${stuCount}`);
-            if(backEl && cardEl) {
-                backEl.innerText = p; 
-                cardEl.classList.add('flipped');
-                stuCount++; 
-                document.getElementById('student-history').innerText = `마지막 뽑힌 번호: ${p}`;
-            }
-        }
-
-        // ==========================================
-        // 📝 4. 과제 & 통계
-        // ==========================================
-        function addHomework() {
-            const d = document.getElementById('hw-date').value; 
-            const c = document.getElementById('hw-category').value || '미분류'; 
-            const t = document.getElementById('hw-title').value; 
-            const tot = parseInt(document.getElementById('hw-total').value) || 23; 
-            const abs = document.getElementById('hw-absent').value.split(',').map(n=>parseInt(n.trim()));
-            
-            if(!t) return alert("내용을 입력해주세요!");
-            let list = {}; 
-            for(let i=1; i<=tot; i++) list[i] = abs.includes(i) ? 'excused' : false;
-            
-            hwRef.push({date:d, category:c, title:t, total:tot, checklist:list, isArchived:false, createdAt:firebase.database.ServerValue.TIMESTAMP});
-            document.getElementById('hw-title').value = ''; document.getElementById('hw-absent').value = '';
-        }
-
-        function renderHomeworkList() {
-            const div = document.getElementById('homework-list'); 
-            div.innerHTML = ''; 
-            const showA = document.getElementById('show-archived').checked;
-            
-            allHomeworks.forEach(hw => {
-                if(hw.isArchived && !showA) return;
-                let btns = '', done = 0, act = hw.total;
-                for(let i=1; i<=hw.total; i++) {
-                    const s = hw.checklist ? hw.checklist[i] : false; 
-                    let cls = '';
-                    if(s===true) { cls='done'; done++; } 
-                    else if(s==='excused') { cls='excused'; act--; }
-                    btns += `<button class="student-btn ${cls}" onclick="cycleH('${hw.id}', ${i})">${i}</button>`;
-                }
-                div.innerHTML += `
-                    <div class="hw-card ${hw.isArchived ? 'archived' : ''}">
-                        <div style="display:flex; justify-content:space-between;">
-                            <div><b>[${hw.category}] ${hw.title}</b><br><small>📅 ${hw.date} | 완료: ${done}/${act}</small></div>
-                            <div>
-                                <button class="reset-btn" style="padding:3px 6px;" onclick="arcH('${hw.id}', ${hw.isArchived})">${hw.isArchived ? '📦꺼내기' : '📥보관'}</button>
-                                <button class="reset-btn" style="background:#e74c3c; padding:3px 6px;" onclick="delH('${hw.id}')">X</button>
-                            </div>
-                        </div>
-                        <div class="student-grid">${btns}</div>
-                    </div>`;
-            });
-        }
-
-        function cycleH(id, n) { 
-            const hw = allHomeworks.find(h=>h.id===id); 
-            const s = hw.checklist ? hw.checklist[n] : false;
-            const next = (s===false||s===undefined) ? true : (s===true?'excused':false);
-            hwRef.child(id).child('checklist').child(String(n)).set(next);
-        }
-        function delH(id) { if(confirm("삭제하시겠습니까?")) hwRef.child(id).remove(); }
-        function arcH(id, s) { hwRef.child(id).child('isArchived').set(!s); }
-
-        function setQuickDate(t) {
-            const s = document.getElementById('stat-start-date'), e = document.getElementById('stat-end-date'), d = new Date();
-            if(t==='week') { let l = new Date(); l.setDate(d.getDate()-6); s.valueAsDate=l; e.valueAsDate=d; }
-            else if(t==='month') { s.valueAsDate = new Date(d.getFullYear(), d.getMonth(), 1); e.valueAsDate = new Date(d.getFullYear(), d.getMonth()+1, 0); }
-            else { s.valueAsDate = new Date(d.getFullYear(), 2, 1); e.valueAsDate = new Date(d.getFullYear(), 7, 31); }
-            calculateStats();
-        }
-
-        function calculateStats() {
-            const s = document.getElementById('stat-start-date').value, e = document.getElementById('stat-end-date').value;
-            const res = document.getElementById('stat-results-area'), sum = document.getElementById('stat-summary');
-            res.innerHTML = ''; 
-            
-            const filt = allHomeworks.filter(h => h.date >= s && h.date <= e);
-            if
+            // 기준 인원 24명으로 적용!
+            db.ref('rooms/' + currentRoom + '/settings/lastDutyIndex').once('value').then(snap => {
+                let lastIdx = snap.val() || 0;
+                let totalStudents = parseInt(document.getElementById('picker-total').value) || 24; 
+                
+                let n1 = (lastIdx % totalStudents) + 1;
+                let n2 = ((lastIdx + 1) % totalStudents) + 1;
+                
+                document.getElementById('be-duty').value
