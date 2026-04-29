@@ -9,11 +9,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
         :root {
-            --main-sky: #e1f5fe; /* 화사한 파스텔 블루 */
+            --main-sky: #e1f5fe;
             --sub-sky: #b3e5fc;
             --accent-blue: #039be5; 
             --dark-blue: #2c3e50;
@@ -43,27 +44,42 @@
         .column-card { background: var(--white); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; border-top: 5px solid var(--accent-blue); }
         .card-header { display: flex; align-items: center; justify-content: center; margin-bottom: 15px; padding-bottom: 10px; font-size: 19px; font-weight: 800; color: var(--dark-blue); border-bottom: 2px solid var(--main-sky);}
         
-        /* 📅 달력 위젯 (Small) */
-        .calendar-card { background: #fdfdfd; border-radius: 15px; padding: 12px; margin-bottom: 15px; border: 1px solid #eee; }
-        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 800; color: var(--accent-blue); }
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
-        .cal-day { font-size: 11px; font-weight: 700; color: #999; padding-bottom: 5px; }
-        .cal-date { font-size: 13px; padding: 8px 0; cursor: pointer; border-radius: 8px; position: relative; font-weight: 600; }
-        .cal-date:hover { background: var(--main-sky); }
-        .cal-date.today { background: var(--sub-sky); color: var(--dark-blue); }
-        .cal-date.has-record::after { content: '●'; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); font-size: 8px; color: var(--accent-blue); }
-        .cal-date.selected { background: var(--accent-blue) !important; color: white !important; }
-
         /* 인라인 편집 박스 */
         .info-box { background: #ffffff; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #e1e8ed; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
         .info-label { font-weight: 800; font-size: 14px; margin-bottom: 8px; display: block; color: var(--accent-blue); }
         [contenteditable="true"] { outline: none; white-space: pre-wrap; min-height: 25px; transition: 0.2s; border-radius: 8px; padding: 4px; font-weight: 500; font-size: 17px; line-height: 1.6;}
         [contenteditable="true"]:focus { background: #f9fdff; box-shadow: 0 0 0 2px var(--sub-sky) inset; }
 
+        .info-content { font-size: 17px; line-height: 1.6; color: #333; flex-grow: 1; font-weight: 500;}
+        .large-text { font-size: 19px; font-weight: 700; color: var(--dark-blue); }
+
         /* 시간표 */
         .tt-row { display: flex; margin-bottom: 12px; align-items: baseline; border-bottom: 1px solid #f0f4f8; padding-bottom: 10px;}
         .tt-label { font-weight: 800; color: #f57c00; width: 65px; flex-shrink: 0; font-size: 17px; }
         .tt-val { flex-grow: 1; color: #333; }
+
+        /* 📅 달력 위젯 (우측 하단 배치용) */
+        .calendar-card { background: #fdfdfd; border-radius: 12px; padding: 12px; margin-top: 15px; border: 2px solid var(--sub-sky); box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);}
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 800; color: var(--accent-blue); font-size: 15px;}
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+        .cal-day { font-size: 11px; font-weight: 700; color: #999; padding-bottom: 5px; }
+        .cal-date { font-size: 13px; padding: 8px 0; cursor: pointer; border-radius: 8px; position: relative; font-weight: 600; transition: 0.2s;}
+        .cal-date:hover { background: var(--main-sky); }
+        .cal-date.today { background: var(--sub-sky); color: var(--dark-blue); }
+        .cal-date.has-record::after { content: '●'; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); font-size: 8px; color: #e91e63; }
+        .cal-date.selected { background: var(--accent-blue) !important; color: white !important; }
+
+        /* 공통 버튼 */
+        .action-btn { font-size: 15px; padding: 10px 15px; background-color: var(--accent-blue); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.2s; font-family: 'Pretendard', sans-serif;}
+        .action-btn:active { transform: scale(0.95); }
+        .reset-btn { font-size: 14px; padding: 8px 15px; background-color: #90a4ae; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; font-family: 'Pretendard', sans-serif;}
+
+        /* 로그인 & 방 입장 오버레이 */
+        .full-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--main-sky); display:flex; justify-content:center; align-items:center; z-index:9999; flex-direction: column;}
+        .login-box { background:white; padding:40px; border-radius:25px; text-align:center; width:90%; max-width:400px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none;}
+        .google-btn { background: white; border: 2px solid #ddd; padding: 12px 20px; border-radius: 30px; font-size: 16px; font-weight: bold; color: #555; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; transition: 0.3s;}
+        .google-btn:hover { background: #f5f5f5; border-color: #ccc; }
+        .google-btn img { width: 20px; height: 20px; }
 
         /* 타이머 */
         #timer-widget { position: fixed; bottom: 30px; right: 30px; z-index: 2000; }
@@ -73,7 +89,7 @@
         .timer-btn { padding: 10px; border: none; border-radius: 10px; background: var(--main-sky); cursor: pointer; font-weight: bold; font-family: 'Pretendard'; }
         .timer-start { background: #ff5252; color: white; grid-column: span 2; }
 
-        /* 기존기능 복구용 (점수판 등) */
+        /* 기타 (기존 기능) */
         .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; } 
         .group-card { background-color: var(--white); border-radius: 15px; padding: 15px; border: 1px solid var(--sub-sky); text-align: center; }
         .score { font-size: 55px; font-weight: 800; color: var(--accent-blue); margin: 10px 0; font-variant-numeric: tabular-nums;}
@@ -81,24 +97,36 @@
         .task-card { background: #eceff1; padding: 12px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #cfd8dc; }
         .task-card.done { background: var(--accent-blue); color: white; }
         .picker-box { background: white; padding: 25px; border-radius: 20px; box-shadow: var(--shadow); border-top: 5px solid var(--accent-blue); text-align: center; }
-
-        /* ⚙️ 모달 */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; justify-content: center; align-items: center; }
         .modal-box { background: white; width: 90%; max-width: 800px; border-radius: 20px; padding: 30px; max-height: 90vh; overflow-y: auto; }
         .setting-group { margin-bottom: 15px; }
         .setting-group label { display: block; font-weight: 700; margin-bottom: 5px; color: var(--accent-blue); }
         .setting-group textarea, .setting-group input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-family: 'Pretendard'; }
+        .setting-input { font-size: 16px; width: 60px; text-align: center; border-radius: 5px; border: 1px solid #b0bec5; padding: 5px; margin: 0 5px; font-family: 'Pretendard', sans-serif;}
 
         @media (max-width: 1100px) { .dashboard-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-    <div id="room-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--main-sky); display:flex; justify-content:center; align-items:center; z-index:9999;">
-        <div style="background:white; padding:35px; border-radius:25px; text-align:center; width:90%; max-width:400px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
-            <h2 style="margin:0 0 20px 0; color:var(--dark-blue);">🌤️ 스카이 클래스 접속</h2>
-            <input type="text" id="room-name-input" style="width:100%; padding:15px; font-size:18px; border:2px solid var(--sub-sky); border-radius:12px; margin-bottom:20px; text-align:center;" placeholder="방 이름을 입력하세요">
-            <button class="action-btn" style="width:100%; padding: 15px; font-size: 18px;" onclick="enterRoom()">교실 입장하기</button>
+    <div class="full-overlay" id="auth-overlay">
+        
+        <div class="login-box" id="login-box">
+            <h2 style="margin:0 0 10px 0; color:var(--dark-blue);">🔐 로그인 필요</h2>
+            <p style="color:#78909c; font-size:14px; margin-bottom:25px;">보안을 위해 선생님의 구글 계정으로<br>로그인해 주세요.</p>
+            <button class="google-btn" onclick="loginWithGoogle()">
+                <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="Google">
+                Google 계정으로 로그인
+            </button>
+        </div>
+
+        <div class="login-box" id="room-box">
+            <div style="color:var(--accent-blue); font-size:30px; margin-bottom:10px;"><i class="fa-solid fa-chalkboard-user"></i></div>
+            <h2 style="margin:0 0 10px 0; color:var(--dark-blue);">🌤️ 스카이 클래스</h2>
+            <p style="color:#7f8c8d; font-size:14px; margin-bottom:20px;">접속할 방 이름을 입력하세요.<br>(예: 신리초5학년5반)</p>
+            <input type="text" id="room-name-input" style="width:100%; padding:15px; font-size:18px; border:2px solid var(--sub-sky); border-radius:12px; margin-bottom:15px; text-align:center; font-family:'Pretendard';" placeholder="방 이름" onkeypress="if(event.key === 'Enter') enterRoom()">
+            <button class="action-btn" style="width:100%; padding: 15px; font-size: 16px;" onclick="enterRoom()">교실 입장하기</button>
+            <button class="reset-btn" style="width:100%; margin-top:10px; background:transparent; color:#999;" onclick="logout()">로그아웃</button>
         </div>
     </div>
 
@@ -106,7 +134,10 @@
         <div class="top-header">
             <div class="logo">🌤️ SKY CLASS</div>
             <div id="real-clock" style="font-size: 22px; font-weight: 800; color: var(--dark-blue);">00:00:00</div>
-            <div class="room-tag" id="current-room-display" onclick="exitRoom()">방 나가기</div>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <div id="user-profile" style="font-size:14px; font-weight:bold; color:#666;"></div>
+                <div class="room-tag" id="current-room-display" onclick="exitRoom()">방 나가기</div>
+            </div>
         </div>
 
         <div class="tab-container">
@@ -118,28 +149,19 @@
         </div>
 
         <div id="board-tab" class="content-section active">
-            <div style="display: flex; justify-content: flex-end; margin-bottom: 12px; gap:8px; align-items: center;">
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 12px; gap:8px;">
                 <button class="action-btn" style="background:#5c6bc0;" onclick="autoFillDashboard()">🪄 오늘 아침 자동 완성</button>
-                <button class="action-btn" style="background:#0288d1;" onclick="saveDashboard()">💾 현재 칠판 저장하기</button>
+                <button class="action-btn" style="background:#0288d1;" onclick="saveDashboard()">💾 현재 칠판 자동기록 저장</button>
                 <button class="reset-btn" onclick="openSettingsModal()">⚙️ 기초 세팅</button>
             </div>
 
             <div class="dashboard-grid">
+                
                 <div class="column-card">
-                    <div class="card-header">📅 기록 캘린더</div>
-                    <div class="calendar-card" id="calendar-widget">
-                        <div class="cal-header">
-                            <span id="cal-month-title">2026년 4월</span>
-                            <div>
-                                <i class="fa-solid fa-chevron-left" style="cursor:pointer; margin-right:10px;" onclick="changeMonth(-1)"></i>
-                                <i class="fa-solid fa-chevron-right" style="cursor:pointer;" onclick="changeMonth(1)"></i>
-                            </div>
-                        </div>
-                        <div class="cal-grid" id="cal-dates"></div>
-                    </div>
-
+                    <div class="card-header">🌱 오늘의 시작</div>
+                    
                     <div class="info-box">
-                        <span class="info-label">📅 선택된 날짜 / 날씨</span>
+                        <span class="info-label">📅 날짜 및 날씨</span>
                         <div class="info-content large-text" id="view-date" contenteditable="true"></div>
                     </div>
                     <div class="info-box">
@@ -175,13 +197,24 @@
                         <span class="info-label">📢 전달 사항</span>
                         <div class="info-content" id="view-notices" contenteditable="true"></div>
                     </div>
-                    <div class="info-box" style="flex:1; border-left: 5px solid #4caf50;">
+                    <div class="info-box" style="border-left: 5px solid #4caf50;">
                         <span class="info-label" style="color:#2e7d32;">📝 알림장</span>
                         <div class="info-content" id="view-allim" contenteditable="true" style="font-weight:700;"></div>
                     </div>
-                    <div class="info-box" style="margin-bottom:0; background:#fff5f8;">
+                    <div class="info-box" style="background:#fff5f8;">
                         <span class="info-label" style="color: #e91e63;">🎂 생일 축하해요!</span>
                         <div class="info-content" id="view-birthday" contenteditable="true"></div>
+                    </div>
+                    
+                    <div class="calendar-card" id="calendar-widget">
+                        <div class="cal-header">
+                            <span id="cal-month-title"></span>
+                            <div>
+                                <i class="fa-solid fa-chevron-left" style="cursor:pointer; margin-right:15px;" onclick="changeMonth(-1)"></i>
+                                <i class="fa-solid fa-chevron-right" style="cursor:pointer;" onclick="changeMonth(1)"></i>
+                            </div>
+                        </div>
+                        <div class="cal-grid" id="cal-dates"></div>
                     </div>
                 </div>
             </div>
@@ -189,10 +222,13 @@
 
         <div id="score-tab" class="content-section">
             <div class="picker-box" style="max-width:1000px; margin: 0 auto;">
+                <div style="margin-bottom: 15px; color: var(--dark-blue); font-weight:bold;">
+                    모둠 수: <input type="number" id="group-count-score" value="6" min="2" max="12" class="setting-input"> <button class="reset-btn" onclick="changeGroupCount('group-count-score')">적용</button>
+                </div>
                 <div id="ranking-board">🏆 순위 계산 중...</div>
                 <div class="grid-container" id="scoreboard"></div>
                 <div id="task-board" class="task-grid" style="margin-top:20px;"></div>
-                <button class="reset-btn" style="margin-top:20px; background:#f44336;" onclick="resetAllScores()">점수 초기화</button>
+                <button class="reset-btn" style="margin-top:20px; background:#f44336;" onclick="resetAllScores()">점수 0점 초기화</button>
             </div>
         </div>
 
@@ -200,14 +236,42 @@
             <div class="dashboard-grid" style="grid-template-columns: 1fr 1fr;">
                 <div class="picker-box">
                     <h2>👥 모둠 뽑기</h2>
+                    <div style="margin-bottom:10px;"><input type="number" id="group-count-picker" value="6" class="setting-input">모둠 <button class="reset-btn" onclick="changeGroupCount('group-count-picker')">적용</button></div>
                     <div id="group-cards-container" class="card-container"></div>
                     <button class="action-btn" onclick="drawGroupCard()">뽑기</button> <button class="reset-btn" onclick="resetGroupDraw()">리셋</button>
                 </div>
                 <div class="picker-box">
                     <h2>👤 개인 번호 뽑기</h2>
+                    <div style="margin-bottom:10px;"><input type="number" id="picker-total" value="24" class="setting-input">명 (결석:<input type="text" id="picker-absent" style="width:40px; margin-left:5px;" class="setting-input">) <button class="reset-btn" onclick="initStudentPicker()">적용</button></div>
                     <div id="student-cards-container" class="card-container"></div>
                     <button class="action-btn" onclick="drawStudentCard()">뽑기</button> <button class="reset-btn" onclick="initStudentPicker()">리셋</button>
                 </div>
+            </div>
+        </div>
+
+        <div id="homework-tab" class="content-section">
+            <div class="picker-box" style="text-align:left;">
+                <h2 style="text-align:center;">📝 과제 관리</h2>
+                <div style="display:flex; gap:10px; margin-bottom:15px; align-items:center;">
+                    <input type="date" id="hw-date" style="padding:8px; border-radius:5px; border:1px solid #ccc; font-family:'Pretendard';"> 
+                    <input type="number" id="hw-total" value="24" class="setting-input">명
+                    <input type="text" id="hw-title" placeholder="수학익힘책 10쪽" style="flex:1; padding:8px; border-radius:5px; border:1px solid #ccc; font-family:'Pretendard';">
+                    <button class="action-btn" onclick="addHomework()">추가</button>
+                </div>
+                <label style="font-size:13px; color:#666;"><input type="checkbox" id="show-archived" onchange="renderHomeworkList()"> 보관된 과제도 보기</label>
+                <div id="homework-list" style="margin-top:15px;"></div>
+            </div>
+        </div>
+
+        <div id="stats-tab" class="content-section">
+            <div class="picker-box">
+                <h2>📊 통계</h2>
+                <div style="display:flex; justify-content:center; gap:10px; margin-bottom:15px;">
+                    <input type="date" id="stat-start-date" style="padding:8px; border-radius:5px; border:1px solid #ccc; font-family:'Pretendard';"> ~ <input type="date" id="stat-end-date" style="padding:8px; border-radius:5px; border:1px solid #ccc; font-family:'Pretendard';">
+                    <button class="action-btn" onclick="calculateStats()">조회</button>
+                </div>
+                <div id="stat-summary" style="font-weight:bold; margin-bottom:15px;"></div>
+                <div id="stat-results-area" style="text-align:left;"></div>
             </div>
         </div>
         
@@ -259,18 +323,53 @@
         };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database(); 
+        const auth = firebase.auth();
+
+        const pointSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'); 
+        const timerSound = new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'); 
+        const pickSound = new Audio('https://assets.mixkit.co/active_storage/sfx/3005/3005-preview.mp3'); 
 
         let currentRoom = "";
         let groupSettingsRef, scoresRef, timerRef, boardRef, settingsRef, historyRef;
         let listenersSet = false, numberOfGroups = 6;
         let currentScores = [], currentTasks = [], historyCheck = {};
-        let viewDate = new Date(); // 현재 칠판이 보여주는 날짜
-        let calDate = new Date();  // 달력이 보여주는 월 기준
+        let viewDate = new Date(); 
+        let calDate = new Date();  
 
+        // 🔐 구글 로그인 및 권한 관리
         window.onload = () => {
-            const savedRoom = localStorage.getItem('classRoomName');
-            if(savedRoom) { document.getElementById('room-name-input').value = savedRoom; enterRoom(); }
+            auth.onAuthStateChanged(user => {
+                if(user) {
+                    // 로그인 됨 -> 방 이름 입력창 띄우기
+                    document.getElementById('login-box').style.display = 'none';
+                    document.getElementById('room-box').style.display = 'block';
+                    document.getElementById('user-profile').innerText = user.displayName + " 선생님";
+                    
+                    const savedRoom = localStorage.getItem('classRoomName');
+                    if(savedRoom) { document.getElementById('room-name-input').value = savedRoom; enterRoom(); }
+                } else {
+                    // 로그인 안 됨 -> 구글 로그인 버튼 띄우기
+                    document.getElementById('auth-overlay').style.display = 'flex';
+                    document.getElementById('login-box').style.display = 'block';
+                    document.getElementById('room-box').style.display = 'none';
+                    document.getElementById('main-app').style.display = 'none';
+                }
+            });
         };
+
+        function loginWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch(error => {
+                alert("로그인 중 에러가 발생했습니다. 파이어베이스 콘솔에서 Google 로그인을 사용 설정했는지 확인해주세요! (" + error.message + ")");
+            });
+        }
+
+        function logout() {
+            auth.signOut().then(() => {
+                localStorage.removeItem('classRoomName');
+                location.reload();
+            });
+        }
 
         function enterRoom() {
             const roomInput = document.getElementById('room-name-input').value.trim();
@@ -286,26 +385,24 @@
             boardRef = db.ref('rooms/' + currentRoom + '/skyDashboard');
             historyRef = db.ref('rooms/' + currentRoom + '/boardHistory');
 
-            document.getElementById('room-overlay').style.display = 'none';
+            document.getElementById('auth-overlay').style.display = 'none';
             document.getElementById('main-app').style.display = 'block';
             
             buildScoreboardHTML(); resetGroupDraw(); initStudentPicker(); 
             setInterval(() => { document.getElementById('real-clock').innerText = new Date().toLocaleTimeString('ko-KR', {hour12: false}); }, 1000);
             
-            loadTodayBoard(); // 처음 입장 시 오늘 칠판 로드
-            startFirebaseListeners();
+            loadTodayBoard(); 
+            if(!listenersSet) { startFirebaseListeners(); listenersSet = true; }
         }
 
         function exitRoom() { localStorage.removeItem('classRoomName'); location.reload(); }
 
         function startFirebaseListeners() {
-            // 칠판 실시간 연동 (단, 내가 편집 중일 때는 안 덮어씌움)
             boardRef.on('value', snap => {
                 if(document.activeElement.getAttribute('contenteditable') === "true") return;
                 const data = snap.val() || {};
                 renderBoardData(data);
             });
-            // 달력에 점 찍기 위한 히스토리 목록 실시간 감시
             historyRef.on('value', snap => {
                 historyCheck = snap.val() || {};
                 renderCalendar();
@@ -336,7 +433,7 @@
             const todayKey = getFormattedDate(new Date());
             historyRef.child(todayKey).once('value').then(snap => {
                 if(snap.exists()) renderBoardData(snap.val());
-                else autoFillDashboard(true); // 오늘 기록 없으면 자동완성
+                else autoFillDashboard(true); 
             });
         }
 
@@ -376,7 +473,7 @@
                 db.ref('rooms/' + currentRoom + '/settings/lastDutyIndex').set(window.tempNextIdx);
                 window.tempNextIdx = undefined; 
             }
-            alert(dateKey + " 기록이 저장되었습니다.");
+            alert(dateKey + " 기록이 성공적으로 자동기록장에 저장되었습니다.");
         }
 
         function autoFillDashboard(isInitial = false) {
@@ -404,7 +501,7 @@
             });
         }
 
-        // 달력 그리기
+        // 📅 달력 그리기 (우측 하단 배치용)
         function renderCalendar() {
             const year = calDate.getFullYear();
             const month = calDate.getMonth();
@@ -418,24 +515,18 @@
             for(let i=0; i<firstDay; i++) container.innerHTML += `<div></div>`;
             for(let i=1; i<=lastDate; i++) {
                 const dateKey = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-                const isToday = getFormattedDate(new Date()) === dateKey;
+                const isViewDate = getFormattedDate(viewDate) === dateKey;
                 const hasRecord = historyCheck[dateKey] ? 'has-record' : '';
-                container.innerHTML += `<div class="cal-date ${isToday?'today':''} ${hasRecord}" onclick="selectDate('${dateKey}')">${i}</div>`;
+                container.innerHTML += `<div class="cal-date ${isViewDate?'selected':''} ${hasRecord}" onclick="selectDate('${dateKey}')">${i}</div>`;
             }
         }
         function changeMonth(val) { calDate.setMonth(calDate.getMonth() + val); renderCalendar(); }
         function selectDate(key) {
-            const target = new Date(key);
-            viewDate = target;
+            viewDate = new Date(key);
             historyRef.child(key).once('value').then(snap => {
                 if(snap.exists()) renderBoardData(snap.val());
-                else {
-                    if(confirm(key + " 기록이 없습니다. 기본 틀을 불러올까요?")) autoFillDashboard(true);
-                }
-            });
-            document.querySelectorAll('.cal-date').forEach(el => {
-                el.classList.remove('selected');
-                if(el.innerText == target.getDate() && calDate.getMonth() == target.getMonth()) el.classList.add('selected');
+                else { if(confirm(key + " 칠판 기록이 없습니다. 이 요일의 기본 틀을 불러올까요?")) autoFillDashboard(true); }
+                renderCalendar(); // 선택 표시 업데이트
             });
         }
 
@@ -482,6 +573,10 @@
             if(localTimer.isRunning) timerRef.set({isRunning:false, endTime:0, pausedRemaining: Math.max(0, Math.ceil((localTimer.endTime - Date.now())/1000))});
             else if(localTimer.pausedRemaining > 0) timerRef.set({isRunning:true, endTime: Date.now() + localTimer.pausedRemaining*1000, pausedRemaining: localTimer.pausedRemaining});
         }
+        function startCustomTimer() {
+            const v = parseFloat(document.getElementById('custom-timer-input').value);
+            if(v > 0) { timerRef.set({isRunning:true, endTime: Date.now() + v*60*1000, pausedRemaining: v*60}); document.getElementById('custom-timer-input').value=''; }
+        }
 
         // 세팅 모달
         function openSettingsModal() { 
@@ -506,20 +601,20 @@
                 thuM: document.getElementById('set-thu-m').value, thuT: document.getElementById('set-thu-t').value,
                 friM: document.getElementById('set-fri-m').value, friT: document.getElementById('set-fri-t').value
             };
-            settingsRef.set(data); alert("저장되었습니다."); closeSettingsModal();
+            settingsRef.set(data); alert("기초 세팅이 저장되었습니다."); closeSettingsModal();
         }
 
-        // 뽑기 (간소화된 로직)
+        // 뽑기
         let remG = [], remS = [];
         function resetGroupDraw() { remG = [1,2,3,4,5,6]; document.getElementById('group-cards-container').innerHTML = remG.map(n => `<div class="flip-card group-card-size"><div class="flip-card-inner"><div class="flip-card-front">?</div><div class="flip-card-back">${n}</div></div></div>`).join(''); }
         function drawGroupCard() { 
             const cards = document.querySelectorAll('#group-cards-container .flip-card:not(.flipped)');
-            if(cards.length > 0) cards[Math.floor(Math.random()*cards.length)].classList.add('flipped');
+            if(cards.length > 0) { cards[Math.floor(Math.random()*cards.length)].classList.add('flipped'); pickSound.currentTime=0; pickSound.play().catch(e=>e); }
         }
-        function initStudentPicker() { remS = Array.from({length:24}, (_,i)=>i+1); document.getElementById('student-cards-container').innerHTML = remS.map(n => `<div class="flip-card student-card-size"><div class="flip-card-inner"><div class="flip-card-front">?</div><div class="flip-card-back">${n}</div></div></div>`).join(''); }
+        function initStudentPicker() { remS = Array.from({length:24}, (_,i)=>i+1); document.getElementById('student-cards-container').innerHTML = remS.map(n => `<div class="flip-card student-card-size"><div class="flip-card-inner"><div class="flip-card-front">👤</div><div class="flip-card-back">${n}</div></div></div>`).join(''); }
         function drawStudentCard() {
             const cards = document.querySelectorAll('#student-cards-container .flip-card:not(.flipped)');
-            if(cards.length > 0) cards[Math.floor(Math.random()*cards.length)].classList.add('flipped');
+            if(cards.length > 0) { cards[Math.floor(Math.random()*cards.length)].classList.add('flipped'); pickSound.currentTime=0; pickSound.play().catch(e=>e); }
         }
     </script>
 </body>
