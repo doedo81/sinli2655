@@ -20,6 +20,10 @@
             --dark-blue: #2c3e50;
             --white: #ffffff;
             --shadow: 0 5px 15px rgba(0,0,0,0.08);
+            
+            /* ✨ 칠판 기본 글씨 크기 변수 (JS로 조절됨) */
+            --board-font-size: 17px;
+            --board-title-size: 19px;
         }
 
         * { box-sizing: border-box; } 
@@ -47,18 +51,20 @@
         /* 인라인 편집 박스 */
         .info-box { background: #ffffff; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #e1e8ed; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
         .info-label { font-weight: 800; font-size: 14px; margin-bottom: 8px; display: block; color: var(--accent-blue); }
-        [contenteditable="true"] { outline: none; white-space: pre-wrap; min-height: 25px; transition: 0.2s; border-radius: 8px; padding: 4px; font-weight: 500; font-size: 17px; line-height: 1.6;}
+        
+        /* ✨ 타자 칠 수 있는 요소의 폰트 사이즈를 변수(--board-font-size)로 연결 */
+        [contenteditable="true"] { outline: none; white-space: pre-wrap; min-height: 25px; transition: 0.2s; border-radius: 8px; padding: 4px; font-weight: 500; font-size: var(--board-font-size); line-height: 1.6;}
         [contenteditable="true"]:focus { background: #f9fdff; box-shadow: 0 0 0 2px var(--sub-sky) inset; }
 
-        .info-content { font-size: 17px; line-height: 1.6; color: #333; flex-grow: 1; font-weight: 500;}
-        .large-text { font-size: 19px; font-weight: 700; color: var(--dark-blue); }
+        .info-content { font-size: var(--board-font-size); line-height: 1.6; color: #333; flex-grow: 1; font-weight: 500;}
+        .large-text { font-size: var(--board-title-size); font-weight: 700; color: var(--dark-blue); }
 
         /* 시간표 */
         .tt-row { display: flex; margin-bottom: 12px; align-items: baseline; border-bottom: 1px solid #f0f4f8; padding-bottom: 10px;}
-        .tt-label { font-weight: 800; color: #f57c00; width: 65px; flex-shrink: 0; font-size: 17px; }
-        .tt-val { flex-grow: 1; color: #333; }
+        .tt-label { font-weight: 800; color: #f57c00; width: 4.5em; flex-shrink: 0; font-size: var(--board-font-size); transition: 0.2s;}
+        .tt-val { flex-grow: 1; color: #333; font-size: var(--board-font-size); transition: 0.2s;}
 
-        /* 📅 달력 위젯 (우측 하단 배치용) */
+        /* 📅 달력 위젯 */
         .calendar-card { background: #fdfdfd; border-radius: 12px; padding: 12px; margin-top: 15px; border: 2px solid var(--sub-sky); box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);}
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 800; color: var(--accent-blue); font-size: 15px;}
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
@@ -89,7 +95,7 @@
         .timer-btn { padding: 10px; border: none; border-radius: 10px; background: var(--main-sky); cursor: pointer; font-weight: bold; font-family: 'Pretendard'; }
         .timer-start { background: #ff5252; color: white; grid-column: span 2; }
 
-        /* 기타 (기존 기능) */
+        /* 기타 */
         .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; } 
         .group-card { background-color: var(--white); border-radius: 15px; padding: 15px; border: 1px solid var(--sub-sky); text-align: center; }
         .score { font-size: 55px; font-weight: 800; color: var(--accent-blue); margin: 10px 0; font-variant-numeric: tabular-nums;}
@@ -110,7 +116,6 @@
 <body>
 
     <div class="full-overlay" id="auth-overlay">
-        
         <div class="login-box" id="login-box">
             <h2 style="margin:0 0 10px 0; color:var(--dark-blue);">🔐 로그인 필요</h2>
             <p style="color:#78909c; font-size:14px; margin-bottom:25px;">보안을 위해 선생님의 구글 계정으로<br>로그인해 주세요.</p>
@@ -119,7 +124,6 @@
                 Google 계정으로 로그인
             </button>
         </div>
-
         <div class="login-box" id="room-box">
             <div style="color:var(--accent-blue); font-size:30px; margin-bottom:10px;"><i class="fa-solid fa-chalkboard-user"></i></div>
             <h2 style="margin:0 0 10px 0; color:var(--dark-blue);">🌤️ 스카이 클래스</h2>
@@ -149,10 +153,19 @@
         </div>
 
         <div id="board-tab" class="content-section active">
-            <div style="display: flex; justify-content: flex-end; margin-bottom: 12px; gap:8px;">
-                <button class="action-btn" style="background:#5c6bc0;" onclick="autoFillDashboard()">🪄 오늘 아침 자동 완성</button>
-                <button class="action-btn" style="background:#0288d1;" onclick="saveDashboard()">💾 현재 칠판 자동기록 저장</button>
-                <button class="reset-btn" onclick="openSettingsModal()">⚙️ 기초 세팅</button>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; gap:8px; align-items: center; flex-wrap: wrap;">
+                
+                <div style="display:flex; align-items:center; gap:5px; background:white; padding:5px 10px; border-radius:10px; border:1px solid #cfd8dc; box-shadow:var(--shadow);">
+                    <span style="font-size:14px; font-weight:bold; color:#546e7a; margin-right:5px;">🔍 칠판 글씨 크기</span>
+                    <button class="reset-btn" style="padding:4px 10px; background:#e1f5fe; color:#0288d1; border:1px solid #b3e5fc;" onclick="changeFontSize(2)">➕ 확대</button>
+                    <button class="reset-btn" style="padding:4px 10px; background:#fff3e0; color:#e65100; border:1px solid #ffe0b2;" onclick="changeFontSize(-2)">➖ 축소</button>
+                </div>
+
+                <div style="display:flex; gap:8px;">
+                    <button class="action-btn" style="background:#5c6bc0;" onclick="autoFillDashboard()">🪄 오늘 아침 자동 완성</button>
+                    <button class="action-btn" style="background:#0288d1;" onclick="saveDashboard()">💾 현재 칠판 자동기록 저장</button>
+                    <button class="reset-btn" onclick="openSettingsModal()">⚙️ 기초 세팅</button>
+                </div>
             </div>
 
             <div class="dashboard-grid">
@@ -175,7 +188,7 @@
                     <div class="info-box" style="margin-bottom:0;">
                         <span class="info-label" style="color:#7b1fa2;">🧹 당번 (& 할 일)</span>
                         <div class="info-content large-text" id="view-duty-nums" contenteditable="true"></div>
-                        <div class="info-content" id="view-duty-tasks" contenteditable="true" style="font-size:14px; margin-top:5px; border-top:1px dashed #eee; padding-top:5px;"></div>
+                        <div class="info-content" id="view-duty-tasks" contenteditable="true" style="font-size:calc(var(--board-font-size) - 2px); margin-top:5px; border-top:1px dashed #eee; padding-top:5px;"></div>
                     </div>
                 </div>
 
@@ -310,6 +323,26 @@
 
     <script>
         // ==========================================
+        // ✨ 글씨 크기 조절 시스템 (localStorage 기억장치 포함)
+        // ==========================================
+        let currentBoardFontSize = 17;
+
+        function applyFontSize() {
+            document.documentElement.style.setProperty('--board-font-size', currentBoardFontSize + 'px');
+            document.documentElement.style.setProperty('--board-title-size', (currentBoardFontSize + 2) + 'px');
+        }
+
+        function changeFontSize(step) {
+            currentBoardFontSize += step;
+            if(currentBoardFontSize < 12) currentBoardFontSize = 12; // 너무 작아지지 않게 방지
+            if(currentBoardFontSize > 35) currentBoardFontSize = 35; // 너무 커지지 않게 방지
+            
+            applyFontSize();
+            // 브라우저에 현재 폰트 사이즈 저장
+            localStorage.setItem('myCustomFontSize', currentBoardFontSize);
+        }
+
+        // ==========================================
         // 🚨 파이어베이스 연동 
         // ==========================================
         const firebaseConfig = {
@@ -336,11 +369,18 @@
         let viewDate = new Date(); 
         let calDate = new Date();  
 
-        // 🔐 구글 로그인 및 권한 관리
+        // 초기 구동 세팅
         window.onload = () => {
+            // 저장된 글씨 크기 불러오기
+            const savedSize = localStorage.getItem('myCustomFontSize');
+            if(savedSize) {
+                currentBoardFontSize = parseInt(savedSize);
+                applyFontSize();
+            }
+
+            // 로그인 체크
             auth.onAuthStateChanged(user => {
                 if(user) {
-                    // 로그인 됨 -> 방 이름 입력창 띄우기
                     document.getElementById('login-box').style.display = 'none';
                     document.getElementById('room-box').style.display = 'block';
                     document.getElementById('user-profile').innerText = user.displayName + " 선생님";
@@ -348,7 +388,6 @@
                     const savedRoom = localStorage.getItem('classRoomName');
                     if(savedRoom) { document.getElementById('room-name-input').value = savedRoom; enterRoom(); }
                 } else {
-                    // 로그인 안 됨 -> 구글 로그인 버튼 띄우기
                     document.getElementById('auth-overlay').style.display = 'flex';
                     document.getElementById('login-box').style.display = 'block';
                     document.getElementById('room-box').style.display = 'none';
@@ -359,16 +398,11 @@
 
         function loginWithGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).catch(error => {
-                alert("로그인 중 에러가 발생했습니다. 파이어베이스 콘솔에서 Google 로그인을 사용 설정했는지 확인해주세요! (" + error.message + ")");
-            });
+            auth.signInWithPopup(provider).catch(error => alert("로그인 중 에러가 발생했습니다: " + error.message));
         }
 
         function logout() {
-            auth.signOut().then(() => {
-                localStorage.removeItem('classRoomName');
-                location.reload();
-            });
+            auth.signOut().then(() => { localStorage.removeItem('classRoomName'); location.reload(); });
         }
 
         function enterRoom() {
@@ -403,14 +437,8 @@
                 const data = snap.val() || {};
                 renderBoardData(data);
             });
-            historyRef.on('value', snap => {
-                historyCheck = snap.val() || {};
-                renderCalendar();
-            });
-            groupSettingsRef.on('value', snap => {
-                numberOfGroups = snap.val() || 6;
-                buildScoreboardHTML();
-            });
+            historyRef.on('value', snap => { historyCheck = snap.val() || {}; renderCalendar(); });
+            groupSettingsRef.on('value', snap => { numberOfGroups = snap.val() || 6; buildScoreboardHTML(); });
             scoresRef.on('value', snap => {
                 const data = snap.val() || {};
                 for (let i = 0; i < numberOfGroups; i++) {
@@ -482,7 +510,7 @@
                 const def = snap.val() || {};
                 const days = ['일','월','화','수','목','금','토'];
                 const dayStr = days[viewDate.getDay()];
-                document.getElementById('view-date').innerText = `${viewDate.getMonth()+1}월 ${viewDate.getDate()}일 ${dayStr}요일 ☀️ 날씨입력`;
+                document.getElementById('view-date').innerText = `${viewDate.getMonth()+1}월 ${viewDate.getDate()}일 ${dayStr}요일`;
                 document.getElementById('view-duty-tasks').innerText = def.duty || "";
                 let targetM = "", targetT = "";
                 if(dayStr === '월') { targetM = def.monM; targetT = def.monT; }
@@ -501,17 +529,12 @@
             });
         }
 
-        // 📅 달력 그리기 (우측 하단 배치용)
         function renderCalendar() {
-            const year = calDate.getFullYear();
-            const month = calDate.getMonth();
+            const year = calDate.getFullYear(), month = calDate.getMonth();
             document.getElementById('cal-month-title').innerText = `${year}년 ${month + 1}월`;
-            const firstDay = new Date(year, month, 1).getDay();
-            const lastDate = new Date(year, month + 1, 0).getDate();
-            const container = document.getElementById('cal-dates');
-            container.innerHTML = '';
-            const dayLabels = ['일','월','화','수','목','금','토'];
-            dayLabels.forEach(d => container.innerHTML += `<div class="cal-day">${d}</div>`);
+            const firstDay = new Date(year, month, 1).getDay(), lastDate = new Date(year, month + 1, 0).getDate();
+            const container = document.getElementById('cal-dates'); container.innerHTML = '';
+            ['일','월','화','수','목','금','토'].forEach(d => container.innerHTML += `<div class="cal-day">${d}</div>`);
             for(let i=0; i<firstDay; i++) container.innerHTML += `<div></div>`;
             for(let i=1; i<=lastDate; i++) {
                 const dateKey = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
@@ -526,7 +549,7 @@
             historyRef.child(key).once('value').then(snap => {
                 if(snap.exists()) renderBoardData(snap.val());
                 else { if(confirm(key + " 칠판 기록이 없습니다. 이 요일의 기본 틀을 불러올까요?")) autoFillDashboard(true); }
-                renderCalendar(); // 선택 표시 업데이트
+                renderCalendar(); 
             });
         }
 
@@ -547,20 +570,16 @@
         function changeScore(i, a) { scoresRef.child(String(i)).set((currentScores[i]||0) + a); }
         function updateRankings() {
             let rank = []; for(let i=0; i<numberOfGroups; i++) rank.push({g: i+1, s: currentScores[i]||0});
-            rank.sort((a,b) => b.s - a.s);
-            document.getElementById('ranking-board').innerHTML = '🏆 ' + rank.map(r => `${r.g}모둠`).join(' - ');
+            rank.sort((a,b) => b.s - a.s); document.getElementById('ranking-board').innerHTML = '🏆 ' + rank.map(r => `${r.g}모둠`).join(' - ');
         }
         function resetAllScores() { if(confirm("초기화할까요?")) scoresRef.set({}); }
 
-        // 타이머
         function toggleTimerBox() { const b = document.getElementById('timer-box'); b.style.display = (b.style.display==='block')?'none':'block'; }
-        let localTimer = { isRunning: false, endTime: 0, pausedRemaining: 0 };
-        let timerInterval;
+        let localTimer = { isRunning: false, endTime: 0, pausedRemaining: 0 }; let timerInterval;
         function updateTimerUI(state) {
             localTimer = state; clearInterval(timerInterval);
             if(state.isRunning) timerInterval = setInterval(refreshTimer, 200);
-            refreshTimer();
-            document.getElementById('timer-toggle-btn').innerText = state.isRunning ? '정지' : '시작';
+            refreshTimer(); document.getElementById('timer-toggle-btn').innerText = state.isRunning ? '정지' : '시작';
         }
         function refreshTimer() {
             let s = localTimer.pausedRemaining;
@@ -578,10 +597,16 @@
             if(v > 0) { timerRef.set({isRunning:true, endTime: Date.now() + v*60*1000, pausedRemaining: v*60}); document.getElementById('custom-timer-input').value=''; }
         }
 
-        // 세팅 모달
         function openSettingsModal() { 
             settingsRef.once('value').then(snap => {
-                const d = snap.val() || {};
+                const d = snap.val() || {
+                    duty: "1. 창문 열고 닫기 (10분)\n2. 교실 앞뒤 쓸기\n3. 공기청정기 켜기\n4. 연필깎이 통 비우기\n5. 선생님 도우미",
+                    monM: "독서", monT: "국어 : \n수학 : \n영어 : \n과학 : \n과학 : \n체육 : ",
+                    tueM: "독서", tueT: "국어 : \n국어 : \n수학 : \n사회 : \n음악 : \n미술 : ",
+                    wedM: "독서", wedT: "창체 : \n창체 : \n과학 : \n과학 : \n음악 : \n",
+                    thuM: "독서", thuT: "수학 : \n사회 : \n국어 : \n체육 : \n영어 : \n실과 : ",
+                    friM: "독서", friT: "국어 : \n수학 : \n사회 : \n실과 : \n실과 : \n창체 : "
+                };
                 document.getElementById('set-duty-tasks').value = d.duty || "";
                 document.getElementById('set-mon-m').value = d.monM || ""; document.getElementById('set-mon-t').value = d.monT || "";
                 document.getElementById('set-tue-m').value = d.tueM || ""; document.getElementById('set-tue-t').value = d.tueT || "";
@@ -601,10 +626,9 @@
                 thuM: document.getElementById('set-thu-m').value, thuT: document.getElementById('set-thu-t').value,
                 friM: document.getElementById('set-fri-m').value, friT: document.getElementById('set-fri-t').value
             };
-            settingsRef.set(data); alert("기초 세팅이 저장되었습니다."); closeSettingsModal();
+            settingsRef.set(data); alert("저장되었습니다."); closeSettingsModal();
         }
 
-        // 뽑기
         let remG = [], remS = [];
         function resetGroupDraw() { remG = [1,2,3,4,5,6]; document.getElementById('group-cards-container').innerHTML = remG.map(n => `<div class="flip-card group-card-size"><div class="flip-card-inner"><div class="flip-card-front">?</div><div class="flip-card-back">${n}</div></div></div>`).join(''); }
         function drawGroupCard() { 
