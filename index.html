@@ -89,13 +89,12 @@
         .timer-btn { padding: 10px; border: none; border-radius: 10px; background: var(--main-sky); cursor: pointer; font-weight: bold; font-family: 'Pretendard'; }
         .timer-start { background: #ff5252; color: white; grid-column: span 2; }
 
-        /* 🌟 점수판 디자인 (버튼 색상 최적화) */
+        /* 🌟 점수판 디자인 */
         .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; } 
         .group-card { background-color: var(--white); border-radius: 15px; padding: 20px 15px; border: 2px solid var(--sub-sky); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.03);}
         .score { font-size: 60px; font-weight: 800; color: var(--accent-blue); margin: 15px 0; font-variant-numeric: tabular-nums; line-height: 1;}
         .button-group { display: flex; justify-content: center; gap: 10px; margin-top: 10px;}
         
-        /* + - 버튼 입체감 및 색상 수정 */
         .score-btn { width: 50px; height: 45px; border: none; border-radius: 10px; cursor: pointer; color: white; font-weight: bold; font-size: 24px; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
         .score-btn:active { transform: translateY(3px); box-shadow: none !important; }
         .btn-plus { background-color: #039be5; box-shadow: 0 4px 0 #0277bd; }
@@ -275,6 +274,9 @@
                 <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
                     <input type="date" id="hw-date" style="padding:10px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';">
                     <input type="number" id="hw-total" value="24" class="setting-input" title="총 인원">명
+                    <input type="text" id="hw-category" list="category-list" placeholder="과목 (예: 수학)" style="width:100px; padding:10px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';">
+                    <datalist id="category-list"><option value="수학"></option><option value="국어"></option><option value="일기"></option></datalist>
+                    
                     <input type="text" id="hw-title" placeholder="과제 내용 (예: 수학익힘책 10쪽)" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';">
                     <button class="action-btn" onclick="addHomework()">추가</button>
                 </div>
@@ -287,10 +289,12 @@
             <div class="picker-box">
                 <h2>📊 과제 제출 통계</h2>
                 <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+                    <button class="reset-btn" style="background:#0288d1;" onclick="setQuickDate('week')">이번 주</button>
+                    <button class="reset-btn" style="background:#5c6bc0;" onclick="setQuickDate('month')">이번 달</button>
                     <input type="date" id="stat-start-date" style="padding:10px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';"> ~ <input type="date" id="stat-end-date" style="padding:10px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';">
                     <button class="action-btn" onclick="calculateStats()">조회</button>
                 </div>
-                <div id="stat-summary" style="font-weight:bold; margin-bottom:15px; color:var(--dark-blue);"></div>
+                <div id="stat-summary" style="font-weight:bold; margin-bottom:15px; color:var(--dark-blue);">조회할 날짜를 선택해주세요.</div>
                 <div id="stat-results-area" style="text-align:left; display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:15px;"></div>
             </div>
         </div>
@@ -331,6 +335,13 @@
     </div>
 
     <script>
+        // ==========================================
+        // ✨ 유틸리티 함수
+        // ==========================================
+        function getFormattedDate(d) { 
+            return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0'); 
+        }
+
         // ==========================================
         // ✨ 글씨 크기 조절 시스템
         // ==========================================
@@ -377,6 +388,15 @@
         window.onload = () => {
             const savedSize = localStorage.getItem('myCustomFontSize');
             if(savedSize) { currentBoardFontSize = parseInt(savedSize); applyFontSize(); }
+
+            // ✨ 통계 및 과제 날짜 안전하게 초기화
+            try {
+                const todayStr = getFormattedDate(new Date());
+                document.getElementById('hw-date').value = todayStr;
+                const lastWeek = new Date(); lastWeek.setDate(lastWeek.getDate() - 6);
+                document.getElementById('stat-start-date').value = getFormattedDate(lastWeek);
+                document.getElementById('stat-end-date').value = todayStr;
+            } catch(e) {}
 
             auth.onAuthStateChanged(user => {
                 if(user) {
@@ -473,19 +493,22 @@
                 }
             });
             tasksRef.on('value', snap => { currentTasks = snap.val() || {}; buildTaskBoard(); });
+            
+            // ✨ 과제 리스트 실시간 연동
             hwRef.on('value', snap => {
-                allHomeworks = []; snap.forEach(c => { allHomeworks.push({id: c.key, ...c.val()}); });
-                allHomeworks.reverse(); renderHomeworkList();
+                allHomeworks = []; 
+                snap.forEach(c => { allHomeworks.push({id: c.key, ...c.val()}); });
+                allHomeworks.reverse(); // 최신순
+                renderHomeworkList();
                 if(document.getElementById('stats-tab').classList.contains('active')) calculateStats();
             });
+            
             timerRef.on('value', snap => { updateTimerUI(snap.val() || { isRunning: false, endTime: 0, pausedRemaining: 0 }); });
         }
 
         // ==========================================
         // 📋 칠판 & 달력 로직
         // ==========================================
-        function getFormattedDate(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0'); }
-        
         function loadTodayBoard() {
             const todayKey = getFormattedDate(new Date());
             historyRef.child(todayKey).once('value').then(snap => {
@@ -609,15 +632,15 @@
             if (!resetConfirmState) {
                 resetConfirmState = true;
                 btn.innerText = "정말 0점으로 초기화 시키겠습니까?";
-                btn.style.backgroundColor = "#c62828"; // 더 진한 빨간색
+                btn.style.backgroundColor = "#c62828";
                 resetTimer = setTimeout(() => {
                     resetConfirmState = false;
                     btn.innerText = "⚠️ 모둠 점수 0점 초기화";
-                    btn.style.backgroundColor = "#e53935"; // 원래 빨간색
-                }, 3000); // 3초 대기
+                    btn.style.backgroundColor = "#e53935"; 
+                }, 3000); 
             } else {
                 clearTimeout(resetTimer);
-                scoresRef.set({}); // 진짜로 초기화!
+                scoresRef.set({}); 
                 resetConfirmState = false;
                 btn.innerText = "⚠️ 모둠 점수 0점 초기화";
                 btn.style.backgroundColor = "#e53935";
@@ -688,44 +711,119 @@
         }
         function startCustomTimer() { const v = parseFloat(document.getElementById('custom-timer-input').value); if(v > 0) timerRef.set({isRunning:true, endTime: Date.now() + v*60*1000, pausedRemaining: v*60}); document.getElementById('custom-timer-input').value=''; }
 
-        // 과제 & 통계
+        // ==========================================
+        // ✨ 4. 과제 & 통계 완벽 복구
+        // ==========================================
         function addHomework() {
-            const d = document.getElementById('hw-date').value, t = document.getElementById('hw-title').value; if(!t || !d) return alert("날짜와 내용을 입력해주세요!");
-            const tot = parseInt(document.getElementById('hw-total').value)||24, abs = document.getElementById('hw-absent').value.split(',').map(n=>parseInt(n.trim()));
-            let list = {}; for(let i=1; i<=tot; i++) list[i] = abs.includes(i) ? 'excused' : false;
-            hwRef.push({date:d, title:t, total:tot, checklist:list, isArchived:false}); document.getElementById('hw-title').value = "";
+            const d = document.getElementById('hw-date').value;
+            const c = document.getElementById('hw-category').value || '미분류';
+            const t = document.getElementById('hw-title').value; 
+            
+            if(!t || !d) return alert("날짜와 내용을 모두 입력해주세요!");
+            
+            const tot = parseInt(document.getElementById('hw-total').value)||24;
+            const abs = document.getElementById('hw-absent').value.split(',').map(n=>parseInt(n.trim()));
+            let list = {}; 
+            for(let i=1; i<=tot; i++) list[i] = abs.includes(i) ? 'excused' : false;
+            
+            // 파이어베이스에 추가
+            hwRef.push({date:d, category:c, title:t, total:tot, checklist:list, isArchived:false}); 
+            document.getElementById('hw-title').value = "";
         }
+
         function renderHomeworkList() {
-            const div = document.getElementById('homework-list'); div.innerHTML = ''; const showA = document.getElementById('show-archived').checked;
+            const div = document.getElementById('homework-list'); 
+            div.innerHTML = ''; 
+            const showA = document.getElementById('show-archived').checked;
+            
             allHomeworks.forEach(hw => {
                 if(hw.isArchived && !showA) return;
+                
                 let btns = '', done = 0, act = hw.total;
                 for(let i=1; i<=hw.total; i++) {
                     const s = hw.checklist ? hw.checklist[i] : false;
                     if(s===true) done++; else if(s==='excused') act--;
-                    btns += `<button class="student-btn ${s===true?'done':(s==='excused'?'excused':'')}" onclick="cycleH('${hw.id}',${i})">${i}</button>`;
+                    let btnClass = s===true ? 'done' : (s==='excused' ? 'excused' : '');
+                    btns += `<button class="student-btn ${btnClass}" onclick="cycleH('${hw.id}',${i})">${i}</button>`;
                 }
-                div.innerHTML += `<div class="hw-card"><div style="display:flex; justify-content:space-between;"><div><b style="font-size:16px; color:var(--dark-blue);">${hw.title}</b> <span style="font-size:13px; color:#666;">(${hw.date}) | 제출 ${done}/${act}</span></div><div><button class="reset-btn" style="padding:4px 8px;font-size:12px;" onclick="archiveH('${hw.id}',${hw.isArchived})">${hw.isArchived?'보관해제':'보관함 넣기'}</button> <button class="reset-btn" style="padding:4px 8px;font-size:12px;background:#e53935;" onclick="deleteH('${hw.id}')">삭제</button></div></div><div class="student-grid">${btns}</div></div>`;
+                
+                const catStr = hw.category && hw.category !== '미분류' ? `[${hw.category}] ` : "";
+                
+                div.innerHTML += `
+                <div class="hw-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <b style="font-size:16px; color:var(--dark-blue);">${catStr}${hw.title}</b> 
+                            <span style="font-size:13px; color:#666; margin-left:5px;">(${hw.date}) | 제출 ${done}/${act}</span>
+                        </div>
+                        <div>
+                            <button class="reset-btn" style="padding:4px 8px;font-size:12px;" onclick="archiveH('${hw.id}',${hw.isArchived})">${hw.isArchived?'보관해제':'보관함 넣기'}</button> 
+                            <button class="reset-btn" style="padding:4px 8px;font-size:12px;background:#e53935;" onclick="deleteH('${hw.id}')">삭제</button>
+                        </div>
+                    </div>
+                    <div class="student-grid">${btns}</div>
+                </div>`;
             });
         }
-        function cycleH(id, n) { const hw = allHomeworks.find(x => x.id === id); const s = hw.checklist ? hw.checklist[n] : false; const next = (s===false||s===undefined)?true:(s===true?'excused':false); hwRef.child(id).child('checklist').child(String(n)).set(next); }
+
+        function cycleH(id, n) { 
+            const hw = allHomeworks.find(x => x.id === id); 
+            const s = hw.checklist ? hw.checklist[n] : false; 
+            const next = (s===false||s===undefined) ? true : (s===true?'excused':false); 
+            hwRef.child(id).child('checklist').child(String(n)).set(next); 
+        }
         function deleteH(id) { if(confirm("삭제할까요?")) hwRef.child(id).remove(); }
         function archiveH(id, s) { hwRef.child(id).child('isArchived').set(!s); }
         
+        function setQuickDate(t) {
+            const s = document.getElementById('stat-start-date');
+            const e = document.getElementById('stat-end-date');
+            const d = new Date();
+            
+            if(t==='week') { 
+                let l = new Date(); l.setDate(d.getDate()-6); 
+                s.value = getFormattedDate(l); 
+                e.value = getFormattedDate(d); 
+            } else if(t==='month') { 
+                let l = new Date(d.getFullYear(), d.getMonth(), 1); 
+                let last = new Date(d.getFullYear(), d.getMonth()+1, 0); 
+                s.value = getFormattedDate(l); 
+                e.value = getFormattedDate(last); 
+            }
+            calculateStats();
+        }
+
         function calculateStats() {
-            const s = document.getElementById('stat-start-date').value, e = document.getElementById('stat-end-date').value;
-            const res = document.getElementById('stat-results-area'), sum = document.getElementById('stat-summary');
+            const s = document.getElementById('stat-start-date').value;
+            const e = document.getElementById('stat-end-date').value;
+            const res = document.getElementById('stat-results-area');
+            const sum = document.getElementById('stat-summary');
             res.innerHTML = ''; 
-            if(!s || !e) return sum.innerText = "조회할 날짜를 선택해주세요.";
+            
+            if(!s || !e) { sum.innerText = "조회할 날짜를 선택해주세요."; return; }
+            
             const filt = allHomeworks.filter(h => h.date >= s && h.date <= e);
             if(!filt.length) { sum.innerText = "해당 기간에 등록된 과제가 없습니다."; return; }
             sum.innerText = `총 ${filt.length}개 과제 현황 (${s} ~ ${e})`;
             
             filt.forEach(hw => {
                 let done = 0, act = hw.total; 
-                for(let i in hw.checklist) { if(hw.checklist[i]===true) done++; else if(hw.checklist[i]==='excused') act--; }
+                for(let i in hw.checklist) { 
+                    if(hw.checklist[i]===true) done++; 
+                    else if(hw.checklist[i]==='excused') act--; 
+                }
                 let p = act > 0 ? Math.round(done/act*100) : 0;
-                res.innerHTML += `<div style="background:white; border:1px solid #eee; padding:15px; border-radius:10px; box-shadow:0 2px 4px rgba(0,0,0,0.02);"><b>${hw.title}</b><br><small style="color:#666;">${hw.date}</small><div style="background:#f0f4f8; height:12px; border-radius:6px; margin:8px 0; overflow:hidden;"><div style="background:var(--accent-blue); height:100%; width:${p}%;"></div></div><div style="font-size:13px; font-weight:bold; color:var(--dark-blue); text-align:right;">${p}% (${done}/${act})</div></div>`;
+                const catStr = hw.category && hw.category !== '미분류' ? `[${hw.category}] ` : "";
+                
+                res.innerHTML += `
+                <div style="background:white; border:1px solid #eee; padding:15px; border-radius:10px; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
+                    <b style="font-size:15px; color:var(--dark-blue);">${catStr}${hw.title}</b><br>
+                    <small style="color:#666;">${hw.date}</small>
+                    <div style="background:#f0f4f8; height:12px; border-radius:6px; margin:8px 0; overflow:hidden;">
+                        <div style="background:var(--accent-blue); height:100%; width:${p}%;"></div>
+                    </div>
+                    <div style="font-size:13px; font-weight:bold; color:var(--dark-blue); text-align:right;">${p}% (${done}/${act})</div>
+                </div>`;
             });
         }
 
