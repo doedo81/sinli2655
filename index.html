@@ -552,4 +552,237 @@
             document.getElementById('ranking-board').innerHTML = '🏆 ' + rank.map(r => `${r.g}모둠`).join(' - ');
         }
         
-        function changeScore(i, a) { scoresRef.child(String(i
+        function changeScore(i, a) { scoresRef.child(String(i)).set((currentScores[i]||0) + a); }
+        function setScoreToZero(i) { scoresRef.child(String(i)).set(0); }
+        function resetAllScores() { if(confirm("점수를 초기화할까요?")) scoresRef.set({}); }
+
+        function buildTaskBoard() {
+            const div = document.getElementById('task-board'); 
+            div.innerHTML = '';
+            for(let i=0; i<numberOfGroups; i++){
+                const done = currentTasks[i] || false;
+                div.innerHTML += `
+                    <div class="task-card ${done ? 'done' : ''}" onclick="toggleTask(${i})">
+                        <div class="task-toggle">${i+1}모둠<br>${done ? '✅' : '⬜'}</div>
+                    </div>`;
+            }
+        }
+        function toggleTask(i) { tasksRef.child(String(i)).set(!currentTasks[i]); }
+        function resetTasks() { if(confirm("모둠 체크판을 모두 비울까요?")) tasksRef.set({}); }
+
+        // ==========================================
+        // ⏱️ 2. 타이머 & 미니 점수판
+        // ==========================================
+        let localTimerState = { isRunning: false, endTime: 0, pausedRemaining: 0 };
+        let timerInterval;
+        
+        function updateTimerUI(state) {
+            localTimerState = state;
+            clearInterval(timerInterval);
+            if(state.isRunning) timerInterval = setInterval(refreshTimerDisplay, 200);
+            refreshTimerDisplay();
+            const btn = document.getElementById('timer-toggle-btn');
+            btn.innerText = state.isRunning ? '정지' : '시작'; 
+            btn.style.background = state.isRunning ? '#95a5a6' : '#e74c3c';
+        }
+
+        function refreshTimerDisplay() {
+            let secs = localTimerState.pausedRemaining;
+            if(localTimerState.isRunning) {
+                secs = Math.max(0, Math.ceil((localTimerState.endTime - Date.now())/1000));
+                if(secs === 0) { 
+                    clearInterval(timerInterval); 
+                    timerRef.update({isRunning:false, pausedRemaining:0}); 
+                    timerSound.currentTime = 0; 
+                    timerSound.play().catch(e=>e); 
+                }
+            }
+            document.getElementById('timer-display').innerText = String(Math.floor(secs/60)).padStart(2,'0') + ':' + String(secs%60).padStart(2,'0');
+        }
+
+        function setTimer(m) { timerRef.set({isRunning:false, endTime:0, pausedRemaining: m*60}); document.getElementById('custom-timer-input').value='';}
+        function toggleTimer() {
+            if(localTimerState.isRunning) timerRef.set({isRunning:false, endTime:0, pausedRemaining: Math.max(0, Math.ceil((localTimerState.endTime - Date.now())/1000))});
+            else if(localTimerState.pausedRemaining > 0) timerRef.set({isRunning:true, endTime: Date.now() + localTimerState.pausedRemaining*1000, pausedRemaining: localTimerState.pausedRemaining});
+            else startCustomTimer();
+        }
+        function startCustomTimer() {
+            const v = parseFloat(document.getElementById('custom-timer-input').value);
+            if(v > 0) { timerRef.set({isRunning:true, endTime: Date.now() + v*60*1000, pausedRemaining: v*60}); document.getElementById('custom-timer-input').value=''; }
+        }
+
+        function buildMiniScoreboard() {
+            const div = document.getElementById('mini-scoreboard'); 
+            div.innerHTML = '';
+            for(let i=0; i<numberOfGroups; i++) {
+                div.innerHTML += `
+                <div class="mini-card">
+                    <div style="font-weight:bold; font-size:12px;">${i+1}모둠</div>
+                    <div class="mini-score-val" id="mini-score-${i}">0</div>
+                    <div style="display:flex; justify-content:center; gap:3px;">
+                        <button class="mini-btn btn-plus" onclick="miniS(${i},1)">+</button>
+                        <button class="mini-btn btn-minus" onclick="miniS(${i},-1)">-</button>
+                    </div>
+                </div>`;
+            }
+        }
+        function miniS(i, a) { miniScoresRef.child(String(i)).set((currentMiniScores[i]||0) + a); }
+        function resetMiniScores() { if(confirm("초기화할까요?")) miniScoresRef.set({}); }
+
+        // ==========================================
+        // 🎲 3. 뽑기
+        // ==========================================
+        let remG = [], grpCount = 0;
+        function resetGroupDraw() {
+            remG = Array.from({length:numberOfGroups}, (_, i) => i+1); 
+            grpCount = 0;
+            const con = document.getElementById('group-cards-container'); 
+            con.innerHTML = '';
+            for(let i=0; i<numberOfGroups; i++) {
+                con.innerHTML += `<div class="flip-card group-card-size" id="gc-${i}"><div class="flip-card-inner"><div class="flip-card-front">❓</div><div class="flip-card-back" id="gcb-${i}"></div></div></div>`;
+            }
+            document.getElementById('group-history').innerText = '뽑힌 모둠: 없음';
+        }
+        function drawGroupCard() {
+            if(remG.length === 0) return alert("모든 카드를 뽑았습니다!");
+            const index = Math.floor(Math.random()*remG.length);
+            const p = remG.splice(index, 1)[0]; 
+            
+            pickSound.currentTime=0; 
+            pickSound.play().catch(e=>e);
+
+            const backEl = document.getElementById(`gcb-${grpCount}`);
+            const cardEl = document.getElementById(`gc-${grpCount}`);
+            if(backEl && cardEl) {
+                backEl.innerText = p; 
+                cardEl.classList.add('flipped');
+                grpCount++; 
+                document.getElementById('group-history').innerText = `뽑은 카드 수: ${grpCount}개`;
+            }
+        }
+
+        let remS = [], stuCount = 0;
+        function initStudentPicker() {
+            const t = parseInt(document.getElementById('picker-total').value) || 24;
+            const a = document.getElementById('picker-absent').value.split(',').map(n=>parseInt(n.trim()));
+            remS = []; 
+            for(let i=1; i<=t; i++) { if(!a.includes(i)) remS.push(i); }
+            stuCount = 0; 
+            const con = document.getElementById('student-cards-container'); 
+            con.innerHTML = '';
+            for(let i=0; i<remS.length; i++) {
+                con.innerHTML += `<div class="flip-card student-card-size" id="sc-${i}"><div class="flip-card-inner"><div class="flip-card-front">👤</div><div class="flip-card-back" id="scb-${i}"></div></div></div>`;
+            }
+            document.getElementById('student-history').innerText = '뽑힌 번호: 없음';
+        }
+        function drawStudentCard() {
+            if(remS.length === 0) return alert("출석한 모든 학생을 뽑았습니다!");
+            const p = remS.splice(Math.floor(Math.random()*remS.length), 1)[0]; 
+            
+            pickSound.currentTime=0; 
+            pickSound.play().catch(e=>e);
+
+            const backEl = document.getElementById(`scb-${stuCount}`);
+            const cardEl = document.getElementById(`sc-${stuCount}`);
+            if(backEl && cardEl) {
+                backEl.innerText = p; 
+                cardEl.classList.add('flipped');
+                stuCount++; 
+                document.getElementById('student-history').innerText = `마지막 뽑힌 번호: ${p}`;
+            }
+        }
+
+        // ==========================================
+        // 📝 4. 과제 & 통계
+        // ==========================================
+        function addHomework() {
+            const d = document.getElementById('hw-date').value; 
+            const c = document.getElementById('hw-category').value || '미분류'; 
+            const t = document.getElementById('hw-title').value; 
+            const tot = parseInt(document.getElementById('hw-total').value) || 24; 
+            const abs = document.getElementById('hw-absent').value.split(',').map(n=>parseInt(n.trim()));
+            
+            if(!t) return alert("내용을 입력해주세요!");
+            let list = {}; 
+            for(let i=1; i<=tot; i++) list[i] = abs.includes(i) ? 'excused' : false;
+            
+            hwRef.push({date:d, category:c, title:t, total:tot, checklist:list, isArchived:false, createdAt:firebase.database.ServerValue.TIMESTAMP});
+            document.getElementById('hw-title').value = ''; document.getElementById('hw-absent').value = '';
+        }
+
+        function renderHomeworkList() {
+            const div = document.getElementById('homework-list'); 
+            div.innerHTML = ''; 
+            const showA = document.getElementById('show-archived').checked;
+            
+            allHomeworks.forEach(hw => {
+                if(hw.isArchived && !showA) return;
+                let btns = '', done = 0, act = hw.total;
+                for(let i=1; i<=hw.total; i++) {
+                    const s = hw.checklist ? hw.checklist[i] : false; 
+                    let cls = '';
+                    if(s===true) { cls='done'; done++; } 
+                    else if(s==='excused') { cls='excused'; act--; }
+                    btns += `<button class="student-btn ${cls}" onclick="cycleH('${hw.id}', ${i})">${i}</button>`;
+                }
+                div.innerHTML += `
+                    <div class="hw-card ${hw.isArchived ? 'archived' : ''}">
+                        <div style="display:flex; justify-content:space-between;">
+                            <div><b>[${hw.category}] ${hw.title}</b><br><small>📅 ${hw.date} | 완료: ${done}/${act}</small></div>
+                            <div>
+                                <button class="reset-btn" style="padding:3px 6px;" onclick="arcH('${hw.id}', ${hw.isArchived})">${hw.isArchived ? '📦꺼내기' : '📥보관'}</button>
+                                <button class="reset-btn" style="background:#e74c3c; padding:3px 6px;" onclick="delH('${hw.id}')">X</button>
+                            </div>
+                        </div>
+                        <div class="student-grid">${btns}</div>
+                    </div>`;
+            });
+        }
+
+        function cycleH(id, n) { 
+            const hw = allHomeworks.find(h=>h.id===id); 
+            const s = hw.checklist ? hw.checklist[n] : false;
+            const next = (s===false||s===undefined) ? true : (s===true?'excused':false);
+            hwRef.child(id).child('checklist').child(String(n)).set(next);
+        }
+        function delH(id) { if(confirm("삭제하시겠습니까?")) hwRef.child(id).remove(); }
+        function arcH(id, s) { hwRef.child(id).child('isArchived').set(!s); }
+
+        function setQuickDate(t) {
+            const s = document.getElementById('stat-start-date'), e = document.getElementById('stat-end-date'), d = new Date();
+            if(t==='week') { let l = new Date(); l.setDate(d.getDate()-6); s.valueAsDate=l; e.valueAsDate=d; }
+            else if(t==='month') { s.valueAsDate = new Date(d.getFullYear(), d.getMonth(), 1); e.valueAsDate = new Date(d.getFullYear(), d.getMonth()+1, 0); }
+            else { s.valueAsDate = new Date(d.getFullYear(), 2, 1); e.valueAsDate = new Date(d.getFullYear(), 7, 31); }
+            calculateStats();
+        }
+
+        function calculateStats() {
+            const s = document.getElementById('stat-start-date').value, e = document.getElementById('stat-end-date').value;
+            const res = document.getElementById('stat-results-area'), sum = document.getElementById('stat-summary');
+            res.innerHTML = ''; 
+            
+            const filt = allHomeworks.filter(h => h.date >= s && h.date <= e);
+            if(!filt.length) { sum.innerText = "해당 기간에 등록된 과제가 없습니다."; return; }
+            sum.innerText = `${filt.length}개 과제 분석 완료! (${s} ~ ${e})`;
+            
+            let cats = {}; let maxTotal = 24;
+            filt.forEach(h => {
+                if(h.total > maxTotal) maxTotal = h.total;
+                let c = h.category || '미분류'; 
+                if(!cats[c]) cats[c] = {t:0, d:0};
+                for(let i=1; i<=h.total; i++) { 
+                    const st = h.checklist ? h.checklist[i] : false; 
+                    if(st !== 'excused'){ cats[c].t++; if(st === true) cats[c].d++; } 
+                }
+            });
+
+            let html = '<div class="stat-grid">';
+            for(let c in cats) { 
+                let p = Math.round(cats[c].d/cats[c].t*100)||0;
+                html += `<div class="stat-card"><b>${c}</b><div class="graph-bg" style="margin-top:5px;"><div class="graph-fill" style="width:${p}%; background:#3498db;"></div></div><small>${p}% (${cats[c].d}/${cats[c].t})</small></div>`;
+            }
+            res.innerHTML = html + '</div>';
+        }
+    </script>
+</body>
+</html>
