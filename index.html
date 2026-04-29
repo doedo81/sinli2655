@@ -27,12 +27,10 @@
         * { box-sizing: border-box; } 
         body { font-family: 'Pretendard', sans-serif; background-color: var(--main-sky); color: #333; margin: 0; padding: 15px; overflow-x: hidden; }
 
-        /* 상단 바 */
         .top-header { display: flex; justify-content: space-between; align-items: center; background: var(--white); padding: 12px 25px; border-radius: 18px; box-shadow: var(--shadow); margin-bottom: 15px; border-bottom: 3px solid var(--sub-sky); }
         .logo { font-size: 22px; font-weight: 800; color: var(--accent-blue); letter-spacing: -1px; }
         .room-tag { background: var(--accent-blue); color: var(--white); padding: 6px 18px; border-radius: 30px; font-size: 14px; font-weight: bold; cursor: pointer; }
 
-        /* 탭 메뉴 */
         .tab-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
         .tab-btn { padding: 12px 22px; border: none; border-radius: 12px; cursor: pointer; background: var(--white); color: #666; font-weight: 700; transition: 0.3s; box-shadow: var(--shadow); font-size: 16px; }
         .tab-btn.active { background: var(--dark-blue); color: var(--white); transform: translateY(-3px); }
@@ -41,7 +39,6 @@
         .content-section.active { display: block; }
         #board-tab, #score-tab { background: transparent; padding: 0; }
 
-        /* 📋 대시보드 레이아웃 */
         .dashboard-grid { display: grid; grid-template-columns: 1fr 1.6fr 1fr; gap: 15px; margin: 0 auto; align-items: start;}
         .column-card { background: var(--white); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; border-top: 5px solid var(--accent-blue); height: 100%;}
         .card-header { display: flex; align-items: center; justify-content: center; margin-bottom: 15px; padding-bottom: 10px; font-size: 19px; font-weight: 800; color: var(--dark-blue); border-bottom: 2px solid var(--main-sky);}
@@ -58,7 +55,6 @@
         .tt-label { font-weight: 800; color: #f57c00; width: 4.5em; flex-shrink: 0; font-size: var(--board-font-size); transition: 0.2s;}
         .tt-val { flex-grow: 1; color: #333; font-size: var(--board-font-size); transition: 0.2s;}
 
-        /* 📅 달력 */
         .calendar-card { background: #fdfdfd; border-radius: 12px; padding: 12px; margin-top: 15px; border: 2px solid var(--sub-sky); box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);}
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 800; color: var(--accent-blue); font-size: 15px;}
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
@@ -69,18 +65,15 @@
         .cal-date.has-record::after { content: '●'; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); font-size: 8px; color: #e91e63; }
         .cal-date.selected { background: var(--accent-blue) !important; color: white !important; }
 
-        /* 공통 버튼 */
         .action-btn { font-size: 15px; padding: 10px 15px; background-color: var(--accent-blue); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; font-family: 'Pretendard', sans-serif;}
         .action-btn:active { transform: scale(0.95); }
         .reset-btn { font-size: 14px; padding: 8px 15px; background-color: #90a4ae; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; font-family: 'Pretendard', sans-serif;}
 
-        /* 🔐 로그인 & 방 입장 오버레이 */
         .full-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--main-sky); display:flex; justify-content:center; align-items:center; z-index:9999; flex-direction: column;}
         .login-box { background:white; padding:40px; border-radius:25px; text-align:center; width:90%; max-width:400px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none;}
         .google-btn { background: white; border: 2px solid #ddd; padding: 12px 20px; border-radius: 30px; font-size: 16px; font-weight: bold; color: #555; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; transition: 0.3s;}
         .google-btn:hover { background: #f5f5f5; border-color: #ccc; }
         
-        /* 타이머 */
         #timer-widget { position: fixed; bottom: 30px; right: 30px; z-index: 2000; }
         .timer-toggle-btn { width: 65px; height: 65px; background: var(--dark-blue); color: var(--white); border-radius: 50%; border: none; font-size: 26px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; transition: 0.3s;}
         .timer-toggle-btn:hover { transform: scale(1.1); }
@@ -89,12 +82,10 @@
         .timer-btn { padding: 10px; border: none; border-radius: 10px; background: var(--main-sky); cursor: pointer; font-weight: bold; font-family: 'Pretendard'; }
         .timer-start { background: #ff5252; color: white; grid-column: span 2; }
 
-        /* 🌟 점수판 디자인 */
         .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; } 
         .group-card { background-color: var(--white); border-radius: 15px; padding: 20px 15px; border: 2px solid var(--sub-sky); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.03);}
         .score { font-size: 60px; font-weight: 800; color: var(--accent-blue); margin: 15px 0; font-variant-numeric: tabular-nums; line-height: 1;}
         .button-group { display: flex; justify-content: center; gap: 10px; margin-top: 10px;}
-        
         .score-btn { width: 50px; height: 45px; border: none; border-radius: 10px; cursor: pointer; color: white; font-weight: bold; font-size: 24px; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
         .score-btn:active { transform: translateY(3px); box-shadow: none !important; }
         .btn-plus { background-color: #039be5; box-shadow: 0 4px 0 #0277bd; }
@@ -104,7 +95,6 @@
         .task-card { background: #eceff1; padding: 12px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #cfd8dc; transition: 0.2s; color:#546e7a;}
         .task-card.done { background: var(--accent-blue); color: white; border-color: var(--dark-blue); box-shadow: 0 4px 10px rgba(2,155,229,0.3);}
         
-        /* 🎲 뽑기 */
         .picker-box { background: white; padding: 25px; border-radius: 20px; box-shadow: var(--shadow); border-top: 5px solid var(--accent-blue); text-align: center; }
         .card-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 15px 0; min-height: 80px; align-items: center; }
         .flip-card { background-color: transparent; perspective: 1000px; }
@@ -122,7 +112,6 @@
         .mini-btn { width: 28px; height: 28px; font-size: 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s;}
         .mini-btn-plus { background: #039be5; } .mini-btn-minus { background: #ff5252; }
 
-        /* 기타 스타일 */
         .hw-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid #eee; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); text-align: left;}
         .student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 6px; text-align: center; margin-top: 12px;}
         .student-btn { font-size: 14px; font-weight: bold; padding: 8px 0; border: none; border-radius: 6px; cursor: pointer; background-color: #eceff1; color: #546e7a; transition: 0.2s;}
@@ -271,15 +260,21 @@
         <div id="homework-tab" class="content-section">
             <div class="picker-box" style="text-align:left;">
                 <h2 style="text-align:center;">📝 과제 체크 리스트</h2>
-                <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+                
+                <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; align-items:center;">
                     <input type="date" id="hw-date" style="padding:10px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';">
                     <input type="number" id="hw-total" value="24" class="setting-input" title="총 인원">명
+                    
                     <input type="text" id="hw-category" list="category-list" placeholder="과목 (예: 수학)" style="width:100px; padding:10px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';">
                     <datalist id="category-list"><option value="수학"></option><option value="국어"></option><option value="일기"></option></datalist>
                     
-                    <input type="text" id="hw-title" placeholder="과제 내용 (예: 수학익힘책 10쪽)" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';">
+                    <input type="text" id="hw-title" placeholder="과제 내용 (예: 수익 10쪽)" style="flex:1; min-width: 150px; padding:10px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';">
+                    
+                    <input type="text" id="hw-absent" placeholder="결석번호(예:3)" style="width:100px; padding:10px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';">
+                    
                     <button class="action-btn" onclick="addHomework()">추가</button>
                 </div>
+                
                 <label style="font-size:13px; color:#666; font-weight:bold;"><input type="checkbox" id="show-archived" onchange="renderHomeworkList()"> 보관된 완료 과제도 보기</label>
                 <div id="homework-list" style="margin-top:15px;"></div>
             </div>
@@ -288,9 +283,10 @@
         <div id="stats-tab" class="content-section">
             <div class="picker-box">
                 <h2>📊 과제 제출 통계</h2>
-                <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+                <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px; flex-wrap:wrap; align-items:center;">
                     <button class="reset-btn" style="background:#0288d1;" onclick="setQuickDate('week')">이번 주</button>
                     <button class="reset-btn" style="background:#5c6bc0;" onclick="setQuickDate('month')">이번 달</button>
+                    <span style="color:#ccc;">|</span>
                     <input type="date" id="stat-start-date" style="padding:10px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';"> ~ <input type="date" id="stat-end-date" style="padding:10px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';">
                     <button class="action-btn" onclick="calculateStats()">조회</button>
                 </div>
@@ -389,7 +385,7 @@
             const savedSize = localStorage.getItem('myCustomFontSize');
             if(savedSize) { currentBoardFontSize = parseInt(savedSize); applyFontSize(); }
 
-            // ✨ 통계 및 과제 날짜 안전하게 초기화
+            // 통계 및 과제 날짜 자동 세팅
             try {
                 const todayStr = getFormattedDate(new Date());
                 document.getElementById('hw-date').value = todayStr;
@@ -498,7 +494,7 @@
             hwRef.on('value', snap => {
                 allHomeworks = []; 
                 snap.forEach(c => { allHomeworks.push({id: c.key, ...c.val()}); });
-                allHomeworks.reverse(); // 최신순
+                allHomeworks.reverse(); 
                 renderHomeworkList();
                 if(document.getElementById('stats-tab').classList.contains('active')) calculateStats();
             });
@@ -624,7 +620,6 @@
             r.sort((a,b) => b.s - a.s); document.getElementById('ranking-board').innerHTML = '🏆 ' + r.map(x => `${x.g}모둠`).join(' - ');
         }
 
-        // ✨ 메인 점수판 스마트 초기화
         let resetConfirmState = false;
         let resetTimer;
         function resetAllScores() {
@@ -669,7 +664,6 @@
         }
         function changeMiniS(i, a) { miniScoresRef.child(String(i)).set((currentMiniScores[i]||0) + a); }
         
-        // ✨ 미니 점수판 스마트 초기화
         let miniResetConfirmState = false;
         let miniResetTimer;
         function resetMiniScores() {
@@ -712,7 +706,7 @@
         function startCustomTimer() { const v = parseFloat(document.getElementById('custom-timer-input').value); if(v > 0) timerRef.set({isRunning:true, endTime: Date.now() + v*60*1000, pausedRemaining: v*60}); document.getElementById('custom-timer-input').value=''; }
 
         // ==========================================
-        // ✨ 4. 과제 & 통계 완벽 복구
+        // ✨ 4. 과제 & 통계 (결석 오류 완벽 해결)
         // ==========================================
         function addHomework() {
             const d = document.getElementById('hw-date').value;
@@ -722,13 +716,20 @@
             if(!t || !d) return alert("날짜와 내용을 모두 입력해주세요!");
             
             const tot = parseInt(document.getElementById('hw-total').value)||24;
-            const abs = document.getElementById('hw-absent').value.split(',').map(n=>parseInt(n.trim()));
+            
+            // 결석 인풋 요소가 있는지 확인 후 처리 (에러 원인 해결)
+            const absentEl = document.getElementById('hw-absent');
+            const absStr = absentEl ? absentEl.value : "";
+            const abs = absStr ? absStr.split(',').map(n=>parseInt(n.trim())) : [];
+            
             let list = {}; 
             for(let i=1; i<=tot; i++) list[i] = abs.includes(i) ? 'excused' : false;
             
-            // 파이어베이스에 추가
             hwRef.push({date:d, category:c, title:t, total:tot, checklist:list, isArchived:false}); 
+            
+            // 인풋 비우기
             document.getElementById('hw-title').value = "";
+            if(absentEl) absentEl.value = "";
         }
 
         function renderHomeworkList() {
