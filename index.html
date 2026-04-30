@@ -20,35 +20,59 @@
             --dark-blue: #2c3e50;
             --white: #ffffff;
             --shadow: 0 5px 15px rgba(0,0,0,0.08);
-            --board-font-size: 18px; /* 기본 글씨 조금 더 키움 */
+            --board-font-size: 18px;
             --board-title-size: 20px;
         }
 
         * { box-sizing: border-box; } 
-        body { font-family: 'Pretendard', sans-serif; background-color: var(--main-sky); color: #333; margin: 0; padding: 15px; overflow-x: hidden; }
+        body { font-family: 'Pretendard', sans-serif; background-color: var(--main-sky); color: #333; margin: 0; overflow-x: hidden; height: 100vh; display: flex; flex-direction: column;}
 
-        /* 상단 바 */
-        .top-header { display: flex; justify-content: space-between; align-items: center; background: var(--white); padding: 12px 25px; border-radius: 18px; box-shadow: var(--shadow); margin-bottom: 15px; border-bottom: 3px solid var(--sub-sky); }
-        .logo { font-size: 22px; font-weight: 800; color: var(--accent-blue); letter-spacing: -1px; }
-        .room-tag { background: var(--accent-blue); color: var(--white); padding: 6px 18px; border-radius: 30px; font-size: 14px; font-weight: bold; cursor: pointer; }
+        /* ✨ 메인 레이아웃 (사이드바 + 메인 콘텐츠) */
+        #main-app { display: none; width: 100vw; height: 100vh; overflow: hidden; display: flex; flex-direction: row; }
+        
+        /* ✨ 좌측 사이드바 */
+        .sidebar { width: 240px; background: var(--white); box-shadow: 2px 0 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; padding: 25px 15px; z-index: 100;}
+        .sidebar .logo { font-size: 22px; font-weight: 800; color: var(--accent-blue); letter-spacing: -1px; text-align: center; margin-bottom: 25px; border-bottom: 2px solid var(--main-sky); padding-bottom: 15px; }
+        
+        .tab-btn { width: 100%; text-align: left; padding: 15px 20px; border: none; border-radius: 12px; cursor: pointer; background: transparent; color: #546e7a; font-weight: 700; transition: 0.2s; font-size: 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px;}
+        .tab-btn i { font-size: 18px; width: 20px; text-align: center;}
+        .tab-btn:hover { background: #f0f4f8; color: var(--accent-blue);}
+        .tab-btn.active { background: var(--dark-blue); color: var(--white); box-shadow: 0 4px 10px rgba(44, 62, 80, 0.2); transform: translateX(5px);}
 
-        /* 탭 메뉴 */
-        .tab-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
-        .tab-btn { padding: 12px 22px; border: none; border-radius: 12px; cursor: pointer; background: var(--white); color: #666; font-weight: 700; transition: 0.3s; box-shadow: var(--shadow); font-size: 16px; }
-        .tab-btn.active { background: var(--dark-blue); color: var(--white); transform: translateY(-3px); }
+        .sidebar-bottom { margin-top: auto; border-top: 2px solid var(--main-sky); padding-top: 15px; text-align: center;}
+        .room-tag { background: #f0f4f8; color: var(--dark-blue); padding: 10px; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; border: 1px solid #cfd8dc; transition: 0.2s; display: block; margin-top: 10px;}
+        .room-tag:hover { background: #e53935; color: white; border-color: #e53935;}
+        
+        /* ✨ 메인 콘텐츠 영역 */
+        .main-content-wrapper { flex: 1; overflow-y: auto; padding: 20px 30px; background: var(--main-sky); position: relative; }
+
+        /* 상단 시계 & 햄버거 메뉴 영역 */
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        #real-clock { font-size: 26px; font-weight: 800; color: var(--dark-blue); background: var(--white); padding: 10px 25px; border-radius: 15px; box-shadow: var(--shadow); border: 2px solid var(--sub-sky); font-variant-numeric: tabular-nums;}
+        
+        /* 🍔 삼선 메뉴 (햄버거 버튼) */
+        .action-menu-container { position: relative; }
+        .hamburger-btn { background: var(--accent-blue); color: white; border: none; border-radius: 12px; width: 50px; height: 50px; font-size: 22px; cursor: pointer; box-shadow: var(--shadow); transition: 0.2s; display: flex; align-items: center; justify-content: center;}
+        .hamburger-btn:hover { transform: scale(1.05); background: var(--dark-blue);}
+        
+        .action-menu { display: none; position: absolute; right: 0; top: 60px; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 2px solid var(--sub-sky); padding: 15px; width: 280px; z-index: 1000; flex-direction: column; gap: 10px; }
+        .action-menu.show { display: flex; }
 
         .content-section { display: none; max-width: 1500px; margin: 0 auto; }
         .content-section.active { display: block; }
-        #board-tab, #score-tab { background: transparent; padding: 0; }
-
-        /* 📋 대시보드 레이아웃 */
-        .dashboard-grid { display: grid; grid-template-columns: 1fr 1.6fr 1fr; gap: 15px; margin: 0 auto; align-items: start;}
-        .column-card { background: var(--white); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; border-top: 5px solid var(--accent-blue); height: 100%;}
-        .card-header { display: flex; align-items: center; justify-content: center; margin-bottom: 15px; padding-bottom: 10px; font-size: 19px; font-weight: 800; color: var(--dark-blue); border-bottom: 2px solid var(--main-sky);}
-        .info-box { background: #ffffff; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #e1e8ed; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
-        .info-label { font-weight: 800; font-size: 14px; margin-bottom: 8px; display: block; color: var(--accent-blue); }
         
-        /* ✨ 타자 칠 수 있는 요소 (빨간 밑줄 없애고 깔끔하게) */
+        /* 공통 버튼 */
+        .action-btn { font-size: 15px; padding: 12px 15px; background-color: var(--accent-blue); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; font-family: 'Pretendard', sans-serif;}
+        .action-btn:active { transform: scale(0.95); }
+        .reset-btn { font-size: 14px; padding: 10px 15px; background-color: #90a4ae; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; font-family: 'Pretendard', sans-serif;}
+
+        /* 📋 3분할 칠판 레이아웃 */
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1.6fr 1fr; gap: 20px; align-items: start;}
+        .column-card { background: var(--white); border-radius: 20px; padding: 25px; box-shadow: var(--shadow); display: flex; flex-direction: column; border-top: 5px solid var(--accent-blue); height: 100%;}
+        .card-header { display: flex; align-items: center; justify-content: center; margin-bottom: 20px; padding-bottom: 12px; font-size: 20px; font-weight: 800; color: var(--dark-blue); border-bottom: 2px solid var(--main-sky);}
+        .info-box { background: #ffffff; border-radius: 12px; padding: 18px; margin-bottom: 15px; border: 1px solid #e1e8ed; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
+        .info-label { font-weight: 800; font-size: 15px; margin-bottom: 10px; display: block; color: var(--accent-blue); }
+        
         [contenteditable="true"] { outline: none; white-space: pre-wrap; min-height: 25px; transition: 0.2s; border-radius: 8px; padding: 6px; font-weight: 500; font-size: var(--board-font-size); line-height: 1.5; color: #333;}
         [contenteditable="true"]:hover { background: #f9fdff; cursor: text; }
         [contenteditable="true"]:focus { background: #ffffff; box-shadow: 0 0 0 2px var(--accent-blue) inset; }
@@ -57,27 +81,22 @@
         .info-content { font-size: var(--board-font-size); line-height: 1.5; color: #333; flex-grow: 1; font-weight: 500;}
         .large-text { font-size: var(--board-title-size); font-weight: 800; color: var(--dark-blue); }
 
-        /* ✨ 시간표 칼각 정렬 (3칸 분리) */
+        /* 시간표 칼각 */
         .tt-row { display: flex; margin-bottom: 12px; align-items: stretch; border-bottom: 1px solid #f0f4f8; padding-bottom: 12px; gap: 12px;}
         .tt-label { font-weight: 900; color: #e65100; width: 60px; flex-shrink: 0; font-size: var(--board-font-size); background: #fff3e0; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 5px; transition: 0.2s;}
         .tt-subject { font-weight: 800; color: var(--accent-blue); width: 85px; flex-shrink: 0; font-size: var(--board-font-size); background: var(--main-sky); border-radius: 8px; text-align: center; padding: 8px 5px; transition: 0.2s;}
         .tt-val { flex-grow: 1; color: #333; font-size: var(--board-font-size); padding: 5px; transition: 0.2s; line-height: 1.5;}
 
         /* 📅 달력 */
-        .calendar-card { background: #fdfdfd; border-radius: 12px; padding: 12px; margin-top: 15px; border: 2px solid var(--sub-sky); box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);}
-        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 800; color: var(--accent-blue); font-size: 15px;}
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
-        .cal-day { font-size: 11px; font-weight: 700; color: #999; padding-bottom: 5px; }
-        .cal-date { font-size: 13px; padding: 8px 0; cursor: pointer; border-radius: 8px; position: relative; font-weight: 600; transition: 0.2s;}
+        .calendar-card { background: #fdfdfd; border-radius: 12px; padding: 15px; margin-top: 15px; border: 2px solid var(--sub-sky); box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);}
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 800; color: var(--accent-blue); font-size: 16px;}
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+        .cal-day { font-size: 12px; font-weight: 700; color: #999; padding-bottom: 5px; }
+        .cal-date { font-size: 14px; padding: 10px 0; cursor: pointer; border-radius: 8px; position: relative; font-weight: 600; transition: 0.2s;}
         .cal-date:hover { background: var(--main-sky); }
         .cal-date.today { background: var(--sub-sky); color: var(--dark-blue); }
-        .cal-date.has-record::after { content: '●'; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); font-size: 8px; color: #e91e63; }
+        .cal-date.has-record::after { content: '●'; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); font-size: 10px; color: #e91e63; }
         .cal-date.selected { background: var(--accent-blue) !important; color: white !important; }
-
-        /* 공통 버튼 */
-        .action-btn { font-size: 15px; padding: 10px 15px; background-color: var(--accent-blue); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; font-family: 'Pretendard', sans-serif;}
-        .action-btn:active { transform: scale(0.95); }
-        .reset-btn { font-size: 14px; padding: 8px 15px; background-color: #90a4ae; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; font-family: 'Pretendard', sans-serif;}
 
         /* 로그인 오버레이 */
         .full-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--main-sky); display:flex; justify-content:center; align-items:center; z-index:9999; flex-direction: column;}
@@ -109,7 +128,7 @@
         .task-card.done { background: var(--accent-blue); color: white; border-color: var(--dark-blue); box-shadow: 0 4px 10px rgba(2,155,229,0.3);}
         
         /* 뽑기 & 미니점수판 */
-        .picker-box { background: white; padding: 25px; border-radius: 20px; box-shadow: var(--shadow); border-top: 5px solid var(--accent-blue); text-align: center; }
+        .picker-box { background: white; padding: 30px; border-radius: 20px; box-shadow: var(--shadow); border-top: 5px solid var(--accent-blue); text-align: center; }
         .card-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 15px 0; min-height: 80px; align-items: center; }
         .flip-card { background-color: transparent; perspective: 1000px; cursor: pointer;}
         .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.4s; transform-style: preserve-3d; }
@@ -126,12 +145,12 @@
         .mini-btn-plus { background: #039be5; } .mini-btn-minus { background: #ff5252; }
 
         /* 과제 */
-        .hw-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid #eee; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); text-align: left;}
-        .student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); gap: 8px; text-align: center; margin-top: 12px;}
+        .hw-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #eee; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); text-align: left;}
+        .student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); gap: 8px; text-align: center; margin-top: 15px;}
         .student-btn { font-size: 18px; font-weight: 800; padding: 12px 0; border: none; border-radius: 8px; cursor: pointer; background-color: #eceff1; color: #546e7a; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
         .student-btn.done { background-color: var(--accent-blue); color: white; } 
         .student-btn.excused { background-color: white; border: 1px dashed #ccc; color: #b0bec5; text-decoration: line-through; box-shadow: none;}
-        .setting-input { font-size: 16px; width: 60px; text-align: center; border-radius: 5px; border: 1px solid #b0bec5; padding: 5px; margin: 0 5px; font-family: 'Pretendard', sans-serif;}
+        .setting-input { font-size: 16px; width: 65px; text-align: center; border-radius: 8px; border: 1px solid #b0bec5; padding: 8px; margin: 0 5px; font-family: 'Pretendard', sans-serif;}
 
         /* 통계 탭 네비게이션 */
         .stat-mode-btn { padding: 10px 20px; border: 2px solid var(--accent-blue); border-radius: 30px; background: white; color: var(--accent-blue); font-weight: bold; cursor: pointer; font-size: 15px; transition: 0.3s; opacity: 0.5;}
@@ -143,7 +162,15 @@
         .setting-group label { display: block; font-weight: 700; margin-bottom: 5px; color: var(--accent-blue); }
         .setting-group textarea, .setting-group input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-family: 'Pretendard'; }
 
-        @media (max-width: 1100px) { .dashboard-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 1100px) { 
+            #main-app { flex-direction: column; overflow-y: auto; }
+            .sidebar { width: 100%; height: auto; flex-direction: row; flex-wrap: wrap; padding: 15px; align-items: center;}
+            .sidebar .logo { margin-bottom: 0; border: none; padding: 0; margin-right: 20px;}
+            .tab-container { flex-direction: row; margin-bottom: 0;}
+            .tab-btn { width: auto; padding: 10px 15px; margin-bottom: 0;}
+            .sidebar-bottom { margin-top: 0; border: none; padding: 0; margin-left: auto;}
+            .dashboard-grid { grid-template-columns: 1fr; } 
+        }
     </style>
 </head>
 <body>
@@ -167,181 +194,173 @@
         </div>
     </div>
 
-    <div id="main-app" style="display:none;">
-        <div class="top-header">
+    <div id="main-app">
+        
+        <nav class="sidebar">
             <div class="logo">🌤️ SKY CLASS</div>
-            <div id="real-clock" style="font-size: 22px; font-weight: 800; color: var(--dark-blue);">00:00:00</div>
-            <div style="display:flex; gap:10px; align-items:center;">
-                <div id="user-profile" style="font-size:14px; font-weight:bold; color:#666;"></div>
-                <div class="room-tag" id="current-room-display" onclick="exitRoom()">방 나가기</div>
+            <div class="tab-container" style="flex-direction: column;">
+                <button class="tab-btn active" onclick="switchTab('board')"><i class="fa-solid fa-clipboard-list"></i> 아침 칠판</button>
+                <button class="tab-btn" onclick="switchTab('score')"><i class="fa-solid fa-star"></i> 점수판</button>
+                <button class="tab-btn" onclick="switchTab('picker')"><i class="fa-solid fa-dice"></i> 활동&뽑기</button>
+                <button class="tab-btn" onclick="switchTab('homework')"><i class="fa-solid fa-book"></i> 과제관리</button>
+                <button class="tab-btn" onclick="switchTab('stats')"><i class="fa-solid fa-chart-bar"></i> 통계</button>
             </div>
-        </div>
-
-        <div class="tab-container">
-            <button class="tab-btn active" onclick="switchTab('board')">📋 아침 칠판</button>
-            <button class="tab-btn" onclick="switchTab('score')">🌟 점수판</button>
-            <button class="tab-btn" onclick="switchTab('picker')">🎲 활동&뽑기</button>
-            <button class="tab-btn" onclick="switchTab('homework')">📝 과제관리</button>
-            <button class="tab-btn" onclick="switchTab('stats')">📊 통계</button>
-        </div>
-
-        <div id="board-tab" class="content-section active">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; gap:8px; align-items: center; flex-wrap: wrap;">
-                
-                <div style="display:flex; align-items:center; gap:5px; background:white; padding:5px 10px; border-radius:10px; border:1px solid #cfd8dc; box-shadow:var(--shadow);">
-                    <span style="font-size:14px; font-weight:bold; color:#546e7a; margin-right:5px;">🔍 칠판 글씨 크기</span>
-                    <button class="reset-btn" style="padding:4px 10px; background:#e1f5fe; color:#0288d1; border:1px solid #b3e5fc; box-shadow:none;" onclick="changeFontSize(2)">➕ 확대</button>
-                    <button class="reset-btn" style="padding:4px 10px; background:#fff3e0; color:#e65100; border:1px solid #ffe0b2; box-shadow:none;" onclick="changeFontSize(-2)">➖ 축소</button>
-                </div>
-
-                <div style="display:flex; gap:8px;">
-                    <button class="action-btn" style="background:#5c6bc0;" onclick="autoFillDashboard()">🪄 오늘 아침 자동 완성</button>
-                    <button class="action-btn" style="background:#0288d1;" onclick="saveDashboard()">💾 현재 칠판 자동기록 저장</button>
-                    <button class="reset-btn" onclick="openSettingsModal()">⚙️ 기초 세팅</button>
-                </div>
+            <div class="sidebar-bottom">
+                <div id="user-profile" style="font-size:13px; font-weight:bold; color:#666;"></div>
+                <button class="room-tag" onclick="exitRoom()"><i class="fa-solid fa-arrow-right-from-bracket"></i> 방 나가기</button>
             </div>
+        </nav>
 
-            <div class="dashboard-grid">
-                <div class="column-card">
-                    <div class="card-header">🌱 오늘의 시작</div>
-                    <div class="info-box"><span class="info-label">📅 날짜 및 날씨</span><div class="info-content large-text" id="view-date" contenteditable="true" spellcheck="false" data-placeholder="날짜와 날씨 입력"></div></div>
-                    <div class="info-box"><span class="info-label" style="color:#d32f2f;">❗️ 안전 수칙</span><div class="info-content" id="view-safety" contenteditable="true" spellcheck="false" style="font-weight:700;" data-placeholder="안전 수칙 입력"></div></div>
-                    <div class="info-box"><span class="info-label" style="color:#f57c00;">⭐ 아침 자습</span><div class="info-content" id="view-morning" contenteditable="true" spellcheck="false" data-placeholder="아침 자습 입력"></div></div>
-                    <div class="info-box" style="margin-bottom:0;"><span class="info-label" style="color:#7b1fa2;">🧹 당번 (& 할 일)</span><div class="info-content large-text" id="view-duty-nums" contenteditable="true" spellcheck="false" data-placeholder="당번 번호"></div><div class="info-content" id="view-duty-tasks" contenteditable="true" spellcheck="false" data-placeholder="할 일 목록" style="font-size:calc(var(--board-font-size) - 2px); margin-top:5px; border-top:1px dashed #eee; padding-top:5px;"></div></div>
+        <main class="main-content-wrapper">
+            
+            <header class="top-header">
+                <div id="real-clock">00:00:00</div>
+                <div class="action-menu-container">
+                    <button class="hamburger-btn" onclick="toggleActionMenu()"><i class="fa-solid fa-bars"></i></button>
+                    <div id="action-menu" class="action-menu">
+                        <div style="font-size:13px; font-weight:bold; color:#999; padding-bottom:5px; border-bottom:1px solid #eee;">칠판 관리 메뉴</div>
+                        <div style="display:flex; align-items:center; gap:5px; background:#f8f9fa; padding:8px; border-radius:8px; justify-content:center;">
+                            <span style="font-size:14px; font-weight:bold; color:#546e7a;">🔍 글씨 크기</span>
+                            <button class="reset-btn" style="padding:4px 10px; background:#e1f5fe; color:#0288d1; box-shadow:none;" onclick="changeFontSize(2)">➕</button>
+                            <button class="reset-btn" style="padding:4px 10px; background:#fff3e0; color:#e65100; box-shadow:none;" onclick="changeFontSize(-2)">➖</button>
+                        </div>
+                        <button class="action-btn" style="background:#5c6bc0;" onclick="autoFillDashboard(); toggleActionMenu();"><i class="fa-solid fa-wand-magic-sparkles"></i> 오늘 칠판 자동 완성</button>
+                        <button class="action-btn" style="background:#0288d1;" onclick="saveDashboard(); toggleActionMenu();"><i class="fa-solid fa-floppy-disk"></i> 현재 칠판 영구 저장</button>
+                        <button class="reset-btn" onclick="openSettingsModal(); toggleActionMenu();"><i class="fa-solid fa-gear"></i> 요일별 기초 세팅</button>
+                    </div>
+                </div>
+            </header>
+
+            <div id="board-tab" class="content-section active">
+                <div style="color: #78909c; font-size: 15px; font-weight:bold; margin-bottom: 15px; padding-left: 10px;">
+                    💡 칠판의 빈칸을 클릭하면 즉시 타자를 칠 수 있습니다. (우측 상단 ☰ 메뉴에서 저장하세요!)
                 </div>
 
-                <div class="column-card">
-                    <div class="card-header">📚 배움 시간표 & 학습 목표</div>
-                    <div class="info-box" style="flex:1; padding: 25px 20px;">
+                <div class="dashboard-grid">
+                    <div class="column-card">
+                        <div class="card-header">🌱 오늘의 시작</div>
+                        <div class="info-box"><span class="info-label">📅 날짜 및 날씨</span><div class="info-content large-text" id="view-date" contenteditable="true" spellcheck="false" data-placeholder="날짜와 날씨 입력"></div></div>
+                        <div class="info-box"><span class="info-label" style="color:#d32f2f;">❗️ 안전 수칙</span><div class="info-content" id="view-safety" contenteditable="true" spellcheck="false" style="font-weight:700;" data-placeholder="안전 수칙 입력"></div></div>
+                        <div class="info-box"><span class="info-label" style="color:#f57c00;">⭐ 아침 자습</span><div class="info-content" id="view-morning" contenteditable="true" spellcheck="false" data-placeholder="아침 자습 입력"></div></div>
+                        <div class="info-box" style="margin-bottom:0;"><span class="info-label" style="color:#7b1fa2;">🧹 당번 (& 할 일)</span><div class="info-content large-text" id="view-duty-nums" contenteditable="true" spellcheck="false" data-placeholder="당번 번호"></div><div class="info-content" id="view-duty-tasks" contenteditable="true" spellcheck="false" data-placeholder="할 일 목록" style="font-size:calc(var(--board-font-size) - 2px); margin-top:5px; border-top:1px dashed #eee; padding-top:5px;"></div></div>
+                    </div>
+
+                    <div class="column-card">
+                        <div class="card-header">📚 배움 시간표 & 학습 목표</div>
+                        <div class="info-box" style="flex:1; padding: 25px 20px;">
+                            <div class="tt-row"><span class="tt-label">1교시</span><span class="tt-subject" id="view-tt-sub-1" contenteditable="true" spellcheck="false" data-placeholder="과목"></span><span class="tt-val" id="view-tt-val-1" contenteditable="true" spellcheck="false" data-placeholder="학습 목표 및 준비물"></span></div>
+                            <div class="tt-row"><span class="tt-label">2교시</span><span class="tt-subject" id="view-tt-sub-2" contenteditable="true" spellcheck="false" data-placeholder="과목"></span><span class="tt-val" id="view-tt-val-2" contenteditable="true" spellcheck="false" data-placeholder="학습 목표 및 준비물"></span></div>
+                            <div class="tt-row"><span class="tt-label">3교시</span><span class="tt-subject" id="view-tt-sub-3" contenteditable="true" spellcheck="false" data-placeholder="과목"></span><span class="tt-val" id="view-tt-val-3" contenteditable="true" spellcheck="false" data-placeholder="학습 목표 및 준비물"></span></div>
+                            <div class="tt-row"><span class="tt-label">4교시</span><span class="tt-subject" id="view-tt-sub-4" contenteditable="true" spellcheck="false" data-placeholder="과목"></span><span class="tt-val" id="view-tt-val-4" contenteditable="true" spellcheck="false" data-placeholder="학습 목표 및 준비물"></span></div>
+                            <div class="tt-row"><span class="tt-label">5교시</span><span class="tt-subject" id="view-tt-sub-5" contenteditable="true" spellcheck="false" data-placeholder="과목"></span><span class="tt-val" id="view-tt-val-5" contenteditable="true" spellcheck="false" data-placeholder="학습 목표 및 준비물"></span></div>
+                            <div class="tt-row" style="border-bottom:none;"><span class="tt-label">6교시</span><span class="tt-subject" id="view-tt-sub-6" contenteditable="true" spellcheck="false" data-placeholder="과목"></span><span class="tt-val" id="view-tt-val-6" contenteditable="true" spellcheck="false" data-placeholder="학습 목표 및 준비물"></span></div>
+                        </div>
+                    </div>
+
+                    <div class="column-card">
+                        <div class="card-header">📢 알림 및 마무리</div>
+                        <div class="info-box"><span class="info-label">📢 전달 사항</span><div class="info-content" id="view-notices" contenteditable="true" spellcheck="false" data-placeholder="전달 사항"></div></div>
+                        <div class="info-box" style="border-left: 5px solid #4caf50;"><span class="info-label" style="color:#2e7d32;">📝 알림장</span><div class="info-content" id="view-allim" contenteditable="true" spellcheck="false" data-placeholder="알림장 내용" style="font-weight:700;"></div></div>
+                        <div class="info-box" style="background:#fff5f8;"><span class="info-label" style="color: #e91e63;">🎂 생일 축하해요!</span><div class="info-content" id="view-birthday" contenteditable="true" spellcheck="false" data-placeholder="생일인 학생"></div></div>
                         
-                        <div class="tt-row">
-                            <span class="tt-label">1교시</span>
-                            <span class="tt-subject" id="view-tt-sub-1" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                            <span class="tt-val" id="view-tt-val-1" contenteditable="true" spellcheck="false" data-placeholder="학습 목표 및 준비물을 입력하세요"></span>
+                        <div class="calendar-card" id="calendar-widget">
+                            <div class="cal-header"><span id="cal-month-title"></span><div><i class="fa-solid fa-chevron-left" style="cursor:pointer; margin-right:15px;" onclick="changeMonth(-1)"></i><i class="fa-solid fa-chevron-right" style="cursor:pointer;" onclick="changeMonth(1)"></i></div></div>
+                            <div class="cal-grid" id="cal-dates"></div>
                         </div>
-                        <div class="tt-row">
-                            <span class="tt-label">2교시</span>
-                            <span class="tt-subject" id="view-tt-sub-2" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                            <span class="tt-val" id="view-tt-val-2" contenteditable="true" spellcheck="false" data-placeholder="학습 목표 및 준비물을 입력하세요"></span>
-                        </div>
-                        <div class="tt-row">
-                            <span class="tt-label">3교시</span>
-                            <span class="tt-subject" id="view-tt-sub-3" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                            <span class="tt-val" id="view-tt-val-3" contenteditable="true" spellcheck="false" data-placeholder="학습 목표 및 준비물을 입력하세요"></span>
-                        </div>
-                        <div class="tt-row">
-                            <span class="tt-label">4교시</span>
-                            <span class="tt-subject" id="view-tt-sub-4" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                            <span class="tt-val" id="view-tt-val-4" contenteditable="true" spellcheck="false" data-placeholder="학습 목표 및 준비물을 입력하세요"></span>
-                        </div>
-                        <div class="tt-row">
-                            <span class="tt-label">5교시</span>
-                            <span class="tt-subject" id="view-tt-sub-5" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                            <span class="tt-val" id="view-tt-val-5" contenteditable="true" spellcheck="false" data-placeholder="학습 목표 및 준비물을 입력하세요"></span>
-                        </div>
-                        <div class="tt-row" style="border-bottom:none;">
-                            <span class="tt-label">6교시</span>
-                            <span class="tt-subject" id="view-tt-sub-6" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                            <span class="tt-val" id="view-tt-val-6" contenteditable="true" spellcheck="false" data-placeholder="학습 목표 및 준비물을 입력하세요"></span>
-                        </div>
-
                     </div>
                 </div>
+            </div>
 
-                <div class="column-card">
-                    <div class="card-header">📢 알림 및 마무리</div>
-                    <div class="info-box"><span class="info-label">📢 전달 사항</span><div class="info-content" id="view-notices" contenteditable="true" spellcheck="false" data-placeholder="전달 사항"></div></div>
-                    <div class="info-box" style="border-left: 5px solid #4caf50;"><span class="info-label" style="color:#2e7d32;">📝 알림장</span><div class="info-content" id="view-allim" contenteditable="true" spellcheck="false" data-placeholder="알림장 내용" style="font-weight:700;"></div></div>
-                    <div class="info-box" style="background:#fff5f8;"><span class="info-label" style="color: #e91e63;">🎂 생일 축하해요!</span><div class="info-content" id="view-birthday" contenteditable="true" spellcheck="false" data-placeholder="생일인 학생"></div></div>
+            <div id="score-tab" class="content-section">
+                <div style="background:white; border-radius:20px; padding:30px; box-shadow:var(--shadow); border-top:5px solid var(--accent-blue); max-width:1100px; margin:0 auto;">
+                    <div style="margin-bottom: 25px; color: var(--dark-blue); font-weight:bold; text-align:center;">
+                        모둠 수: <input type="number" id="group-count-score" value="6" min="2" max="12" class="setting-input" style="padding:10px;"> <button class="action-btn" onclick="changeGroupCount('group-count-score')">적용</button>
+                    </div>
+                    <div id="ranking-board" style="text-align:center; font-size:22px; font-weight:bold; background:#eceff1; padding:15px; border-radius:10px; margin-bottom:25px; color:var(--dark-blue);">🏆 순위 계산 중...</div>
+                    <div class="grid-container" id="scoreboard"></div>
                     
-                    <div class="calendar-card" id="calendar-widget">
-                        <div class="cal-header"><span id="cal-month-title"></span><div><i class="fa-solid fa-chevron-left" style="cursor:pointer; margin-right:15px;" onclick="changeMonth(-1)"></i><i class="fa-solid fa-chevron-right" style="cursor:pointer;" onclick="changeMonth(1)"></i></div></div>
-                        <div class="cal-grid" id="cal-dates"></div>
+                    <div style="margin-top: 30px; background: #f8f9fa; padding: 20px; border-radius: 15px; text-align:center;">
+                        <h3 style="margin-top:0; color:var(--dark-blue); font-size:18px;">🤝 모둠 활동 확인 (클릭하여 체크)</h3>
+                        <div id="task-board" class="task-grid"></div>
+                        <button class="reset-btn" style="margin-top: 15px; padding:10px 20px;" onclick="resetTasks()">🔄 체크 전체 해제</button>
+                    </div>
+                    <div style="text-align:center; margin-top:25px; border-top:1px solid #eee; padding-top:20px;">
+                        <button id="master-reset-btn" class="reset-btn" style="background:#e53935; padding:12px 30px; font-size:16px; transition:0.3s;" onclick="resetAllScores()">⚠️ 모둠 점수 0점 초기화</button>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div id="score-tab" class="content-section">
-            <div style="background:white; border-radius:20px; padding:30px; box-shadow:var(--shadow); border-top:5px solid var(--accent-blue); max-width:1100px; margin:0 auto;">
-                <div style="margin-bottom: 15px; color: var(--dark-blue); font-weight:bold; text-align:center;">
-                    모둠 수: <input type="number" id="group-count-score" value="6" min="2" max="12" class="setting-input"> <button class="reset-btn" onclick="changeGroupCount('group-count-score')">적용</button>
+            <div id="picker-tab" class="content-section">
+                <div class="dashboard-grid" style="grid-template-columns: 1fr 1fr;">
+                    <div class="picker-box">
+                        <h2>👥 모둠 뽑기</h2>
+                        <div style="margin-bottom:10px; font-weight:bold; color:var(--dark-blue);"><input type="number" id="group-count-picker" value="6" class="setting-input">모둠 <button class="reset-btn" onclick="changeGroupCount('group-count-picker')">적용</button></div>
+                        <div id="group-cards-container" class="card-container"></div>
+                        <button class="action-btn" onclick="drawGroupCard()">카드 뽑기</button> <button class="reset-btn" onclick="resetGroupDraw()">다시 섞기</button>
+                    </div>
+                    <div class="picker-box">
+                        <h2>👤 개인 번호 뽑기</h2>
+                        <div style="margin-bottom:10px; font-weight:bold; color:var(--dark-blue);"><input type="number" id="picker-total" value="24" class="setting-input">명 (결석:<input type="text" id="picker-absent" style="width:50px; margin-left:5px;" class="setting-input">) <button class="reset-btn" onclick="initStudentPicker()">적용</button></div>
+                        <div id="student-cards-container" class="card-container"></div>
+                        <button class="action-btn" style="background:#8e44ad;" onclick="drawStudentCard()">번호 뽑기</button> <button class="reset-btn" onclick="initStudentPicker()">다시 섞기</button>
+                    </div>
                 </div>
-                <div id="ranking-board" style="text-align:center; font-size:20px; font-weight:bold; background:#eceff1; padding:15px; border-radius:10px; margin-bottom:20px; color:var(--dark-blue);">🏆 순위 계산 중...</div>
-                <div class="grid-container" id="scoreboard"></div>
-                <div style="margin-top: 30px; background: #f8f9fa; padding: 20px; border-radius: 15px; text-align:center;">
-                    <h3 style="margin-top:0; color:var(--dark-blue); font-size:16px;">🤝 모둠 활동 확인 (클릭하여 체크)</h3>
-                    <div id="task-board" class="task-grid"></div>
-                    <button class="reset-btn" style="margin-top: 15px;" onclick="resetTasks()">🔄 체크 전체 해제</button>
-                </div>
-                <div style="text-align:center; margin-top:25px; border-top:1px solid #eee; padding-top:20px;">
-                    <button id="master-reset-btn" class="reset-btn" style="background:#e53935; padding:12px 30px; font-size:16px; transition:0.3s;" onclick="resetAllScores()">⚠️ 모둠 점수 0점 초기화</button>
+                <div class="picker-box" style="margin-top:20px;">
+                    <h2 style="color:#2e7d32;">🕹️ 미니 점수판</h2>
+                    <div class="mini-score-grid" id="mini-scoreboard"></div>
+                    <button id="mini-reset-btn" class="reset-btn" style="margin-top:20px; background:#78909c; transition:0.3s;" onclick="resetMiniScores()">미니 점수 전체 초기화</button>
                 </div>
             </div>
-        </div>
 
-        <div id="picker-tab" class="content-section">
-            <div class="dashboard-grid" style="grid-template-columns: 1fr 1fr;">
+            <div id="homework-tab" class="content-section">
+                <div class="picker-box" style="text-align:left;">
+                    <h2 style="text-align:center;">📝 과제 체크 리스트</h2>
+                    
+                    <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; align-items:center; background:#f8f9fa; padding:20px; border-radius:15px;">
+                        <input type="date" id="hw-date" style="padding:12px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';">
+                        <input type="number" id="hw-total" value="24" class="setting-input" style="padding:12px;" title="총 인원">명
+                        
+                        <input type="text" id="hw-category" list="category-list" placeholder="과목 (예: 수학)" style="width:110px; padding:12px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';">
+                        <datalist id="category-list"><option value="수학"></option><option value="국어"></option><option value="일기"></option></datalist>
+                        
+                        <input type="text" id="hw-title" placeholder="과제 내용 (예: 수익 10쪽)" style="flex:1; min-width: 150px; padding:12px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';">
+                        
+                        <input type="text" id="hw-absent" placeholder="결석번호(예:3)" style="width:110px; padding:12px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';">
+                        
+                        <button class="action-btn" style="padding:12px 25px;" onclick="addHomework()">추가하기</button>
+                    </div>
+                    
+                    <label style="font-size:15px; color:#546e7a; font-weight:bold; margin-left:10px;"><input type="checkbox" id="show-archived" onchange="renderHomeworkList()"> 보관된 완료 과제도 보기</label>
+                    <div id="homework-list" style="margin-top:20px;"></div>
+                </div>
+            </div>
+
+            <div id="stats-tab" class="content-section">
                 <div class="picker-box">
-                    <h2>👥 모둠 뽑기</h2>
-                    <div style="margin-bottom:10px; font-weight:bold; color:var(--dark-blue);"><input type="number" id="group-count-picker" value="6" class="setting-input">모둠 <button class="reset-btn" onclick="changeGroupCount('group-count-picker')">적용</button></div>
-                    <div id="group-cards-container" class="card-container"></div>
-                    <button class="action-btn" onclick="drawGroupCard()">카드 뽑기</button> <button class="reset-btn" onclick="resetGroupDraw()">다시 섞기</button>
-                </div>
-                <div class="picker-box">
-                    <h2>👤 개인 번호 뽑기</h2>
-                    <div style="margin-bottom:10px; font-weight:bold; color:var(--dark-blue);"><input type="number" id="picker-total" value="24" class="setting-input">명 (결석:<input type="text" id="picker-absent" style="width:40px; margin-left:5px;" class="setting-input">) <button class="reset-btn" onclick="initStudentPicker()">적용</button></div>
-                    <div id="student-cards-container" class="card-container"></div>
-                    <button class="action-btn" style="background:#8e44ad;" onclick="drawStudentCard()">번호 뽑기</button> <button class="reset-btn" onclick="initStudentPicker()">다시 섞기</button>
+                    <h2>📊 과제 제출 통계</h2>
+                    
+                    <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px; flex-wrap:wrap; align-items:center;">
+                        <input type="date" id="stat-start-date" style="padding:10px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';"> ~ <input type="date" id="stat-end-date" style="padding:10px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';">
+                    </div>
+                    
+                    <div style="display:flex; justify-content:center; gap:10px; margin-bottom:25px; flex-wrap:wrap;">
+                        <button id="btn-stat-hw" class="stat-mode-btn active" onclick="renderStats('hw')">과제별 현황</button>
+                        <button id="btn-stat-subject" class="stat-mode-btn" onclick="renderStats('subject')">과목별 평균</button>
+                        <button id="btn-stat-student" class="stat-mode-btn" onclick="renderStats('student')">학생 개인별 달성률</button>
+                    </div>
+                    
+                    <div id="stat-summary" style="font-size:18px; font-weight:bold; margin-bottom:20px; color:var(--dark-blue); border-bottom:2px dashed #eee; padding-bottom:10px;">조회할 날짜를 선택해주세요.</div>
+                    <div id="stat-results-area" style="text-align:left; display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:20px;"></div>
                 </div>
             </div>
-            <div class="picker-box" style="margin-top:20px;">
-                <h2 style="color:#2e7d32;">🕹️ 미니 점수판</h2>
-                <div class="mini-score-grid" id="mini-scoreboard"></div>
-                <button id="mini-reset-btn" class="reset-btn" style="margin-top:20px; background:#78909c; transition:0.3s;" onclick="resetMiniScores()">미니 점수 전체 초기화</button>
-            </div>
-        </div>
 
-        <div id="homework-tab" class="content-section">
-            <div class="picker-box" style="text-align:left;">
-                <h2 style="text-align:center;">📝 과제 체크 리스트</h2>
-                <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; align-items:center;">
-                    <input type="date" id="hw-date" style="padding:10px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';">
-                    <input type="number" id="hw-total" value="24" class="setting-input" title="총 인원">명
-                    <input type="text" id="hw-category" list="category-list" placeholder="과목 (예: 수학)" style="width:100px; padding:10px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';">
-                    <datalist id="category-list"><option value="수학"></option><option value="국어"></option><option value="일기"></option></datalist>
-                    <input type="text" id="hw-title" placeholder="과제 내용 (예: 수익 10쪽)" style="flex:1; min-width: 150px; padding:10px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';">
-                    <input type="text" id="hw-absent" placeholder="결석번호(예:3)" style="width:100px; padding:10px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';">
-                    <button class="action-btn" onclick="addHomework()">추가</button>
-                </div>
-                <label style="font-size:13px; color:#666; font-weight:bold;"><input type="checkbox" id="show-archived" onchange="renderHomeworkList()"> 보관된 완료 과제도 보기</label>
-                <div id="homework-list" style="margin-top:15px;"></div>
-            </div>
-        </div>
-
-        <div id="stats-tab" class="content-section">
-            <div class="picker-box">
-                <h2>📊 과제 제출 통계</h2>
-                <div style="display:flex; justify-content:center; gap:10px; margin-bottom:15px; flex-wrap:wrap; align-items:center;">
-                    <input type="date" id="stat-start-date" style="padding:10px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';"> ~ <input type="date" id="stat-end-date" style="padding:10px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';">
-                </div>
-                
-                <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
-                    <button id="btn-stat-hw" class="stat-mode-btn active" onclick="renderStats('hw')">과제별 통계</button>
-                    <button id="btn-stat-subject" class="stat-mode-btn" onclick="renderStats('subject')">과목별 평균</button>
-                    <button id="btn-stat-student" class="stat-mode-btn" onclick="renderStats('student')">개인별 달성률</button>
-                </div>
-                
-                <div id="stat-summary" style="font-weight:bold; margin-bottom:15px; color:var(--dark-blue);">조회할 날짜를 선택해주세요.</div>
-                <div id="stat-results-area" style="text-align:left; display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:15px;"></div>
-            </div>
-        </div>
+        </main>
 
         <div class="floating-tools">
             <div style="position:relative; display:flex; align-items:center;">
                 <div id="quick-student-box" class="tool-box">
                     <h3 style="margin:0 0 10px 0; color:var(--dark-blue); text-align:center;">👤 개인 번호 뽑기</h3>
-                    <div id="quick-student-result" style="font-size: 40px; font-weight: 800; color: #8e44ad; text-align: center; margin-bottom: 15px;">-</div>
+                    <div id="quick-student-result" style="font-size: 45px; font-weight: 800; color: #8e44ad; text-align: center; margin-bottom: 15px;">-</div>
                     <div style="display:flex; gap:5px;"><button class="action-btn" style="flex:1; background:#8e44ad;" onclick="drawStudentCard()">뽑기!</button><button class="reset-btn" style="flex:1;" onclick="initStudentPicker()">리셋</button></div>
                 </div>
                 <button class="tool-btn-circle" style="background:#8e44ad;" onclick="toggleToolBox('quick-student-box')" title="개인 뽑기">👤</button>
@@ -350,7 +369,7 @@
             <div style="position:relative; display:flex; align-items:center;">
                 <div id="quick-group-box" class="tool-box">
                     <h3 style="margin:0 0 10px 0; color:var(--dark-blue); text-align:center;">👥 모둠 뽑기</h3>
-                    <div id="quick-group-result" style="font-size: 40px; font-weight: 800; color: #2ecc71; text-align: center; margin-bottom: 15px;">-</div>
+                    <div id="quick-group-result" style="font-size: 45px; font-weight: 800; color: #2ecc71; text-align: center; margin-bottom: 15px;">-</div>
                     <div style="display:flex; gap:5px;"><button class="action-btn" style="flex:1; background:#2ecc71;" onclick="drawGroupCard()">뽑기!</button><button class="reset-btn" style="flex:1;" onclick="resetGroupDraw()">리셋</button></div>
                 </div>
                 <button class="tool-btn-circle" style="background:#2ecc71;" onclick="toggleToolBox('quick-group-box')" title="모둠 뽑기">👥</button>
@@ -365,7 +384,7 @@
                     </div>
                     <input type="number" id="custom-timer-input" style="width:100%; margin-top:10px; padding:10px; border-radius:8px; border:1px solid #ddd; text-align:center; font-family:'Pretendard';" placeholder="직접 분 입력 후 엔터" onkeypress="if(event.key==='Enter')startCustomTimer()">
                 </div>
-                <button class="tool-btn-circle" style="background:var(--dark-blue);" onclick="toggleToolBox('timer-box')" title="타이머">⏱️</button>
+                <button class="tool-btn-circle" style="background:var(--dark-blue);" onclick="toggleToolBox('timer-box')" title="타이머"><i class="fa-solid fa-stopwatch"></i></button>
             </div>
         </div>
 
@@ -376,7 +395,7 @@
                     <button class="reset-btn" onclick="closeSettingsModal()">닫기</button>
                 </div>
                 <div class="setting-group"><label>당번 기본 할 일</label><textarea id="set-duty-tasks" style="height:60px;"></textarea></div>
-                <p style="background:var(--main-sky); padding:10px; border-radius:8px; font-size:14px; color:var(--dark-blue); font-weight:bold;">📚 시간표 입력 시 '교시'는 빼고 [과목: 학습목표(준비물)] 처럼 각 줄에 하나씩 콜론(:)을 넣어 적어주세요!<br>(예: 국어 : 바른말 고운말 쓰기)</p>
+                <p style="background:var(--main-sky); padding:10px; border-radius:8px; font-size:14px; color:var(--dark-blue); font-weight:bold;">📚 시간표는 왼쪽 칸(과목)과 오른쪽 칸(내용)을 각각 엔터로 줄바꿈하여 작성하세요!</p>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                     <div class="setting-group"><label>월요일 (자습 / 시간표)</label><input type="text" id="set-mon-m" placeholder="자습내용"><textarea id="set-mon-t" style="height:120px;" placeholder="국어: 내용&#10;수학: 내용"></textarea></div>
                     <div class="setting-group"><label>화요일</label><input type="text" id="set-tue-m"><textarea id="set-tue-t" style="height:120px;"></textarea></div>
@@ -384,7 +403,7 @@
                     <div class="setting-group"><label>목요일</label><input type="text" id="set-thu-m"><textarea id="set-thu-t" style="height:120px;"></textarea></div>
                     <div class="setting-group" style="grid-column: span 2;"><label>금요일</label><input type="text" id="set-fri-m"><textarea id="set-fri-t" style="height:120px;"></textarea></div>
                 </div>
-                <button class="action-btn" style="width:100%; margin-top:10px;" onclick="saveSettingsData()">💾 저장하기</button>
+                <button class="action-btn" style="width:100%; margin-top:10px; padding:15px; font-size:18px;" onclick="saveSettingsData()">💾 기초 세팅 저장</button>
             </div>
         </div>
 
@@ -401,6 +420,11 @@
         function changeFontSize(step) {
             currentBoardFontSize += step; if(currentBoardFontSize < 12) currentBoardFontSize = 12; if(currentBoardFontSize > 35) currentBoardFontSize = 35; 
             applyFontSize(); localStorage.setItem('myCustomFontSize', currentBoardFontSize);
+        }
+
+        function toggleActionMenu() {
+            const menu = document.getElementById('action-menu');
+            menu.classList.toggle('show');
         }
 
         const firebaseConfig = {
@@ -436,12 +460,20 @@
 
             auth.onAuthStateChanged(user => {
                 if(user) {
-                    document.getElementById('login-box').style.display = 'none'; document.getElementById('room-box').style.display = 'block'; document.getElementById('user-profile').innerText = user.displayName + " 선생님";
+                    document.getElementById('login-box').style.display = 'none'; document.getElementById('room-box').style.display = 'block'; document.getElementById('user-profile').innerHTML = `<i class="fa-solid fa-user"></i> ${user.displayName} 선생님`;
                     const savedRoom = localStorage.getItem('classRoomName'); if(savedRoom) { document.getElementById('room-name-input').value = savedRoom; enterRoom(); }
                 } else {
                     document.getElementById('auth-overlay').style.display = 'flex'; document.getElementById('login-box').style.display = 'block'; document.getElementById('room-box').style.display = 'none'; document.getElementById('main-app').style.display = 'none';
                 }
             });
+            
+            // 햄버거 메뉴 바깥 클릭시 닫기
+            window.onclick = function(event) {
+                if (!event.target.matches('.hamburger-btn') && !event.target.matches('.fa-bars') && !event.target.closest('.action-menu')) {
+                    const menu = document.getElementById('action-menu');
+                    if (menu.classList.contains('show')) menu.classList.remove('show');
+                }
+            }
         };
 
         function loginWithGoogle() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err => alert("로그인 실패: "+err.message)); }
@@ -457,7 +489,7 @@
             timerRef = db.ref('rooms/' + currentRoom + '/timerState'); boardRef = db.ref('rooms/' + currentRoom + '/skyDashboard');
             historyRef = db.ref('rooms/' + currentRoom + '/boardHistory'); tasksRef = db.ref('rooms/' + currentRoom + '/groupTasks'); hwRef = db.ref('rooms/' + currentRoom + '/homeworks');
 
-            document.getElementById('auth-overlay').style.display = 'none'; document.getElementById('main-app').style.display = 'block';
+            document.getElementById('auth-overlay').style.display = 'none'; document.getElementById('main-app').style.display = 'flex';
             setInterval(() => { document.getElementById('real-clock').innerText = new Date().toLocaleTimeString('ko-KR', {hour12: false}); }, 1000);
             
             document.querySelectorAll('[contenteditable="true"]').forEach(el => { el.addEventListener('focus', () => { isDashboardFocused = true; }); el.addEventListener('blur', () => { isDashboardFocused = false; }); });
@@ -527,7 +559,7 @@
             for(let i=1; i<=6; i++) { d[`ttSub${i}`] = document.getElementById(`view-tt-sub-${i}`).innerText; d[`ttVal${i}`] = document.getElementById(`view-tt-val-${i}`).innerText; }
             boardRef.set(d); historyRef.child(getFormattedDate(viewDate)).set(d);
             if (window.tempNextIdx !== undefined) { db.ref('rooms/' + currentRoom + '/settings/lastDutyIndex').set(window.tempNextIdx); window.tempNextIdx = undefined; }
-            alert(getFormattedDate(viewDate) + " 기록이 성공적으로 자동기록장에 저장되었습니다.");
+            alert(getFormattedDate(viewDate) + " 기록이 성공적으로 저장되었습니다.");
         }
 
         function autoFillDashboard(isInitial = false) {
@@ -645,9 +677,7 @@
         function toggleTimer() { if(localTimer.isRunning) timerRef.set({isRunning:false, endTime:0, pausedRemaining: Math.max(0, Math.ceil((localTimer.endTime - Date.now())/1000))}); else if(localTimer.pausedRemaining > 0) timerRef.set({isRunning:true, endTime: Date.now() + localTimer.pausedRemaining*1000, pausedRemaining: localTimer.pausedRemaining}); }
         function startCustomTimer() { const v = parseFloat(document.getElementById('custom-timer-input').value); if(v > 0) timerRef.set({isRunning:true, endTime: Date.now() + v*60*1000, pausedRemaining: v*60}); document.getElementById('custom-timer-input').value=''; }
 
-        // ==========================================
-        // ✨ 4. 과제 & 3단 통계
-        // ==========================================
+        // 과제 & 3단 통계
         function addHomework() {
             const d = document.getElementById('hw-date').value; const c = document.getElementById('hw-category').value || '미분류'; const t = document.getElementById('hw-title').value; 
             if(!t || !d) return alert("날짜와 내용을 모두 입력해주세요!");
@@ -670,10 +700,9 @@
                     btns += `<button class="student-btn ${btnClass}" onclick="cycleH('${hw.id}',${i})">${i}</button>`;
                 }
                 const catStr = hw.category && hw.category !== '미분류' ? `[${hw.category}] ` : "";
-                div.innerHTML += `<div class="hw-card"><div style="display:flex; justify-content:space-between; align-items:center;"><div><b style="font-size:16px; color:var(--dark-blue);">${catStr}${hw.title}</b> <span style="font-size:13px; color:#666; margin-left:5px;">(${hw.date}) | 제출 ${done}/${act}</span></div><div><button class="reset-btn" style="padding:4px 8px;font-size:12px;" onclick="archiveH('${hw.id}',${hw.isArchived})">${hw.isArchived?'보관해제':'보관함 넣기'}</button> <button class="reset-btn" style="padding:4px 8px;font-size:12px;background:#e53935;" onclick="deleteH('${hw.id}')">삭제</button></div></div><div class="student-grid">${btns}</div></div>`;
+                div.innerHTML += `<div class="hw-card"><div style="display:flex; justify-content:space-between; align-items:center;"><div><b style="font-size:18px; color:var(--dark-blue);">${catStr}${hw.title}</b> <span style="font-size:14px; color:#666; margin-left:5px;">(${hw.date}) | 제출 ${done}/${act}</span></div><div><button class="reset-btn" style="padding:6px 12px;font-size:13px;" onclick="archiveH('${hw.id}',${hw.isArchived})">${hw.isArchived?'보관해제':'보관함 넣기'}</button> <button class="reset-btn" style="padding:6px 12px;font-size:13px;background:#e53935;" onclick="deleteH('${hw.id}')">삭제</button></div></div><div class="student-grid">${btns}</div></div>`;
             });
         }
-
         function cycleH(id, n) { const hw = allHomeworks.find(x => x.id === id); const s = hw.checklist ? hw.checklist[n] : false; const next = (s===false||s===undefined) ? true : (s===true?'excused':false); hwRef.child(id).child('checklist').child(String(n)).set(next); }
         function deleteH(id) { if(confirm("삭제할까요?")) hwRef.child(id).remove(); }
         function archiveH(id, s) { hwRef.child(id).child('isArchived').set(!s); }
@@ -683,13 +712,6 @@
             currentStatsMode = mode;
             document.querySelectorAll('.stat-mode-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`btn-stat-${mode}`).classList.add('active');
-            calculateStats();
-        }
-
-        function setQuickDate(t) {
-            const s = document.getElementById('stat-start-date'); const e = document.getElementById('stat-end-date'); const d = new Date();
-            if(t==='week') { let l = new Date(); l.setDate(d.getDate()-6); s.value = getFormattedDate(l); e.value = getFormattedDate(d); } 
-            else if(t==='month') { let l = new Date(d.getFullYear(), d.getMonth(), 1); let last = new Date(d.getFullYear(), d.getMonth()+1, 0); s.value = getFormattedDate(l); e.value = getFormattedDate(last); }
             calculateStats();
         }
 
@@ -709,7 +731,7 @@
                     for(let i in hw.checklist) { if(hw.checklist[i]===true) done++; else if(hw.checklist[i]==='excused') act--; }
                     let p = act > 0 ? Math.round(done/act*100) : 0;
                     const catStr = hw.category && hw.category !== '미분류' ? `[${hw.category}] ` : "";
-                    res.innerHTML += `<div style="background:white; border:1px solid #eee; padding:15px; border-radius:10px; box-shadow:0 2px 4px rgba(0,0,0,0.02);"><b style="font-size:15px; color:var(--dark-blue);">${catStr}${hw.title}</b><br><small style="color:#666;">${hw.date}</small><div style="background:#f0f4f8; height:12px; border-radius:6px; margin:8px 0; overflow:hidden;"><div style="background:var(--accent-blue); height:100%; width:${p}%;"></div></div><div style="font-size:13px; font-weight:bold; color:var(--dark-blue); text-align:right;">${p}% (${done}/${act})</div></div>`;
+                    res.innerHTML += `<div style="background:white; border:1px solid #eee; padding:20px; border-radius:15px; box-shadow:0 4px 6px rgba(0,0,0,0.02);"><b style="font-size:18px; color:var(--dark-blue);">${catStr}${hw.title}</b><br><small style="color:#666; font-size:14px;">${hw.date}</small><div style="background:#f0f4f8; height:16px; border-radius:8px; margin:12px 0; overflow:hidden;"><div style="background:var(--accent-blue); height:100%; width:${p}%;"></div></div><div style="font-size:15px; font-weight:bold; color:var(--dark-blue); text-align:right;">${p}% (${done}/${act})</div></div>`;
                 });
             } else if (currentStatsMode === 'subject') {
                 let subjects = {};
@@ -725,7 +747,7 @@
                 for(let cat in subjects) {
                     let done = subjects[cat].done, act = subjects[cat].act;
                     let p = act > 0 ? Math.round(done/act*100) : 0;
-                    res.innerHTML += `<div style="background:white; border:1px solid #eee; padding:15px; border-radius:10px;"><b style="font-size:16px; color:var(--dark-blue);">${cat}</b> <small style="color:#666;">(${subjects[cat].count}개 과제)</small><div style="background:#f0f4f8; height:12px; border-radius:6px; margin:8px 0; overflow:hidden;"><div style="background:#4caf50; height:100%; width:${p}%;"></div></div><div style="font-size:13px; font-weight:bold; color:var(--dark-blue); text-align:right;">평균 달성률: ${p}%</div></div>`;
+                    res.innerHTML += `<div style="background:white; border:1px solid #eee; padding:20px; border-radius:15px; box-shadow:0 4px 6px rgba(0,0,0,0.02);"><b style="font-size:20px; color:var(--dark-blue);">${cat}</b> <small style="color:#666; font-size:14px;">(${subjects[cat].count}개 과제)</small><div style="background:#f0f4f8; height:16px; border-radius:8px; margin:12px 0; overflow:hidden;"><div style="background:#4caf50; height:100%; width:${p}%;"></div></div><div style="font-size:15px; font-weight:bold; color:var(--dark-blue); text-align:right;">평균 달성률: ${p}%</div></div>`;
                 }
             } else if (currentStatsMode === 'student') {
                 let students = {}; let maxTotal = 24;
@@ -733,13 +755,13 @@
                 for(let i=1; i<=maxTotal; i++) students[i] = { done: 0, act: 0 };
                 filt.forEach(hw => { for(let i=1; i<=hw.total; i++) { if(hw.checklist[i] === true) { students[i].done++; students[i].act++; } else if(hw.checklist[i] === false || hw.checklist[i] === undefined) { students[i].act++; } } });
                 
-                let studentHtml = `<div style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px;">`;
+                let studentHtml = `<div style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px;">`;
                 for(let i=1; i<=maxTotal; i++) {
                     let done = students[i].done, act = students[i].act;
                     if(act === 0) continue; 
                     let p = Math.round(done/act*100);
                     let color = p >= 80 ? '#2e7d32' : (p >= 50 ? '#f57c00' : '#c62828');
-                    studentHtml += `<div style="background:white; border:1px solid #eee; padding:15px; border-radius:10px; text-align:center; box-shadow:0 2px 4px rgba(0,0,0,0.02);"><div style="font-size:16px; font-weight:bold; color:var(--dark-blue); margin-bottom:5px;">${i}번 학생</div><div style="font-size:26px; font-weight:900; color:${color}; margin-bottom:5px;">${p}%</div><div style="font-size:13px; color:#666; font-weight:bold;">${done} / ${act} 개 완료</div></div>`;
+                    studentHtml += `<div style="background:white; border:1px solid #eee; padding:20px; border-radius:15px; text-align:center; box-shadow:0 4px 6px rgba(0,0,0,0.02);"><div style="font-size:18px; font-weight:bold; color:var(--dark-blue); margin-bottom:8px;">${i}번 학생</div><div style="font-size:32px; font-weight:900; color:${color}; margin-bottom:8px;">${p}%</div><div style="font-size:14px; color:#666; font-weight:bold;">${done} / ${act} 완료</div></div>`;
                 }
                 studentHtml += `</div>`; res.innerHTML = studentHtml;
             }
