@@ -30,7 +30,7 @@
 
         #main-app { display: none; width: 100vw; height: 100vh; overflow: hidden; display: flex; flex-direction: row; }
         
-        /* 사이드바 */
+        /* 🚀 좌측 사이드바 */
         .sidebar { width: 240px; background: var(--white); box-shadow: 2px 0 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; padding: 25px 15px; z-index: 100; flex-shrink: 0; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s; overflow: hidden;}
         .sidebar.collapsed { width: 80px; padding: 25px 10px; align-items: center;}
         .sidebar.collapsed .logo-text, .sidebar.collapsed .tab-text, .sidebar.collapsed .room-tag span, .sidebar.collapsed .user-profile-text { display: none; }
@@ -82,9 +82,10 @@
         .tt-content-wrapper { display: flex; flex-direction: column; flex-grow: 1; gap: 4px; justify-content: center; min-width: 0;}
         .tt-obj { color: #2c3e50; font-size: var(--board-font-size); font-weight: 700; padding: 4px; word-break: keep-all;}
         
+        /* ✨ 작아지고 콤팩트해진 준비물 박스 */
         .tt-prep-wrap { display: flex; align-items: center; gap: 4px; background: #fff8e1; padding: 2px 6px; border-radius: 6px; border-left: 3px solid #ffb300; margin-top: 2px; width: fit-content;}
-        .prep-icon { font-size: 13px; color: #f57c00; font-weight: 900; white-space: nowrap;}
-        .tt-prep { color: #d32f2f; font-size: 14px; font-weight: 800; flex-grow: 1; outline: none; line-height: 1.3;}
+        .prep-icon { font-size: 12px; color: #f57c00; font-weight: 900; white-space: nowrap;}
+        .tt-prep { color: #d32f2f; font-size: 13px; font-weight: 800; flex-grow: 1; outline: none; line-height: 1.2;}
 
         .tt-page { font-weight: 800; color: #0288d1; width: 120px; flex-shrink: 0; font-size: calc(var(--board-font-size) - 2px); background: #f0f4f8; border: 2px dashed #b3e5fc; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 10px; line-height: 1.4; word-break: keep-all;}
 
@@ -95,8 +96,6 @@
         .cal-date { font-size: 14px; padding: 10px 0; cursor: pointer; border-radius: 8px; position: relative; font-weight: 600;}
         .cal-date:hover { background: var(--main-sky); }
         .cal-date.today { background: var(--sub-sky); color: var(--dark-blue); }
-        .cal-date.has-record::after { content: '●'; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); font-size: 10px; color: #e91e63; }
-        .cal-date.selected { background: var(--accent-blue) !important; color: white !important; }
 
         .full-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--main-sky); display:flex; justify-content:center; align-items:center; z-index:9999; flex-direction: column;}
         .login-box { background:white; padding:40px; border-radius:25px; text-align:center; width:90%; max-width:400px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none;}
@@ -104,27 +103,24 @@
         
         .floating-tools { position: fixed; bottom: 20px; right: 25px; z-index: 2000; display: flex; flex-direction: row; gap: 10px; align-items: flex-end; }
         .tool-btn-circle { width: 55px; height: 55px; border-radius: 50%; border: none; font-size: 22px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; transition: 0.3s; color: white;}
-        .tool-btn-circle:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 6px 15px rgba(0,0,0,0.2); }
         .tool-box-popup { position: absolute; right: 0; bottom: 65px; background: var(--white); padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); width: 280px; display: none; border: 2px solid var(--accent-blue); transform-origin: bottom right; z-index: 3000; }
 
         .timer-display { font-size: 45px; font-weight: 800; color: var(--accent-blue); text-align: center; margin-bottom: 15px; font-variant-numeric: tabular-nums;}
         .timer-btn { padding: 10px; border: none; border-radius: 10px; background: var(--main-sky); cursor: pointer; font-weight: bold; font-family: 'Pretendard'; color:var(--dark-blue);}
         .timer-start { background: #ff5252; color: white; grid-column: span 2; }
 
-        /* 점수판 - 색상 연동을 위해 배경색 흰색 보장 */
+        /* 점수판 */
         .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; } 
         .group-card { background-color: var(--white); border-radius: 15px; padding: 20px 15px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.03); border-style: solid; border-width: 3px;}
         .score { font-size: 60px; font-weight: 800; margin: 15px 0; font-variant-numeric: tabular-nums; line-height: 1; color: var(--dark-blue);}
         .button-group { display: flex; justify-content: center; gap: 10px; margin-top: 10px;}
         .score-btn { width: 50px; height: 45px; border: none; border-radius: 10px; cursor: pointer; color: white; font-weight: bold; font-size: 24px; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
-        .score-btn:active { transform: translateY(3px); box-shadow: none !important; }
-        .btn-plus { background-color: #039be5; box-shadow: 0 4px 0 #0277bd; }
-        .btn-minus { background-color: #ff5252; box-shadow: 0 4px 0 #d32f2f; }
         
         .task-grid { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 20px; background: #f8f9fa; padding: 20px; border-radius: 15px; }
         .task-card { background: #eceff1; padding: 12px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #cfd8dc; transition: 0.2s; color:#546e7a;}
         .task-card.done { background: var(--accent-blue); color: white; border-color: var(--dark-blue); box-shadow: 0 4px 10px rgba(2,155,229,0.3);}
         
+        /* 🎲 뽑기 */
         .picker-box { background: white; padding: 25px; border-radius: 20px; box-shadow: var(--shadow); border-top: 5px solid var(--accent-blue); text-align: center; }
         .card-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 15px 0; min-height: 80px; align-items: center; }
         .flip-card { background-color: transparent; perspective: 1000px; cursor: pointer;}
@@ -135,6 +131,7 @@
         .flip-card-back { background-color: var(--accent-blue); color: white; transform: rotateY(180deg); font-size: 20px;}
         .group-card-size { width: 60px; height: 80px; }
         .student-card-size { width: 48px; height: 65px; }
+
         .mini-score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 8px; margin-top: 15px; } 
         .mini-card { background: #f8f9fa; border-radius: 8px; padding: 10px; border: 1px solid #eceff1; }
         .mini-val { font-size: 22px; font-weight: bold; color: var(--accent-blue); margin: 5px 0; font-variant-numeric: tabular-nums;}
@@ -144,9 +141,8 @@
         .student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); gap: 8px; text-align: center; margin-top: 15px;}
         .student-btn { font-size: 18px; font-weight: 800; padding: 12px 0; border: none; border-radius: 8px; cursor: pointer; background-color: #eceff1; color: #546e7a; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
         .student-btn.done { background-color: var(--accent-blue); color: white; } 
-        .student-btn.excused { background-color: white; border: 1px dashed #ccc; color: #b0bec5; text-decoration: line-through; box-shadow: none;}
-        .setting-input { font-size: 16px; width: 65px; text-align: center; border-radius: 8px; border: 1px solid #b0bec5; padding: 8px; margin: 0 5px; font-family: 'Pretendard', sans-serif;}
 
+        .setting-input { font-size: 16px; width: 65px; text-align: center; border-radius: 8px; border: 1px solid #b0bec5; padding: 8px; margin: 0 5px; font-family: 'Pretendard', sans-serif;}
         .stat-mode-btn { padding: 10px 20px; border: 2px solid var(--accent-blue); border-radius: 30px; background: white; color: var(--accent-blue); font-weight: bold; cursor: pointer; font-size: 15px; transition: 0.3s; opacity: 0.5;}
         .stat-mode-btn.active { background: var(--accent-blue); color: white; opacity: 1;}
 
@@ -156,9 +152,9 @@
         .setting-group label { display: block; font-weight: 700; margin-bottom: 5px; color: var(--accent-blue); }
         .setting-group textarea, .setting-group input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-family: 'Pretendard'; }
 
-        /* ✨ 자리배치 전용 (드래그 앤 드롭 애니메이션 추가) */
+        /* ✨ 자리배치 및 드래그 앤 드롭 애니메이션 */
         .seating-grid { display: grid; gap: 15px; margin: 20px auto; justify-content: center; background: #f0f4f8; padding: 30px; border-radius: 20px; border: 2px dashed #b0bec5; }
-        .desk-card { background: white; border-radius: 12px; width: 80px; height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: var(--dark-blue); box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: grab; transition: transform 0.2s, box-shadow 0.2s; user-select: none; }
+        .desk-card { background: white; border-radius: 12px; width: 80px; height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: var(--dark-blue); box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: grab; transition: transform 0.2s, box-shadow 0.2s; user-select: none; border-style: solid; border-width: 3px; }
         .desk-card:active { cursor: grabbing; }
         .desk-card.drag-over { transform: scale(1.1); box-shadow: 0 0 15px var(--accent-blue); z-index: 10;}
         
@@ -170,9 +166,7 @@
         .desk-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
         .desk-card.empty { background: transparent; border: 2px dashed #cfd8dc; color: transparent; box-shadow: none; cursor: pointer; }
         .desk-card.empty .gender-tag { display: none; }
-        .desk-card.selected { transform: scale(1.05); box-shadow: 0 0 0 4px rgba(255,152,0,0.4); }
         
-        /* 모둠별 테두리 및 배경색 (점수판과 연동됨) */
         .group-bg-1 { border-color: #2196f3 !important; background-color: #e3f2fd !important; }
         .group-bg-2 { border-color: #ff9800 !important; background-color: #fff3e0 !important; }
         .group-bg-3 { border-color: #4caf50 !important; background-color: #e8f5e9 !important; }
@@ -180,10 +174,8 @@
         .group-bg-5 { border-color: #f44336 !important; background-color: #ffebee !important; }
         .group-bg-6 { border-color: #00bcd4 !important; background-color: #e0f7fa !important; }
 
-        /* 자리 불러오기 목록 UI */
         .history-list-item { background: #ffffff; border: 1px solid #cfd8dc; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s;}
         .history-list-item:hover { background: #e1f5fe; border-color: #0288d1; }
-        .history-list-item i { color: #0288d1; font-size: 20px; }
 
         @media (max-width: 1100px) { 
             #main-app { flex-direction: column; overflow-y: auto; }
@@ -221,7 +213,7 @@
     <!-- 🌟 메인 앱 레이아웃 -->
     <div id="main-app">
         
-        <!-- 🚀 좌측 사이드바 -->
+        <!-- 🚀 좌측 사이드바 (토글 지원) -->
         <nav class="sidebar" id="mySidebar">
             <div class="sidebar-header">
                 <div class="logo">
@@ -239,7 +231,7 @@
                 <button class="tab-btn" onclick="switchTab('seating')" title="자리 배치"><i class="fa-solid fa-chair"></i> <span class="tab-text">자리 배치</span></button>
             </div>
             <div class="sidebar-bottom">
-                <!-- ✨ 학급 세팅 버튼을 사이드바로 이동 -->
+                <!-- ✨ 톱니바퀴 학급 설정 버튼을 사이드바로 이동 -->
                 <button class="tab-btn" onclick="openSettingsModal()" style="margin-bottom: 20px;" title="기초 세팅"><i class="fa-solid fa-gear"></i> <span class="tab-text">기초 세팅</span></button>
                 <div id="user-profile" class="user-profile-text" style="font-size:13px; font-weight:bold; color:#666; margin-bottom:5px;"></div>
                 <button class="room-tag" onclick="exitRoom()" title="방 나가기"><i class="fa-solid fa-arrow-right-from-bracket"></i> <span>방 나가기</span></button>
@@ -266,8 +258,8 @@
 
                     <div class="column-card" style="position: relative; padding-top: 20px;">
                         
-                        <!-- ✨ 깔끔해진 우측 상단 버튼 배열 -->
-                        <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 10px; gap: 8px;">
+                        <!-- ✨ 깔끔해진 우측 상단 메뉴 바 (설정, 글자크기, 불러오기, 저장 일렬 배치) -->
+                        <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 15px; gap: 8px;">
                             <span id="auto-save-toast" style="font-size:13px; font-weight:bold; color:#4caf50; opacity:0; transition:opacity 0.5s;">자동 저장 완료 ✓</span>
                             
                             <div style="display:flex; align-items:center; background:#f0f4f8; border-radius:8px; padding:4px;">
@@ -283,33 +275,33 @@
                         <div class="info-box" style="flex:1; padding: 25px 20px;">
                             <div class="tt-row">
                                 <span class="tt-label">1교시</span><span class="tt-subject" id="view-tt-sub-1" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-1" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-1" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력 (클릭)"></div></div></div>
-                                <span class="tt-page" id="view-tt-page-1" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터 줄바꿈)"></span>
+                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-1" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-1" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력"></div></div></div>
+                                <span class="tt-page" id="view-tt-page-1" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수"></span>
                             </div>
                             <div class="tt-row">
                                 <span class="tt-label">2교시</span><span class="tt-subject" id="view-tt-sub-2" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-2" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-2" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력 (클릭)"></div></div></div>
-                                <span class="tt-page" id="view-tt-page-2" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터 줄바꿈)"></span>
+                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-2" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-2" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력"></div></div></div>
+                                <span class="tt-page" id="view-tt-page-2" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수"></span>
                             </div>
                             <div class="tt-row">
                                 <span class="tt-label">3교시</span><span class="tt-subject" id="view-tt-sub-3" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-3" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-3" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력 (클릭)"></div></div></div>
-                                <span class="tt-page" id="view-tt-page-3" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터 줄바꿈)"></span>
+                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-3" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-3" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력"></div></div></div>
+                                <span class="tt-page" id="view-tt-page-3" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수"></span>
                             </div>
                             <div class="tt-row">
                                 <span class="tt-label">4교시</span><span class="tt-subject" id="view-tt-sub-4" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-4" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-4" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력 (클릭)"></div></div></div>
-                                <span class="tt-page" id="view-tt-page-4" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터 줄바꿈)"></span>
+                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-4" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-4" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력"></div></div></div>
+                                <span class="tt-page" id="view-tt-page-4" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수"></span>
                             </div>
                             <div class="tt-row">
                                 <span class="tt-label">5교시</span><span class="tt-subject" id="view-tt-sub-5" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-5" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-5" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력 (클릭)"></div></div></div>
-                                <span class="tt-page" id="view-tt-page-5" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터 줄바꿈)"></span>
+                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-5" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-5" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력"></div></div></div>
+                                <span class="tt-page" id="view-tt-page-5" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수"></span>
                             </div>
                             <div class="tt-row" style="border-bottom:none;">
                                 <span class="tt-label">6교시</span><span class="tt-subject" id="view-tt-sub-6" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-6" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-6" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력 (클릭)"></div></div></div>
-                                <span class="tt-page" id="view-tt-page-6" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터 줄바꿈)"></span>
+                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-6" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-6" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력"></div></div></div>
+                                <span class="tt-page" id="view-tt-page-6" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수"></span>
                             </div>
                         </div>
                     </div>
@@ -379,8 +371,10 @@
             <!-- 📝 3. 과제관리 탭 -->
             <div id="homework-tab" class="content-section">
                 <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
-                    <button class="action-btn" style="background:#00897b; margin-right:8px; padding:8px 15px; border-radius: 8px;" onclick="toggleHwView('list')"><i class="fa-solid fa-list"></i> 체크 리스트</button>
-                    <button class="action-btn" style="background:#fb8c00; padding:8px 15px; border-radius: 8px;" onclick="toggleHwView('stats')"><i class="fa-solid fa-chart-pie"></i> 제출 통계</button>
+                    <div id="tool-hw-menu" style="position:relative; display:flex; align-items:center;">
+                        <button class="action-btn" style="background:#00897b; margin-right:8px; padding:8px 15px; border-radius: 8px;" onclick="toggleHwView('list')"><i class="fa-solid fa-list"></i> 체크 리스트</button>
+                        <button class="action-btn" style="background:#fb8c00; padding:8px 15px; border-radius: 8px;" onclick="toggleHwView('stats')"><i class="fa-solid fa-chart-pie"></i> 제출 통계</button>
+                    </div>
                 </div>
 
                 <div style="background:var(--white); border-radius:20px; padding:25px; box-shadow:var(--shadow); border-top:5px solid #00897b; margin-bottom:20px;">
@@ -421,25 +415,26 @@
                 </div>
             </div>
 
-            <!-- ✨ 4. 스마트 자리 배치 탭 (드래그 앤 드롭 완벽 적용) -->
+            <!-- ✨ 4. 자리 배치 탭 (드래그 지원 & 순서 가이드) -->
             <div id="seating-tab" class="content-section">
                 <div class="picker-box">
-                    <h2 style="color:var(--dark-blue); margin-bottom:10px;"><i class="fa-solid fa-chair"></i> 스마트 자리 배치</h2>
+                    <h2 style="color:var(--dark-blue); margin-bottom:10px;"><i class="fa-solid fa-chair"></i> 스마트 자리 배치 시스템</h2>
                     
                     <div style="background:#e3f2fd; border-radius:12px; padding:20px; text-align:left; margin-bottom:20px; border:2px solid #90caf9;">
-                        <h3 style="margin-top:0; color:#1565c0;">💡 스마트 배치 알고리즘 안내</h3>
+                        <h3 style="margin-top:0; color:#1565c0;">💡 배치 순서 안내</h3>
                         <p style="color:#546e7a; font-size:15px; margin-bottom:0; line-height: 1.6;">
-                            <b>1. 남녀 대각선 배치:</b> 기초 세팅에 입력된 명단을 바탕으로 남학생과 여학생이 겹치지 않게 교차로 배치합니다.<br>
-                            <b>2. 기피 학생 회피:</b> 설정에 입력된 '기피 학생'끼리는 절대 같은 모둠에 배치되지 않습니다.<br>
-                            <b>3. 마우스 드래그 배치:</b> 학생 자리를 <b>마우스로 꾹 눌러서 다른 자리로 끌어당기면</b> 자리가 즉시 바뀝니다!
+                            <b>1. 명단 세팅:</b> 좌측 톱니바퀴 [학급 설정] 메뉴에서 학생 명단과 기피 학생 번호를 입력하세요.<br>
+                            <b>2. 자동 배치:</b> [스마트 대각선] 또는 [단순 무작위] 버튼을 누르면 조건에 맞게 자리가 깔립니다.<br>
+                            <b>3. 수동 교체:</b> 완성된 표에서 <b>학생 자리를 마우스로 꾹 누른 채 빈자리나 다른 학생 자리로 끌어당겨 놓으면(드래그 앤 드롭)</b> 즉시 자리가 바뀝니다.<br>
+                            <b>4. 자리 보관:</b> 맘에 드는 자리가 완성되면 [보관함에 저장]을 눌러 다음 번 배치 시 이전 짝꿍 회피 기록으로 사용하세요.
                         </p>
                     </div>
                     
                     <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px; align-items:center; flex-wrap: wrap;">
-                        <button class="action-btn" style="background:#0288d1; padding:12px 20px; font-size:15px;" onclick="generateSmartSeating()"><i class="fa-solid fa-venus-mars"></i> 스마트 남녀 대각선</button>
-                        <button class="action-btn" style="background:#8e44ad; padding:12px 20px; font-size:15px;" onclick="generateRandomSeating()"><i class="fa-solid fa-dice"></i> 단순 무작위</button>
-                        <button class="reset-btn" style="background:#f57c00; padding:12px 20px; font-size:15px;" onclick="saveToSeatingHistory()"><i class="fa-solid fa-box-archive"></i> 보관함에 저장 (기록용)</button>
-                        <button class="reset-btn" style="background:#4caf50; padding:12px 20px; font-size:15px;" onclick="openSeatingHistoryModal()"><i class="fa-solid fa-folder-open"></i> 보관함 불러오기</button>
+                        <button class="action-btn" style="background:#0288d1; padding:12px 20px; font-size:15px;" onclick="generateSmartSeating()"><i class="fa-solid fa-venus-mars"></i> 스마트 대각선 배치</button>
+                        <button class="action-btn" style="background:#8e44ad; padding:12px 20px; font-size:15px;" onclick="generateRandomSeating()"><i class="fa-solid fa-dice"></i> 단순 무작위 배치</button>
+                        <button class="reset-btn" style="background:#f57c00; padding:12px 20px; font-size:15px; color:white;" onclick="saveToSeatingHistory()"><i class="fa-solid fa-box-archive"></i> 보관함에 저장 (기록)</button>
+                        <button class="reset-btn" style="background:#4caf50; padding:12px 20px; font-size:15px; color:white;" onclick="openSeatingHistoryModal()"><i class="fa-solid fa-folder-open"></i> 보관함 불러오기</button>
                     </div>
 
                     <div style="background:#546e7a; color:white; padding:10px; border-radius:10px; width:60%; margin:0 auto 20px auto; font-weight:800; font-size:20px; letter-spacing:5px;">칠 판</div>
@@ -525,16 +520,16 @@
             </div>
         </div>
 
-        <!-- ✨ 자리 보관함 불러오기 모달 -->
+        <!-- ✨ 보관함 불러오기 모달 -->
         <div class="modal-overlay" id="seating-history-modal">
             <div class="modal-box" style="max-width: 500px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
-                    <h2 style="margin:0; color:var(--accent-blue);">📂 저장된 자리 배치 목록</h2>
+                    <h2 style="margin:0; color:var(--accent-blue);">📂 저장된 과거 자리 보관함</h2>
                     <button class="reset-btn" onclick="closeSeatingHistoryModal()">닫기</button>
                 </div>
-                <p style="font-size:14px; color:#666; margin-bottom:20px;">이전에 <b>[보관함에 저장]</b> 해둔 자리 배치 목록입니다. 클릭하시면 해당 자리 배치를 현재 칠판으로 불러옵니다.</p>
+                <p style="font-size:14px; color:#666; margin-bottom:20px;">클릭하시면 해당 시점의 자리 배치를 칠판으로 즉시 불러옵니다.</p>
                 <div id="seating-history-list" style="max-height: 300px; overflow-y: auto;">
-                    <!-- 스크립트로 채워짐 -->
+                    <!-- 렌더링 영역 -->
                 </div>
             </div>
         </div>
@@ -542,12 +537,13 @@
     </div>
 
     <script>
-        // 사이드바 토글 기능
+        // 사이드바 토글
         function toggleSidebar() {
             const sidebar = document.getElementById('mySidebar');
             sidebar.classList.toggle('collapsed');
         }
 
+        // 시계 및 유틸
         function updateClock() {
             const now = new Date();
             const h = String(now.getHours()).padStart(2, '0');
@@ -567,7 +563,7 @@
             applyFontSize(); localStorage.setItem('myCustomFontSize', currentBoardFontSize);
         }
 
-        // 파이어베이스 연동
+        // 파이어베이스 
         const firebaseConfig = {
           apiKey: "AIzaSyCrEfpzVS1YvORiM4HYRCryytj6Y-kG2fI",
           authDomain: "classscore-sinli.firebaseapp.com",
@@ -594,7 +590,7 @@
         let globalStudentRosterStr = ""; 
         let globalSeparatedStr = "";
 
-        // 자리 배치용 변수
+        // 자리 배치 변수
         let currentSeating = []; 
         let groupMembersMap = {}; 
         let parsedRoster = []; 
@@ -645,7 +641,8 @@
 
             document.getElementById('auth-overlay').style.display = 'none'; document.getElementById('main-app').style.display = 'flex';
             
-            updateClock(); setInterval(updateClock, 1000);
+            if(window.clockInterval) clearInterval(window.clockInterval);
+            updateClock(); window.clockInterval = setInterval(updateClock, 1000);
             
             let autoSaveTimer;
             document.querySelectorAll('#board-tab [contenteditable="true"]').forEach(el => { 
@@ -657,6 +654,7 @@
                 });
             });
 
+            // 설정값 안전 로드
             settingsRef.once('value').then(snap => {
                 if(snap.exists()){
                     const s = snap.val();
@@ -713,10 +711,33 @@
                 for(let i=0; i<numberOfGroups; i++) { currentMiniScores[i] = data[i] || 0; if(document.getElementById(`mini-score-${i}`)) document.getElementById(`mini-score-${i}`).innerText = currentMiniScores[i]; }
             });
             tasksRef.on('value', snap => { currentTasks = snap.val() || {}; buildTaskBoard(); });
-            hwRef.on('value', snap => { allHomeworks = []; snap.forEach(c => { allHomeworks.push({id: c.key, ...c.val()}); }); allHomeworks.reverse(); renderHomeworkList(); if(document.getElementById('hw-stats-section').style.display === 'block') renderStats(currentStatsMode); });
+            
+            // 과제 배열 안전 파싱
+            hwRef.on('value', snap => { 
+                allHomeworks = []; 
+                snap.forEach(c => { allHomeworks.push({id: c.key, ...c.val()}); }); 
+                allHomeworks.reverse(); renderHomeworkList(); 
+                if(document.getElementById('hw-stats-section').style.display === 'block') renderStats(currentStatsMode); 
+            });
+            
             timerRef.on('value', snap => { updateTimerUI(snap.val() || { isRunning: false, endTime: 0, pausedRemaining: 0 }); });
             
-            seatingRef.on('value', snap => { currentSeating = snap.val() || []; renderSeatingGrid(); });
+            // ✨ 자리 배열 안전 파싱 (오류 원천 차단)
+            seatingRef.on('value', snap => { 
+                let raw = snap.val();
+                if(raw) {
+                    if(Array.isArray(raw)) currentSeating = raw;
+                    else {
+                        let maxKey = Math.max(...Object.keys(raw).map(Number));
+                        currentSeating = new Array(maxKey + 1).fill(null);
+                        for(let k in raw) currentSeating[k] = raw[k];
+                    }
+                } else {
+                    currentSeating = [];
+                }
+                renderSeatingGrid(); 
+            });
+            
             groupMembersRef.on('value', snap => { groupMembersMap = snap.val() || {}; });
             seatingHistoryRef.on('value', snap => { allSeatingHistories = snap.val() || {}; }); 
         }
@@ -724,6 +745,25 @@
         // ==========================================
         // 📋 칠판 로직
         // ==========================================
+        function loadTodayBoard() {
+            const todayKey = getFormattedDate(new Date());
+            historyRef.child(todayKey).once('value').then(snap => {
+                if(snap.exists()) {
+                    const d = snap.val();
+                    document.getElementById('view-date').innerText = d.date || ""; document.getElementById('view-morning').innerText = d.morning || "";
+                    document.getElementById('view-duty-nums').innerText = d.dutyNums || ""; document.getElementById('view-duty-tasks').innerText = d.dutyTasks || "";
+                    document.getElementById('view-notices').innerText = d.notices || ""; document.getElementById('view-allim').innerText = d.allim || "";
+                    document.getElementById('view-safety').innerText = d.safety || ""; document.getElementById('view-birthday').innerText = d.birthday || "";
+                    for(let i=1; i<=6; i++) { 
+                        document.getElementById(`view-tt-sub-${i}`).innerText = d[`ttSub${i}`] || ""; 
+                        document.getElementById(`view-tt-obj-${i}`).innerText = d[`ttObj${i}`] || ""; 
+                        document.getElementById(`view-tt-prep-${i}`).innerText = d[`ttPrep${i}`] || ""; 
+                        document.getElementById(`view-tt-page-${i}`).innerText = d[`ttPage${i}`] || ""; 
+                    }
+                } else { autoFillDashboard(true); }
+            });
+        }
+
         function saveDashboard(isSilent = false) {
             const d = {
                 date: document.getElementById('view-date').innerText, morning: document.getElementById('view-morning').innerText,
@@ -740,12 +780,11 @@
             boardRef.set(d); historyRef.child(getFormattedDate(viewDate)).set(d);
             if (window.tempNextIdx !== undefined) { db.ref('rooms/' + currentRoom + '/settings/lastDutyIndex').set(window.tempNextIdx); window.tempNextIdx = undefined; }
             
-            // 수동 저장일 때 명확한 피드백을 제공!
             if(!isSilent) {
                 alert("💾 칠판 기록이 저장되었습니다!");
             } else {
                 const toast = document.getElementById('auto-save-toast');
-                toast.style.opacity = 1; setTimeout(() => { toast.style.opacity = 0; }, 2000);
+                if(toast) { toast.style.opacity = 1; setTimeout(() => { toast.style.opacity = 0; }, 2000); }
             }
         }
 
@@ -843,7 +882,7 @@
         }
 
         // ==========================================
-        // ✨ 스마트 자리 배치 로직 (드래그 앤 드롭 추가)
+        // ✨ 스마트 자리 배치 로직 (드래그 앤 드롭 완벽 연동)
         // ==========================================
         function parseStudentRoster() {
             parsedRoster = [];
@@ -895,8 +934,8 @@
 
         function generateSmartSeating() {
             if (parsedRoster.length === 0) {
-                alert("설정 메뉴에서 [학생 명단 성별 데이터]를 먼저 입력해주세요!\n(예: 1번 남, 2번 여)");
-                openSettingsModal(); return;
+                alert("왼쪽 톱니바퀴 [기초 세팅] 메뉴에서 [학생 명단 성별 데이터]를 먼저 입력해주세요!\n(예: 1번 남, 2번 여)");
+                return;
             }
             if(!confirm("설정된 조건(남녀 대각선, 기피학생, 과거 자리 회피)을 바탕으로 최적의 배치를 찾습니다. 계속할까요?")) return;
 
@@ -949,10 +988,9 @@
             saveSeatingToFirebase();
         }
 
-        // ✨ 이전 데이터 저장(보관함)
         function saveToSeatingHistory() {
             if(!currentSeating || currentSeating.length === 0) { alert("저장할 자리 배치가 없습니다."); return; }
-            if(confirm("현재 자리 배치를 보관함에 저장하시겠습니까? (이 기록은 다음 '스마트 배치' 시 이전 짝꿍 회피 조건에 자동으로 반영됩니다.)")) {
+            if(confirm("현재 자리 배치를 보관함에 저장하시겠습니까?\n이 기록은 다음 '스마트 배치' 시 이전 짝꿍 회피 조건에 자동으로 반영됩니다.")) {
                 const now = new Date();
                 const key = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}시${String(now.getMinutes()).padStart(2,'0')}분`;
                 seatingHistoryRef.child(key).set(currentSeating);
@@ -960,11 +998,10 @@
                 pastGroupsRecord = groupMembersMap;
                 settingsRef.child('pastGroups').set(pastGroupsRecord);
                 
-                alert(`[${key}] 이름으로 보관함에 성공적으로 저장되었습니다!`);
+                alert(`[${key}] 보관함에 성공적으로 저장되었습니다!`);
             }
         }
 
-        // ✨ 보관함 열기 및 불러오기
         function openSeatingHistoryModal() {
             const listDiv = document.getElementById('seating-history-list');
             listDiv.innerHTML = '';
@@ -994,7 +1031,7 @@
             }
         }
 
-        // ✨ 자리 렌더링 (드래그 앤 드롭 마법 추가!)
+        // ✨ 드래그 앤 드롭 마법 연동
         function renderSeatingGrid() {
             const container = document.getElementById('seating-grid-container');
             container.innerHTML = '';
@@ -1025,8 +1062,8 @@
                     if(gText) desk.innerHTML += `<div class="gender-tag ${gClass}">${gText}</div>`;
                 }
 
-                // 드래그 앤 드롭 이벤트 등록
-                desk.draggable = true; // 빈자리도 드래그 받을 수 있어야 하므로 일단 true
+                // ✨ 드래그 앤 드롭 이벤트
+                desk.draggable = true; 
                 
                 desk.ondragstart = (e) => {
                     e.dataTransfer.setData('text/plain', idx);
@@ -1050,7 +1087,7 @@
                         let temp = currentSeating[fromIdx];
                         currentSeating[fromIdx] = currentSeating[toIdx];
                         currentSeating[toIdx] = temp;
-                        saveSeatingToFirebase(); // 스왑 후 즉시 저장
+                        saveSeatingToFirebase(); 
                     }
                 };
 
@@ -1068,7 +1105,7 @@
         }
 
         // ==========================================
-        // 🌟 나머지 기능 (점수판, 타이머, 뽑기, 과제, 통계)
+        // 🌟 나머지 기능 (점수판, 타이머, 뽑기)
         // ==========================================
         function changeGroupCount(id) { const v = parseInt(document.getElementById(id).value); if(v>=2 && v<=12) groupSettingsRef.set(v); }
         
@@ -1077,7 +1114,7 @@
             const div = document.getElementById('scoreboard'); div.innerHTML = ''; 
             for (let i = 0; i < numberOfGroups; i++) {
                 let groupNum = (i % 6) + 1;
-                div.innerHTML += `<div class="group-card group-bg-${groupNum}" style="background-color: white;"><div class="group-name" style="color:var(--dark-blue); font-weight:900;">${i+1}모둠</div><div class="score" id="score-${i}" style="color:var(--dark-blue);">${currentScores[i]||0}</div><div class="button-group"><button class="score-btn btn-plus" onclick="changeScore(${i},1)">+</button><button class="score-btn btn-minus" onclick="changeScore(${i},-1)">-</button></div></div>`;
+                div.innerHTML += `<div class="group-card group-bg-${groupNum}" style="background-color: white;"><div class="group-name" style="color:var(--dark-blue); font-weight:900;">${i+1}모둠</div><div class="score" id="score-${i}">${currentScores[i]||0}</div><div class="button-group"><button class="score-btn btn-plus" onclick="changeScore(${i},1)">+</button><button class="score-btn btn-minus" onclick="changeScore(${i},-1)">-</button></div></div>`;
             }
         }
         
@@ -1133,6 +1170,9 @@
         function toggleTimer() { if(localTimer.isRunning) timerRef.set({isRunning:false, endTime:0, pausedRemaining: Math.max(0, Math.ceil((localTimer.endTime - Date.now())/1000))}); else if(localTimer.pausedRemaining > 0) timerRef.set({isRunning:true, endTime: Date.now() + localTimer.pausedRemaining*1000, pausedRemaining: localTimer.pausedRemaining}); }
         function startCustomTimer() { const v = parseFloat(document.getElementById('custom-timer-input').value); if(v > 0) timerRef.set({isRunning:true, endTime: Date.now() + v*60*1000, pausedRemaining: v*60}); document.getElementById('custom-timer-input').value=''; }
 
+        // ==========================================
+        // ✨ 4. 과제 & 통계
+        // ==========================================
         function addHomework() {
             const d = document.getElementById('hw-date').value; const c = document.getElementById('hw-category').value || '미분류'; const t = document.getElementById('hw-title').value; 
             if(!t || !d) return alert("날짜와 내용을 모두 입력해주세요!");
@@ -1253,7 +1293,7 @@
                 className: document.getElementById('set-class-name').value || "",
                 roster: document.getElementById('set-student-roster').value || "", 
                 separatedPairs: document.getElementById('set-separated-pairs').value || "",
-                pastGroups: pastGroupsRecord, // 과거 데이터 보존
+                pastGroups: pastGroupsRecord, 
                 duty: document.getElementById('set-duty-tasks').value, monM: document.getElementById('set-mon-m').value, monT: document.getElementById('set-mon-t').value,
                 tueM: document.getElementById('set-tue-m').value, tueT: document.getElementById('set-tue-t').value, wedM: document.getElementById('set-wed-m').value, wedT: document.getElementById('set-wed-t').value,
                 thuM: document.getElementById('set-thu-m').value, thuT: document.getElementById('set-thu-t').value, friM: document.getElementById('set-fri-m').value, friT: document.getElementById('set-fri-t').value
