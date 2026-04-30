@@ -26,23 +26,41 @@
         }
 
         * { box-sizing: border-box; } 
-        body { font-family: 'Pretendard', sans-serif; background-color: var(--main-sky); color: #333; margin: 0; overflow-x: hidden; height: 100vh; display: flex; flex-direction: column;}
+        body { font-family: 'Pretendard', sans-serif; background-color: var(--main-sky); color: #333; margin: 0; overflow-x: hidden; height: 100vh; display: flex; flex-direction: row;}
 
+        /* ✨ 메인 레이아웃 */
         #main-app { display: none; width: 100vw; height: 100vh; overflow: hidden; display: flex; flex-direction: row; }
         
-        .sidebar { width: 240px; background: var(--white); box-shadow: 2px 0 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; padding: 25px 15px; z-index: 100; flex-shrink: 0;}
-        .sidebar .logo { font-size: 22px; font-weight: 800; color: var(--accent-blue); letter-spacing: -1px; text-align: center; margin-bottom: 25px; border-bottom: 2px solid var(--main-sky); padding-bottom: 15px; }
+        /* ✨ 좌측 사이드바 (접기/펴기 애니메이션 적용) */
+        .sidebar { width: 240px; background: var(--white); box-shadow: 2px 0 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; padding: 25px 15px; z-index: 100; flex-shrink: 0; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s; overflow: hidden;}
         
-        .tab-btn { width: 100%; text-align: left; padding: 15px 20px; border: none; border-radius: 12px; cursor: pointer; background: transparent; color: #546e7a; font-weight: 700; transition: 0.2s; font-size: 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px;}
+        /* 사이드바 접혔을 때 상태 */
+        .sidebar.collapsed { width: 80px; padding: 25px 10px; align-items: center;}
+        .sidebar.collapsed .logo-text { display: none; }
+        .sidebar.collapsed .logo-icon { display: block !important; font-size: 24px; color: var(--accent-blue); margin-bottom: 20px;}
+        .sidebar.collapsed .tab-text { display: none; }
+        .sidebar.collapsed .tab-btn { padding: 15px; justify-content: center; border-radius: 50%; width: 50px; height: 50px; margin-bottom: 15px;}
+        .sidebar.collapsed .tab-btn i { font-size: 20px; margin: 0; }
+        .sidebar.collapsed .sidebar-bottom { padding-top: 15px; border-top: none; }
+        .sidebar.collapsed .room-tag span { display: none; }
+        .sidebar.collapsed .user-profile-text { display: none; }
+
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid var(--main-sky); padding-bottom: 15px; width: 100%;}
+        .logo { font-size: 20px; font-weight: 900; color: var(--accent-blue); letter-spacing: -1px; white-space: nowrap; overflow: hidden;}
+        .toggle-btn { background: transparent; border: none; color: var(--dark-blue); font-size: 20px; cursor: pointer; padding: 5px; transition: 0.2s;}
+        .toggle-btn:hover { color: var(--accent-blue); }
+
+        .tab-btn { width: 100%; text-align: left; padding: 15px 20px; border: none; border-radius: 12px; cursor: pointer; background: transparent; color: #546e7a; font-weight: 700; transition: 0.2s; font-size: 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; white-space: nowrap;}
         .tab-btn i { font-size: 18px; width: 20px; text-align: center;}
         .tab-btn:hover { background: #f0f4f8; color: var(--accent-blue);}
         .tab-btn.active { background: var(--dark-blue); color: var(--white); box-shadow: 0 4px 10px rgba(44, 62, 80, 0.2); transform: translateX(5px);}
+        .sidebar.collapsed .tab-btn.active { transform: none; }
 
-        .sidebar-bottom { margin-top: auto; border-top: 2px solid var(--main-sky); padding-top: 15px; text-align: center;}
-        .room-tag { background: #f0f4f8; color: var(--dark-blue); padding: 10px; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; border: 1px solid #cfd8dc; transition: 0.2s; display: block; margin-top: 10px;}
+        .sidebar-bottom { margin-top: auto; border-top: 2px solid var(--main-sky); padding-top: 15px; text-align: center; width: 100%;}
+        .room-tag { background: #f0f4f8; color: var(--dark-blue); padding: 10px; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; border: 1px solid #cfd8dc; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; white-space: nowrap;}
         .room-tag:hover { background: #e53935; color: white; border-color: #e53935;}
         
-        .main-content-wrapper { flex: 1; overflow-y: auto; padding: 20px 30px; background: var(--main-sky); position: relative; }
+        .main-content-wrapper { flex: 1; overflow-y: auto; padding: 20px 30px; background: var(--main-sky); position: relative; transition: padding 0.3s; }
         .content-section { display: none; max-width: 1600px; margin: 0 auto; }
         .content-section.active { display: block; }
         
@@ -50,7 +68,7 @@
         .action-btn:active { transform: scale(0.95); }
         .reset-btn { font-size: 14px; padding: 10px 15px; background-color: #90a4ae; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; font-family: 'Pretendard', sans-serif;}
 
-        /* 📋 대시보드 레이아웃 */
+        /* 📋 3분할 칠판 레이아웃 */
         .dashboard-grid { display: grid; grid-template-columns: 1fr 2.4fr 1fr; gap: 20px; align-items: start;}
         .column-card { background: var(--white); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; border-top: 5px solid var(--accent-blue); height: 100%;}
         .card-header { display: flex; align-items: center; justify-content: center; margin-bottom: 15px; padding-bottom: 10px; font-size: 18px; font-weight: 800; color: var(--dark-blue); border-bottom: 2px solid var(--main-sky);}
@@ -66,19 +84,19 @@
         .large-text { font-size: var(--board-title-size); font-weight: 900; color: var(--dark-blue); }
 
         .tt-row { display: flex; margin-bottom: 15px; align-items: stretch; border-bottom: 1px solid #f0f4f8; padding-bottom: 15px; gap: 12px;}
-        .tt-label { font-weight: 900; color: #e65100; width: 60px; flex-shrink: 0; font-size: var(--board-font-size); background: #fff3e0; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 8px 5px; transition: 0.2s;}
-        .tt-subject { font-weight: 800; color: var(--accent-blue); width: 85px; flex-shrink: 0; font-size: var(--board-font-size); background: var(--main-sky); border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px 5px; transition: 0.2s;}
+        .tt-label { font-weight: 900; color: #e65100; width: 60px; flex-shrink: 0; font-size: var(--board-font-size); background: #fff3e0; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 8px 5px;}
+        .tt-subject { font-weight: 800; color: var(--accent-blue); width: 85px; flex-shrink: 0; font-size: var(--board-font-size); background: var(--main-sky); border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px 5px;}
         .tt-content-wrapper { display: flex; flex-direction: column; flex-grow: 1; gap: 4px; justify-content: center; min-width: 0;}
-        .tt-obj { color: #2c3e50; font-size: var(--board-font-size); font-weight: 700; padding: 4px; transition: 0.2s; word-break: keep-all;}
+        .tt-obj { color: #2c3e50; font-size: var(--board-font-size); font-weight: 700; padding: 4px; word-break: keep-all;}
         .tt-prep-wrap { display: flex; align-items: flex-start; gap: 5px; background: #fff8e1; padding: 4px 8px; border-radius: 8px; border-left: 4px solid #ffb300; }
         .tt-prep { color: #d32f2f; font-size: calc(var(--board-font-size) - 1px); font-weight: 800; flex-grow: 1; outline: none; line-height: 1.4;}
-        .tt-page { font-weight: 800; color: #0288d1; width: 120px; flex-shrink: 0; font-size: calc(var(--board-font-size) - 2px); background: #f0f4f8; border: 2px dashed #b3e5fc; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 10px; transition: 0.2s; line-height: 1.4; word-break: keep-all;}
+        .tt-page { font-weight: 800; color: #0288d1; width: 120px; flex-shrink: 0; font-size: calc(var(--board-font-size) - 2px); background: #f0f4f8; border: 2px dashed #b3e5fc; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 10px; line-height: 1.4; word-break: keep-all;}
 
         .calendar-card { background: #fdfdfd; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 2px solid var(--sub-sky); box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);}
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 800; color: var(--accent-blue); font-size: 16px;}
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
         .cal-day { font-size: 12px; font-weight: 700; color: #999; padding-bottom: 5px; }
-        .cal-date { font-size: 14px; padding: 10px 0; cursor: pointer; border-radius: 8px; position: relative; font-weight: 600; transition: 0.2s;}
+        .cal-date { font-size: 14px; padding: 10px 0; cursor: pointer; border-radius: 8px; position: relative; font-weight: 600;}
         .cal-date:hover { background: var(--main-sky); }
         .cal-date.today { background: var(--sub-sky); color: var(--dark-blue); }
         .cal-date.has-record::after { content: '●'; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); font-size: 10px; color: #e91e63; }
@@ -99,7 +117,6 @@
         .timer-btn { padding: 10px; border: none; border-radius: 10px; background: var(--main-sky); cursor: pointer; font-weight: bold; font-family: 'Pretendard'; color:var(--dark-blue);}
         .timer-start { background: #ff5252; color: white; grid-column: span 2; }
 
-        /* 점수판 */
         .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; } 
         .group-card { background-color: var(--white); border-radius: 15px; padding: 20px 15px; border: 2px solid var(--sub-sky); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.03);}
         .score { font-size: 60px; font-weight: 800; color: var(--accent-blue); margin: 15px 0; font-variant-numeric: tabular-nums; line-height: 1;}
@@ -112,7 +129,6 @@
         .task-card { background: #eceff1; padding: 12px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #cfd8dc; transition: 0.2s; color:#546e7a;}
         .task-card.done { background: var(--accent-blue); color: white; border-color: var(--dark-blue); box-shadow: 0 4px 10px rgba(2,155,229,0.3);}
         
-        /* 🎲 뽑기 & 미니점수판 */
         .picker-box { background: white; padding: 25px; border-radius: 20px; box-shadow: var(--shadow); border-top: 5px solid var(--accent-blue); text-align: center; }
         .card-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 15px 0; min-height: 80px; align-items: center; }
         .flip-card { background-color: transparent; perspective: 1000px; cursor: pointer;}
@@ -129,7 +145,6 @@
         .mini-btn { width: 28px; height: 28px; font-size: 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s;}
         .mini-btn-plus { background: #039be5; } .mini-btn-minus { background: #ff5252; }
 
-        /* 과제 */
         .hw-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #eee; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); text-align: left;}
         .student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); gap: 8px; text-align: center; margin-top: 15px;}
         .student-btn { font-size: 18px; font-weight: 800; padding: 12px 0; border: none; border-radius: 8px; cursor: pointer; background-color: #eceff1; color: #546e7a; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
@@ -146,15 +161,11 @@
         .setting-group label { display: block; font-weight: 700; margin-bottom: 5px; color: var(--accent-blue); }
         .setting-group textarea, .setting-group input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-family: 'Pretendard'; }
 
-        /* ✨ 자리배치 전용 스타일 */
+        /* ✨ 자리배치 탭 전용 */
         .seating-grid { display: grid; gap: 15px; margin: 20px auto; justify-content: center; background: #f0f4f8; padding: 30px; border-radius: 20px; border: 2px dashed #b0bec5; }
-        .desk-card { background: white; border: 2px solid var(--sub-sky); border-radius: 12px; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; color: var(--dark-blue); box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer; transition: 0.2s; user-select: none; }
-        .desk-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); border-color: var(--accent-blue); }
+        .desk-card { background: white; border: 2px solid var(--sub-sky); border-radius: 12px; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; color: var(--dark-blue); box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer; user-select: none; }
         .desk-card.empty { background: transparent; border: 2px dashed #cfd8dc; color: transparent; box-shadow: none; cursor: default; }
-        .desk-card.empty:hover { transform: none; }
         .desk-card.selected { background: #ffe0b2; border-color: #ff9800; transform: scale(1.05); box-shadow: 0 0 0 4px rgba(255,152,0,0.3); }
-        
-        /* 모둠별 색상 시각화 (동적 할당용 클래스들) */
         .group-bg-1 { background-color: #e3f2fd !important; border-color: #2196f3 !important; }
         .group-bg-2 { background-color: #fce4ec !important; border-color: #ff9800 !important; }
         .group-bg-3 { background-color: #e8f5e9 !important; border-color: #4caf50 !important; }
@@ -165,17 +176,17 @@
         @media (max-width: 1100px) { 
             #main-app { flex-direction: column; overflow-y: auto; }
             .sidebar { width: 100%; height: auto; flex-direction: row; flex-wrap: wrap; padding: 15px; align-items: center; justify-content: space-between;}
-            .sidebar .logo { margin-bottom: 0; border: none; padding: 0; margin-right: 20px;}
-            .tab-container { flex-direction: row; margin-bottom: 0; flex-wrap: wrap;}
+            .sidebar .sidebar-header { margin-bottom: 0; border: none; padding: 0; width: auto;}
+            .tab-container { flex-direction: row; margin-bottom: 0; flex-wrap: wrap; width: 100%; justify-content: flex-start;}
             .tab-btn { width: auto; padding: 10px 15px; margin-bottom: 0;}
-            .sidebar-bottom { margin-top: 0; border: none; padding: 0;}
+            .sidebar-bottom { margin-top: 0; border: none; padding: 0; width: auto;}
             .dashboard-grid { grid-template-columns: 1fr; } 
         }
     </style>
 </head>
 <body>
 
-    <!-- 🔐 로그인 & 방 입장 오버레이 -->
+    <!-- 🔐 로그인 & 방 입장 -->
     <div class="full-overlay" id="auth-overlay">
         <div class="login-box" id="login-box">
             <h2 style="margin:0 0 10px 0; color:var(--dark-blue);">🔐 로그인 필요</h2>
@@ -198,20 +209,27 @@
     <!-- 🌟 메인 앱 레이아웃 -->
     <div id="main-app">
         
-        <!-- 🚀 좌측 사이드바 -->
-        <nav class="sidebar">
-            <div class="logo">🌤️ SKY CLASS</div>
+        <!-- 🚀 좌측 사이드바 (토글 적용) -->
+        <nav class="sidebar" id="mySidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-text">🌤️ SKY CLASS</span>
+                    <i class="fa-solid fa-cloud-sun logo-icon" style="display:none;"></i>
+                </div>
+                <!-- 🍔 사이드바 햄버거 토글 버튼 -->
+                <button onclick="toggleSidebar()" class="toggle-btn"><i class="fa-solid fa-bars"></i></button>
+            </div>
+            
             <div class="tab-container" style="flex-direction: column;">
-                <button class="tab-btn active" onclick="switchTab('board')"><i class="fa-solid fa-clipboard-list"></i> 아침 칠판</button>
-                <button class="tab-btn" onclick="switchTab('score')"><i class="fa-solid fa-star"></i> 점수판</button>
-                <button class="tab-btn" onclick="switchTab('picker')"><i class="fa-solid fa-dice"></i> 활동&뽑기</button>
-                <button class="tab-btn" onclick="switchTab('homework')"><i class="fa-solid fa-book"></i> 과제 관리</button>
-                <!-- ✨ 새롭게 추가된 자리 배치 탭 버튼 -->
-                <button class="tab-btn" onclick="switchTab('seating')"><i class="fa-solid fa-chair"></i> 자리 배치</button>
+                <button class="tab-btn active" onclick="switchTab('board')"><i class="fa-solid fa-clipboard-list"></i> <span class="tab-text">아침 칠판</span></button>
+                <button class="tab-btn" onclick="switchTab('score')"><i class="fa-solid fa-star"></i> <span class="tab-text">점수판</span></button>
+                <button class="tab-btn" onclick="switchTab('picker')"><i class="fa-solid fa-dice"></i> <span class="tab-text">활동&뽑기</span></button>
+                <button class="tab-btn" onclick="switchTab('homework')"><i class="fa-solid fa-book"></i> <span class="tab-text">과제 관리</span></button>
+                <button class="tab-btn" onclick="switchTab('seating')"><i class="fa-solid fa-chair"></i> <span class="tab-text">자리 배치</span></button>
             </div>
             <div class="sidebar-bottom">
-                <div id="user-profile" style="font-size:13px; font-weight:bold; color:#666; margin-bottom:5px;"></div>
-                <button class="room-tag" onclick="exitRoom()"><i class="fa-solid fa-arrow-right-from-bracket"></i> 방 나가기</button>
+                <div id="user-profile" class="user-profile-text" style="font-size:13px; font-weight:bold; color:#666; margin-bottom:5px;"></div>
+                <button class="room-tag" onclick="exitRoom()"><i class="fa-solid fa-arrow-right-from-bracket"></i> <span>방 나가기</span></button>
             </div>
         </nav>
 
@@ -220,11 +238,11 @@
 
             <!-- 📋 0. 대시보드 탭 -->
             <div id="board-tab" class="content-section active">
-
                 <div class="dashboard-grid">
+                    
                     <!-- 1. 왼쪽 열 -->
                     <div class="column-card">
-                        <!-- 대형 시계 (한줄 고정) -->
+                        <!-- 대형 시계 -->
                         <div style="background: var(--dark-blue); border-radius: 15px; padding: 20px; margin-bottom: 20px; text-align: center; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
                             <div id="real-clock" style="font-size: 35px; font-weight: 900; font-variant-numeric: tabular-nums; letter-spacing: 1px; white-space: nowrap;">00:00:00</div>
                         </div>
@@ -235,29 +253,30 @@
                         <div class="info-box" style="margin-bottom:0;"><span class="info-label" style="color:#7b1fa2;">🧹 당번 (& 할 일)</span><div class="info-content large-text" id="view-duty-nums" contenteditable="true" spellcheck="false" data-placeholder="당번 번호"></div><div class="info-content" id="view-duty-tasks" contenteditable="true" spellcheck="false" data-placeholder="할 일 목록" style="font-size:calc(var(--board-font-size) - 2px); margin-top:5px; border-top:1px dashed #eee; padding-top:5px;"></div></div>
                     </div>
 
-                    <!-- 2. 가운데 열 -->
+                    <!-- 2. 가운데 열 (시간표) -->
                     <div class="column-card" style="position: relative; padding-top: 20px;">
                         
                         <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 10px; gap: 8px;">
                             <span id="auto-save-toast" style="font-size:13px; font-weight:bold; color:#4caf50; opacity:0; transition:opacity 0.5s;">자동 저장 완료 ✓</span>
-                            <button class="action-btn" style="background:#0288d1; padding: 8px 15px; border-radius: 8px;" onclick="saveDashboard()" title="현재 칠판 수동 저장"><i class="fa-solid fa-floppy-disk"></i> 저장</button>
+                            <button class="action-btn" style="background:#0288d1; padding: 8px 15px; border-radius: 8px;" onclick="saveDashboard()" title="수동 저장"><i class="fa-solid fa-floppy-disk"></i> 저장</button>
                             
                             <div id="tool-board-menu" style="position:relative; display:flex; align-items:center;">
                                 <div id="board-menu-box" class="tool-box-inline">
                                     <h3 style="margin:0 0 15px 0; color:var(--dark-blue); text-align:center;">📋 칠판 추가 메뉴</h3>
                                     <div style="display:flex; align-items:center; gap:5px; background:#f8f9fa; padding:10px; border-radius:10px; justify-content:center; margin-bottom:15px; border: 1px solid #eee;">
-                                        <span style="font-size:15px; font-weight:bold; color:#546e7a; margin-right:5px;">🔍 글씨 크기 조절</span>
+                                        <span style="font-size:15px; font-weight:bold; color:#546e7a; margin-right:5px;">🔍 글씨 크기</span>
                                         <button class="reset-btn" style="padding:6px 12px; background:#e1f5fe; color:#0288d1; box-shadow:none;" onclick="changeFontSize(2)">➕</button>
                                         <button class="reset-btn" style="padding:6px 12px; background:#fff3e0; color:#e65100; box-shadow:none;" onclick="changeFontSize(-2)">➖</button>
                                     </div>
                                     <button class="action-btn" style="width:100%; background:#5c6bc0; margin-bottom:8px; padding:12px;" onclick="autoFillDashboard(); toggleToolBox('board-menu-box');">🪄 요일 기본값 불러오기</button>
-                                    <button class="reset-btn" style="width:100%; padding:12px;" onclick="openSettingsModal(); toggleToolBox('board-menu-box');">⚙️ 전체 학급/요일 세팅</button>
+                                    <button class="reset-btn" style="width:100%; padding:12px;" onclick="openSettingsModal(); toggleToolBox('board-menu-box');">⚙️ 학급/요일 기초 세팅</button>
                                 </div>
                                 <button class="action-btn" style="background:#34495e; padding: 8px 15px; border-radius: 8px;" onclick="toggleToolBox('board-menu-box')" title="메뉴 열기"><i class="fa-solid fa-bars"></i></button>
                             </div>
                         </div>
 
                         <div class="info-box" style="flex:1; padding: 25px 20px;">
+                            <!-- 1~6교시 렌더링 생략 (기존과 동일하게 유지하되 HTML 길이를 위해 축약) -->
                             <div class="tt-row">
                                 <span class="tt-label">1교시</span><span class="tt-subject" id="view-tt-sub-1" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
                                 <div class="tt-content-wrapper">
@@ -348,7 +367,7 @@
                 <div class="dashboard-grid" style="grid-template-columns: 1fr 1fr;">
                     <div class="picker-box">
                         <h2 style="color:var(--dark-blue);">👥 모둠 뽑기</h2>
-                        <div style="margin-bottom:10px; color:#78909c; font-size:14px;">(자리 배치 결과와 자동 연동됩니다)</div>
+                        <div style="margin-bottom:10px; color:#78909c; font-size:14px;">(자리 배치 결과와 연동됩니다)</div>
                         <div id="group-cards-container" class="card-container"></div>
                         <div style="margin-top:20px;">
                             <button class="action-btn" style="background:#2ecc71; padding:12px 25px; font-size:18px;" onclick="drawGroupCard()">모둠 뽑기!</button>
@@ -357,7 +376,7 @@
                     </div>
                     <div class="picker-box">
                         <h2 style="color:var(--dark-blue);">👤 개인 번호 뽑기</h2>
-                        <div style="margin-bottom:10px; font-weight:bold; color:var(--dark-blue);">결석 번호: <input type="text" id="picker-absent" style="width:80px;" class="setting-input" placeholder="예: 3, 5"> <button class="reset-btn" onclick="initStudentPicker()">반영</button></div>
+                        <div style="margin-bottom:10px; font-weight:bold; color:var(--dark-blue);">결석: <input type="text" id="picker-absent" style="width:80px;" class="setting-input" placeholder="예: 3, 5"> <button class="reset-btn" onclick="initStudentPicker()">반영</button></div>
                         <div id="student-cards-container" class="card-container"></div>
                         <div style="margin-top:20px;">
                             <button class="action-btn" style="background:#8e44ad; padding:12px 25px; font-size:18px;" onclick="drawStudentCard()">번호 뽑기!</button> 
@@ -372,7 +391,7 @@
                 </div>
             </div>
 
-            <!-- 📝 3. 과제관리 (통계 통합) 탭 -->
+            <!-- 📝 3. 과제관리 탭 -->
             <div id="homework-tab" class="content-section">
                 
                 <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
@@ -390,6 +409,7 @@
                     <h2 style="margin:0 0 20px 0; color:#00695c; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-pen-to-square"></i> 새 과제 등록</h2>
                     <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; background:#e0f2f1; padding:20px; border-radius:15px; border:1px solid #b2dfdb;">
                         <input type="date" id="hw-date" style="padding:12px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard'; font-weight:700;">
+                        <div style="font-weight:bold; color:#00695c;">총 <input type="number" id="hw-total" value="24" class="setting-input" style="padding:12px; width:70px; font-weight:700;">명</div>
                         <input type="text" id="hw-category" list="category-list" placeholder="과목 (예: 수학)" style="width:120px; padding:12px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard'; font-weight:700;">
                         <datalist id="category-list"><option value="수학"></option><option value="국어"></option><option value="일기"></option></datalist>
                         <input type="text" id="hw-title" placeholder="과제 내용 (예: 수익 10쪽)" style="flex:1; min-width: 150px; padding:12px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard'; font-weight:700;">
@@ -423,25 +443,28 @@
                 </div>
             </div>
 
-            <!-- ✨ 4. 자리 배치 탭 (신규 추가!) -->
+            <!-- ✨ 4. 자리 배치 탭 (기초 UI만 세팅) -->
             <div id="seating-tab" class="content-section">
                 <div class="picker-box">
                     <h2 style="color:var(--dark-blue); margin-bottom:10px;"><i class="fa-solid fa-chair"></i> 스마트 자리 배치</h2>
-                    <p style="color:#78909c; font-size:14px; margin-bottom:20px;">[자리 랜덤 뽑기]를 누르면 자동으로 6모둠 대형이 생성됩니다. 두 학생의 자리를 차례로 클릭하면 <b>자리가 서로 바뀝니다(수동 배치).</b></p>
+                    
+                    <div style="background:#e3f2fd; border-radius:12px; padding:20px; text-align:left; margin-bottom:20px; border:2px solid #90caf9;">
+                        <h3 style="margin-top:0; color:#1565c0;">🛠️ 단계별 자리 세팅 (업데이트 예정)</h3>
+                        <p style="color:#546e7a; font-size:15px; margin-bottom:0;">
+                            선생님께서 원하시는 <b>'남녀 대각선 배치'</b>를 완벽하게 구현하기 위해, <b>[학생 명단(성별) 입력 시스템]</b>을 구축 중입니다.<br>
+                            현재는 <b>단순 랜덤 생성(6모둠)</b> 및 <b>클릭을 통한 수동 자리 바꾸기(스왑)</b>만 지원합니다.
+                        </p>
+                    </div>
                     
                     <div style="display:flex; justify-content:center; gap:15px; margin-bottom:20px; align-items:center;">
-                        <button class="action-btn" style="background:#8e44ad; padding:15px 30px; font-size:18px;" onclick="generateSeating()">🎲 자리 랜덤 뽑기 (6모둠)</button>
-                        <button class="reset-btn" onclick="saveSeatingToFirebase()">💾 현재 자리 배치 저장</button>
+                        <button class="action-btn" style="background:#8e44ad; padding:15px 30px; font-size:18px;" onclick="generateSeating()">🎲 무작위 자리 뽑기 (6모둠)</button>
+                        <button class="reset-btn" onclick="saveSeatingToFirebase()">💾 현재 자리 저장</button>
                     </div>
 
-                    <!-- 칠판 표시 영역 -->
                     <div style="background:#546e7a; color:white; padding:10px; border-radius:10px; width:60%; margin:0 auto 20px auto; font-weight:800; font-size:20px; letter-spacing:5px;">칠 판</div>
-
-                    <!-- 자리 배치도 Grid 컨테이너 -->
                     <div id="seating-grid-container" class="seating-grid" style="grid-template-columns: repeat(6, 1fr);">
-                        <!-- 스크립트로 렌더링 됨 -->
+                        <!-- 렌더링 영역 -->
                     </div>
-                    
                 </div>
             </div>
 
@@ -449,7 +472,6 @@
 
         <!-- ✨ 우측 하단 퀵 플로팅 툴 -->
         <div class="floating-tools">
-            
             <div style="position:relative; display:flex; align-items:center;">
                 <div id="quick-student-box" class="tool-box-popup">
                     <h3 style="margin:0 0 10px 0; color:var(--dark-blue); text-align:center;">👤 개인 번호 뽑기</h3>
@@ -489,7 +511,6 @@
                     <button class="reset-btn" onclick="closeSettingsModal()">닫기</button>
                 </div>
                 
-                <!-- ✨ 범용성 확장을 위한 학급 기본 정보 설정 -->
                 <div style="background:#e3f2fd; padding:20px; border-radius:15px; margin-bottom:20px; border:2px solid #90caf9;">
                     <h3 style="margin:0 0 15px 0; color:#1565c0;"><i class="fa-solid fa-school"></i> 우리 반 기본 정보</h3>
                     <div style="display:flex; gap:15px; align-items:center;">
@@ -514,6 +535,12 @@
     </div>
 
     <script>
+        // 사이드바 토글 기능
+        function toggleSidebar() {
+            const sidebar = document.getElementById('mySidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+
         // 공통 유틸리티
         function updateClock() {
             const now = new Date();
@@ -534,7 +561,7 @@
             applyFontSize(); localStorage.setItem('myCustomFontSize', currentBoardFontSize);
         }
 
-        // 파이어베이스 연동
+        // 파이어베이스 연동 (오류 방지를 위해 로직 강화)
         const firebaseConfig = {
           apiKey: "AIzaSyCrEfpzVS1YvORiM4HYRCryytj6Y-kG2fI",
           authDomain: "classscore-sinli.firebaseapp.com",
@@ -556,12 +583,12 @@
         let currentScores = [], currentMiniScores = [], currentTasks = [], historyCheck = {}, allHomeworks = [];
         let viewDate = new Date(); let calDate = new Date(); 
         let isDashboardFocused = false; 
-        let globalTotalStudents = 24; // 전역 학생 수
+        let globalTotalStudents = 24; 
 
-        // ✨ 자리 배치 전역 변수
-        let currentSeating = []; // 현재 자리 배열
-        let selectedDeskIndex = null; // 클릭 스왑용
-        let groupMembersMap = {}; // 뽑기 연동용 모둠 객체 { "1": [1, 2, 3, 4], "2": [...] }
+        // 자리 배치 변수
+        let currentSeating = []; 
+        let selectedDeskIndex = null; 
+        let groupMembersMap = {}; 
 
         window.onload = () => {
             const savedSize = localStorage.getItem('myCustomFontSize');
@@ -575,7 +602,7 @@
             auth.onAuthStateChanged(user => {
                 if(user) {
                     document.getElementById('login-box').style.display = 'none'; document.getElementById('room-box').style.display = 'block'; 
-                    document.getElementById('user-profile').innerHTML = `<i class="fa-solid fa-user-circle"></i> ${user.displayName} 선생님`;
+                    document.getElementById('user-profile').innerText = `${user.displayName} 선생님`;
                     const savedRoom = localStorage.getItem('classRoomName'); if(savedRoom) { document.getElementById('room-name-input').value = savedRoom; enterRoom(); }
                 } else {
                     document.getElementById('auth-overlay').style.display = 'flex'; document.getElementById('login-box').style.display = 'block'; document.getElementById('room-box').style.display = 'none'; document.getElementById('main-app').style.display = 'none';
@@ -602,7 +629,6 @@
             timerRef = db.ref('rooms/' + currentRoom + '/timerState'); boardRef = db.ref('rooms/' + currentRoom + '/skyDashboard');
             historyRef = db.ref('rooms/' + currentRoom + '/boardHistory'); tasksRef = db.ref('rooms/' + currentRoom + '/groupTasks'); hwRef = db.ref('rooms/' + currentRoom + '/homeworks');
             
-            // ✨ 자리배치용 참조
             seatingRef = db.ref('rooms/' + currentRoom + '/seating');
             groupMembersRef = db.ref('rooms/' + currentRoom + '/groupMembers');
 
@@ -620,20 +646,22 @@
                 });
             });
 
-            // 설정값 초기 로드 (총 인원 반영)
+            // 설정 로드 에러 방지
             settingsRef.once('value').then(snap => {
-                const s = snap.val() || {};
-                globalTotalStudents = s.totalStudents || 24;
-                document.getElementById('set-total-students').value = globalTotalStudents;
-                document.getElementById('set-class-name').value = s.className || "";
-                if(s.className) document.querySelector('.logo').innerText = s.className;
-            });
+                if(snap.exists()){
+                    const s = snap.val();
+                    globalTotalStudents = s.totalStudents || 24;
+                    document.getElementById('set-total-students').value = globalTotalStudents;
+                    document.getElementById('set-class-name').value = s.className || "";
+                    if(s.className) document.querySelector('.logo-text').innerText = s.className;
+                }
+            }).catch(e => console.error(e));
 
             groupSettingsRef.once('value').then(snap => {
                 numberOfGroups = snap.val() || 6; document.getElementById('group-count-score').value = numberOfGroups; document.getElementById('group-count-picker').value = numberOfGroups;
                 buildScoreboardHTML(); buildTaskBoard(); buildMiniScoreboard(); resetGroupDraw(); initStudentPicker(); loadTodayBoard(); 
                 if(!listenersSet) { startFirebaseListeners(); listenersSet = true; }
-            });
+            }).catch(e => console.error(e));
         }
 
         function exitRoom() { localStorage.removeItem('classRoomName'); location.reload(); }
@@ -671,18 +699,12 @@
             hwRef.on('value', snap => { allHomeworks = []; snap.forEach(c => { allHomeworks.push({id: c.key, ...c.val()}); }); allHomeworks.reverse(); renderHomeworkList(); if(document.getElementById('hw-stats-section').style.display === 'block') renderStats(currentStatsMode); });
             timerRef.on('value', snap => { updateTimerUI(snap.val() || { isRunning: false, endTime: 0, pausedRemaining: 0 }); });
             
-            // ✨ 자리배치 & 모둠 연동 리스너
-            seatingRef.on('value', snap => {
-                currentSeating = snap.val() || [];
-                renderSeatingGrid();
-            });
-            groupMembersRef.on('value', snap => {
-                groupMembersMap = snap.val() || {};
-            });
+            seatingRef.on('value', snap => { currentSeating = snap.val() || []; renderSeatingGrid(); });
+            groupMembersRef.on('value', snap => { groupMembersMap = snap.val() || {}; });
         }
 
         // ==========================================
-        // 📋 칠판 & 달력 로직
+        // 📋 칠판 로직
         // ==========================================
         function loadTodayBoard() {
             const todayKey = getFormattedDate(new Date());
@@ -793,7 +815,7 @@
         }
 
         // ==========================================
-        // 🌟 탭 관리 및 햄버거 메뉴 토글 로직
+        // 🌟 탭 관리 로직
         // ==========================================
         function switchTab(t) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -826,26 +848,18 @@
         function generateSeating() {
             if(!confirm("새로운 자리 배치를 생성합니다. 기존 배치는 사라집니다. 계속할까요?")) return;
             
-            // 1. 1번부터 전역 학생 수만큼 배열 생성 후 셔플
             let students = Array.from({length: globalTotalStudents}, (_, i) => i + 1);
             for (let i = students.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [students[i], students[j]] = [students[j], students[i]];
             }
 
-            // 2. 6모둠 구조 만들기 (가로 6칸, 즉 1열이 1모둠)
-            // 총 인원이 24명이면: 6모둠 x 4명 (가로 6 x 세로 4 격자)
             let cols = 6; 
             let rows = Math.ceil(globalTotalStudents / cols);
             let grid = new Array(rows * cols).fill(null);
-            
-            // 배치 (단순히 차례대로 채움. 추후 세로/가로 배치 방향 옵션 추가 가능)
-            for(let i=0; i<students.length; i++) {
-                grid[i] = students[i];
-            }
+            for(let i=0; i<students.length; i++) grid[i] = students[i];
 
-            currentSeating = grid;
-            selectedDeskIndex = null;
+            currentSeating = grid; selectedDeskIndex = null;
             saveSeatingToFirebase();
         }
 
@@ -859,7 +873,7 @@
             }
 
             currentSeating.forEach((num, idx) => {
-                let col = idx % 6; // 0~5 열 = 1~6 모둠 (6모둠 대형 기준)
+                let col = idx % 6; 
                 let groupNum = col + 1;
                 
                 const desk = document.createElement('div');
@@ -867,7 +881,6 @@
                 if (selectedDeskIndex === idx) desk.classList.add('selected');
                 
                 desk.innerText = num !== null ? num : '';
-                
                 desk.onclick = () => handleDeskClick(idx);
                 container.appendChild(desk);
             });
@@ -875,40 +888,27 @@
 
         function handleDeskClick(idx) {
             if(selectedDeskIndex === null) {
-                selectedDeskIndex = idx;
-                renderSeatingGrid();
+                selectedDeskIndex = idx; renderSeatingGrid();
             } else {
                 if(selectedDeskIndex !== idx) {
-                    // 스왑 (Swap)
                     let temp = currentSeating[selectedDeskIndex];
                     currentSeating[selectedDeskIndex] = currentSeating[idx];
                     currentSeating[idx] = temp;
-                    saveSeatingToFirebase(); // 스왑시 즉시 자동 저장
+                    saveSeatingToFirebase(); 
                 }
-                selectedDeskIndex = null;
-                renderSeatingGrid();
+                selectedDeskIndex = null; renderSeatingGrid();
             }
         }
 
         function saveSeatingToFirebase() {
-            // 1. 그리드 저장
             seatingRef.set(currentSeating);
-            
-            // 2. 모둠 데이터 맵핑 및 저장 (열 기반 매핑 - 6열 6모둠 기준)
             let newGroups = {};
             for(let i=1; i<=6; i++) newGroups[i] = [];
-            
             currentSeating.forEach((num, idx) => {
-                if(num !== null) {
-                    let groupNum = (idx % 6) + 1; // 1열=1모둠 ... 6열=6모둠
-                    newGroups[groupNum].push(num);
-                }
+                if(num !== null) { let groupNum = (idx % 6) + 1; newGroups[groupNum].push(num); }
             });
-            
-            // 정렬
             for(let g in newGroups) newGroups[g].sort((a,b) => a-b);
-            groupMembersMap = newGroups;
-            groupMembersRef.set(newGroups);
+            groupMembersMap = newGroups; groupMembersRef.set(newGroups);
         }
 
         // ==========================================
@@ -931,15 +931,13 @@
         function resetTasks() { tasksRef.set({}); }
 
         let remG = [], remS = [];
-        function resetGroupDraw() { remG = Array.from({length:numberOfGroups}, (_, i) => i+1); document.getElementById('group-cards-container').innerHTML = remG.map(n => `<div class="flip-card group-card-size"><div class="flip-card-inner"><div class="flip-card-front">?</div><div class="flip-card-back">${n}</div></div></div>`).join(''); document.getElementById('quick-group-result').innerText = "-"; }
+        function resetGroupDraw() { remG = Array.from({length:numberOfGroups}, (_, i) => i+1); document.getElementById('group-cards-container').innerHTML = remG.map(n => `<div class="flip-card group-card-size"><div class="flip-card-inner"><div class="flip-card-front">?</div><div class="flip-card-back">${n}</div></div></div>`).join(''); document.getElementById('quick-group-result').innerHTML = "-"; }
         
-        // ✨ 모둠 뽑기 결과에 소속 학생 번호 함께 출력 연동!
         function drawGroupCard() { 
             const c = document.querySelectorAll('#group-cards-container .flip-card:not(.flipped)'); 
             if(c.length>0) { 
                 const t = c[Math.floor(Math.random()*c.length)]; 
-                t.classList.add('flipped'); 
-                pickSound.currentTime=0; pickSound.play().catch(e=>e); 
+                t.classList.add('flipped'); pickSound.currentTime=0; pickSound.play().catch(e=>e); 
                 
                 let gNum = t.querySelector('.flip-card-back').innerText;
                 let members = groupMembersMap[gNum];
@@ -947,7 +945,7 @@
                 if(members && members.length > 0) resHtml += `<br><span style="font-size:22px; color:#555;">(${members.join(', ')}번)</span>`;
                 
                 document.getElementById('quick-group-result').innerHTML = resHtml; 
-            } else { document.getElementById('quick-group-result').innerText = "끝!"; } 
+            } else { document.getElementById('quick-group-result').innerHTML = "끝!"; } 
         }
         
         function initStudentPicker() { const tot = parseInt(document.getElementById('picker-total').value)||globalTotalStudents; const abs = document.getElementById('picker-absent').value.split(',').map(n=>parseInt(n.trim())); remS = []; for(let i=1;i<=tot;i++){if(!abs.includes(i))remS.push(i);} document.getElementById('student-cards-container').innerHTML = remS.map(n => `<div class="flip-card student-card-size"><div class="flip-card-inner"><div class="flip-card-front">👤</div><div class="flip-card-back">${n}</div></div></div>`).join(''); document.getElementById('quick-student-result').innerText = "-"; }
@@ -1094,7 +1092,7 @@
             globalTotalStudents = data.totalStudents;
             document.getElementById('hw-total').value = globalTotalStudents;
             document.getElementById('picker-total').value = globalTotalStudents;
-            if(data.className) document.querySelector('.logo').innerText = data.className;
+            if(data.className) document.querySelector('.logo-text').innerText = data.className;
 
             settingsRef.set(data); alert("학급 기본 정보가 성공적으로 반영되었습니다."); closeSettingsModal();
         }
