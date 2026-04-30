@@ -28,6 +28,7 @@
         * { box-sizing: border-box; } 
         body { font-family: 'Pretendard', sans-serif; background-color: var(--main-sky); color: #333; margin: 0; overflow-x: hidden; height: 100vh; display: flex; flex-direction: row;}
 
+        /* ✨ 메인 레이아웃 */
         #main-app { display: none; width: 100vw; height: 100vh; overflow: hidden; display: flex; flex-direction: row; }
         
         .sidebar { width: 240px; background: var(--white); box-shadow: 2px 0 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; padding: 25px 15px; z-index: 100; flex-shrink: 0; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s; overflow: hidden;}
@@ -64,7 +65,7 @@
         .action-btn:active { transform: scale(0.95); }
         .reset-btn { font-size: 14px; padding: 10px 15px; background-color: #90a4ae; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; font-family: 'Pretendard', sans-serif;}
 
-        /* 📋 3분할 칠판 레이아웃 */
+        /* 📋 대시보드 레이아웃 */
         .dashboard-grid { display: grid; grid-template-columns: 1fr 2.4fr 1fr; gap: 20px; align-items: start;}
         .column-card { background: var(--white); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; border-top: 5px solid var(--accent-blue); height: 100%;}
         .card-header { display: flex; align-items: center; justify-content: center; margin-bottom: 15px; padding-bottom: 10px; font-size: 18px; font-weight: 800; color: var(--dark-blue); border-bottom: 2px solid var(--main-sky);}
@@ -80,13 +81,17 @@
         .large-text { font-size: var(--board-title-size); font-weight: 900; color: var(--dark-blue); }
 
         .tt-row { display: flex; margin-bottom: 15px; align-items: stretch; border-bottom: 1px solid #f0f4f8; padding-bottom: 15px; gap: 12px;}
-        .tt-label { font-weight: 900; color: #e65100; width: 60px; flex-shrink: 0; font-size: var(--board-font-size); background: #fff3e0; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 8px 5px;}
-        .tt-subject { font-weight: 800; color: var(--accent-blue); width: 85px; flex-shrink: 0; font-size: var(--board-font-size); background: var(--main-sky); border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px 5px;}
+        .tt-label { font-weight: 900; color: #e65100; width: 60px; flex-shrink: 0; font-size: var(--board-font-size); background: #fff3e0; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 8px 5px; transition: 0.2s;}
+        .tt-subject { font-weight: 800; color: var(--accent-blue); width: 85px; flex-shrink: 0; font-size: var(--board-font-size); background: var(--main-sky); border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px 5px; transition: 0.2s;}
         .tt-content-wrapper { display: flex; flex-direction: column; flex-grow: 1; gap: 4px; justify-content: center; min-width: 0;}
-        .tt-obj { color: #2c3e50; font-size: var(--board-font-size); font-weight: 700; padding: 4px; word-break: keep-all;}
-        .tt-prep-wrap { display: flex; align-items: flex-start; gap: 5px; background: #fff8e1; padding: 4px 8px; border-radius: 8px; border-left: 4px solid #ffb300; }
-        .tt-prep { color: #d32f2f; font-size: calc(var(--board-font-size) - 1px); font-weight: 800; flex-grow: 1; outline: none; line-height: 1.4;}
-        .tt-page { font-weight: 800; color: #0288d1; width: 120px; flex-shrink: 0; font-size: calc(var(--board-font-size) - 2px); background: #f0f4f8; border: 2px dashed #b3e5fc; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 10px; line-height: 1.4; word-break: keep-all;}
+        .tt-obj { color: #2c3e50; font-size: var(--board-font-size); font-weight: 700; padding: 4px; transition: 0.2s; word-break: keep-all;}
+        
+        /* ✨ 준비물 박스 다이어트 CSS (크기 축소 및 패딩 조절) */
+        .tt-prep-wrap { display: flex; align-items: center; gap: 4px; background: #fff8e1; padding: 2px 6px; border-radius: 6px; border-left: 3px solid #ffb300; margin-top: 2px; width: fit-content;}
+        .prep-icon { font-size: 13px; color: #f57c00; font-weight: 900; white-space: nowrap;}
+        .tt-prep { color: #d32f2f; font-size: 14px; font-weight: 800; flex-grow: 1; outline: none; line-height: 1.3;}
+
+        .tt-page { font-weight: 800; color: #0288d1; width: 120px; flex-shrink: 0; font-size: calc(var(--board-font-size) - 2px); background: #f0f4f8; border: 2px dashed #b3e5fc; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 10px; transition: 0.2s; line-height: 1.4; word-break: keep-all;}
 
         .calendar-card { background: #fdfdfd; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 2px solid var(--sub-sky); box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);}
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 800; color: var(--accent-blue); font-size: 16px;}
@@ -157,18 +162,16 @@
         .setting-group label { display: block; font-weight: 700; margin-bottom: 5px; color: var(--accent-blue); }
         .setting-group textarea, .setting-group input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-family: 'Pretendard'; }
 
-        /* ✨ 자리배치 전용 스타일 */
+        /* 자리배치 전용 */
         .seating-grid { display: grid; gap: 15px; margin: 20px auto; justify-content: center; background: #f0f4f8; padding: 30px; border-radius: 20px; border: 2px dashed #b0bec5; }
-        
-        /* 남, 여, 빈자리 표시를 위한 색상 추가 */
         .desk-card { background: white; border: 2px solid var(--sub-sky); border-radius: 12px; width: 80px; height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: var(--dark-blue); box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer; transition: 0.2s; user-select: none; }
         .desk-card .gender-tag { font-size: 12px; font-weight: bold; margin-top: 5px; padding: 2px 6px; border-radius: 4px;}
         .desk-card .gender-m { background-color: #e3f2fd; color: #1976d2; }
         .desk-card .gender-f { background-color: #fce4ec; color: #c2185b; }
-        .desk-card .gender-u { background-color: #f5f5f5; color: #757575; }
-
+        .desk-card .gender-u { display: none; }
         .desk-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); border-color: var(--accent-blue); }
         .desk-card.empty { background: transparent; border: 2px dashed #cfd8dc; color: transparent; box-shadow: none; cursor: default; }
+        .desk-card.empty .gender-tag { display: none; }
         .desk-card.empty:hover { transform: none; }
         .desk-card.selected { background: #ffe0b2; border-color: #ff9800; transform: scale(1.05); box-shadow: 0 0 0 4px rgba(255,152,0,0.3); }
         
@@ -265,12 +268,12 @@
                                 <div id="board-menu-box" class="tool-box-inline">
                                     <h3 style="margin:0 0 15px 0; color:var(--dark-blue); text-align:center;">📋 칠판 추가 메뉴</h3>
                                     <div style="display:flex; align-items:center; gap:5px; background:#f8f9fa; padding:10px; border-radius:10px; justify-content:center; margin-bottom:15px; border: 1px solid #eee;">
-                                        <span style="font-size:15px; font-weight:bold; color:#546e7a; margin-right:5px;">🔍 글씨 크기</span>
+                                        <span style="font-size:15px; font-weight:bold; color:#546e7a; margin-right:5px;">🔍 글씨 크기 조절</span>
                                         <button class="reset-btn" style="padding:6px 12px; background:#e1f5fe; color:#0288d1; box-shadow:none;" onclick="changeFontSize(2)">➕</button>
                                         <button class="reset-btn" style="padding:6px 12px; background:#fff3e0; color:#e65100; box-shadow:none;" onclick="changeFontSize(-2)">➖</button>
                                     </div>
                                     <button class="action-btn" style="width:100%; background:#5c6bc0; margin-bottom:8px; padding:12px;" onclick="autoFillDashboard(); toggleToolBox('board-menu-box');">🪄 요일 기본값 불러오기</button>
-                                    <button class="reset-btn" style="width:100%; padding:12px;" onclick="openSettingsModal(); toggleToolBox('board-menu-box');">⚙️ 학급/요일 기초 세팅</button>
+                                    <button class="reset-btn" style="width:100%; padding:12px;" onclick="openSettingsModal(); toggleToolBox('board-menu-box');">⚙️ 학급 전체/요일 기초 세팅</button>
                                 </div>
                                 <button class="action-btn" style="background:#34495e; padding: 8px 15px; border-radius: 8px;" onclick="toggleToolBox('board-menu-box')" title="메뉴 열기"><i class="fa-solid fa-bars"></i></button>
                             </div>
@@ -279,33 +282,51 @@
                         <div class="info-box" style="flex:1; padding: 25px 20px;">
                             <div class="tt-row">
                                 <span class="tt-label">1교시</span><span class="tt-subject" id="view-tt-sub-1" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-1" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><div class="tt-prep" id="view-tt-prep-1" contenteditable="true" spellcheck="false" data-placeholder="🖍️ 준비물 (클릭하여 입력)"></div></div></div>
-                                <span class="tt-page" id="view-tt-page-1" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터로 줄바꿈)"></span>
+                                <div class="tt-content-wrapper">
+                                    <div class="tt-obj" id="view-tt-obj-1" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div>
+                                    <div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-1" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력 (클릭)"></div></div>
+                                </div>
+                                <span class="tt-page" id="view-tt-page-1" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터 줄바꿈)"></span>
                             </div>
                             <div class="tt-row">
                                 <span class="tt-label">2교시</span><span class="tt-subject" id="view-tt-sub-2" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-2" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><div class="tt-prep" id="view-tt-prep-2" contenteditable="true" spellcheck="false" data-placeholder="🖍️ 준비물 (클릭하여 입력)"></div></div></div>
-                                <span class="tt-page" id="view-tt-page-2" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터로 줄바꿈)"></span>
+                                <div class="tt-content-wrapper">
+                                    <div class="tt-obj" id="view-tt-obj-2" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div>
+                                    <div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-2" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력 (클릭)"></div></div>
+                                </div>
+                                <span class="tt-page" id="view-tt-page-2" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터 줄바꿈)"></span>
                             </div>
                             <div class="tt-row">
                                 <span class="tt-label">3교시</span><span class="tt-subject" id="view-tt-sub-3" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-3" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><div class="tt-prep" id="view-tt-prep-3" contenteditable="true" spellcheck="false" data-placeholder="🖍️ 준비물 (클릭하여 입력)"></div></div></div>
-                                <span class="tt-page" id="view-tt-page-3" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터로 줄바꿈)"></span>
+                                <div class="tt-content-wrapper">
+                                    <div class="tt-obj" id="view-tt-obj-3" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div>
+                                    <div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-3" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력 (클릭)"></div></div>
+                                </div>
+                                <span class="tt-page" id="view-tt-page-3" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터 줄바꿈)"></span>
                             </div>
                             <div class="tt-row">
                                 <span class="tt-label">4교시</span><span class="tt-subject" id="view-tt-sub-4" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-4" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><div class="tt-prep" id="view-tt-prep-4" contenteditable="true" spellcheck="false" data-placeholder="🖍️ 준비물 (클릭하여 입력)"></div></div></div>
-                                <span class="tt-page" id="view-tt-page-4" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터로 줄바꿈)"></span>
+                                <div class="tt-content-wrapper">
+                                    <div class="tt-obj" id="view-tt-obj-4" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div>
+                                    <div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-4" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력 (클릭)"></div></div>
+                                </div>
+                                <span class="tt-page" id="view-tt-page-4" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터 줄바꿈)"></span>
                             </div>
                             <div class="tt-row">
                                 <span class="tt-label">5교시</span><span class="tt-subject" id="view-tt-sub-5" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-5" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><div class="tt-prep" id="view-tt-prep-5" contenteditable="true" spellcheck="false" data-placeholder="🖍️ 준비물 (클릭하여 입력)"></div></div></div>
-                                <span class="tt-page" id="view-tt-page-5" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터로 줄바꿈)"></span>
+                                <div class="tt-content-wrapper">
+                                    <div class="tt-obj" id="view-tt-obj-5" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div>
+                                    <div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-5" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력 (클릭)"></div></div>
+                                </div>
+                                <span class="tt-page" id="view-tt-page-5" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터 줄바꿈)"></span>
                             </div>
                             <div class="tt-row" style="border-bottom:none;">
                                 <span class="tt-label">6교시</span><span class="tt-subject" id="view-tt-sub-6" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-6" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><div class="tt-prep" id="view-tt-prep-6" contenteditable="true" spellcheck="false" data-placeholder="🖍️ 준비물 (클릭하여 입력)"></div></div></div>
-                                <span class="tt-page" id="view-tt-page-6" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터로 줄바꿈)"></span>
+                                <div class="tt-content-wrapper">
+                                    <div class="tt-obj" id="view-tt-obj-6" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div>
+                                    <div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-6" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력 (클릭)"></div></div>
+                                </div>
+                                <span class="tt-page" id="view-tt-page-6" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터 줄바꿈)"></span>
                             </div>
                         </div>
                     </div>
@@ -423,24 +444,25 @@
                 </div>
             </div>
 
-            <!-- ✨ 4. 자리 배치 탭 (대각선 배치 마법사 도입) -->
+            <!-- ✨ 4. 스마트 자리 배치 탭 -->
             <div id="seating-tab" class="content-section">
                 <div class="picker-box">
                     <h2 style="color:var(--dark-blue); margin-bottom:10px;"><i class="fa-solid fa-chair"></i> 스마트 자리 배치</h2>
                     
                     <div style="background:#e3f2fd; border-radius:12px; padding:20px; text-align:left; margin-bottom:20px; border:2px solid #90caf9;">
-                        <h3 style="margin-top:0; color:#1565c0;">💡 스마트 남녀 대각선 배치 안내</h3>
-                        <p style="color:#546e7a; font-size:15px; margin-bottom:0; line-height: 1.5;">
-                            좌측 메뉴의 <b>[⚙️ 기초 세팅]</b> 창에서 <b>학생 성별 명단</b>을 입력하시면 대각선(지그재그) 배치가 가능합니다.<br>
-                            - <b>[남녀 대각선 배치]</b>: 명단을 바탕으로 남학생과 여학생이 겹치지 않게 교차로 앉힙니다.<br>
-                            - <b>[무작위 랜덤 배치]</b>: 성별 구분 없이 1번부터 끝 번호까지 완전 무작위로 섞습니다.
+                        <h3 style="margin-top:0; color:#1565c0;">💡 스마트 배치 알고리즘 안내</h3>
+                        <p style="color:#546e7a; font-size:15px; margin-bottom:0; line-height: 1.6;">
+                            <b>1. 남녀 대각선 배치:</b> 기초 세팅에 입력된 명단을 바탕으로 남학생과 여학생이 서로 지그재그가 되도록 배치합니다.<br>
+                            <b>2. 분리 학생 조건:</b> 기초 세팅에 입력된 '분리 학생'끼리는 절대 같은 모둠(같은 열)에 배정되지 않습니다.<br>
+                            <b>3. 이전 자리 회피:</b> 수백 번의 시뮬레이션을 통해 이전 자리와 짝꿍 겹침을 최소화하는 최적의 배치를 찾아냅니다.
                         </p>
                     </div>
                     
-                    <div style="display:flex; justify-content:center; gap:15px; margin-bottom:20px; align-items:center;">
-                        <button class="action-btn" style="background:#0288d1; padding:15px 25px; font-size:16px;" onclick="generateSmartSeating()"><i class="fa-solid fa-venus-mars"></i> 남녀 대각선 스마트 배치</button>
-                        <button class="action-btn" style="background:#8e44ad; padding:15px 25px; font-size:16px;" onclick="generateRandomSeating()"><i class="fa-solid fa-dice"></i> 무작위 랜덤 배치</button>
-                        <button class="reset-btn" style="padding:15px 25px; font-size:16px;" onclick="saveSeatingToFirebase()"><i class="fa-solid fa-floppy-disk"></i> 자리 저장</button>
+                    <div style="display:flex; justify-content:center; gap:15px; margin-bottom:20px; align-items:center; flex-wrap: wrap;">
+                        <button class="action-btn" style="background:#0288d1; padding:15px 25px; font-size:16px;" onclick="generateSmartSeating()"><i class="fa-solid fa-venus-mars"></i> 남녀 대각선 최적화 배치</button>
+                        <button class="action-btn" style="background:#8e44ad; padding:15px 25px; font-size:16px;" onclick="generateRandomSeating()"><i class="fa-solid fa-dice"></i> 단순 무작위 배치</button>
+                        <button class="action-btn" style="background:#4caf50; padding:15px 25px; font-size:16px;" onclick="saveCurrentToPastGroups()"><i class="fa-solid fa-clock-rotate-left"></i> 현재를 '이전 자리'로 기록</button>
+                        <button class="reset-btn" style="padding:15px 25px; font-size:16px;" onclick="saveSeatingToFirebase()"><i class="fa-solid fa-floppy-disk"></i> 수동 자리 저장</button>
                     </div>
 
                     <div style="background:#546e7a; color:white; padding:10px; border-radius:10px; width:60%; margin:0 auto 20px auto; font-weight:800; font-size:20px; letter-spacing:5px;">칠 판</div>
@@ -485,7 +507,7 @@
             </div>
         </div>
 
-        <!-- ⚙️ 기초 세팅 모달 -->
+        <!-- ⚙️ 기초 세팅 모달 (명단 입력 및 기피학생 추가) -->
         <div class="modal-overlay" id="settings-modal">
             <div class="modal-box">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
@@ -494,19 +516,27 @@
                 </div>
                 
                 <div style="background:#e3f2fd; padding:20px; border-radius:15px; margin-bottom:20px; border:2px solid #90caf9;">
-                    <h3 style="margin:0 0 15px 0; color:#1565c0;"><i class="fa-solid fa-school"></i> 우리 반 기본 정보 및 명단</h3>
+                    <h3 style="margin:0 0 15px 0; color:#1565c0;"><i class="fa-solid fa-school"></i> 우리 반 기본 정보 및 스마트 배치 설정</h3>
                     <div style="display:flex; gap:15px; align-items:center; margin-bottom:15px;">
                         <div style="font-weight:bold; color:var(--dark-blue);">학급명: <input type="text" id="set-class-name" placeholder="예: 5학년 1반" class="setting-input" style="width:120px;"></div>
                         <div style="font-weight:bold; color:var(--dark-blue);">총 학생 수: <input type="number" id="set-total-students" value="24" class="setting-input" style="width:80px;">명</div>
                     </div>
-                    <!-- ✨ 성별 자리 배치를 위한 명단 데이터 -->
-                    <div style="font-weight:bold; color:var(--dark-blue); font-size:14px;">👥 학생 명단 성별 데이터 (자리배치용)</div>
-                    <p style="font-size:12px; color:#555; margin: 5px 0;">작성 예시: 1번 남, 2번 여, 3번 남 ... (반드시 번호와 성별을 적어주세요!)</p>
-                    <textarea id="set-student-roster" style="height:100px; font-family:'Pretendard'; padding:10px; border-radius:8px; border:1px solid #ccc; width:100%; line-height:1.5;" placeholder="1번 남&#10;2번 여&#10;3번 남"></textarea>
+                    
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                        <div>
+                            <div style="font-weight:bold; color:var(--dark-blue); font-size:14px;">👥 학생 명단 성별 데이터</div>
+                            <p style="font-size:12px; color:#555; margin: 5px 0;">작성 예: 1번 남, 2번 여, 3번 남...</p>
+                            <textarea id="set-student-roster" style="height:100px; font-family:'Pretendard'; padding:10px; border-radius:8px; border:1px solid #ccc; width:100%; line-height:1.5;" placeholder="1번 남&#10;2번 여"></textarea>
+                        </div>
+                        <div>
+                            <div style="font-weight:bold; color:var(--dark-blue); font-size:14px;">🚫 분리 학생 설정 (절대 같은 모둠 X)</div>
+                            <p style="font-size:12px; color:#555; margin: 5px 0;">작성 예: 1-5, 3-8 (번호-번호)</p>
+                            <textarea id="set-separated-pairs" style="height:100px; font-family:'Pretendard'; padding:10px; border-radius:8px; border:1px solid #ccc; width:100%; line-height:1.5;" placeholder="1-5&#10;3-8"></textarea>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="setting-group"><label>당번 기본 할 일</label><textarea id="set-duty-tasks" style="height:60px; font-weight:700;"></textarea></div>
-                <p style="background:var(--main-sky); padding:10px; border-radius:8px; font-size:14px; color:var(--dark-blue); font-weight:bold;">📚 시간표 입력 시 '교시'는 빼고 [과목: 학습목표] 형태로 적어주세요! (콜론 ':' 필수)</p>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                     <div class="setting-group"><label>월요일 (자습 / 시간표)</label><input type="text" id="set-mon-m" placeholder="자습내용" style="font-weight:700;"><textarea id="set-mon-t" style="height:120px; font-weight:700;" placeholder="국어: 내용&#10;수학: 내용"></textarea></div>
                     <div class="setting-group"><label>화요일</label><input type="text" id="set-tue-m" style="font-weight:700;"><textarea id="set-tue-t" style="height:120px; font-weight:700;"></textarea></div>
@@ -527,7 +557,6 @@
             sidebar.classList.toggle('collapsed');
         }
 
-        // 공통 유틸리티
         function updateClock() {
             const now = new Date();
             const h = String(now.getHours()).padStart(2, '0');
@@ -547,7 +576,6 @@
             applyFontSize(); localStorage.setItem('myCustomFontSize', currentBoardFontSize);
         }
 
-        // 파이어베이스 연동
         const firebaseConfig = {
           apiKey: "AIzaSyCrEfpzVS1YvORiM4HYRCryytj6Y-kG2fI",
           authDomain: "classscore-sinli.firebaseapp.com",
@@ -571,13 +599,16 @@
         let isDashboardFocused = false; 
         
         let globalTotalStudents = 24; 
-        let globalStudentRosterStr = ""; // 명단 텍스트 원본 보관
+        let globalStudentRosterStr = ""; 
+        let globalSeparatedStr = "";
 
-        // 자리 배치 전역 변수
+        // 자리 배치용 변수
         let currentSeating = []; 
         let selectedDeskIndex = null; 
         let groupMembersMap = {}; 
-        let parsedRoster = []; // 분석된 명단 배열 [{id:1, gender:'M'}, ...]
+        let parsedRoster = []; 
+        let parsedSeparated = [];
+        let pastGroupsRecord = {}; // 이전 모둠 데이터 저장용
 
         window.onload = () => {
             const savedSize = localStorage.getItem('myCustomFontSize');
@@ -635,13 +666,16 @@
                 });
             });
 
-            // 설정값 및 명단 데이터 안전하게 로드
             settingsRef.once('value').then(snap => {
                 if(snap.exists()){
                     const s = snap.val();
                     globalTotalStudents = s.totalStudents || 24;
                     globalStudentRosterStr = s.roster || "";
-                    parseStudentRoster(); // 명단 분석 실행
+                    globalSeparatedStr = s.separatedPairs || "";
+                    pastGroupsRecord = s.pastGroups || {};
+                    
+                    parseStudentRoster();
+                    parseSeparatedPairs();
                     
                     document.getElementById('set-total-students').value = globalTotalStudents;
                     document.getElementById('set-class-name').value = s.className || "";
@@ -650,7 +684,7 @@
                     const hwTotalEl = document.getElementById('hw-total');
                     if (hwTotalEl) hwTotalEl.value = globalTotalStudents;
                 }
-            }).catch(e => console.error(e));
+            }).catch(e => console.error("설정 로드 오류:", e));
 
             groupSettingsRef.once('value').then(snap => {
                 numberOfGroups = snap.val() || 6; document.getElementById('group-count-score').value = numberOfGroups; 
@@ -839,10 +873,9 @@
         }
 
         // ==========================================
-        // ✨ 스마트 자리 배치 로직 (남녀 대각선 포함)
+        // ✨ 스마트 자리 배치 로직 (대각선 / 기피학생 / 이전데이터 반영)
         // ==========================================
         
-        // 1. 세팅에서 가져온 문자열을 배열로 파싱
         function parseStudentRoster() {
             parsedRoster = [];
             if (!globalStudentRosterStr) return;
@@ -853,62 +886,126 @@
                 let idMatch = text.match(/\d+/);
                 let id = idMatch ? parseInt(idMatch[0]) : null;
                 let gender = text.includes('남') ? 'M' : (text.includes('여') ? 'F' : 'U');
-                if (id !== null) {
-                    parsedRoster.push({ id: id, gender: gender });
+                if (id !== null) parsedRoster.push({ id: id, gender: gender });
+            });
+        }
+
+        function parseSeparatedPairs() {
+            parsedSeparated = [];
+            if (!globalSeparatedStr) return;
+            const pairs = globalSeparatedStr.split('\n');
+            pairs.forEach(p => {
+                let nums = p.match(/\d+/g);
+                if (nums && nums.length >= 2) {
+                    parsedSeparated.push([parseInt(nums[0]), parseInt(nums[1])]);
                 }
             });
         }
 
-        // 2. 남녀 대각선 스마트 배치 버튼 클릭시
+        // 페널티 계산 (휴리스틱)
+        function calculatePenalty(grid, cols) {
+            let penalty = 0;
+            // 1. 기피 학생 검사 (같은 열=같은 모둠에 있으면 페널티 무한대)
+            for (let pair of parsedSeparated) {
+                let idx1 = grid.indexOf(pair[0]);
+                let idx2 = grid.indexOf(pair[1]);
+                if (idx1 !== -1 && idx2 !== -1) {
+                    let col1 = idx1 % cols;
+                    let col2 = idx2 % cols;
+                    if (col1 === col2) penalty += 10000; // 절대 불가
+                }
+            }
+            
+            // 2. 이전 짝꿍 회피 검사 (과거에 같은 모둠이었던 기록이 있으면 페널티 증가)
+            for (let col = 0; col < cols; col++) {
+                let currentGroupMembers = [];
+                for (let i = 0; i < grid.length; i++) {
+                    if (i % cols === col && grid[i] !== null) currentGroupMembers.push(grid[i]);
+                }
+                
+                // 현재 그룹 내의 모든 쌍 조합에 대해 과거 기록 검사
+                for (let i = 0; i < currentGroupMembers.length; i++) {
+                    for (let j = i + 1; j < currentGroupMembers.length; j++) {
+                        let s1 = currentGroupMembers[i];
+                        let s2 = currentGroupMembers[j];
+                        
+                        // 과거 기록(pastGroupsRecord) 탐색
+                        for (let pastG in pastGroupsRecord) {
+                            let pMembers = pastGroupsRecord[pastG];
+                            if (pMembers.includes(s1) && pMembers.includes(s2)) {
+                                penalty += 10; // 과거에 같은 조였으면 +10점
+                            }
+                        }
+                    }
+                }
+            }
+            return penalty;
+        }
+
         function generateSmartSeating() {
             if (parsedRoster.length === 0) {
                 alert("설정 메뉴에서 [학생 명단 성별 데이터]를 먼저 입력해주세요!\n(예: 1번 남, 2번 여)");
-                openSettingsModal();
-                return;
+                openSettingsModal(); return;
             }
-            if(!confirm("남학생과 여학생이 대각선으로 앉도록 배치합니다. 계속할까요?")) return;
+            
+            if(!confirm("설정된 조건(남녀 대각선, 기피학생, 과거 자리 회피)을 바탕으로 최적의 배치를 찾습니다. 계속할까요?")) return;
 
-            let boys = [], girls = [], unassigned = [];
-            parsedRoster.forEach(s => {
-                if (s.gender === 'M') boys.push(s.id);
-                else if (s.gender === 'F') girls.push(s.id);
-                else unassigned.push(s.id);
-            });
-
-            // 배열 섞기
-            const shuffle = (array) => {
-                for (let i = array.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [array[i], array[j]] = [array[j], array[i]];
-                }
-            };
-            shuffle(boys); shuffle(girls); shuffle(unassigned);
-
-            // 6칸 격자 계산
             let cols = 6; 
             let rows = Math.ceil(globalTotalStudents / cols);
-            let grid = new Array(rows * cols).fill(null);
+            
+            let bestGrid = null;
+            let lowestPenalty = Infinity;
+            
+            // 500번의 무작위 배치 시뮬레이션을 돌려 가장 완벽한 배치를 찾습니다.
+            for (let attempt = 0; attempt < 500; attempt++) {
+                let boys = [], girls = [], unassigned = [];
+                parsedRoster.forEach(s => {
+                    if (s.gender === 'M') boys.push(s.id);
+                    else if (s.gender === 'F') girls.push(s.id);
+                    else unassigned.push(s.id);
+                });
 
-            // 체크보드 로직 (대각선 배치)
-            for(let i=0; i<globalTotalStudents; i++) {
-                let r = Math.floor(i / cols);
-                let c = i % cols;
+                const shuffle = (array) => {
+                    for (let i = array.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [array[i], array[j]] = [array[j], array[i]];
+                    }
+                };
+                shuffle(boys); shuffle(girls); shuffle(unassigned);
+
+                let grid = new Array(rows * cols).fill(null);
+
+                // 남녀 대각선(체크보드) 세팅
+                for(let i=0; i<globalTotalStudents; i++) {
+                    let r = Math.floor(i / cols);
+                    let c = i % cols;
+                    if ((r + c) % 2 === 0) {
+                        grid[i] = girls.pop() || boys.pop() || unassigned.pop() || null;
+                    } else {
+                        grid[i] = boys.pop() || girls.pop() || unassigned.pop() || null;
+                    }
+                }
                 
-                // (r + c) 가 짝수이면 여학생, 홀수이면 남학생 (부족하면 남는 애들 채움)
-                if ((r + c) % 2 === 0) {
-                    grid[i] = girls.pop() || boys.pop() || unassigned.pop() || null;
-                } else {
-                    grid[i] = boys.pop() || girls.pop() || unassigned.pop() || null;
+                let currentPenalty = calculatePenalty(grid, cols);
+                if (currentPenalty < lowestPenalty) {
+                    lowestPenalty = currentPenalty;
+                    bestGrid = grid.slice();
+                    if (currentPenalty === 0) break; // 완벽한 배치(페널티 0)를 찾으면 즉시 종료
                 }
             }
 
-            currentSeating = grid; selectedDeskIndex = null;
+            if (lowestPenalty >= 10000) {
+                alert("기피 학생 조건을 100% 만족하는 배치를 찾기 어렵습니다. 다시 시도하거나 직접 수정해 주세요.");
+            } else if (lowestPenalty > 0) {
+                console.log("일부 이전 짝꿍과 겹칩니다. 페널티 점수: " + lowestPenalty);
+            }
+            
+            currentSeating = bestGrid; selectedDeskIndex = null;
             saveSeatingToFirebase();
         }
 
-        // 3. 기존 무작위 램덤 뽑기 버튼 클릭시
         function generateRandomSeating() {
-            if(!confirm("완전 무작위 배치를 생성합니다. 기존 배치는 사라집니다. 계속할까요?")) return;
+            if(!confirm("완전 무작위 배치를 생성합니다. 성별/기피 조건은 무시됩니다. 계속할까요?")) return;
             
             let students = Array.from({length: globalTotalStudents}, (_, i) => i + 1);
             for (let i = students.length - 1; i > 0; i--) {
@@ -924,14 +1021,25 @@
             currentSeating = grid; selectedDeskIndex = null;
             saveSeatingToFirebase();
         }
+        
+        // 현재 그룹을 이전 과거 그룹으로 덮어쓰기 저장
+        function saveCurrentToPastGroups() {
+            if(Object.keys(groupMembersMap).length === 0) {
+                alert("저장된 모둠 정보가 없습니다. 먼저 자리를 배치하세요."); return;
+            }
+            if(confirm("현재 모둠 편성을 '이전 자리' 기록으로 보관하시겠습니까?\n다음 자리 배치 시 이 데이터가 회피 조건으로 사용됩니다.")) {
+                pastGroupsRecord = groupMembersMap;
+                settingsRef.child('pastGroups').set(pastGroupsRecord);
+                alert("과거 자리 기록으로 성공적으로 보관되었습니다!");
+            }
+        }
 
-        // 4. 화면에 그리기
         function renderSeatingGrid() {
             const container = document.getElementById('seating-grid-container');
             container.innerHTML = '';
             
             if(!currentSeating || currentSeating.length === 0) {
-                container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#999;">위에 있는 버튼을 눌러 자리를 생성하세요.</div>';
+                container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#999;">위에 있는 [스마트 배치] 또는 [무작위 배치] 버튼을 눌러 자리를 생성하세요.</div>';
                 return;
             }
 
@@ -943,7 +1051,6 @@
                 desk.className = `desk-card ${num === null ? 'empty' : `group-bg-${groupNum}`}`;
                 if (selectedDeskIndex === idx) desk.classList.add('selected');
                 
-                // 학생 번호와 성별 표시 로직 연동
                 let gClass = 'gender-u';
                 let gText = '';
                 if(num !== null && parsedRoster.length > 0) {
@@ -1136,60 +1243,6 @@
                 }
                 studentHtml += `</div>`; res.innerHTML = studentHtml;
             }
-        }
-
-        // ==========================================
-        // ⚙️ 세팅 모달 로직 (명단 데이터 보존 및 적용)
-        // ==========================================
-        function openSettingsModal() { 
-            settingsRef.once('value').then(snap => {
-                const d = snap.val() || {
-                    roster: "", duty: "1. 창문 열고 닫기 (10분)\n2. 교실 앞뒤 쓸기\n3. 공기청정기 켜기\n4. 연필깎이 통 비우기\n5. 선생님 도우미",
-                    monM: "독서", monT: "국어 : \n수학 : \n영어 : \n과학 : \n과학 : \n체육 : ",
-                    tueM: "독서", tueT: "국어 : \n국어 : \n수학 : \n사회 : \n음악 : \n미술 : ",
-                    wedM: "독서", wedT: "창체 : \n창체 : \n과학 : \n과학 : \n음악 : \n",
-                    thuM: "독서", thuT: "수학 : \n사회 : \n국어 : \n체육 : \n영어 : \n실과 : ",
-                    friM: "독서", friT: "국어 : \n수학 : \n사회 : \n실과 : \n실과 : \n창체 : "
-                };
-                // 로드 시 명단 데이터 표시
-                document.getElementById('set-student-roster').value = d.roster || "";
-                document.getElementById('set-duty-tasks').value = d.duty || "";
-                document.getElementById('set-mon-m').value = d.monM || ""; document.getElementById('set-mon-t').value = d.monT || "";
-                document.getElementById('set-tue-m').value = d.tueM || ""; document.getElementById('set-tue-t').value = d.tueT || "";
-                document.getElementById('set-wed-m').value = d.wedM || ""; document.getElementById('set-wed-t').value = d.wedT || "";
-                document.getElementById('set-thu-m').value = d.thuM || ""; document.getElementById('set-thu-t').value = d.thuT || "";
-                document.getElementById('set-fri-m').value = d.friM || ""; document.getElementById('set-fri-t').value = d.friT || "";
-                document.getElementById('settings-modal').style.display = 'flex';
-            });
-        }
-        
-        function closeSettingsModal() { document.getElementById('settings-modal').style.display = 'none'; }
-        
-        function saveSettingsData() {
-            const data = {
-                totalStudents: parseInt(document.getElementById('set-total-students').value) || 24,
-                className: document.getElementById('set-class-name').value || "",
-                roster: document.getElementById('set-student-roster').value || "", // 명단 저장
-                duty: document.getElementById('set-duty-tasks').value, monM: document.getElementById('set-mon-m').value, monT: document.getElementById('set-mon-t').value,
-                tueM: document.getElementById('set-tue-m').value, tueT: document.getElementById('set-tue-t').value, wedM: document.getElementById('set-wed-m').value, wedT: document.getElementById('set-wed-t').value,
-                thuM: document.getElementById('set-thu-m').value, thuT: document.getElementById('set-thu-t').value, friM: document.getElementById('set-fri-m').value, friT: document.getElementById('set-fri-t').value
-            };
-            
-            globalTotalStudents = data.totalStudents;
-            globalStudentRosterStr = data.roster;
-            parseStudentRoster(); // 저장 즉시 파싱 실행
-            
-            const hwTotalEl = document.getElementById('hw-total');
-            if (hwTotalEl) hwTotalEl.value = globalTotalStudents;
-            
-            if (data.className) document.querySelector('.logo-text').innerText = data.className;
-
-            settingsRef.set(data).then(() => {
-                alert("설정이 성공적으로 저장되었습니다!"); 
-                closeSettingsModal();
-            }).catch(e => {
-                alert("저장 중 오류가 발생했습니다: " + e.message);
-            });
         }
     </script>
 </body>
