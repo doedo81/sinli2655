@@ -28,7 +28,6 @@
         * { box-sizing: border-box; } 
         body { font-family: 'Pretendard', sans-serif; background-color: var(--main-sky); color: #333; margin: 0; overflow-x: hidden; height: 100vh; display: flex; flex-direction: row;}
 
-        /* ✨ 메인 레이아웃 */
         #main-app { display: none; width: 100vw; height: 100vh; overflow: hidden; display: flex; flex-direction: row; }
         
         .sidebar { width: 240px; background: var(--white); box-shadow: 2px 0 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; padding: 25px 15px; z-index: 100; flex-shrink: 0; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s; overflow: hidden;}
@@ -65,10 +64,9 @@
         .action-btn:active { transform: scale(0.95); }
         .reset-btn { font-size: 14px; padding: 10px 15px; background-color: #90a4ae; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; font-family: 'Pretendard', sans-serif;}
 
-        /* 📋 대시보드 레이아웃 */
+        /* 📋 칠판 레이아웃 */
         .dashboard-grid { display: grid; grid-template-columns: 1fr 2.4fr 1fr; gap: 20px; align-items: start;}
         .column-card { background: var(--white); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; border-top: 5px solid var(--accent-blue); height: 100%;}
-        .card-header { display: flex; align-items: center; justify-content: center; margin-bottom: 15px; padding-bottom: 10px; font-size: 18px; font-weight: 800; color: var(--dark-blue); border-bottom: 2px solid var(--main-sky);}
         .info-box { background: #ffffff; border-radius: 12px; padding: 18px; margin-bottom: 15px; border: 1px solid #e1e8ed; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
         .info-label { font-weight: 800; font-size: 15px; margin-bottom: 10px; display: block; color: var(--accent-blue); }
         
@@ -81,17 +79,17 @@
         .large-text { font-size: var(--board-title-size); font-weight: 900; color: var(--dark-blue); }
 
         .tt-row { display: flex; margin-bottom: 15px; align-items: stretch; border-bottom: 1px solid #f0f4f8; padding-bottom: 15px; gap: 12px;}
-        .tt-label { font-weight: 900; color: #e65100; width: 60px; flex-shrink: 0; font-size: var(--board-font-size); background: #fff3e0; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 8px 5px; transition: 0.2s;}
-        .tt-subject { font-weight: 800; color: var(--accent-blue); width: 85px; flex-shrink: 0; font-size: var(--board-font-size); background: var(--main-sky); border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px 5px; transition: 0.2s;}
+        .tt-label { font-weight: 900; color: #e65100; width: 60px; flex-shrink: 0; font-size: var(--board-font-size); background: #fff3e0; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 8px 5px;}
+        .tt-subject { font-weight: 800; color: var(--accent-blue); width: 85px; flex-shrink: 0; font-size: var(--board-font-size); background: var(--main-sky); border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px 5px;}
         .tt-content-wrapper { display: flex; flex-direction: column; flex-grow: 1; gap: 4px; justify-content: center; min-width: 0;}
-        .tt-obj { color: #2c3e50; font-size: var(--board-font-size); font-weight: 700; padding: 4px; transition: 0.2s; word-break: keep-all;}
+        .tt-obj { color: #2c3e50; font-size: var(--board-font-size); font-weight: 700; padding: 4px; word-break: keep-all;}
         
-        /* ✨ 준비물 박스 다이어트 CSS (크기 축소 및 패딩 조절) */
+        /* 준비물 박스 다이어트 */
         .tt-prep-wrap { display: flex; align-items: center; gap: 4px; background: #fff8e1; padding: 2px 6px; border-radius: 6px; border-left: 3px solid #ffb300; margin-top: 2px; width: fit-content;}
         .prep-icon { font-size: 13px; color: #f57c00; font-weight: 900; white-space: nowrap;}
         .tt-prep { color: #d32f2f; font-size: 14px; font-weight: 800; flex-grow: 1; outline: none; line-height: 1.3;}
 
-        .tt-page { font-weight: 800; color: #0288d1; width: 120px; flex-shrink: 0; font-size: calc(var(--board-font-size) - 2px); background: #f0f4f8; border: 2px dashed #b3e5fc; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 10px; transition: 0.2s; line-height: 1.4; word-break: keep-all;}
+        .tt-page { font-weight: 800; color: #0288d1; width: 120px; flex-shrink: 0; font-size: calc(var(--board-font-size) - 2px); background: #f0f4f8; border: 2px dashed #b3e5fc; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 10px; line-height: 1.4; word-break: keep-all;}
 
         .calendar-card { background: #fdfdfd; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 2px solid var(--sub-sky); box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);}
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 800; color: var(--accent-blue); font-size: 16px;}
@@ -106,7 +104,6 @@
         .full-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--main-sky); display:flex; justify-content:center; align-items:center; z-index:9999; flex-direction: column;}
         .login-box { background:white; padding:40px; border-radius:25px; text-align:center; width:90%; max-width:400px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none;}
         .google-btn { background: white; border: 2px solid #ddd; padding: 12px 20px; border-radius: 30px; font-size: 16px; font-weight: bold; color: #555; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; transition: 0.3s;}
-        .google-btn:hover { background: #f5f5f5; border-color: #ccc; }
         
         .floating-tools { position: fixed; bottom: 20px; right: 25px; z-index: 2000; display: flex; flex-direction: row; gap: 10px; align-items: flex-end; }
         .tool-btn-circle { width: 55px; height: 55px; border-radius: 50%; border: none; font-size: 22px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; transition: 0.3s; color: white;}
@@ -123,9 +120,7 @@
         .score { font-size: 60px; font-weight: 800; color: var(--accent-blue); margin: 15px 0; font-variant-numeric: tabular-nums; line-height: 1;}
         .button-group { display: flex; justify-content: center; gap: 10px; margin-top: 10px;}
         .score-btn { width: 50px; height: 45px; border: none; border-radius: 10px; cursor: pointer; color: white; font-weight: bold; font-size: 24px; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
-        .score-btn:active { transform: translateY(3px); box-shadow: none !important; }
-        .btn-plus { background-color: #039be5; box-shadow: 0 4px 0 #0277bd; }
-        .btn-minus { background-color: #ff5252; box-shadow: 0 4px 0 #d32f2f; }
+        
         .task-grid { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 20px; background: #f8f9fa; padding: 20px; border-radius: 15px; }
         .task-card { background: #eceff1; padding: 12px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #cfd8dc; transition: 0.2s; color:#546e7a;}
         .task-card.done { background: var(--accent-blue); color: white; border-color: var(--dark-blue); box-shadow: 0 4px 10px rgba(2,155,229,0.3);}
@@ -144,7 +139,6 @@
         .mini-card { background: #f8f9fa; border-radius: 8px; padding: 10px; border: 1px solid #eceff1; }
         .mini-val { font-size: 22px; font-weight: bold; color: var(--accent-blue); margin: 5px 0; font-variant-numeric: tabular-nums;}
         .mini-btn { width: 28px; height: 28px; font-size: 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s;}
-        .mini-btn-plus { background: #039be5; } .mini-btn-minus { background: #ff5252; }
 
         .hw-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #eee; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); text-align: left;}
         .student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); gap: 8px; text-align: center; margin-top: 15px;}
@@ -162,7 +156,7 @@
         .setting-group label { display: block; font-weight: 700; margin-bottom: 5px; color: var(--accent-blue); }
         .setting-group textarea, .setting-group input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-family: 'Pretendard'; }
 
-        /* 자리배치 전용 */
+        /* ✨ 자리배치 전용 */
         .seating-grid { display: grid; gap: 15px; margin: 20px auto; justify-content: center; background: #f0f4f8; padding: 30px; border-radius: 20px; border: 2px dashed #b0bec5; }
         .desk-card { background: white; border: 2px solid var(--sub-sky); border-radius: 12px; width: 80px; height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: var(--dark-blue); box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer; transition: 0.2s; user-select: none; }
         .desk-card .gender-tag { font-size: 12px; font-weight: bold; margin-top: 5px; padding: 2px 6px; border-radius: 4px;}
@@ -172,7 +166,6 @@
         .desk-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); border-color: var(--accent-blue); }
         .desk-card.empty { background: transparent; border: 2px dashed #cfd8dc; color: transparent; box-shadow: none; cursor: default; }
         .desk-card.empty .gender-tag { display: none; }
-        .desk-card.empty:hover { transform: none; }
         .desk-card.selected { background: #ffe0b2; border-color: #ff9800; transform: scale(1.05); box-shadow: 0 0 0 4px rgba(255,152,0,0.3); }
         
         .group-bg-1 { border-color: #2196f3 !important; border-width: 3px;}
@@ -181,6 +174,11 @@
         .group-bg-4 { border-color: #9c27b0 !important; border-width: 3px;}
         .group-bg-5 { border-color: #f44336 !important; border-width: 3px;}
         .group-bg-6 { border-color: #00bcd4 !important; border-width: 3px;}
+
+        /* 자리 불러오기 목록 UI */
+        .history-list-item { background: #f8f9fa; border: 1px solid #cfd8dc; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s;}
+        .history-list-item:hover { background: #e1f5fe; border-color: #0288d1; }
+        .history-list-item i { color: #0288d1; font-size: 20px; }
 
         @media (max-width: 1100px) { 
             #main-app { flex-direction: column; overflow-y: auto; }
@@ -273,7 +271,7 @@
                                         <button class="reset-btn" style="padding:6px 12px; background:#fff3e0; color:#e65100; box-shadow:none;" onclick="changeFontSize(-2)">➖</button>
                                     </div>
                                     <button class="action-btn" style="width:100%; background:#5c6bc0; margin-bottom:8px; padding:12px;" onclick="autoFillDashboard(); toggleToolBox('board-menu-box');">🪄 요일 기본값 불러오기</button>
-                                    <button class="reset-btn" style="width:100%; padding:12px;" onclick="openSettingsModal(); toggleToolBox('board-menu-box');">⚙️ 학급 전체/요일 기초 세팅</button>
+                                    <button class="reset-btn" style="width:100%; padding:12px;" onclick="openSettingsModal(); toggleToolBox('board-menu-box');">⚙️ 학급/요일 기초 세팅</button>
                                 </div>
                                 <button class="action-btn" style="background:#34495e; padding: 8px 15px; border-radius: 8px;" onclick="toggleToolBox('board-menu-box')" title="메뉴 열기"><i class="fa-solid fa-bars"></i></button>
                             </div>
@@ -282,50 +280,32 @@
                         <div class="info-box" style="flex:1; padding: 25px 20px;">
                             <div class="tt-row">
                                 <span class="tt-label">1교시</span><span class="tt-subject" id="view-tt-sub-1" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                                <div class="tt-content-wrapper">
-                                    <div class="tt-obj" id="view-tt-obj-1" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div>
-                                    <div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-1" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력 (클릭)"></div></div>
-                                </div>
+                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-1" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-1" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력"></div></div></div>
                                 <span class="tt-page" id="view-tt-page-1" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터 줄바꿈)"></span>
                             </div>
                             <div class="tt-row">
                                 <span class="tt-label">2교시</span><span class="tt-subject" id="view-tt-sub-2" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                                <div class="tt-content-wrapper">
-                                    <div class="tt-obj" id="view-tt-obj-2" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div>
-                                    <div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-2" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력 (클릭)"></div></div>
-                                </div>
+                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-2" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-2" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력"></div></div></div>
                                 <span class="tt-page" id="view-tt-page-2" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터 줄바꿈)"></span>
                             </div>
                             <div class="tt-row">
                                 <span class="tt-label">3교시</span><span class="tt-subject" id="view-tt-sub-3" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                                <div class="tt-content-wrapper">
-                                    <div class="tt-obj" id="view-tt-obj-3" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div>
-                                    <div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-3" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력 (클릭)"></div></div>
-                                </div>
+                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-3" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-3" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력"></div></div></div>
                                 <span class="tt-page" id="view-tt-page-3" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터 줄바꿈)"></span>
                             </div>
                             <div class="tt-row">
                                 <span class="tt-label">4교시</span><span class="tt-subject" id="view-tt-sub-4" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                                <div class="tt-content-wrapper">
-                                    <div class="tt-obj" id="view-tt-obj-4" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div>
-                                    <div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-4" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력 (클릭)"></div></div>
-                                </div>
+                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-4" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-4" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력"></div></div></div>
                                 <span class="tt-page" id="view-tt-page-4" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터 줄바꿈)"></span>
                             </div>
                             <div class="tt-row">
                                 <span class="tt-label">5교시</span><span class="tt-subject" id="view-tt-sub-5" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                                <div class="tt-content-wrapper">
-                                    <div class="tt-obj" id="view-tt-obj-5" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div>
-                                    <div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-5" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력 (클릭)"></div></div>
-                                </div>
+                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-5" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-5" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력"></div></div></div>
                                 <span class="tt-page" id="view-tt-page-5" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터 줄바꿈)"></span>
                             </div>
                             <div class="tt-row" style="border-bottom:none;">
                                 <span class="tt-label">6교시</span><span class="tt-subject" id="view-tt-sub-6" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
-                                <div class="tt-content-wrapper">
-                                    <div class="tt-obj" id="view-tt-obj-6" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div>
-                                    <div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-6" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력 (클릭)"></div></div>
-                                </div>
+                                <div class="tt-content-wrapper"><div class="tt-obj" id="view-tt-obj-6" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div><div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-6" contenteditable="true" spellcheck="false" data-placeholder="준비물 입력"></div></div></div>
                                 <span class="tt-page" id="view-tt-page-6" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수&#10;(엔터 줄바꿈)"></span>
                             </div>
                         </div>
@@ -452,17 +432,18 @@
                     <div style="background:#e3f2fd; border-radius:12px; padding:20px; text-align:left; margin-bottom:20px; border:2px solid #90caf9;">
                         <h3 style="margin-top:0; color:#1565c0;">💡 스마트 배치 알고리즘 안내</h3>
                         <p style="color:#546e7a; font-size:15px; margin-bottom:0; line-height: 1.6;">
-                            <b>1. 남녀 대각선 배치:</b> 기초 세팅에 입력된 명단을 바탕으로 남학생과 여학생이 서로 지그재그가 되도록 배치합니다.<br>
-                            <b>2. 분리 학생 조건:</b> 기초 세팅에 입력된 '분리 학생'끼리는 절대 같은 모둠(같은 열)에 배정되지 않습니다.<br>
-                            <b>3. 이전 자리 회피:</b> 수백 번의 시뮬레이션을 통해 이전 자리와 짝꿍 겹침을 최소화하는 최적의 배치를 찾아냅니다.
+                            <b>1. 남녀 대각선 배치:</b> 기초 세팅에 입력된 명단을 바탕으로 남학생과 여학생이 겹치지 않게 교차로 배치합니다.<br>
+                            <b>2. 기피 학생 회피:</b> 설정에 입력된 '기피 학생'끼리는 절대 같은 모둠에 배치되지 않습니다.<br>
+                            <b>3. 이전 자리 회피:</b> <b>[보관함에 저장]</b> 된 과거 자리 기록을 바탕으로 이전 짝꿍과 다시 겹치지 않는 최적의 배치를 찾습니다.
                         </p>
                     </div>
                     
-                    <div style="display:flex; justify-content:center; gap:15px; margin-bottom:20px; align-items:center; flex-wrap: wrap;">
-                        <button class="action-btn" style="background:#0288d1; padding:15px 25px; font-size:16px;" onclick="generateSmartSeating()"><i class="fa-solid fa-venus-mars"></i> 남녀 대각선 최적화 배치</button>
-                        <button class="action-btn" style="background:#8e44ad; padding:15px 25px; font-size:16px;" onclick="generateRandomSeating()"><i class="fa-solid fa-dice"></i> 단순 무작위 배치</button>
-                        <button class="action-btn" style="background:#4caf50; padding:15px 25px; font-size:16px;" onclick="saveCurrentToPastGroups()"><i class="fa-solid fa-clock-rotate-left"></i> 현재를 '이전 자리'로 기록</button>
-                        <button class="reset-btn" style="padding:15px 25px; font-size:16px;" onclick="saveSeatingToFirebase()"><i class="fa-solid fa-floppy-disk"></i> 수동 자리 저장</button>
+                    <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px; align-items:center; flex-wrap: wrap;">
+                        <button class="action-btn" style="background:#0288d1; padding:12px 20px; font-size:15px;" onclick="generateSmartSeating()"><i class="fa-solid fa-venus-mars"></i> 스마트 남녀 대각선</button>
+                        <button class="action-btn" style="background:#8e44ad; padding:12px 20px; font-size:15px;" onclick="generateRandomSeating()"><i class="fa-solid fa-dice"></i> 단순 무작위</button>
+                        <button class="reset-btn" style="background:#f57c00; padding:12px 20px; font-size:15px;" onclick="saveToSeatingHistory()"><i class="fa-solid fa-box-archive"></i> 보관함에 저장 (기록용)</button>
+                        <button class="reset-btn" style="background:#4caf50; padding:12px 20px; font-size:15px;" onclick="openSeatingHistoryModal()"><i class="fa-solid fa-folder-open"></i> 보관함 불러오기</button>
+                        <button class="reset-btn" style="padding:12px 20px; font-size:15px;" onclick="saveSeatingToFirebase()"><i class="fa-solid fa-floppy-disk"></i> 수동 자리 확정</button>
                     </div>
 
                     <div style="background:#546e7a; color:white; padding:10px; border-radius:10px; width:60%; margin:0 auto 20px auto; font-weight:800; font-size:20px; letter-spacing:5px;">칠 판</div>
@@ -507,7 +488,7 @@
             </div>
         </div>
 
-        <!-- ⚙️ 기초 세팅 모달 (명단 입력 및 기피학생 추가) -->
+        <!-- ⚙️ 기초 세팅 모달 -->
         <div class="modal-overlay" id="settings-modal">
             <div class="modal-box">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
@@ -529,7 +510,7 @@
                             <textarea id="set-student-roster" style="height:100px; font-family:'Pretendard'; padding:10px; border-radius:8px; border:1px solid #ccc; width:100%; line-height:1.5;" placeholder="1번 남&#10;2번 여"></textarea>
                         </div>
                         <div>
-                            <div style="font-weight:bold; color:var(--dark-blue); font-size:14px;">🚫 분리 학생 설정 (절대 같은 모둠 X)</div>
+                            <div style="font-weight:bold; color:var(--dark-blue); font-size:14px;">🚫 기피 학생 설정 (절대 같은 모둠 X)</div>
                             <p style="font-size:12px; color:#555; margin: 5px 0;">작성 예: 1-5, 3-8 (번호-번호)</p>
                             <textarea id="set-separated-pairs" style="height:100px; font-family:'Pretendard'; padding:10px; border-radius:8px; border:1px solid #ccc; width:100%; line-height:1.5;" placeholder="1-5&#10;3-8"></textarea>
                         </div>
@@ -538,13 +519,27 @@
 
                 <div class="setting-group"><label>당번 기본 할 일</label><textarea id="set-duty-tasks" style="height:60px; font-weight:700;"></textarea></div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    <div class="setting-group"><label>월요일 (자습 / 시간표)</label><input type="text" id="set-mon-m" placeholder="자습내용" style="font-weight:700;"><textarea id="set-mon-t" style="height:120px; font-weight:700;" placeholder="국어: 내용&#10;수학: 내용"></textarea></div>
+                    <div class="setting-group"><label>월요일</label><input type="text" id="set-mon-m" placeholder="자습내용" style="font-weight:700;"><textarea id="set-mon-t" style="height:120px; font-weight:700;" placeholder="국어: 내용&#10;수학: 내용"></textarea></div>
                     <div class="setting-group"><label>화요일</label><input type="text" id="set-tue-m" style="font-weight:700;"><textarea id="set-tue-t" style="height:120px; font-weight:700;"></textarea></div>
                     <div class="setting-group"><label>수요일</label><input type="text" id="set-wed-m" style="font-weight:700;"><textarea id="set-wed-t" style="height:120px; font-weight:700;"></textarea></div>
                     <div class="setting-group"><label>목요일</label><input type="text" id="set-thu-m" style="font-weight:700;"><textarea id="set-thu-t" style="height:120px; font-weight:700;"></textarea></div>
                     <div class="setting-group" style="grid-column: span 2;"><label>금요일</label><input type="text" id="set-fri-m" style="font-weight:700;"><textarea id="set-fri-t" style="height:120px; font-weight:700;"></textarea></div>
                 </div>
                 <button class="action-btn" style="width:100%; margin-top:10px; padding:15px; font-size:18px;" onclick="saveSettingsData()">💾 설정 저장 및 반영</button>
+            </div>
+        </div>
+
+        <!-- ✨ 자리 보관함 모달 (불러오기 기능) -->
+        <div class="modal-overlay" id="seating-history-modal">
+            <div class="modal-box" style="max-width: 500px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
+                    <h2 style="margin:0; color:var(--accent-blue);">📂 저장된 자리 배치 목록</h2>
+                    <button class="reset-btn" onclick="closeSeatingHistoryModal()">닫기</button>
+                </div>
+                <p style="font-size:14px; color:#666; margin-bottom:20px;">이전에 <b>[보관함에 저장]</b> 해둔 자리 배치 목록입니다. 클릭하시면 해당 자리 배치를 현재 칠판으로 즉시 불러옵니다.</p>
+                <div id="seating-history-list" style="max-height: 300px; overflow-y: auto;">
+                    <!-- 목록 렌더링 -->
+                </div>
             </div>
         </div>
 
@@ -576,6 +571,7 @@
             applyFontSize(); localStorage.setItem('myCustomFontSize', currentBoardFontSize);
         }
 
+        // 파이어베이스 연동
         const firebaseConfig = {
           apiKey: "AIzaSyCrEfpzVS1YvORiM4HYRCryytj6Y-kG2fI",
           authDomain: "classscore-sinli.firebaseapp.com",
@@ -592,7 +588,8 @@
         const pickSound = new Audio('https://assets.mixkit.co/active_storage/sfx/3005/3005-preview.mp3'); 
 
         let currentRoom = "";
-        let groupSettingsRef, scoresRef, miniScoresRef, timerRef, boardRef, settingsRef, historyRef, tasksRef, hwRef, seatingRef, groupMembersRef;
+        let groupSettingsRef, scoresRef, miniScoresRef, timerRef, boardRef, settingsRef, historyRef, tasksRef, hwRef;
+        let seatingRef, groupMembersRef, seatingHistoryRef; // ✨ 히스토리 참조 추가
         let listenersSet = false, numberOfGroups = 6;
         let currentScores = [], currentMiniScores = [], currentTasks = [], historyCheck = {}, allHomeworks = [];
         let viewDate = new Date(); let calDate = new Date(); 
@@ -608,7 +605,8 @@
         let groupMembersMap = {}; 
         let parsedRoster = []; 
         let parsedSeparated = [];
-        let pastGroupsRecord = {}; // 이전 모둠 데이터 저장용
+        let pastGroupsRecord = {}; 
+        let allSeatingHistories = {}; // 서버에서 가져온 과거 자리 데이터
 
         window.onload = () => {
             const savedSize = localStorage.getItem('myCustomFontSize');
@@ -648,9 +646,8 @@
             scoresRef = db.ref('rooms/' + currentRoom + '/groupScores'); miniScoresRef = db.ref('rooms/' + currentRoom + '/miniScores');
             timerRef = db.ref('rooms/' + currentRoom + '/timerState'); boardRef = db.ref('rooms/' + currentRoom + '/skyDashboard');
             historyRef = db.ref('rooms/' + currentRoom + '/boardHistory'); tasksRef = db.ref('rooms/' + currentRoom + '/groupTasks'); hwRef = db.ref('rooms/' + currentRoom + '/homeworks');
-            
-            seatingRef = db.ref('rooms/' + currentRoom + '/seating');
-            groupMembersRef = db.ref('rooms/' + currentRoom + '/groupMembers');
+            seatingRef = db.ref('rooms/' + currentRoom + '/seating'); groupMembersRef = db.ref('rooms/' + currentRoom + '/groupMembers');
+            seatingHistoryRef = db.ref('rooms/' + currentRoom + '/seatingHistory'); // ✨ 추가
 
             document.getElementById('auth-overlay').style.display = 'none'; document.getElementById('main-app').style.display = 'flex';
             
@@ -673,16 +670,12 @@
                     globalStudentRosterStr = s.roster || "";
                     globalSeparatedStr = s.separatedPairs || "";
                     pastGroupsRecord = s.pastGroups || {};
-                    
-                    parseStudentRoster();
-                    parseSeparatedPairs();
+                    parseStudentRoster(); parseSeparatedPairs();
                     
                     document.getElementById('set-total-students').value = globalTotalStudents;
                     document.getElementById('set-class-name').value = s.className || "";
                     if(s.className) document.querySelector('.logo-text').innerText = s.className;
-                    
-                    const hwTotalEl = document.getElementById('hw-total');
-                    if (hwTotalEl) hwTotalEl.value = globalTotalStudents;
+                    const hwTotalEl = document.getElementById('hw-total'); if (hwTotalEl) hwTotalEl.value = globalTotalStudents;
                 }
             }).catch(e => console.error("설정 로드 오류:", e));
 
@@ -731,6 +724,7 @@
             
             seatingRef.on('value', snap => { currentSeating = snap.val() || []; renderSeatingGrid(); });
             groupMembersRef.on('value', snap => { groupMembersMap = snap.val() || {}; });
+            seatingHistoryRef.on('value', snap => { allSeatingHistories = snap.val() || {}; }); // ✨ 히스토리 업데이트
         }
 
         // ==========================================
@@ -875,14 +869,12 @@
         // ==========================================
         // ✨ 스마트 자리 배치 로직 (대각선 / 기피학생 / 이전데이터 반영)
         // ==========================================
-        
         function parseStudentRoster() {
             parsedRoster = [];
             if (!globalStudentRosterStr) return;
             const lines = globalStudentRosterStr.split('\n');
             lines.forEach(line => {
-                let text = line.trim();
-                if (!text) return;
+                let text = line.trim(); if (!text) return;
                 let idMatch = text.match(/\d+/);
                 let id = idMatch ? parseInt(idMatch[0]) : null;
                 let gender = text.includes('남') ? 'M' : (text.includes('여') ? 'F' : 'U');
@@ -896,45 +888,30 @@
             const pairs = globalSeparatedStr.split('\n');
             pairs.forEach(p => {
                 let nums = p.match(/\d+/g);
-                if (nums && nums.length >= 2) {
-                    parsedSeparated.push([parseInt(nums[0]), parseInt(nums[1])]);
-                }
+                if (nums && nums.length >= 2) parsedSeparated.push([parseInt(nums[0]), parseInt(nums[1])]);
             });
         }
 
-        // 페널티 계산 (휴리스틱)
         function calculatePenalty(grid, cols) {
             let penalty = 0;
-            // 1. 기피 학생 검사 (같은 열=같은 모둠에 있으면 페널티 무한대)
+            // 기피 학생 검사 (같은 열=같은 모둠에 있으면 페널티 무한대)
             for (let pair of parsedSeparated) {
-                let idx1 = grid.indexOf(pair[0]);
-                let idx2 = grid.indexOf(pair[1]);
+                let idx1 = grid.indexOf(pair[0]); let idx2 = grid.indexOf(pair[1]);
                 if (idx1 !== -1 && idx2 !== -1) {
-                    let col1 = idx1 % cols;
-                    let col2 = idx2 % cols;
-                    if (col1 === col2) penalty += 10000; // 절대 불가
+                    let col1 = idx1 % cols; let col2 = idx2 % cols;
+                    if (col1 === col2) penalty += 10000;
                 }
             }
-            
-            // 2. 이전 짝꿍 회피 검사 (과거에 같은 모둠이었던 기록이 있으면 페널티 증가)
+            // 이전 짝꿍 회피 검사 (과거 모둠과 겹치면 페널티)
             for (let col = 0; col < cols; col++) {
                 let currentGroupMembers = [];
-                for (let i = 0; i < grid.length; i++) {
-                    if (i % cols === col && grid[i] !== null) currentGroupMembers.push(grid[i]);
-                }
-                
-                // 현재 그룹 내의 모든 쌍 조합에 대해 과거 기록 검사
+                for (let i = 0; i < grid.length; i++) { if (i % cols === col && grid[i] !== null) currentGroupMembers.push(grid[i]); }
                 for (let i = 0; i < currentGroupMembers.length; i++) {
                     for (let j = i + 1; j < currentGroupMembers.length; j++) {
-                        let s1 = currentGroupMembers[i];
-                        let s2 = currentGroupMembers[j];
-                        
-                        // 과거 기록(pastGroupsRecord) 탐색
+                        let s1 = currentGroupMembers[i], s2 = currentGroupMembers[j];
                         for (let pastG in pastGroupsRecord) {
                             let pMembers = pastGroupsRecord[pastG];
-                            if (pMembers.includes(s1) && pMembers.includes(s2)) {
-                                penalty += 10; // 과거에 같은 조였으면 +10점
-                            }
+                            if (pMembers && pMembers.includes(s1) && pMembers.includes(s2)) penalty += 10;
                         }
                     }
                 }
@@ -947,16 +924,12 @@
                 alert("설정 메뉴에서 [학생 명단 성별 데이터]를 먼저 입력해주세요!\n(예: 1번 남, 2번 여)");
                 openSettingsModal(); return;
             }
-            
             if(!confirm("설정된 조건(남녀 대각선, 기피학생, 과거 자리 회피)을 바탕으로 최적의 배치를 찾습니다. 계속할까요?")) return;
 
-            let cols = 6; 
-            let rows = Math.ceil(globalTotalStudents / cols);
+            let cols = 6; let rows = Math.ceil(globalTotalStudents / cols);
+            let bestGrid = null; let lowestPenalty = Infinity;
             
-            let bestGrid = null;
-            let lowestPenalty = Infinity;
-            
-            // 500번의 무작위 배치 시뮬레이션을 돌려 가장 완벽한 배치를 찾습니다.
+            // 500번 시뮬레이션
             for (let attempt = 0; attempt < 500; attempt++) {
                 let boys = [], girls = [], unassigned = [];
                 parsedRoster.forEach(s => {
@@ -965,40 +938,26 @@
                     else unassigned.push(s.id);
                 });
 
-                const shuffle = (array) => {
-                    for (let i = array.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [array[i], array[j]] = [array[j], array[i]];
-                    }
-                };
+                const shuffle = (array) => { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } };
                 shuffle(boys); shuffle(girls); shuffle(unassigned);
 
                 let grid = new Array(rows * cols).fill(null);
 
-                // 남녀 대각선(체크보드) 세팅
+                // 남녀 대각선 세팅
                 for(let i=0; i<globalTotalStudents; i++) {
-                    let r = Math.floor(i / cols);
-                    let c = i % cols;
-                    if ((r + c) % 2 === 0) {
-                        grid[i] = girls.pop() || boys.pop() || unassigned.pop() || null;
-                    } else {
-                        grid[i] = boys.pop() || girls.pop() || unassigned.pop() || null;
-                    }
+                    let r = Math.floor(i / cols); let c = i % cols;
+                    if ((r + c) % 2 === 0) grid[i] = girls.pop() || boys.pop() || unassigned.pop() || null;
+                    else grid[i] = boys.pop() || girls.pop() || unassigned.pop() || null;
                 }
                 
                 let currentPenalty = calculatePenalty(grid, cols);
                 if (currentPenalty < lowestPenalty) {
-                    lowestPenalty = currentPenalty;
-                    bestGrid = grid.slice();
-                    if (currentPenalty === 0) break; // 완벽한 배치(페널티 0)를 찾으면 즉시 종료
+                    lowestPenalty = currentPenalty; bestGrid = grid.slice();
+                    if (currentPenalty === 0) break; // 완벽한 배치(페널티 0)
                 }
             }
 
-            if (lowestPenalty >= 10000) {
-                alert("기피 학생 조건을 100% 만족하는 배치를 찾기 어렵습니다. 다시 시도하거나 직접 수정해 주세요.");
-            } else if (lowestPenalty > 0) {
-                console.log("일부 이전 짝꿍과 겹칩니다. 페널티 점수: " + lowestPenalty);
-            }
+            if (lowestPenalty >= 10000) alert("기피 학생 조건을 100% 만족하는 배치를 찾기 어렵습니다. 수동으로 수정해 주세요.");
             
             currentSeating = bestGrid; selectedDeskIndex = null;
             saveSeatingToFirebase();
@@ -1008,29 +967,62 @@
             if(!confirm("완전 무작위 배치를 생성합니다. 성별/기피 조건은 무시됩니다. 계속할까요?")) return;
             
             let students = Array.from({length: globalTotalStudents}, (_, i) => i + 1);
-            for (let i = students.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [students[i], students[j]] = [students[j], students[i]];
-            }
+            for (let i = students.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [students[i], students[j]] = [students[j], students[i]]; }
 
-            let cols = 6; 
-            let rows = Math.ceil(globalTotalStudents / cols);
+            let cols = 6; let rows = Math.ceil(globalTotalStudents / cols);
             let grid = new Array(rows * cols).fill(null);
             for(let i=0; i<students.length; i++) grid[i] = students[i];
 
             currentSeating = grid; selectedDeskIndex = null;
             saveSeatingToFirebase();
         }
-        
-        // 현재 그룹을 이전 과거 그룹으로 덮어쓰기 저장
-        function saveCurrentToPastGroups() {
-            if(Object.keys(groupMembersMap).length === 0) {
-                alert("저장된 모둠 정보가 없습니다. 먼저 자리를 배치하세요."); return;
-            }
-            if(confirm("현재 모둠 편성을 '이전 자리' 기록으로 보관하시겠습니까?\n다음 자리 배치 시 이 데이터가 회피 조건으로 사용됩니다.")) {
+
+        // ✨ 과거 데이터로 저장 (히스토리 보관함)
+        function saveToSeatingHistory() {
+            if(!currentSeating || currentSeating.length === 0) { alert("저장할 자리 배치가 없습니다."); return; }
+            if(confirm("현재 자리 배치를 보관함에 저장하시겠습니까? (이 기록은 다음 '스마트 배치' 시 이전 짝꿍 회피 조건에 자동으로 반영됩니다.)")) {
+                const now = new Date();
+                const key = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}시${String(now.getMinutes()).padStart(2,'0')}분`;
+                seatingHistoryRef.child(key).set(currentSeating);
+                
+                // 이전 모둠 기록 (회피용)도 동시에 업데이트
                 pastGroupsRecord = groupMembersMap;
                 settingsRef.child('pastGroups').set(pastGroupsRecord);
-                alert("과거 자리 기록으로 성공적으로 보관되었습니다!");
+                
+                alert(`[${key}] 이름으로 보관함에 성공적으로 저장되었습니다!`);
+            }
+        }
+
+        // ✨ 히스토리 모달 열기
+        function openSeatingHistoryModal() {
+            const listDiv = document.getElementById('seating-history-list');
+            listDiv.innerHTML = '';
+            
+            if(Object.keys(allSeatingHistories).length === 0) {
+                listDiv.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">저장된 과거 기록이 없습니다.</div>';
+            } else {
+                // 키(날짜) 역순으로 정렬
+                const keys = Object.keys(allSeatingHistories).sort((a,b) => b.localeCompare(a));
+                keys.forEach(k => {
+                    const item = document.createElement('div');
+                    item.className = 'history-list-item';
+                    item.innerHTML = `<span style="font-weight:bold; color:var(--dark-blue);">${k} 저장됨</span> <i class="fa-solid fa-download"></i>`;
+                    item.onclick = () => loadSeatingFromHistory(k);
+                    listDiv.appendChild(item);
+                });
+            }
+            document.getElementById('seating-history-modal').style.display = 'flex';
+        }
+
+        function closeSeatingHistoryModal() { document.getElementById('seating-history-modal').style.display = 'none'; }
+
+        // ✨ 선택한 과거 자리 불러오기
+        function loadSeatingFromHistory(key) {
+            if(confirm(`[${key}] 기록을 현재 칠판으로 불러오시겠습니까?\n(불러온 후 우측 하단 [수동 자리 확정]을 눌러야 학생들에게 반영됩니다.)`)) {
+                currentSeating = allSeatingHistories[key];
+                selectedDeskIndex = null;
+                renderSeatingGrid();
+                closeSeatingHistoryModal();
             }
         }
 
@@ -1039,7 +1031,7 @@
             container.innerHTML = '';
             
             if(!currentSeating || currentSeating.length === 0) {
-                container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#999;">위에 있는 [스마트 배치] 또는 [무작위 배치] 버튼을 눌러 자리를 생성하세요.</div>';
+                container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#999;">위에 있는 버튼을 눌러 자리를 생성하세요.</div>';
                 return;
             }
 
@@ -1051,8 +1043,7 @@
                 desk.className = `desk-card ${num === null ? 'empty' : `group-bg-${groupNum}`}`;
                 if (selectedDeskIndex === idx) desk.classList.add('selected');
                 
-                let gClass = 'gender-u';
-                let gText = '';
+                let gClass = 'gender-u'; let gText = '';
                 if(num !== null && parsedRoster.length > 0) {
                     let sData = parsedRoster.find(x => x.id === num);
                     if(sData) {
@@ -1089,11 +1080,11 @@
             seatingRef.set(currentSeating);
             let newGroups = {};
             for(let i=1; i<=6; i++) newGroups[i] = [];
-            currentSeating.forEach((num, idx) => {
-                if(num !== null) { let groupNum = (idx % 6) + 1; newGroups[groupNum].push(num); }
-            });
+            currentSeating.forEach((num, idx) => { if(num !== null) { let groupNum = (idx % 6) + 1; newGroups[groupNum].push(num); } });
             for(let g in newGroups) newGroups[g].sort((a,b) => a-b);
             groupMembersMap = newGroups; groupMembersRef.set(newGroups);
+            
+            alert('현재 자리가 수동으로 확정(저장) 되었습니다.');
         }
 
         // ==========================================
