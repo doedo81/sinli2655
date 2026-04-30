@@ -46,19 +46,7 @@
         /* ✨ 메인 콘텐츠 영역 */
         .main-content-wrapper { flex: 1; overflow-y: auto; padding: 20px 30px; background: var(--main-sky); position: relative; }
 
-        /* 상단 시계 & 햄버거 메뉴 영역 */
-        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        #real-clock { font-size: 26px; font-weight: 800; color: var(--dark-blue); background: var(--white); padding: 10px 25px; border-radius: 15px; box-shadow: var(--shadow); border: 2px solid var(--sub-sky); font-variant-numeric: tabular-nums;}
-        
-        /* 🍔 삼선 메뉴 (햄버거 버튼) */
-        .action-menu-container { position: relative; }
-        .hamburger-btn { background: var(--accent-blue); color: white; border: none; border-radius: 12px; width: 50px; height: 50px; font-size: 22px; cursor: pointer; box-shadow: var(--shadow); transition: 0.2s; display: flex; align-items: center; justify-content: center;}
-        .hamburger-btn:hover { transform: scale(1.05); background: var(--dark-blue);}
-        
-        .action-menu { display: none; position: absolute; right: 0; top: 60px; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 2px solid var(--sub-sky); padding: 15px; width: 280px; z-index: 1000; flex-direction: column; gap: 10px; }
-        .action-menu.show { display: flex; }
-
-        .content-section { display: none; max-width: 1500px; margin: 0 auto; }
+        .content-section { display: none; max-width: 1600px; margin: 0 auto; }
         .content-section.active { display: block; }
         
         /* 공통 버튼 */
@@ -66,8 +54,8 @@
         .action-btn:active { transform: scale(0.95); }
         .reset-btn { font-size: 14px; padding: 10px 15px; background-color: #90a4ae; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; font-family: 'Pretendard', sans-serif;}
 
-        /* 📋 3분할 칠판 레이아웃 */
-        .dashboard-grid { display: grid; grid-template-columns: 1fr 1.6fr 1fr; gap: 20px; align-items: start;}
+        /* 📋 3분할 칠판 레이아웃 (✨가운데 넓게 수정: 1fr 2.2fr 1fr) */
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 2.2fr 1fr; gap: 20px; align-items: start;}
         .column-card { background: var(--white); border-radius: 20px; padding: 25px; box-shadow: var(--shadow); display: flex; flex-direction: column; border-top: 5px solid var(--accent-blue); height: 100%;}
         .card-header { display: flex; align-items: center; justify-content: center; margin-bottom: 20px; padding-bottom: 12px; font-size: 20px; font-weight: 800; color: var(--dark-blue); border-bottom: 2px solid var(--main-sky);}
         .info-box { background: #ffffff; border-radius: 12px; padding: 18px; margin-bottom: 15px; border: 1px solid #e1e8ed; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
@@ -111,7 +99,7 @@
         .tool-box { position: absolute; right: 80px; background: var(--white); padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); width: 280px; display: none; border: 2px solid var(--accent-blue); transform-origin: right center; }
         
         .timer-display { font-size: 45px; font-weight: 800; color: var(--accent-blue); text-align: center; margin-bottom: 15px; font-variant-numeric: tabular-nums;}
-        .timer-btn { padding: 10px; border: none; border-radius: 10px; background: var(--main-sky); cursor: pointer; font-weight: bold; font-family: 'Pretendard'; }
+        .timer-btn { padding: 10px; border: none; border-radius: 10px; background: var(--main-sky); cursor: pointer; font-weight: bold; font-family: 'Pretendard'; color:var(--dark-blue);}
         .timer-start { background: #ff5252; color: white; grid-column: span 2; }
 
         /* 점수판 */
@@ -128,7 +116,7 @@
         .task-card.done { background: var(--accent-blue); color: white; border-color: var(--dark-blue); box-shadow: 0 4px 10px rgba(2,155,229,0.3);}
         
         /* 뽑기 & 미니점수판 */
-        .picker-box { background: white; padding: 30px; border-radius: 20px; box-shadow: var(--shadow); border-top: 5px solid var(--accent-blue); text-align: center; }
+        .picker-box { background: white; padding: 25px; border-radius: 20px; box-shadow: var(--shadow); border-top: 5px solid var(--accent-blue); text-align: center; }
         .card-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 15px 0; min-height: 80px; align-items: center; }
         .flip-card { background-color: transparent; perspective: 1000px; cursor: pointer;}
         .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.4s; transform-style: preserve-3d; }
@@ -164,11 +152,11 @@
 
         @media (max-width: 1100px) { 
             #main-app { flex-direction: column; overflow-y: auto; }
-            .sidebar { width: 100%; height: auto; flex-direction: row; flex-wrap: wrap; padding: 15px; align-items: center;}
+            .sidebar { width: 100%; height: auto; flex-direction: row; flex-wrap: wrap; padding: 15px; align-items: center; justify-content: space-between;}
             .sidebar .logo { margin-bottom: 0; border: none; padding: 0; margin-right: 20px;}
-            .tab-container { flex-direction: row; margin-bottom: 0;}
+            .tab-container { flex-direction: row; margin-bottom: 0; flex-wrap: wrap;}
             .tab-btn { width: auto; padding: 10px 15px; margin-bottom: 0;}
-            .sidebar-bottom { margin-top: 0; border: none; padding: 0; margin-left: auto;}
+            .sidebar-bottom { margin-top: 0; border: none; padding: 0;}
             .dashboard-grid { grid-template-columns: 1fr; } 
         }
     </style>
@@ -212,33 +200,15 @@
         </nav>
 
         <main class="main-content-wrapper">
-            
-            <header class="top-header">
-                <div id="real-clock">00:00:00</div>
-                <div class="action-menu-container">
-                    <button class="hamburger-btn" onclick="toggleActionMenu()"><i class="fa-solid fa-bars"></i></button>
-                    <div id="action-menu" class="action-menu">
-                        <div style="font-size:13px; font-weight:bold; color:#999; padding-bottom:5px; border-bottom:1px solid #eee;">칠판 관리 메뉴</div>
-                        <div style="display:flex; align-items:center; gap:5px; background:#f8f9fa; padding:8px; border-radius:8px; justify-content:center;">
-                            <span style="font-size:14px; font-weight:bold; color:#546e7a;">🔍 글씨 크기</span>
-                            <button class="reset-btn" style="padding:4px 10px; background:#e1f5fe; color:#0288d1; box-shadow:none;" onclick="changeFontSize(2)">➕</button>
-                            <button class="reset-btn" style="padding:4px 10px; background:#fff3e0; color:#e65100; box-shadow:none;" onclick="changeFontSize(-2)">➖</button>
-                        </div>
-                        <button class="action-btn" style="background:#5c6bc0;" onclick="autoFillDashboard(); toggleActionMenu();"><i class="fa-solid fa-wand-magic-sparkles"></i> 오늘 칠판 자동 완성</button>
-                        <button class="action-btn" style="background:#0288d1;" onclick="saveDashboard(); toggleActionMenu();"><i class="fa-solid fa-floppy-disk"></i> 현재 칠판 영구 저장</button>
-                        <button class="reset-btn" onclick="openSettingsModal(); toggleActionMenu();"><i class="fa-solid fa-gear"></i> 요일별 기초 세팅</button>
-                    </div>
-                </div>
-            </header>
 
             <div id="board-tab" class="content-section active">
-                <div style="color: #78909c; font-size: 15px; font-weight:bold; margin-bottom: 15px; padding-left: 10px;">
-                    💡 칠판의 빈칸을 클릭하면 즉시 타자를 칠 수 있습니다. (우측 상단 ☰ 메뉴에서 저장하세요!)
-                </div>
 
                 <div class="dashboard-grid">
                     <div class="column-card">
-                        <div class="card-header">🌱 오늘의 시작</div>
+                        <div style="background: var(--dark-blue); border-radius: 15px; padding: 20px; margin-bottom: 20px; text-align: center; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+                            <div id="real-clock" style="font-size: 38px; font-weight: 900; font-variant-numeric: tabular-nums; letter-spacing: 2px;">00:00:00</div>
+                        </div>
+
                         <div class="info-box"><span class="info-label">📅 날짜 및 날씨</span><div class="info-content large-text" id="view-date" contenteditable="true" spellcheck="false" data-placeholder="날짜와 날씨 입력"></div></div>
                         <div class="info-box"><span class="info-label" style="color:#d32f2f;">❗️ 안전 수칙</span><div class="info-content" id="view-safety" contenteditable="true" spellcheck="false" style="font-weight:700;" data-placeholder="안전 수칙 입력"></div></div>
                         <div class="info-box"><span class="info-label" style="color:#f57c00;">⭐ 아침 자습</span><div class="info-content" id="view-morning" contenteditable="true" spellcheck="false" data-placeholder="아침 자습 입력"></div></div>
@@ -357,6 +327,22 @@
         </main>
 
         <div class="floating-tools">
+            
+            <div style="position:relative; display:flex; align-items:center;">
+                <div id="board-menu-box" class="tool-box" style="width: 320px; padding: 25px; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);">
+                    <h3 style="margin:0 0 15px 0; color:var(--dark-blue); text-align:center;">📋 칠판 관리 메뉴</h3>
+                    <div style="display:flex; align-items:center; gap:5px; background:#f8f9fa; padding:10px; border-radius:10px; justify-content:center; margin-bottom:15px; border: 1px solid #eee;">
+                        <span style="font-size:15px; font-weight:bold; color:#546e7a; margin-right:5px;">🔍 칠판 글씨 크기</span>
+                        <button class="reset-btn" style="padding:6px 12px; background:#e1f5fe; color:#0288d1; box-shadow:none;" onclick="changeFontSize(2)">➕</button>
+                        <button class="reset-btn" style="padding:6px 12px; background:#fff3e0; color:#e65100; box-shadow:none;" onclick="changeFontSize(-2)">➖</button>
+                    </div>
+                    <button class="action-btn" style="width:100%; background:#5c6bc0; margin-bottom:8px; padding:12px;" onclick="autoFillDashboard(); toggleToolBox('board-menu-box');">🪄 요일 기본값 불러오기</button>
+                    <button class="action-btn" style="width:100%; background:#0288d1; margin-bottom:8px; padding:12px;" onclick="saveDashboard(); toggleToolBox('board-menu-box');">💾 학생 화면에 칠판 저장</button>
+                    <button class="reset-btn" style="width:100%; padding:12px;" onclick="openSettingsModal(); toggleToolBox('board-menu-box');">⚙️ 요일별 기초 세팅</button>
+                </div>
+                <button class="tool-btn-circle" style="background:#34495e;" onclick="toggleToolBox('board-menu-box')" title="칠판 관리"><i class="fa-solid fa-bars"></i></button>
+            </div>
+
             <div style="position:relative; display:flex; align-items:center;">
                 <div id="quick-student-box" class="tool-box">
                     <h3 style="margin:0 0 10px 0; color:var(--dark-blue); text-align:center;">👤 개인 번호 뽑기</h3>
@@ -384,7 +370,7 @@
                     </div>
                     <input type="number" id="custom-timer-input" style="width:100%; margin-top:10px; padding:10px; border-radius:8px; border:1px solid #ddd; text-align:center; font-family:'Pretendard';" placeholder="직접 분 입력 후 엔터" onkeypress="if(event.key==='Enter')startCustomTimer()">
                 </div>
-                <button class="tool-btn-circle" style="background:var(--dark-blue);" onclick="toggleToolBox('timer-box')" title="타이머"><i class="fa-solid fa-stopwatch"></i></button>
+                <button class="tool-btn-circle" style="background:var(--accent-blue);" onclick="toggleToolBox('timer-box')" title="타이머"><i class="fa-solid fa-stopwatch"></i></button>
             </div>
         </div>
 
@@ -418,13 +404,8 @@
             document.documentElement.style.setProperty('--board-title-size', (currentBoardFontSize + 2) + 'px');
         }
         function changeFontSize(step) {
-            currentBoardFontSize += step; if(currentBoardFontSize < 12) currentBoardFontSize = 12; if(currentBoardFontSize > 35) currentBoardFontSize = 35; 
+            currentBoardFontSize += step; if(currentBoardFontSize < 12) currentBoardFontSize = 12; if(currentBoardFontSize > 40) currentBoardFontSize = 40; 
             applyFontSize(); localStorage.setItem('myCustomFontSize', currentBoardFontSize);
-        }
-
-        function toggleActionMenu() {
-            const menu = document.getElementById('action-menu');
-            menu.classList.toggle('show');
         }
 
         const firebaseConfig = {
@@ -466,14 +447,6 @@
                     document.getElementById('auth-overlay').style.display = 'flex'; document.getElementById('login-box').style.display = 'block'; document.getElementById('room-box').style.display = 'none'; document.getElementById('main-app').style.display = 'none';
                 }
             });
-            
-            // 햄버거 메뉴 바깥 클릭시 닫기
-            window.onclick = function(event) {
-                if (!event.target.matches('.hamburger-btn') && !event.target.matches('.fa-bars') && !event.target.closest('.action-menu')) {
-                    const menu = document.getElementById('action-menu');
-                    if (menu.classList.contains('show')) menu.classList.remove('show');
-                }
-            }
         };
 
         function loginWithGoogle() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err => alert("로그인 실패: "+err.message)); }
@@ -559,7 +532,7 @@
             for(let i=1; i<=6; i++) { d[`ttSub${i}`] = document.getElementById(`view-tt-sub-${i}`).innerText; d[`ttVal${i}`] = document.getElementById(`view-tt-val-${i}`).innerText; }
             boardRef.set(d); historyRef.child(getFormattedDate(viewDate)).set(d);
             if (window.tempNextIdx !== undefined) { db.ref('rooms/' + currentRoom + '/settings/lastDutyIndex').set(window.tempNextIdx); window.tempNextIdx = undefined; }
-            alert(getFormattedDate(viewDate) + " 기록이 성공적으로 저장되었습니다.");
+            alert(getFormattedDate(viewDate) + " 칠판이 성공적으로 저장되었습니다!");
         }
 
         function autoFillDashboard(isInitial = false) {
@@ -649,8 +622,8 @@
         function resetTasks() { tasksRef.set({}); }
 
         function toggleToolBox(boxId) {
-            ['quick-group-box', 'quick-student-box', 'timer-box'].forEach(id => { if(id !== boxId) document.getElementById(id).style.display = 'none'; });
-            const b = document.getElementById(boxId); b.style.display = (b.style.display === 'block') ? 'none' : 'block';
+            ['quick-group-box', 'quick-student-box', 'timer-box', 'board-menu-box'].forEach(id => { if(id !== boxId) document.getElementById(id).style.display = 'none'; });
+            const b = document.getElementById(boxId); b.style.display = (b.style.display === 'flex' || b.style.display === 'block') ? 'none' : 'flex';
         }
 
         let remG = [], remS = [];
