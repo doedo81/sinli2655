@@ -61,7 +61,7 @@
         .action-btn:active { transform: scale(0.95); }
         .reset-btn { font-size: 14px; padding: 10px 15px; background-color: #90a4ae; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; font-family: 'Pretendard', sans-serif;}
 
-        /* 📋 대시보드 칠판 레이아웃 */
+        /* 📋 칠판 레이아웃 */
         .dashboard-grid { display: grid; grid-template-columns: 1fr 2.4fr 1fr; gap: 20px; align-items: start;}
         .column-card { background: var(--white); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; border-top: 5px solid var(--accent-blue); height: 100%;}
         .info-box { background: #ffffff; border-radius: 12px; padding: 18px; margin-bottom: 15px; border: 1px solid #e1e8ed; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
@@ -79,25 +79,24 @@
         .info-content { font-size: var(--board-font-size); line-height: 1.5; color: #2c3e50; flex-grow: 1; font-weight: 700;}
         .large-text { font-size: var(--board-title-size); font-weight: 900; color: var(--dark-blue); }
 
-        /* ✨ 반응형을 위한 시간표 행 디자인 */
+        /* ✨ 시간표 행 디자인 */
         .tt-row { display: flex; margin-bottom: 15px; align-items: stretch; border-bottom: 1px solid #f0f4f8; padding-bottom: 15px; gap: 12px;}
         .tt-label { font-weight: 900; color: #e65100; width: 60px; flex-shrink: 0; font-size: var(--board-font-size); background: #fff3e0; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 8px 5px;}
         .tt-subject { font-weight: 800; color: var(--accent-blue); width: 85px; flex-shrink: 0; font-size: var(--board-font-size); background: var(--main-sky); border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px 5px;}
         
-        .tt-content-wrapper { display: flex; flex-direction: column; flex-grow: 1; gap: 6px; justify-content: center; min-width: 0;} /* min-width:0 필수! 화면 축소 시 삐져나감 방지 */
+        .tt-content-wrapper { display: flex; flex-direction: column; flex-grow: 1; gap: 6px; justify-content: center; min-width: 0;} 
         .tt-obj { color: #2c3e50; font-size: var(--board-font-size); font-weight: 700; padding: 4px; word-break: keep-all; flex-grow: 1;}
         
-        /* ✨ 신규: 학습 내용 필기 칸 */
-        .tt-note { background: #fdfaf6; border-left: 3px solid #8e44ad; padding: 4px 8px; border-radius: 6px; font-size: calc(var(--board-font-size) - 2px); line-height: 1.3; color: #2c3e50; font-weight: 700; flex-grow: 1; outline: none; }
+        /* 학습 내용 필기 칸 */
+        .tt-note { background: #fdfaf6; border-left: 3px solid #8e44ad; padding: 4px 8px; border-radius: 6px; font-size: calc(var(--board-font-size) - 2px); line-height: 1.3; color: #2c3e50; font-weight: 700; flex-grow: 1; outline: none; min-height: 25px; }
         
-        /* ✨ 신규: 우측 사이드 래퍼 (쪽수 + 준비물 반반 쪼개기) */
+        /* 우측 사이드 래퍼 (쪽수 + 준비물) */
         .tt-side-wrapper { display: flex; flex-direction: column; gap: 6px; width: 120px; flex-shrink: 0; }
         .tt-page { font-weight: 800; color: #0288d1; font-size: calc(var(--board-font-size) - 2px); background: #f0f4f8; border: 2px dashed #b3e5fc; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px; flex: 1; line-height: 1.4; word-break: keep-all;}
         
-        /* 준비물 박스가 쪽수 박스 아래로 이동됨 */
-        .tt-prep-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff8e1; border: 2px dashed #ffb300; border-radius: 8px; padding: 6px; flex: 1; text-align: center;}
-        .prep-icon { font-size: 13px; color: #f57c00; font-weight: 900; margin-bottom: 2px;}
-        .tt-prep { color: #d32f2f; font-size: calc(var(--board-font-size) - 3px); font-weight: 800; outline: none; line-height: 1.2; width: 100%;}
+        /* ✨ 미니멀해진 준비물 박스 (아이콘 삭제, 여백 축소) */
+        .tt-prep-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff8e1; border: 2px dashed #ffb300; border-radius: 8px; padding: 4px; flex: 1; text-align: center; min-height: 25px;}
+        .tt-prep { color: #d32f2f; font-size: calc(var(--board-font-size) - 3px); font-weight: 800; outline: none; line-height: 1.2; width: 100%; min-height: 20px;}
 
         /* 캘린더 */
         .calendar-card { background: #fdfdfd; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 2px solid var(--sub-sky); box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);}
@@ -136,7 +135,7 @@
         .task-card { background: #eceff1; padding: 12px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #cfd8dc; transition: 0.2s; color:#546e7a;}
         .task-card.done { background: var(--accent-blue); color: white; border-color: var(--dark-blue); box-shadow: 0 4px 10px rgba(2,155,229,0.3);}
         
-        /* 🎲 뽑기 */
+        /* 뽑기 & 미니점수판 */
         .picker-box { background: white; padding: 25px; border-radius: 20px; box-shadow: var(--shadow); border-top: 5px solid var(--accent-blue); text-align: center; }
         .card-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 15px 0; min-height: 80px; align-items: center; }
         .flip-card { background-color: transparent; perspective: 1000px; cursor: pointer;}
@@ -144,7 +143,7 @@
         .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
         .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
         .flip-card-front { background-color: #f0f4f8; color: var(--dark-blue); border: 1px solid #cfd8dc; font-size: 20px;}
-        .flip-card-back { background-color: var(--accent-blue); color: white; transform: rotateY(180deg); font-size: 20px;} 
+        .flip-card-back { border-style: solid; font-size: 20px;} 
         .group-card-size { width: 60px; height: 80px; }
         .student-card-size { width: 48px; height: 65px; }
         
@@ -169,7 +168,7 @@
         .setting-group label { display: block; font-weight: 700; margin-bottom: 5px; color: var(--accent-blue); }
         .setting-group textarea, .setting-group input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-family: 'Pretendard'; }
 
-        /* ✨ 자리배치 및 공통 모둠 색상 */
+        /* 자리배치 및 공통 모둠 색상 */
         .seating-wrapper { display: flex; flex-direction: column; align-items: center; gap: 20px; background: #f0f4f8; padding: 30px; border-radius: 20px; border: 2px dashed #b0bec5; margin: 20px auto; }
         .seating-grid { display: grid; gap: 15px; justify-content: center; width: 100%; }
         .desk-card { background: white; border-radius: 12px; width: 80px; height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: var(--dark-blue); box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: grab; transition: transform 0.2s, box-shadow 0.2s; user-select: none; border-style: solid; border-width: 3px; }
@@ -182,6 +181,7 @@
         .desk-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
         .desk-card.empty { background: transparent; border: 2px dashed #cfd8dc; color: transparent; box-shadow: none; cursor: default; }
         .desk-card.empty .gender-tag { display: none; }
+        .desk-card.selected { background: #ffe0b2; border-color: #ff9800; transform: scale(1.05); box-shadow: 0 0 0 4px rgba(255,152,0,0.3); }
         
         .group-bg-1 { border-color: #2196f3 !important; background-color: #e3f2fd !important; }
         .group-bg-2 { border-color: #ff9800 !important; background-color: #fff3e0 !important; }
@@ -211,7 +211,7 @@
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
 
-        /* ✨ 반응형 웹 디자인 핵심 (창을 좁게 했을 때) */
+        /* 반응형 웹 모드 */
         @media (max-width: 1100px) { 
             #main-app { flex-direction: column; overflow-y: auto; }
             .sidebar { width: 100%; height: auto; flex-direction: row; flex-wrap: wrap; padding: 15px; align-items: center; justify-content: space-between;}
@@ -219,9 +219,7 @@
             .tab-container { flex-direction: row; margin-bottom: 0; flex-wrap: wrap; width: 100%; justify-content: flex-start;}
             .tab-btn { width: auto; padding: 10px 15px; margin-bottom: 0;}
             .sidebar-bottom { margin-top: 0; border: none; padding: 0; width: auto;}
-            /* 대시보드 3분할을 1분할로 세로로 쌓기 */
             .dashboard-grid { grid-template-columns: 1fr; } 
-            /* 시간표 칸이 깨지지 않게 사이드 래퍼를 가로로 펼치기 */
             .tt-row { flex-wrap: wrap; }
             .tt-side-wrapper { width: 100%; flex-direction: row; }
             .tt-page, .tt-prep-wrap { flex: 1; }
@@ -245,7 +243,7 @@
             <h2 style="margin:0 0 10px 0; color:var(--dark-blue);">🌤️ 스카이 클래스</h2>
             <p style="color:#7f8c8d; font-size:14px; margin-bottom:20px;">접속할 방 이름을 입력하세요.<br>(예: 신리초5학년5반)</p>
             <input type="text" id="room-name-input" style="width:100%; padding:15px; font-size:18px; border:2px solid var(--sub-sky); border-radius:12px; margin-bottom:15px; text-align:center; font-family:'Pretendard';" placeholder="방 이름" onkeypress="if(event.key === 'Enter') enterRoom()">
-            <button class="action-btn" style="width:100%; padding: 15px; font-size: 16px;" onclick="enterRoom()">교실 입장하기</button>
+            <button class="action-btn" style="width:100%; padding: 15px; font-size: 16px;" id="enter-room-btn" onclick="enterRoom()">교실 입장하기</button>
             <button class="reset-btn" style="width:100%; margin-top:10px; background:transparent; color:#999; box-shadow:none;" onclick="logout()">로그아웃</button>
         </div>
     </div>
@@ -281,7 +279,7 @@
         <!-- 🚀 메인 콘텐츠 영역 -->
         <main class="main-content-wrapper">
 
-            <!-- 📋 0. 대시보드 (아침 칠판) 탭 -->
+            <!-- 📋 0. 대시보드 탭 -->
             <div id="board-tab" class="content-section active">
                 <div class="dashboard-grid">
                     
@@ -298,6 +296,7 @@
 
                     <div class="column-card" style="position: relative; padding-top: 20px;">
                         
+                        <!-- ✨ 깔끔해진 우측 상단 메뉴 바 -->
                         <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 15px; gap: 8px;">
                             <span id="auto-save-toast" style="font-size:13px; font-weight:bold; color:#4caf50; opacity:0; transition:opacity 0.5s;">자동 저장 완료 ✓</span>
                             
@@ -311,72 +310,72 @@
                             <button class="action-btn" style="background:#0288d1; padding: 8px 15px; border-radius: 8px;" onclick="saveDashboard()"><i class="fa-solid fa-floppy-disk"></i> 저장</button>
                         </div>
 
-                        <!-- ✨ 새로운 시간표 레이아웃 적용 -->
+                        <!-- ✨ 미니멀해진 시간표 레이아웃 (아이콘 및 placeholder 제거) -->
                         <div class="info-box" style="flex:1; padding: 25px 20px;">
                             <div class="tt-row">
                                 <span class="tt-label">1교시</span><span class="tt-subject" id="view-tt-sub-1" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
                                 <div class="tt-content-wrapper">
                                     <div class="tt-obj" id="view-tt-obj-1" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div>
-                                    <div class="tt-note" id="view-tt-note-1" contenteditable="true" spellcheck="false" data-placeholder="📝 학습 내용 필기"></div>
+                                    <div class="tt-note" id="view-tt-note-1" contenteditable="true" spellcheck="false" data-placeholder=""></div>
                                 </div>
                                 <div class="tt-side-wrapper">
                                     <span class="tt-page" id="view-tt-page-1" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수"></span>
-                                    <div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-1" contenteditable="true" spellcheck="false" data-placeholder="준비물"></div></div>
+                                    <div class="tt-prep-wrap"><div class="tt-prep" id="view-tt-prep-1" contenteditable="true" spellcheck="false" data-placeholder=""></div></div>
                                 </div>
                             </div>
                             <div class="tt-row">
                                 <span class="tt-label">2교시</span><span class="tt-subject" id="view-tt-sub-2" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
                                 <div class="tt-content-wrapper">
                                     <div class="tt-obj" id="view-tt-obj-2" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div>
-                                    <div class="tt-note" id="view-tt-note-2" contenteditable="true" spellcheck="false" data-placeholder="📝 학습 내용 필기"></div>
+                                    <div class="tt-note" id="view-tt-note-2" contenteditable="true" spellcheck="false" data-placeholder=""></div>
                                 </div>
                                 <div class="tt-side-wrapper">
                                     <span class="tt-page" id="view-tt-page-2" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수"></span>
-                                    <div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-2" contenteditable="true" spellcheck="false" data-placeholder="준비물"></div></div>
+                                    <div class="tt-prep-wrap"><div class="tt-prep" id="view-tt-prep-2" contenteditable="true" spellcheck="false" data-placeholder=""></div></div>
                                 </div>
                             </div>
                             <div class="tt-row">
                                 <span class="tt-label">3교시</span><span class="tt-subject" id="view-tt-sub-3" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
                                 <div class="tt-content-wrapper">
                                     <div class="tt-obj" id="view-tt-obj-3" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div>
-                                    <div class="tt-note" id="view-tt-note-3" contenteditable="true" spellcheck="false" data-placeholder="📝 학습 내용 필기"></div>
+                                    <div class="tt-note" id="view-tt-note-3" contenteditable="true" spellcheck="false" data-placeholder=""></div>
                                 </div>
                                 <div class="tt-side-wrapper">
                                     <span class="tt-page" id="view-tt-page-3" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수"></span>
-                                    <div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-3" contenteditable="true" spellcheck="false" data-placeholder="준비물"></div></div>
+                                    <div class="tt-prep-wrap"><div class="tt-prep" id="view-tt-prep-3" contenteditable="true" spellcheck="false" data-placeholder=""></div></div>
                                 </div>
                             </div>
                             <div class="tt-row">
                                 <span class="tt-label">4교시</span><span class="tt-subject" id="view-tt-sub-4" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
                                 <div class="tt-content-wrapper">
                                     <div class="tt-obj" id="view-tt-obj-4" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div>
-                                    <div class="tt-note" id="view-tt-note-4" contenteditable="true" spellcheck="false" data-placeholder="📝 학습 내용 필기"></div>
+                                    <div class="tt-note" id="view-tt-note-4" contenteditable="true" spellcheck="false" data-placeholder=""></div>
                                 </div>
                                 <div class="tt-side-wrapper">
                                     <span class="tt-page" id="view-tt-page-4" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수"></span>
-                                    <div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-4" contenteditable="true" spellcheck="false" data-placeholder="준비물"></div></div>
+                                    <div class="tt-prep-wrap"><div class="tt-prep" id="view-tt-prep-4" contenteditable="true" spellcheck="false" data-placeholder=""></div></div>
                                 </div>
                             </div>
                             <div class="tt-row">
                                 <span class="tt-label">5교시</span><span class="tt-subject" id="view-tt-sub-5" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
                                 <div class="tt-content-wrapper">
                                     <div class="tt-obj" id="view-tt-obj-5" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div>
-                                    <div class="tt-note" id="view-tt-note-5" contenteditable="true" spellcheck="false" data-placeholder="📝 학습 내용 필기"></div>
+                                    <div class="tt-note" id="view-tt-note-5" contenteditable="true" spellcheck="false" data-placeholder=""></div>
                                 </div>
                                 <div class="tt-side-wrapper">
                                     <span class="tt-page" id="view-tt-page-5" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수"></span>
-                                    <div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-5" contenteditable="true" spellcheck="false" data-placeholder="준비물"></div></div>
+                                    <div class="tt-prep-wrap"><div class="tt-prep" id="view-tt-prep-5" contenteditable="true" spellcheck="false" data-placeholder=""></div></div>
                                 </div>
                             </div>
                             <div class="tt-row" style="border-bottom:none;">
                                 <span class="tt-label">6교시</span><span class="tt-subject" id="view-tt-sub-6" contenteditable="true" spellcheck="false" data-placeholder="과목"></span>
                                 <div class="tt-content-wrapper">
                                     <div class="tt-obj" id="view-tt-obj-6" contenteditable="true" spellcheck="false" data-placeholder="🎯 학습 목표"></div>
-                                    <div class="tt-note" id="view-tt-note-6" contenteditable="true" spellcheck="false" data-placeholder="📝 학습 내용 필기"></div>
+                                    <div class="tt-note" id="view-tt-note-6" contenteditable="true" spellcheck="false" data-placeholder=""></div>
                                 </div>
                                 <div class="tt-side-wrapper">
                                     <span class="tt-page" id="view-tt-page-6" contenteditable="true" spellcheck="false" data-placeholder="📖 쪽수"></span>
-                                    <div class="tt-prep-wrap"><span class="prep-icon">🖍️</span><div class="tt-prep" id="view-tt-prep-6" contenteditable="true" spellcheck="false" data-placeholder="준비물"></div></div>
+                                    <div class="tt-prep-wrap"><div class="tt-prep" id="view-tt-prep-6" contenteditable="true" spellcheck="false" data-placeholder=""></div></div>
                                 </div>
                             </div>
                         </div>
@@ -834,7 +833,6 @@
                     document.getElementById(`view-tt-obj-${i}`).innerText = d[`ttObj${i}`] || "";
                     document.getElementById(`view-tt-prep-${i}`).innerText = d[`ttPrep${i}`] || "";
                     document.getElementById(`view-tt-page-${i}`).innerText = d[`ttPage${i}`] || "";
-                    // ✨ 신규 필기 칸 연동
                     let noteEl = document.getElementById(`view-tt-note-${i}`);
                     if(noteEl) noteEl.innerText = d[`ttNote${i}`] || "";
                 }
@@ -891,7 +889,6 @@
                         document.getElementById(`view-tt-obj-${i}`).innerText = d[`ttObj${i}`] || ""; 
                         document.getElementById(`view-tt-prep-${i}`).innerText = d[`ttPrep${i}`] || ""; 
                         document.getElementById(`view-tt-page-${i}`).innerText = d[`ttPage${i}`] || ""; 
-                        // ✨ 신규 필기 칸 연동
                         let noteEl = document.getElementById(`view-tt-note-${i}`);
                         if(noteEl) noteEl.innerText = d[`ttNote${i}`] || "";
                     }
@@ -912,7 +909,6 @@
                 d[`ttObj${i}`] = document.getElementById(`view-tt-obj-${i}`).innerText; 
                 d[`ttPrep${i}`] = document.getElementById(`view-tt-prep-${i}`).innerText; 
                 d[`ttPage${i}`] = document.getElementById(`view-tt-page-${i}`).innerText; 
-                // ✨ 신규 필기 칸 저장 연동
                 let noteEl = document.getElementById(`view-tt-note-${i}`);
                 if(noteEl) d[`ttNote${i}`] = noteEl.innerText;
             }
@@ -954,7 +950,6 @@
                     document.getElementById(`view-tt-prep-${i}`).innerText = ""; 
                     document.getElementById(`view-tt-page-${i}`).innerText = ""; 
                     
-                    // ✨ 초기화 시 필기 칸도 리셋!
                     let noteEl = document.getElementById(`view-tt-note-${i}`);
                     if(noteEl) noteEl.innerText = "";
                 }
@@ -1339,7 +1334,6 @@
             if(count === 0) { listDiv.innerHTML = "<div style='width:100%; text-align:center; color:#999; padding:20px;'>등록된 바로가기가 없습니다. 위에서 추가해 보세요!</div>"; }
         }
         function deleteBookmark(key) { if(confirm("이 바로가기를 삭제할까요?")) bookmarksRef.child(key).remove(); }
-
 
         // ==========================================
         // 🌟 나머지 기능 (점수판, 뽑기, 통계)
