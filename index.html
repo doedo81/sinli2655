@@ -107,6 +107,7 @@
         .cal-date:hover { background: var(--main-sky); }
         .cal-date.today { background: var(--sub-sky); color: var(--dark-blue); }
         .cal-date.has-record::after { content: '●'; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); font-size: 10px; color: #e91e63; }
+        .cal-date.has-event::before { content: '•'; position: absolute; top: 0; right: 5px; font-size: 16px; color: #5b97d1; line-height: 1; }
         .cal-date.selected { background: var(--accent-blue) !important; color: white !important; }
 
         .full-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--main-sky); display:flex; justify-content:center; align-items:center; z-index:9999; flex-direction: column;}
@@ -414,13 +415,14 @@
                     </div>
 
                     <div class="column-card" style="padding-top: 45px;">
-                        <div class="info-box"><span class="info-label">📢 전달 사항</span><div class="info-content" id="view-notices" contenteditable="true" spellcheck="false" data-placeholder="클릭하여 입력"></div></div>
+                        <div class="info-box"><span class="info-label">📢 전달 사항</span><div id="view-notices-cal" style="display:none; margin-bottom:8px; font-weight:700; font-size:var(--board-font-size); color:#2c3e50; line-height:1.5;"></div><div class="info-content" id="view-notices" contenteditable="true" spellcheck="false" data-placeholder="클릭하여 입력"></div></div>
                         <div class="info-box" style="border-left: 5px solid #a5d6a7;"><span class="info-label" style="color:#5fa267;">📝 알림장</span><div class="info-content" id="view-allim" contenteditable="true" spellcheck="false" data-placeholder="클릭하여 입력"></div></div>
                         <div class="info-box" style="background:#fdf1f6;"><span class="info-label" style="color: #db5e90;">🎂 생일 축하해요!</span><div class="info-content" id="view-birthday" contenteditable="true" spellcheck="false" data-placeholder="클릭하여 입력"></div></div>
                         
                         <div class="calendar-card" id="calendar-widget">
                             <div class="cal-header"><span id="cal-month-title"></span><div><i class="fa-solid fa-chevron-left" style="cursor:pointer; margin-right:15px;" onclick="changeMonth(-1)"></i><i class="fa-solid fa-chevron-right" style="cursor:pointer;" onclick="changeMonth(1)"></i></div></div>
                             <div class="cal-grid" id="cal-dates"></div>
+                            <button onclick="openEventModal()" style="margin-top:12px; width:100%; padding:9px; border:none; border-radius:8px; background:var(--accent-blue); color:white; font-weight:700; cursor:pointer; font-size:13px;">📅 일정 추가 / 관리</button>
                         </div>
                     </div>
                 </div>
@@ -666,6 +668,31 @@
             </div>
         </div>
 
+        <!-- 📅 일정 관리 모달 -->
+        <div class="modal-overlay" id="calendar-event-modal">
+            <div class="modal-box" style="max-width: 480px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
+                    <h2 style="margin:0; color:var(--accent-blue);">📅 일정 관리</h2>
+                    <button class="reset-btn" onclick="closeEventModal()">닫기</button>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label style="font-weight:700; color:var(--dark-blue); font-size:14px;">날짜</label>
+                    <input type="date" id="event-date-input" style="padding:8px; border-radius:8px; border:1px solid #ccc; font-weight:700; margin-left:8px;" onchange="renderEventModalList()">
+                </div>
+                <div id="event-modal-list" style="max-height:230px; overflow-y:auto; margin-bottom:15px;"></div>
+                <div style="display:flex; gap:6px; align-items:center; background:#f3f6fb; padding:12px; border-radius:10px; flex-wrap:wrap;">
+                    <select id="event-type-input" style="padding:9px; border-radius:8px; border:1px solid #ccc; font-weight:700;">
+                        <option value="birthday">🎂 생일</option>
+                        <option value="event">🎈 행사</option>
+                        <option value="work">📌 업무</option>
+                    </select>
+                    <input type="text" id="event-text-input" placeholder="내용 (예: 현장학습, OO 생일)" style="flex:1; min-width:150px; padding:9px; border-radius:8px; border:1px solid #ccc;" onkeypress="if(event.key==='Enter') addCalendarEvent()">
+                    <button class="action-btn" style="padding:11px 18px;" onclick="addCalendarEvent()">추가</button>
+                </div>
+                <p style="font-size:12px; color:#888; margin:12px 0 0 0; line-height:1.5;">🎂 생일은 <b>생일 축하해요</b> 칸에, 🎈행사·📌업무는 <b>전달 사항</b> 칸에 그날 자동으로 표시됩니다.</p>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -723,6 +750,8 @@
         let globalSeparatedStr = "";
         let globalBirthdaysStr = "";
         let birthdayMap = {};
+        let calendarEventsRef = null;
+        let allCalendarEvents = {};
 
         let currentSeating = []; 
         let groupMembersMap = {}; 
@@ -805,6 +834,7 @@
             seatingRef = db.ref('rooms/' + currentRoom + '/seating'); groupMembersRef = db.ref('rooms/' + currentRoom + '/groupMembers');
             seatingHistoryRef = db.ref('rooms/' + currentRoom + '/seatingHistory'); 
             bookmarksRef = db.ref('rooms/' + currentRoom + '/bookmarks');
+            calendarEventsRef = db.ref('rooms/' + currentRoom + '/calendarEvents');
 
             document.getElementById('auth-overlay').style.display = 'none'; 
             document.getElementById('main-app').style.display = 'flex';
@@ -877,7 +907,7 @@
                 document.getElementById('view-date').innerText = d.date || ""; document.getElementById('view-morning').innerText = d.morning || "";
                 document.getElementById('view-duty-nums').innerText = d.dutyNums || ""; document.getElementById('view-duty-tasks').innerText = d.dutyTasks || "";
                 document.getElementById('view-notices').innerText = d.notices || ""; document.getElementById('view-allim').innerText = d.allim || "";
-                document.getElementById('view-safety').innerText = d.safety || ""; document.getElementById('view-birthday').innerText = d.birthday || getBirthdayText(viewDate);
+                document.getElementById('view-safety').innerText = d.safety || ""; document.getElementById('view-birthday').innerText = d.birthday || getBirthdayText(viewDate); renderCalendarNotices(viewDate);
                 for(let i=1; i<=6; i++) {
                     document.getElementById(`view-tt-sub-${i}`).innerText = d[`ttSub${i}`] || "";
                     document.getElementById(`view-tt-obj-${i}`).innerText = d[`ttObj${i}`] || "";
@@ -920,6 +950,12 @@
             groupMembersRef.on('value', snap => { groupMembersMap = snap.val() || {}; });
             seatingHistoryRef.on('value', snap => { allSeatingHistories = snap.val() || {}; }); 
             bookmarksRef.on('value', snap => { allBookmarks = snap.val() || {}; renderBookmarks(); });
+            calendarEventsRef.on('value', snap => {
+                allCalendarEvents = snap.val() || {};
+                renderCalendar();
+                applyCalendarToBoard();
+                if (document.getElementById('calendar-event-modal').style.display === 'flex') renderEventModalList();
+            });
         }
 
         // ==========================================
@@ -933,7 +969,7 @@
                     document.getElementById('view-date').innerText = d.date || ""; document.getElementById('view-morning').innerText = d.morning || "";
                     document.getElementById('view-duty-nums').innerText = d.dutyNums || ""; document.getElementById('view-duty-tasks').innerText = d.dutyTasks || "";
                     document.getElementById('view-notices').innerText = d.notices || ""; document.getElementById('view-allim').innerText = d.allim || "";
-                    document.getElementById('view-safety').innerText = d.safety || ""; document.getElementById('view-birthday').innerText = d.birthday || getBirthdayText(viewDate);
+                    document.getElementById('view-safety').innerText = d.safety || ""; document.getElementById('view-birthday').innerText = d.birthday || getBirthdayText(viewDate); renderCalendarNotices(viewDate);
                     for(let i=1; i<=6; i++) { 
                         document.getElementById(`view-tt-sub-${i}`).innerText = d[`ttSub${i}`] || ""; 
                         document.getElementById(`view-tt-obj-${i}`).innerText = d[`ttObj${i}`] || ""; 
@@ -1137,7 +1173,7 @@
                 
                 document.getElementById('view-notices').innerText = "";
                 document.getElementById('view-allim').innerText = "";
-                document.getElementById('view-birthday').innerText = getBirthdayText(viewDate);
+                document.getElementById('view-birthday').innerText = getBirthdayText(viewDate); renderCalendarNotices(viewDate);
                 
                 let targetM = "", targetT = "";
                 if(dayStr === '월') { targetM = def.monM; targetT = def.monT; } else if(dayStr === '화') { targetM = def.tueM; targetT = def.tueT; } else if(dayStr === '수') { targetM = def.wedM; targetT = def.wedT; } else if(dayStr === '목') { targetM = def.thuM; targetT = def.thuT; } else if(dayStr === '금') { targetM = def.friM; targetT = def.friT; }
@@ -1193,7 +1229,8 @@
             for(let i=1; i<=last; i++) {
                 const k = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
                 const isSelected = getFormattedDate(viewDate) === k; const hasRecord = historyCheck[k] ? 'has-record' : '';
-                con.innerHTML += `<div class="cal-date ${isSelected?'selected':''} ${hasRecord}" onclick="selectDate('${k}')">${i}</div>`;
+                const hasEvent = (allCalendarEvents[k] && Object.keys(allCalendarEvents[k]).length) ? 'has-event' : '';
+                con.innerHTML += `<div class="cal-date ${isSelected?'selected':''} ${hasRecord} ${hasEvent}" onclick="selectDate('${k}')">${i}</div>`;
             }
         }
         function changeMonth(v) { calDate.setMonth(calDate.getMonth() + v); renderCalendar(); }
@@ -1206,7 +1243,7 @@
                     document.getElementById('view-date').innerText = d.date || ""; document.getElementById('view-morning').innerText = d.morning || "";
                     document.getElementById('view-duty-nums').innerText = d.dutyNums || ""; document.getElementById('view-duty-tasks').innerText = d.dutyTasks || "";
                     document.getElementById('view-notices').innerText = d.notices || ""; document.getElementById('view-allim').innerText = d.allim || "";
-                    document.getElementById('view-safety').innerText = d.safety || ""; document.getElementById('view-birthday').innerText = d.birthday || getBirthdayText(viewDate);
+                    document.getElementById('view-safety').innerText = d.safety || ""; document.getElementById('view-birthday').innerText = d.birthday || getBirthdayText(viewDate); renderCalendarNotices(viewDate);
                     for(let i=1; i<=6; i++) { 
                         document.getElementById(`view-tt-sub-${i}`).innerText = d[`ttSub${i}`] || ""; 
                         document.getElementById(`view-tt-obj-${i}`).innerText = d[`ttObj${i}`] || ""; 
@@ -1302,12 +1339,71 @@
             } catch(e) { console.error("생일 파싱 오류", e); }
         }
 
-        // 해당 날짜의 생일자 텍스트 반환 (없으면 빈 문자열)
+        // 해당 날짜의 생일자 텍스트 반환 (기초세팅 생일명단 + 캘린더 생일 일정)
         function getBirthdayText(d) {
-            const key = String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
-            const names = birthdayMap[key];
-            if (!names || names.length === 0) return "";
+            const mmdd = String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+            let names = (birthdayMap[mmdd] || []).slice();
+            getCalendarEventsFor(getFormattedDate(d)).forEach(e => { if (e.type === 'birthday' && e.text) names.push(e.text); });
+            if (names.length === 0) return "";
             return "🎉 " + names.join(', ') + " 생일 축하해요!";
+        }
+
+        // ==========================================
+        // 📅 일정(캘린더) 관리
+        // ==========================================
+        function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+        function getCalendarEventsFor(dateKey) {
+            const obj = allCalendarEvents[dateKey] || {};
+            return Object.keys(obj).map(id => ({ id, type: obj[id].type, text: obj[id].text }));
+        }
+
+        const EVENT_ICON = { birthday: '🎂', event: '🎈', work: '📌' };
+
+        // 전달 사항 칸 위에 그날의 행사·업무 일정을 표시 (읽기 전용, 저장 안 됨)
+        function renderCalendarNotices(d) {
+            const el = document.getElementById('view-notices-cal');
+            if (!el) return;
+            const evs = getCalendarEventsFor(getFormattedDate(d)).filter(e => e.type === 'event' || e.type === 'work');
+            if (evs.length === 0) { el.style.display = 'none'; el.innerHTML = ''; return; }
+            el.style.display = 'block';
+            el.innerHTML = evs.map(e => `<div>${EVENT_ICON[e.type]} ${escapeHtml(e.text)}</div>`).join('');
+        }
+
+        // 캘린더 일정을 현재 보고 있는 날짜의 칠판에 반영
+        function applyCalendarToBoard() {
+            renderCalendarNotices(viewDate);
+            const bEl = document.getElementById('view-birthday');
+            if (bEl && !bEl.innerText.trim()) bEl.innerText = getBirthdayText(viewDate);
+        }
+
+        function openEventModal() {
+            document.getElementById('event-date-input').value = getFormattedDate(viewDate);
+            renderEventModalList();
+            document.getElementById('calendar-event-modal').style.display = 'flex';
+        }
+        function closeEventModal() { document.getElementById('calendar-event-modal').style.display = 'none'; }
+
+        function renderEventModalList() {
+            const dateKey = document.getElementById('event-date-input').value;
+            const listDiv = document.getElementById('event-modal-list');
+            const evs = dateKey ? getCalendarEventsFor(dateKey) : [];
+            if (evs.length === 0) { listDiv.innerHTML = '<p style="text-align:center; color:#aaa; padding:15px 0;">등록된 일정이 없습니다.</p>'; return; }
+            listDiv.innerHTML = evs.map(e => `<div style="display:flex; justify-content:space-between; align-items:center; padding:9px 10px; border:1px solid #eee; border-radius:8px; margin-bottom:6px;"><span style="font-weight:700;">${EVENT_ICON[e.type]} ${escapeHtml(e.text)}</span><button class="reset-btn" style="padding:5px 10px; font-size:12px; background:#e57373;" onclick="deleteCalendarEvent('${dateKey}','${e.id}')">삭제</button></div>`).join('');
+        }
+
+        function addCalendarEvent() {
+            const dateKey = document.getElementById('event-date-input').value;
+            const type = document.getElementById('event-type-input').value;
+            const text = document.getElementById('event-text-input').value.trim();
+            if (!dateKey) { alert('날짜를 선택해 주세요.'); return; }
+            if (!text) { alert('내용을 입력해 주세요.'); return; }
+            calendarEventsRef.child(dateKey).push({ type: type, text: text });
+            document.getElementById('event-text-input').value = '';
+        }
+
+        function deleteCalendarEvent(dateKey, id) {
+            calendarEventsRef.child(dateKey).child(id).remove();
         }
 
         function getGroupNumForIdx(idx, cols) {
