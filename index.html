@@ -227,6 +227,17 @@
 
         /* 📱 핸드폰 전용 (점수판 등 잘 보이게) */
         @media (max-width: 600px) {
+            /* 사이드바를 상단 가로 메뉴로 (세로로 화면 다 먹던 문제 해결) */
+            .sidebar { flex-direction: column; align-items: stretch; padding: 8px 10px; gap: 6px; }
+            .sidebar-header { margin: 0; border: none; padding: 0; justify-content: center; }
+            .toggle-btn { display: none; }
+            .tab-container { flex-direction: row !important; flex-wrap: wrap; gap: 6px; width: 100%; }
+            .sidebar .tab-btn { width: auto; flex: 1 1 28%; min-width: 92px; padding: 10px 6px; margin: 0; font-size: 14px; justify-content: center; gap: 6px; }
+            .sidebar .tab-btn.active { transform: none; }
+            .sidebar-bottom { margin: 0; border: none; padding: 0; display: flex; flex-direction: row; gap: 8px; align-items: center; }
+            .sidebar-bottom .tab-btn { margin-bottom: 0 !important; flex: 1 1 auto; }
+            .sidebar .room-tag { margin-top: 0; flex: 0 0 auto; }
+            .user-profile-text { display: none; }
             .main-content-wrapper { padding: 12px 10px; }
             /* 점수판 안쪽 카드 여백 축소 */
             #score-tab > div { padding: 16px 12px !important; }
