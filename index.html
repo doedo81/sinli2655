@@ -214,11 +214,18 @@
         /* 반응형 웹 모드 */
         @media (max-width: 1100px) { 
             #main-app { flex-direction: column; overflow-y: auto; }
-            .sidebar { width: 100%; height: auto; flex-direction: row; flex-wrap: wrap; padding: 15px; align-items: center; justify-content: space-between;}
+            .sidebar { width: 100%; height: auto; flex-direction: row; flex-wrap: wrap; padding: 10px 14px; align-items: center; gap: 8px;}
             .sidebar .sidebar-header { margin-bottom: 0; border: none; padding: 0; width: auto;}
-            .tab-container { flex-direction: row !important; margin-bottom: 0; flex-wrap: wrap; width: 100%; justify-content: flex-start; gap: 6px;}
-            .tab-btn { width: auto; padding: 10px 15px; margin-bottom: 0;}
-            .sidebar-bottom { margin-top: 0; border: none; padding: 0; width: auto;}
+            /* 좁은 화면: 메뉴는 아이콘만, 가로로 흐르고 필요하면 줄바꿈 */
+            .tab-container { flex-direction: row !important; margin: 0; flex-wrap: wrap; width: auto; flex: 1; justify-content: flex-start; gap: 8px;}
+            .tab-btn { width: auto !important; padding: 12px !important; margin: 0 !important; border-radius: 12px;}
+            .tab-text { display: none; }
+            .tab-btn i { font-size: 20px; width: auto; margin: 0;}
+            .tab-btn.active { transform: none; }
+            .sidebar-bottom { margin: 0; border: none; padding: 0; width: auto; display: flex; gap: 8px; align-items: center;}
+            .sidebar-bottom .tab-btn { margin: 0 !important; }
+            .user-profile-text { display: none; }
+            .room-tag { margin-top: 0; padding: 12px; }
             .dashboard-grid { grid-template-columns: 1fr; }
             .tt-row { flex-wrap: wrap; }
             .tt-side-wrapper { width: 100%; flex-direction: row; }
@@ -227,17 +234,10 @@
 
         /* 📱 핸드폰 전용 (점수판 등 잘 보이게) */
         @media (max-width: 600px) {
-            /* 사이드바를 상단 가로 메뉴로 (세로로 화면 다 먹던 문제 해결) */
-            .sidebar { flex-direction: column; align-items: stretch; padding: 8px 10px; gap: 6px; }
-            .sidebar-header { margin: 0; border: none; padding: 0; justify-content: center; }
-            .toggle-btn { display: none; }
-            .tab-container { flex-direction: row !important; flex-wrap: wrap; gap: 6px; width: 100%; }
-            .sidebar .tab-btn { width: auto; flex: 1 1 28%; min-width: 92px; padding: 10px 6px; margin: 0; font-size: 14px; justify-content: center; gap: 6px; }
-            .sidebar .tab-btn.active { transform: none; }
-            .sidebar-bottom { margin: 0; border: none; padding: 0; display: flex; flex-direction: row; gap: 8px; align-items: center; }
-            .sidebar-bottom .tab-btn { margin-bottom: 0 !important; flex: 1 1 auto; }
-            .sidebar .room-tag { margin-top: 0; flex: 0 0 auto; }
-            .user-profile-text { display: none; }
+            /* 핸드폰에선 메뉴 아이콘을 조금 더 작게 (가로/아이콘 배치는 위 1100px 규칙 사용) */
+            .sidebar { padding: 8px 10px; }
+            .sidebar .tab-btn { padding: 10px !important; }
+            .tab-btn i { font-size: 18px; }
             .main-content-wrapper { padding: 12px 10px; }
             /* 점수판 안쪽 카드 여백 축소 */
             #score-tab > div { padding: 16px 12px !important; }
