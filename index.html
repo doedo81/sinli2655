@@ -15,10 +15,10 @@
 
     <style>
         :root {
-            --main-sky: #e1f5fe;
-            --sub-sky: #b3e5fc;
-            --accent-blue: #039be5; 
-            --dark-blue: #2c3e50;
+            --main-sky: #eef5fc;
+            --sub-sky: #d4e8f7;
+            --accent-blue: #5b97d1;
+            --dark-blue: #51618a;
             --white: #ffffff;
             --shadow: 0 5px 15px rgba(0,0,0,0.08);
             --board-font-size: 18px;
@@ -64,7 +64,7 @@
         /* 📋 칠판 레이아웃 */
         .dashboard-grid { display: grid; grid-template-columns: 1fr 2.4fr 1fr; gap: 20px; align-items: start;}
         .column-card { background: var(--white); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; border-top: 5px solid var(--accent-blue); height: 100%;}
-        .info-box { background: #ffffff; border-radius: 12px; padding: 18px; margin-bottom: 15px; border: 1px solid #e1e8ed; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
+        .info-box { background: #f7fbff; border-radius: 12px; padding: 18px; margin-bottom: 15px; border: 1px solid #e6eef7; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
         .info-label { font-weight: 800; font-size: 15px; margin-bottom: 10px; display: block; color: var(--accent-blue); }
         
         /* 읽기 전용 제어 */
@@ -81,14 +81,14 @@
 
         /* ✨ 시간표 행 디자인 */
         .tt-row { display: flex; margin-bottom: 15px; align-items: stretch; border-bottom: 1px solid #f0f4f8; padding-bottom: 15px; gap: 12px;}
-        .tt-label { font-weight: 900; color: #e65100; width: 60px; flex-shrink: 0; font-size: var(--board-font-size); background: #fff3e0; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 8px 5px;}
+        .tt-label { font-weight: 900; color: #c2825c; width: 60px; flex-shrink: 0; font-size: var(--board-font-size); background: #fbeee2; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 8px 5px;}
         .tt-subject { font-weight: 800; color: var(--accent-blue); width: 85px; flex-shrink: 0; font-size: var(--board-font-size); background: var(--main-sky); border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px 5px;}
         
         .tt-content-wrapper { display: flex; flex-direction: column; flex-grow: 1; gap: 6px; justify-content: center; min-width: 0;} 
         .tt-obj { color: #2c3e50; font-size: var(--board-font-size); font-weight: 700; padding: 4px; word-break: keep-all; flex-grow: 1;}
         
         /* 학습 내용 필기 칸 */
-        .tt-note { background: #fdfaf6; border-left: 3px solid #8e44ad; padding: 4px 8px; border-radius: 6px; font-size: calc(var(--board-font-size) - 2px); line-height: 1.3; color: #2c3e50; font-weight: 700; flex-grow: 1; outline: none; min-height: 25px; }
+        .tt-note { display: none; background: #fdfaf6; border-left: 3px solid #8e44ad; padding: 4px 8px; border-radius: 6px; font-size: calc(var(--board-font-size) - 2px); line-height: 1.3; color: #2c3e50; font-weight: 700; flex-grow: 1; outline: none; min-height: 25px; }
         
         /* 우측 사이드 래퍼 (쪽수 + 준비물) */
         .tt-side-wrapper { display: flex; flex-direction: column; gap: 6px; width: 120px; flex-shrink: 0; }
@@ -96,7 +96,7 @@
         
         /* ✨ 미니멀해진 준비물 박스 (아이콘 삭제, 여백 축소) */
         .tt-prep-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff8e1; border: 2px dashed #ffb300; border-radius: 8px; padding: 4px; flex: 1; text-align: center; min-height: 25px;}
-        .tt-prep { color: #d32f2f; font-size: calc(var(--board-font-size) - 3px); font-weight: 800; outline: none; line-height: 1.2; width: 100%; min-height: 20px;}
+        .tt-prep { color: #d98a8a; font-size: calc(var(--board-font-size) - 3px); font-weight: 800; outline: none; line-height: 1.2; width: 100%; min-height: 20px;}
 
         /* 캘린더 */
         .calendar-card { background: #fdfdfd; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 2px solid var(--sub-sky); box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);}
@@ -219,10 +219,30 @@
             .tab-container { flex-direction: row; margin-bottom: 0; flex-wrap: wrap; width: 100%; justify-content: flex-start;}
             .tab-btn { width: auto; padding: 10px 15px; margin-bottom: 0;}
             .sidebar-bottom { margin-top: 0; border: none; padding: 0; width: auto;}
-            .dashboard-grid { grid-template-columns: 1fr; } 
+            .dashboard-grid { grid-template-columns: 1fr; }
             .tt-row { flex-wrap: wrap; }
             .tt-side-wrapper { width: 100%; flex-direction: row; }
             .tt-page, .tt-prep-wrap { flex: 1; }
+        }
+
+        /* 📱 핸드폰 전용 (점수판 등 잘 보이게) */
+        @media (max-width: 600px) {
+            .main-content-wrapper { padding: 12px 10px; }
+            /* 점수판 안쪽 카드 여백 축소 */
+            #score-tab > div { padding: 16px 12px !important; }
+            #ranking-board { font-size: 15px !important; padding: 10px !important; line-height: 1.5; word-break: keep-all; }
+            /* 점수판: 한 줄에 2칸, 큼직하게 */
+            .grid-container { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .group-card { padding: 14px 6px; }
+            .group-name { font-size: 17px !important; }
+            .score { font-size: 46px; margin: 8px 0; }
+            .score-btn { width: 46px; height: 44px; font-size: 22px; }
+            /* 미니 점수판은 한 줄에 3칸 */
+            .mini-score-grid { grid-template-columns: repeat(3, 1fr); }
+            /* 뽑기 상자·과제 번호 버튼 정리 */
+            .picker-box { padding: 16px; }
+            .student-grid { grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); }
+            .timer-display { font-size: 38px; }
         }
     </style>
 </head>
@@ -289,9 +309,9 @@
                         </div>
 
                         <div class="info-box"><span class="info-label">📅 날짜 및 날씨</span><div class="info-content large-text" id="view-date" contenteditable="true" spellcheck="false" data-placeholder="날짜와 날씨 입력"></div></div>
-                        <div class="info-box"><span class="info-label" style="color:#d32f2f;">❗️ 안전 수칙</span><div class="info-content" id="view-safety" contenteditable="true" spellcheck="false" data-placeholder="안전 수칙 입력"></div></div>
-                        <div class="info-box"><span class="info-label" style="color:#f57c00;">⭐ 아침 자습</span><div class="info-content" id="view-morning" contenteditable="true" spellcheck="false" data-placeholder="아침 자습 입력"></div></div>
-                        <div class="info-box" style="margin-bottom:0;"><span class="info-label" style="color:#7b1fa2;">🧹 당번 (& 할 일)</span><div class="info-content large-text" id="view-duty-nums" contenteditable="true" spellcheck="false" data-placeholder="당번 번호"></div><div class="info-content" id="view-duty-tasks" contenteditable="true" spellcheck="false" data-placeholder="할 일 목록" style="font-size:calc(var(--board-font-size) - 2px); margin-top:5px; border-top:1px dashed #eee; padding-top:5px;"></div></div>
+                        <div class="info-box"><span class="info-label" style="color:#d96a6a;">❗️ 안전 수칙</span><div class="info-content" id="view-safety" contenteditable="true" spellcheck="false" data-placeholder="안전 수칙 입력"></div></div>
+                        <div class="info-box"><span class="info-label" style="color:#e0964a;">⭐ 아침 자습</span><div class="info-content" id="view-morning" contenteditable="true" spellcheck="false" data-placeholder="아침 자습 입력"></div></div>
+                        <div class="info-box" style="margin-bottom:0;"><span class="info-label" style="color:#8e5bb5;">🧹 당번 (& 할 일)</span><div class="info-content large-text" id="view-duty-nums" contenteditable="true" spellcheck="false" data-placeholder="당번 번호"></div><div class="info-content" id="view-duty-tasks" contenteditable="true" spellcheck="false" data-placeholder="할 일 목록" style="font-size:calc(var(--board-font-size) - 2px); margin-top:5px; border-top:1px dashed #eee; padding-top:5px;"></div></div>
                     </div>
 
                     <div class="column-card" style="position: relative; padding-top: 20px;">
@@ -383,8 +403,8 @@
 
                     <div class="column-card" style="padding-top: 45px;">
                         <div class="info-box"><span class="info-label">📢 전달 사항</span><div class="info-content" id="view-notices" contenteditable="true" spellcheck="false" data-placeholder="클릭하여 입력"></div></div>
-                        <div class="info-box" style="border-left: 5px solid #4caf50;"><span class="info-label" style="color:#2e7d32;">📝 알림장</span><div class="info-content" id="view-allim" contenteditable="true" spellcheck="false" data-placeholder="클릭하여 입력"></div></div>
-                        <div class="info-box" style="background:#fff5f8;"><span class="info-label" style="color: #e91e63;">🎂 생일 축하해요!</span><div class="info-content" id="view-birthday" contenteditable="true" spellcheck="false" data-placeholder="클릭하여 입력"></div></div>
+                        <div class="info-box" style="border-left: 5px solid #a5d6a7;"><span class="info-label" style="color:#5fa267;">📝 알림장</span><div class="info-content" id="view-allim" contenteditable="true" spellcheck="false" data-placeholder="클릭하여 입력"></div></div>
+                        <div class="info-box" style="background:#fdf1f6;"><span class="info-label" style="color: #db5e90;">🎂 생일 축하해요!</span><div class="info-content" id="view-birthday" contenteditable="true" spellcheck="false" data-placeholder="클릭하여 입력"></div></div>
                         
                         <div class="calendar-card" id="calendar-widget">
                             <div class="cal-header"><span id="cal-month-title"></span><div><i class="fa-solid fa-chevron-left" style="cursor:pointer; margin-right:15px;" onclick="changeMonth(-1)"></i><i class="fa-solid fa-chevron-right" style="cursor:pointer;" onclick="changeMonth(1)"></i></div></div>
@@ -601,6 +621,12 @@
                             <textarea id="set-separated-pairs" style="height:100px; font-family:'Pretendard'; padding:10px; border-radius:8px; border:1px solid #ccc; width:100%; line-height:1.5;" placeholder="1-5&#10;3-8"></textarea>
                         </div>
                     </div>
+
+                    <div style="margin-top:15px;">
+                        <div style="font-weight:bold; color:#e91e63; font-size:14px;">🎂 생일 명단 (입력하면 그날 칠판에 자동 표시)</div>
+                        <p style="font-size:12px; color:#555; margin: 5px 0;">한 줄에 한 명씩. 작성 예: 김민준 0315 / 이서연 11-20 (월일 4자리 또는 월-일)</p>
+                        <textarea id="set-birthdays" style="height:100px; font-family:'Pretendard'; padding:10px; border-radius:8px; border:1px solid #ccc; width:100%; line-height:1.5;" placeholder="김민준 0315&#10;이서연 11-20"></textarea>
+                    </div>
                 </div>
 
                 <div class="setting-group"><label>당번 기본 할 일</label><textarea id="set-duty-tasks" style="height:60px; font-weight:700;"></textarea></div>
@@ -680,9 +706,11 @@
         let viewDate = new Date(); let calDate = new Date(); 
         let isDashboardFocused = false; 
         
-        let globalTotalStudents = 24; 
-        let globalStudentRosterStr = ""; 
+        let globalTotalStudents = 24;
+        let globalStudentRosterStr = "";
         let globalSeparatedStr = "";
+        let globalBirthdaysStr = "";
+        let birthdayMap = {};
 
         let currentSeating = []; 
         let groupMembersMap = {}; 
@@ -735,7 +763,8 @@
             auth.onAuthStateChanged(user => {
                 if(user) {
                     document.getElementById('login-box').style.display = 'none'; document.getElementById('room-box').style.display = 'block'; 
-                    document.querySelector('.user-profile-text').innerText = `${user.displayName} 선생님`;
+                    const teacherName = user.displayName || (user.email ? user.email.split('@')[0] : '');
+                    document.querySelector('.user-profile-text').innerText = teacherName ? `${teacherName} 선생님` : `선생님`;
                     const savedRoom = localStorage.getItem('classRoomName'); if(savedRoom) { document.getElementById('room-name-input').value = savedRoom; enterRoom(); }
                 } else {
                     document.getElementById('auth-overlay').style.display = 'flex'; document.getElementById('login-box').style.display = 'block'; document.getElementById('room-box').style.display = 'none'; document.getElementById('main-app').style.display = 'none';
@@ -773,14 +802,22 @@
             
             if(!isTabletMode) {
                 let autoSaveTimer;
-                document.querySelectorAll('#board-tab [contenteditable="true"]').forEach(el => { 
-                    el.addEventListener('focus', () => { isDashboardFocused = true; }); 
-                    el.addEventListener('blur', () => { isDashboardFocused = false; }); 
+                let dashboardDirty = false;
+                window.flushDashboardSave = function() {
+                    if(!dashboardDirty) return;
+                    clearTimeout(autoSaveTimer); dashboardDirty = false;
+                    saveDashboard(true);
+                };
+                document.querySelectorAll('#board-tab [contenteditable="true"]').forEach(el => {
+                    el.addEventListener('focus', () => { isDashboardFocused = true; });
+                    el.addEventListener('blur', () => { isDashboardFocused = false; window.flushDashboardSave(); });
                     el.addEventListener('input', () => {
+                        dashboardDirty = true;
                         clearTimeout(autoSaveTimer);
-                        autoSaveTimer = setTimeout(() => { saveDashboard(true); }, 1500);
+                        autoSaveTimer = setTimeout(() => { dashboardDirty = false; saveDashboard(true); }, 1000);
                     });
                 });
+                window.addEventListener('beforeunload', () => { window.flushDashboardSave(); });
             }
 
             settingsRef.once('value').then(snap => {
@@ -789,8 +826,9 @@
                     globalTotalStudents = s.totalStudents || 24;
                     globalStudentRosterStr = s.roster || "";
                     globalSeparatedStr = s.separatedPairs || "";
+                    globalBirthdaysStr = s.birthdays || "";
                     pastGroupsRecord = s.pastGroups || {};
-                    parseStudentRoster(); parseSeparatedPairs();
+                    parseStudentRoster(); parseSeparatedPairs(); parseBirthdays();
                     
                     document.getElementById('set-total-students').value = globalTotalStudents;
                     document.getElementById('set-class-name').value = s.className || "";
@@ -807,7 +845,7 @@
             }).catch(e => console.error(e));
         }
 
-        function exitRoom() { localStorage.removeItem('classRoomName'); location.reload(); }
+        function exitRoom() { if(window.flushDashboardSave) window.flushDashboardSave(); localStorage.removeItem('classRoomName'); location.reload(); }
 
         function toArray(data, length) {
             if (Array.isArray(data)) return data;
@@ -827,7 +865,7 @@
                 document.getElementById('view-date').innerText = d.date || ""; document.getElementById('view-morning').innerText = d.morning || "";
                 document.getElementById('view-duty-nums').innerText = d.dutyNums || ""; document.getElementById('view-duty-tasks').innerText = d.dutyTasks || "";
                 document.getElementById('view-notices').innerText = d.notices || ""; document.getElementById('view-allim').innerText = d.allim || "";
-                document.getElementById('view-safety').innerText = d.safety || ""; document.getElementById('view-birthday').innerText = d.birthday || "";
+                document.getElementById('view-safety').innerText = d.safety || ""; document.getElementById('view-birthday').innerText = d.birthday || getBirthdayText(viewDate);
                 for(let i=1; i<=6; i++) {
                     document.getElementById(`view-tt-sub-${i}`).innerText = d[`ttSub${i}`] || "";
                     document.getElementById(`view-tt-obj-${i}`).innerText = d[`ttObj${i}`] || "";
@@ -883,7 +921,7 @@
                     document.getElementById('view-date').innerText = d.date || ""; document.getElementById('view-morning').innerText = d.morning || "";
                     document.getElementById('view-duty-nums').innerText = d.dutyNums || ""; document.getElementById('view-duty-tasks').innerText = d.dutyTasks || "";
                     document.getElementById('view-notices').innerText = d.notices || ""; document.getElementById('view-allim').innerText = d.allim || "";
-                    document.getElementById('view-safety').innerText = d.safety || ""; document.getElementById('view-birthday').innerText = d.birthday || "";
+                    document.getElementById('view-safety').innerText = d.safety || ""; document.getElementById('view-birthday').innerText = d.birthday || getBirthdayText(viewDate);
                     for(let i=1; i<=6; i++) { 
                         document.getElementById(`view-tt-sub-${i}`).innerText = d[`ttSub${i}`] || ""; 
                         document.getElementById(`view-tt-obj-${i}`).innerText = d[`ttObj${i}`] || ""; 
@@ -913,7 +951,19 @@
                 if(noteEl) d[`ttNote${i}`] = noteEl.innerText;
             }
             boardRef.set(d); historyRef.child(getFormattedDate(viewDate)).set(d);
-            if (window.tempNextIdx !== undefined) { db.ref('rooms/' + currentRoom + '/settings/lastDutyIndex').set(window.tempNextIdx); window.tempNextIdx = undefined; }
+            if (window.tempDutyNum !== undefined) {
+                // 자동 채우기로 정해진 당번 → 마지막 번호와 날짜 기록
+                db.ref('rooms/' + currentRoom + '/settings/lastDutyNum').set(window.tempDutyNum);
+                db.ref('rooms/' + currentRoom + '/settings/lastDutyDate').set(window.tempDutyDate);
+                window.tempDutyNum = undefined; window.tempDutyDate = undefined;
+            } else if (getFormattedDate(viewDate) === getFormattedDate(new Date())) {
+                // 오늘 당번 번호를 직접 고쳤을 때 → 그 마지막 번호 기준으로 내일 이어지게
+                const nums = (document.getElementById('view-duty-nums').innerText.match(/\d+/g) || []).map(Number);
+                if (nums.length) {
+                    db.ref('rooms/' + currentRoom + '/settings/lastDutyNum').set(nums[nums.length - 1]);
+                    db.ref('rooms/' + currentRoom + '/settings/lastDutyDate').set(getFormattedDate(viewDate));
+                }
+            }
             
             if(!isSilent) {
                 alert("💾 칠판 기록이 수동으로 저장되었습니다!");
@@ -923,6 +973,148 @@
             }
         }
 
+        // 🛟 달별 안전 수칙 (계절·행사 반영). 그 달 안에서 날짜에 따라 매일 다른 문구가 나옵니다.
+        const SAFETY_BY_MONTH = {
+            3: [
+                "새 학년 새 친구에게 먼저 반갑게 인사하기!",
+                "등하굣길에서는 좌우를 살피고 횡단보도로 건너기!",
+                "우리 반 약속과 규칙을 함께 지키기!",
+                "복도에서는 우측통행하며 사뿐사뿐 걷기!",
+                "친구의 좋은 점을 찾아 칭찬해 주기!",
+                "봄철 미세먼지가 심한 날엔 마스크 쓰기!",
+                "계단은 한 칸씩, 난간을 잡고 오르내리기!",
+                "바르고 고운 말로 친구를 존중하기!",
+                "내 책상과 사물함은 스스로 정리정돈하기!"
+            ],
+            4: [
+                "미세먼지·황사가 심한 날엔 창문 닫고 마스크 쓰기!",
+                "봄나들이 갈 때 선생님 곁에서 함께 움직이기!",
+                "자전거·킥보드 탈 땐 헬멧 꼭 쓰기!",
+                "아침저녁 일교차를 조심해 겉옷 챙기기!",
+                "친구의 말을 끝까지 경청하고 존중하기!",
+                "운동장에서 뛸 때 부딪히지 않게 살피기!",
+                "손을 깨끗이 씻어 봄철 감기 예방하기!",
+                "쓰레기는 종류에 맞게 분리수거 하기!",
+                "위험한 장난은 절대 하지 않기!"
+            ],
+            5: [
+                "소풍·현장학습 때 모둠과 함께 다니기!",
+                "횡단보도에서는 손 들고 좌우 확인 후 건너기!",
+                "가족에게 사랑한다고 표현하기!",
+                "야외활동 후 손과 얼굴 깨끗이 씻기!",
+                "친구와 다투면 대화로 풀고 먼저 사과하기!",
+                "햇볕이 강한 날 모자 쓰고 물 자주 마시기!",
+                "놀이기구는 차례를 지켜 안전하게 타기!",
+                "어른께 공손한 말로 인사드리기!",
+                "교실을 나갈 때 전기와 에어컨 끄기!"
+            ],
+            6: [
+                "음식을 먹기 전 손을 깨끗이 씻기! (식중독 예방)",
+                "날이 더워도 복도에서는 뛰지 않기!",
+                "물을 자주 마셔 더위에 지치지 않기!",
+                "상한 음식은 먹지 않고 선생님께 알리기!",
+                "친구가 힘들어 보이면 먼저 도와주기!",
+                "창문을 열 때 떨어지지 않게 조심하기!",
+                "운동 후에는 그늘에서 충분히 쉬기!",
+                "모둠 활동 때 서로의 의견을 존중하기!",
+                "쉬는 시간이 끝나면 제자리를 정리하기!"
+            ],
+            7: [
+                "물놀이는 반드시 어른과 함께, 준비운동 먼저!",
+                "비 오는 날 빗길에서 뛰지 않고 천천히 걷기!",
+                "젖은 손으로 전기 콘센트를 만지지 않기!",
+                "천둥·번개가 칠 땐 나무 밑과 물가 피하기!",
+                "우산을 휘두르지 않고 안전하게 들기!",
+                "폭염엔 물 자주 마시고 그늘에서 쉬기!",
+                "계곡·바다에서는 깊은 곳에 들어가지 않기!",
+                "더위에 음식이 상하기 쉬우니 손 깨끗이 씻기!",
+                "에어컨 바람을 직접 오래 쐬지 않기!"
+            ],
+            8: [
+                "폭염엔 야외활동을 줄이고 물 자주 마시기!",
+                "물놀이 후 귀와 몸을 잘 말리기!",
+                "자외선이 강하니 모자 쓰고 그늘 이용하기!",
+                "방학 동안 있었던 이야기를 친구와 나누기!",
+                "규칙적인 생활 습관을 다시 찾기!",
+                "손 씻기로 여름철 감염병 예방하기!",
+                "길에서 스마트폰 보지 않고 앞을 보며 걷기!",
+                "교실 환기를 자주 하기!",
+                "친구의 별명 대신 이름을 불러 주기!"
+            ],
+            9: [
+                "아침저녁이 쌀쌀하니 겉옷을 챙기기!",
+                "환절기 감기 예방을 위해 손 자주 씻기!",
+                "2학기 새 마음으로 수업에 집중하기!",
+                "추석엔 어른께 감사 인사 드리기!",
+                "복도에서는 우측통행으로 사뿐사뿐 걷기!",
+                "운동회 연습 때 다치지 않게 준비운동하기!",
+                "기침·재채기는 옷소매로 가리기!",
+                "친구와 사이좋게 협동하기!",
+                "낙엽 쌓인 길에서 미끄럼 조심하기!"
+            ],
+            10: [
+                "단풍 나들이 때 선생님 곁을 떠나지 않기!",
+                "산이나 공원에서 길을 잃지 않게 함께 다니기!",
+                "일교차가 크니 옷을 알맞게 입기!",
+                "건조한 날 불조심하기!",
+                "책을 가까이하며 독서하는 가을 보내기!",
+                "운동장 활동 후 물 마시고 손 씻기!",
+                "친구의 다른 점을 이해하고 존중하기!",
+                "자전거 탈 때 헬멧 쓰고 길 조심하기!",
+                "교실 정리정돈을 깨끗이 하기!"
+            ],
+            11: [
+                "독감 예방을 위해 손 씻기와 기침예절 지키기!",
+                "공기가 건조하니 물을 자주 마시기!",
+                "난방기구 가까이서 장난치지 않기!",
+                "일찍 어두워지니 하굣길은 밝은 길로 다니기!",
+                "따뜻하게 옷 입고 감기 예방하기!",
+                "친구에게 고마운 마음을 표현하기!",
+                "복도와 계단에서 뛰지 않기!",
+                "미세먼지가 심한 날 마스크 쓰기!",
+                "사용한 물건은 제자리에 두기!"
+            ],
+            12: [
+                "빙판길에선 주머니에 손 넣지 말고 천천히 걷기!",
+                "눈 오는 날 미끄러지지 않게 조심해 걷기!",
+                "난로·히터 가까이서 장난치지 않기!",
+                "한파엔 목도리·장갑으로 따뜻하게!",
+                "한 해를 돌아보며 친구에게 감사 전하기!",
+                "손 씻기로 겨울 감기 예방하기!",
+                "눈싸움은 정해진 곳에서 안전하게!",
+                "교실 환기를 자주 해 공기 바꾸기!",
+                "따뜻한 말로 친구 마음 녹여 주기!"
+            ],
+            1: [
+                "빙판과 눈길에서 뛰지 않고 천천히 걷기!",
+                "썰매·스케이트는 안전장비를 갖추고 타기!",
+                "추운 날 동상에 걸리지 않게 따뜻하게 입기!",
+                "새해 목표를 세우고 하나씩 실천하기!",
+                "실내에서도 손을 자주 씻기!",
+                "난방기구는 사용 후 끄는 것 잊지 않기!",
+                "가족과 함께 규칙적으로 생활하기!",
+                "두꺼운 옷을 입고 바른 자세로 걷기!",
+                "책을 읽으며 알찬 시간 보내기!"
+            ],
+            2: [
+                "빙판길이 여전히 미끄러우니 조심히 걷기!",
+                "한 학년을 잘 마무리하며 정리정돈하기!",
+                "친구와 좋았던 추억을 이야기 나누기!",
+                "환절기 감기 조심해 손 자주 씻기!",
+                "새 학년을 준비하며 마음가짐 다지기!",
+                "따뜻하게 입고 건강 챙기기!",
+                "고마웠던 친구·선생님께 감사 전하기!",
+                "사용한 교실을 깨끗이 정리하기!",
+                "바르고 고운 말로 한 해를 마무리하기!"
+            ]
+        };
+
+        // 해당 날짜의 안전 수칙 1개 반환 (그 달 안에서 날짜별로 순환)
+        function getSafetyMsg(d) {
+            const pool = SAFETY_BY_MONTH[d.getMonth() + 1] || [];
+            if (!pool.length) return "";
+            return pool[(d.getDate() - 1) % pool.length];
+        }
         function autoFillDashboard(isInitial = false) {
             if(isTabletMode) return;
             if(!isInitial && !confirm("오늘 요일에 맞는 기본값으로 덮어씌웁니까?")) return;
@@ -933,7 +1125,7 @@
                 
                 document.getElementById('view-notices').innerText = "";
                 document.getElementById('view-allim').innerText = "";
-                document.getElementById('view-birthday').innerText = "";
+                document.getElementById('view-birthday').innerText = getBirthdayText(viewDate);
                 
                 let targetM = "", targetT = "";
                 if(dayStr === '월') { targetM = def.monM; targetT = def.monT; } else if(dayStr === '화') { targetM = def.tueM; targetT = def.tueT; } else if(dayStr === '수') { targetM = def.wedM; targetT = def.wedT; } else if(dayStr === '목') { targetM = def.thuM; targetT = def.thuT; } else if(dayStr === '금') { targetM = def.friM; targetT = def.friT; }
@@ -954,12 +1146,27 @@
                     if(noteEl) noteEl.innerText = "";
                 }
                 
-                const safetyMsgs = ["복도에서는 우측통행하며 사뿐사뿐 걷기!", "스마트폰은 주머니에 넣고 앞을 보며 걷기!", "친구의 말을 끝까지 경청하고 존중하기!", "바르고 고운 말, 긍정적인 말 사용하기!"];
-                document.getElementById('view-safety').innerText = safetyMsgs[Math.floor(Math.random() * safetyMsgs.length)];
+                document.getElementById('view-safety').innerText = getSafetyMsg(viewDate);
 
-                db.ref('rooms/' + currentRoom + '/settings/lastDutyIndex').once('value').then(s => {
-                    let last = s.val() || 0; document.getElementById('view-duty-nums').innerText = `${(last % globalTotalStudents)+1}번, ${((last+1) % globalTotalStudents)+1}번`;
-                    window.tempNextIdx = last + 2; 
+                const total = globalTotalStudents;
+                const todayKey = getFormattedDate(viewDate);
+                Promise.all([
+                    db.ref('rooms/' + currentRoom + '/settings/lastDutyDate').once('value'),
+                    db.ref('rooms/' + currentRoom + '/settings/lastDutyNum').once('value')
+                ]).then(([ds, ns]) => {
+                    const lastDate = ds.val() || "";
+                    const lastNum = parseInt(ns.val()) || 0;
+                    const advance = (!lastDate) || (todayKey > lastDate); // 새(이후) 날짜일 때만 다음 번호로
+                    let n1, n2;
+                    if (advance) {
+                        n1 = (lastNum % total) + 1;
+                        n2 = (n1 % total) + 1;
+                        window.tempDutyNum = n2; window.tempDutyDate = todayKey; // 오늘 당번의 마지막 번호를 기록
+                    } else {
+                        n2 = lastNum > 0 ? lastNum : 2;
+                        n1 = ((n2 - 2 + total) % total) + 1;
+                    }
+                    document.getElementById('view-duty-nums').innerText = `${n1}번, ${n2}번`;
                     saveDashboard(true);
                 });
             });
@@ -979,6 +1186,7 @@
         }
         function changeMonth(v) { calDate.setMonth(calDate.getMonth() + v); renderCalendar(); }
         function selectDate(key) {
+            if(window.flushDashboardSave) window.flushDashboardSave();
             viewDate = new Date(key);
             historyRef.child(key).once('value').then(snap => {
                 if(snap.exists()) {
@@ -986,7 +1194,7 @@
                     document.getElementById('view-date').innerText = d.date || ""; document.getElementById('view-morning').innerText = d.morning || "";
                     document.getElementById('view-duty-nums').innerText = d.dutyNums || ""; document.getElementById('view-duty-tasks').innerText = d.dutyTasks || "";
                     document.getElementById('view-notices').innerText = d.notices || ""; document.getElementById('view-allim').innerText = d.allim || "";
-                    document.getElementById('view-safety').innerText = d.safety || ""; document.getElementById('view-birthday').innerText = d.birthday || "";
+                    document.getElementById('view-safety').innerText = d.safety || ""; document.getElementById('view-birthday').innerText = d.birthday || getBirthdayText(viewDate);
                     for(let i=1; i<=6; i++) { 
                         document.getElementById(`view-tt-sub-${i}`).innerText = d[`ttSub${i}`] || ""; 
                         document.getElementById(`view-tt-obj-${i}`).innerText = d[`ttObj${i}`] || ""; 
@@ -1056,6 +1264,38 @@
                     if (nums && nums.length >= 2) parsedSeparated.push([parseInt(nums[0]), parseInt(nums[1])]);
                 });
             } catch(e) { console.error(e); }
+        }
+
+        // 🎂 생일 명단 파싱: "이름 0315" 또는 "이름 3-15" → birthdayMap["0315"] = ["이름"]
+        function parseBirthdays() {
+            birthdayMap = {};
+            if (!globalBirthdaysStr) return;
+            try {
+                globalBirthdaysStr.split('\n').forEach(line => {
+                    let t = line.trim(); if (!t) return;
+                    let mm = null, dd = null;
+                    let m = t.match(/(\d{1,2})\s*[-.\/월]\s*(\d{1,2})/);
+                    if (m) { mm = parseInt(m[1]); dd = parseInt(m[2]); t = t.replace(m[0], ' '); }
+                    else {
+                        let m2 = t.match(/(?:^|\s)(\d{4})(?:\s|$)/);
+                        if (m2) { mm = parseInt(m2[1].slice(0,2)); dd = parseInt(m2[1].slice(2)); t = t.replace(m2[1], ' '); }
+                    }
+                    if (mm === null || mm < 1 || mm > 12 || dd < 1 || dd > 31) return;
+                    let name = t.replace(/^\s*\d+\s*[.번)]?\s*/, '').replace(/\s+[남여]\s*$/, '').trim();
+                    if (!name) return;
+                    let key = String(mm).padStart(2,'0') + String(dd).padStart(2,'0');
+                    if (!birthdayMap[key]) birthdayMap[key] = [];
+                    birthdayMap[key].push(name);
+                });
+            } catch(e) { console.error("생일 파싱 오류", e); }
+        }
+
+        // 해당 날짜의 생일자 텍스트 반환 (없으면 빈 문자열)
+        function getBirthdayText(d) {
+            const key = String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+            const names = birthdayMap[key];
+            if (!names || names.length === 0) return "";
+            return "🎉 " + names.join(', ') + " 생일 축하해요!";
         }
 
         function getGroupNumForIdx(idx, cols) {
@@ -1508,6 +1748,7 @@
                 };
                 document.getElementById('set-student-roster').value = d.roster || "";
                 document.getElementById('set-separated-pairs').value = d.separatedPairs || "";
+                document.getElementById('set-birthdays').value = d.birthdays || "";
                 document.getElementById('set-duty-tasks').value = d.duty || "";
                 document.getElementById('set-mon-m').value = d.monM || ""; document.getElementById('set-mon-t').value = d.monT || "";
                 document.getElementById('set-tue-m').value = d.tueM || ""; document.getElementById('set-tue-t').value = d.tueT || "";
@@ -1524,8 +1765,9 @@
             const data = {
                 totalStudents: parseInt(document.getElementById('set-total-students').value) || 24,
                 className: document.getElementById('set-class-name').value || "",
-                roster: document.getElementById('set-student-roster').value || "", 
+                roster: document.getElementById('set-student-roster').value || "",
                 separatedPairs: document.getElementById('set-separated-pairs').value || "",
+                birthdays: document.getElementById('set-birthdays').value || "",
                 pastGroups: pastGroupsRecord, 
                 duty: document.getElementById('set-duty-tasks').value, monM: document.getElementById('set-mon-m').value, monT: document.getElementById('set-mon-t').value,
                 tueM: document.getElementById('set-tue-m').value, tueT: document.getElementById('set-tue-t').value, wedM: document.getElementById('set-wed-m').value, wedT: document.getElementById('set-wed-t').value,
@@ -1535,7 +1777,8 @@
             globalTotalStudents = data.totalStudents;
             globalStudentRosterStr = data.roster;
             globalSeparatedStr = data.separatedPairs;
-            parseStudentRoster(); parseSeparatedPairs();
+            globalBirthdaysStr = data.birthdays;
+            parseStudentRoster(); parseSeparatedPairs(); parseBirthdays();
             
             const hwTotalEl = document.getElementById('hw-total');
             if (hwTotalEl) hwTotalEl.value = globalTotalStudents;
