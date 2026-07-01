@@ -225,8 +225,7 @@
             #seating-tab, #seating-tab * { visibility: visible; }
             #seating-tab { position: absolute; left: 0; top: 0; width: 100%; }
             .sidebar, .floating-tools, .action-btn, .reset-btn, #auth-overlay { display: none !important; }
-            .seating-wrapper { box-shadow: none; border: none; margin: 0; padding: 0; background: white;}
-            .picker-box h2, .picker-box p, .picker-box div[style*="border-radius"] { display: none !important; } 
+            .seating-controls { display: none !important; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
 
@@ -560,27 +559,11 @@
             <!-- ✨ 4. 자리 배치 탭 -->
             <div id="seating-tab" class="content-section">
                 <div class="picker-box">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <h2 style="color:var(--dark-blue); margin:0;"><i class="fa-solid fa-chair"></i> 스마트 자리 배치 시스템</h2>
-                        <div>
-                            <button class="reset-btn" style="background:#607d8b; padding:8px 15px; margin-right: 5px;" onclick="toggleTeacherView()" id="view-toggle-btn"><i class="fa-solid fa-eye"></i> 학생 시점 (칠판 위)</button>
-                            <button class="action-btn" style="background:#0288d1; padding:8px 15px;" onclick="printSeating()"><i class="fa-solid fa-print"></i> 인쇄하기</button>
+                    <div class="seating-controls">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+                            <h2 style="color:var(--dark-blue); margin:0;"><i class="fa-solid fa-chair"></i> 자리 배치</h2>
+                            <button class="action-btn" style="background:#0288d1; padding:9px 16px;" onclick="window.print()"><i class="fa-solid fa-print"></i> 인쇄 / 화면 배포</button>
                         </div>
-                    </div>
-                    
-                    <div style="background:#e3f2fd; border-radius:12px; padding:20px; text-align:left; margin-bottom:20px; border:2px solid #90caf9;" id="seating-guide-box">
-                        <h3 style="margin-top:0; color:#1565c0;">💡 배치 순서 안내</h3>
-                        <p style="color:#546e7a; font-size:15px; margin-bottom:0; line-height: 1.6;">
-                            <b>1. 명단 세팅:</b> 좌측 톱니바퀴 [기초 세팅] 메뉴에서 학생 명단과 기피 학생 번호를 입력하세요.<br>
-                            <b>2. 자동 배치:</b> [스마트 대각선] 또는 [단순 무작위] 버튼을 누르면 조건에 맞게 자리가 깔립니다.<br>
-                            <b>3. 수동 교체:</b> 완성된 표에서 <b>학생 자리를 마우스로 꾹 누른 채 빈자리나 다른 학생 자리로 끌어당겨 놓으면(드래그 앤 드롭)</b> 즉시 자리가 바뀝니다.<br>
-                            <b>4. 자리 보관:</b> 맘에 드는 자리가 완성되면 [보관함에 저장]을 눌러 다음 번 배치 시 이전 짝꿍 회피 기록으로 사용하세요.
-                        </p>
-                    </div>
-                    
-                    <!-- 🧩 신규: 협동학습·대형 자리배치 -->
-                    <div style="background:#fff; border:2px solid #d1c4e9; border-radius:14px; padding:18px; margin-bottom:22px;">
-                        <h3 style="margin:0 0 12px 0; color:#6a4bb5;">🧩 대형 선택 자리배치 (신규)</h3>
                         <div style="display:flex; flex-wrap:wrap; gap:14px; align-items:center; margin-bottom:12px;">
                             <span><b>대형:</b>
                                 <select id="ns-formation" style="padding:8px; border-radius:8px; border:1px solid #ccc; font-weight:700; margin-left:4px;">
@@ -594,27 +577,23 @@
                             <label style="font-weight:600; color:#c62828;"><input type="checkbox" id="ns-student-view" onchange="nsGenerate()"> 학생 배포용(이름만)</label>
                             <span>모둠/분단 수 <input type="number" id="ns-groups" value="6" min="1" max="12" style="width:52px; padding:6px; border-radius:6px; border:1px solid #ccc; text-align:center;"></span>
                         </div>
-                        <p style="font-size:13px; color:#666; margin:0 0 6px 0; line-height:1.5;">한 줄에 <b>이름 [성별(남/여)] 점수 점수…</b> — 점수가 여러 개면 합산해 등급을 나눠요(협동학습용). 성별 생략 시 이름으로 추정. (자유/시험/분단 대형은 점수 없어도 됨)</p>
-                        <textarea id="ns-roster" style="width:100%; height:110px; padding:10px; border-radius:8px; border:1px solid #ccc; line-height:1.5;" placeholder="김민준 남 20 18 19&#10;이서연 여 17 20 18&#10;박도윤 18 17 19"></textarea>
-                        <div style="display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 4px 0;">
-                            <button class="action-btn" style="background:#6a4bb5; padding:11px 20px;" onclick="nsGenerate()">🪑 자리 만들기</button>
-                            <button class="reset-btn" style="padding:11px 18px;" onclick="nsGenerate()">🎲 다시 섞기</button>
+                        <div style="display:grid; grid-template-columns:2fr 1fr; gap:14px;" id="ns-input-grid">
+                            <div>
+                                <p style="font-size:13px; color:#666; margin:0 0 6px 0; line-height:1.5;">👥 <b>명단</b> — 한 줄에 <b>이름 [성별(남/여)] 점수 점수…</b> (점수 여러 개면 합산해 등급 산출·협동학습용). 성별 생략 시 이름으로 추정.</p>
+                                <textarea id="ns-roster" style="width:100%; height:130px; padding:10px; border-radius:8px; border:1px solid #ccc; line-height:1.5;" placeholder="김민준 남 20 18 19&#10;이서연 여 17 20 18&#10;박도윤 18 17 19"></textarea>
+                            </div>
+                            <div>
+                                <p style="font-size:13px; color:#c62828; margin:0 0 6px 0; line-height:1.5;">🚫 <b>꼭 떨어뜨릴 학생</b> — 한 줄에 두 명(이름). 절대 같은 모둠/짝이 안 되게.</p>
+                                <textarea id="ns-avoid" style="width:100%; height:130px; padding:10px; border-radius:8px; border:1px solid #ef9a9a; line-height:1.5;" placeholder="김민준 이서연&#10;박도윤 최지우"></textarea>
+                            </div>
                         </div>
-                        <div id="ns-board" style="display:none; background:#455a64; color:#fff; text-align:center; padding:8px; border-radius:8px; font-weight:800; letter-spacing:4px; margin:12px auto; max-width:420px;">칠 판</div>
-                        <div id="ns-result"></div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap; margin:14px 0 4px 0;">
+                            <button class="action-btn" style="background:#6a4bb5; padding:12px 24px; font-size:16px;" onclick="nsGenerate()">🪑 자리 만들기</button>
+                            <button class="reset-btn" style="padding:12px 20px;" onclick="nsGenerate()">🎲 다시 섞기</button>
+                        </div>
                     </div>
-
-                    <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px; align-items:center; flex-wrap: wrap;" id="seating-action-btns">
-                        <button class="action-btn" style="background:#0288d1; padding:12px 20px; font-size:15px;" onclick="generateSmartSeating()"><i class="fa-solid fa-venus-mars"></i> 스마트 2x2 대각선</button>
-                        <button class="action-btn" style="background:#8e44ad; padding:12px 20px; font-size:15px;" onclick="generateRandomSeating()"><i class="fa-solid fa-dice"></i> 단순 무작위 배치</button>
-                        <button class="reset-btn" style="background:#f57c00; padding:12px 20px; font-size:15px; color:white;" onclick="saveToSeatingHistory()"><i class="fa-solid fa-box-archive"></i> 보관함에 저장 (기록)</button>
-                        <button class="reset-btn" style="background:#4caf50; padding:12px 20px; font-size:15px; color:white;" onclick="openSeatingHistoryModal()"><i class="fa-solid fa-folder-open"></i> 보관함 열기</button>
-                    </div>
-
-                    <div class="seating-wrapper" id="seating-wrapper">
-                        <div id="seating-board-ui" style="background:#546e7a; color:white; padding:10px; border-radius:10px; width:60%; text-align: center; font-weight:800; font-size:20px; letter-spacing:5px; order: 1;">칠 판</div>
-                        <div id="seating-grid-container" class="seating-grid" style="grid-template-columns: repeat(6, 1fr); column-gap: 15px; order: 2; width: 100%;"></div>
-                    </div>
+                    <div id="ns-board" style="display:none; background:#455a64; color:#fff; text-align:center; padding:10px; border-radius:8px; font-weight:800; font-size:20px; letter-spacing:6px; margin:16px auto; max-width:520px;">칠 판</div>
+                    <div id="ns-result"></div>
                 </div>
             </div>
 
@@ -1685,7 +1664,27 @@
             }
             return pairs;
         }
-        function nsRenderCooperative(groupCount, studentView, boyGirl) {
+        // 🚫 꼭 떨어뜨릴 학생(기피) 관련
+        function nsParseAvoid() {
+            const el = document.getElementById('ns-avoid');
+            const pairs = [];
+            if (el && el.value.trim()) el.value.trim().split('\n').forEach(line => {
+                const names = line.trim().split(/\s+/).filter(Boolean);
+                if (names.length >= 2) pairs.push([names[0], names[1]]);
+            });
+            return pairs;
+        }
+        function nsUnitHasForbidden(names, avoid) {
+            return avoid.some(([a, b]) => names.indexOf(a) !== -1 && names.indexOf(b) !== -1);
+        }
+        function nsMakePairsSafe(list, boyGirl, avoid) {
+            let pairs = nsMakePairs(list, boyGirl);
+            for (let k = 0; k < 80 && avoid.length && pairs.some(p => nsUnitHasForbidden(p.map(s => s.name), avoid)); k++) {
+                pairs = nsMakePairs(list, boyGirl);
+            }
+            return pairs;
+        }
+        function nsBuildCoopGroups(groupCount, boyGirl) {
             const arr = nsAssignTiers();
             const groups = Array.from({ length: groupCount }, () => []);
             [4, 3, 2, 1].forEach(tv => {
@@ -1702,6 +1701,13 @@
                     best.push(s);
                 });
             });
+            return groups;
+        }
+        function nsRenderCooperative(groupCount, studentView, boyGirl, avoid) {
+            let groups = nsBuildCoopGroups(groupCount, boyGirl);
+            for (let k = 0; k < 80 && avoid.length && groups.some(g => nsUnitHasForbidden(g.map(m => m.name), avoid)); k++) {
+                groups = nsBuildCoopGroups(groupCount, boyGirl);
+            }
             let html = '<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:16px;">';
             groups.forEach((mem, gi) => {
                 const males = mem.filter(m => m.gender === '남');
@@ -1724,8 +1730,8 @@
             });
             return html + '</div>';
         }
-        function nsRenderColumns(groupCount, studentView, boyGirl) {
-            const pairs = nsMakePairs(nsStudents, boyGirl);
+        function nsRenderColumns(groupCount, studentView, boyGirl, avoid) {
+            const pairs = nsMakePairsSafe(nsStudents, boyGirl, avoid);
             const cols = Array.from({ length: groupCount }, () => []);
             pairs.forEach((p, i) => cols[i % groupCount].push(p));
             let html = `<div style="display:grid; grid-template-columns:repeat(${groupCount},1fr); gap:16px; align-items:start;">`;
@@ -1751,11 +1757,12 @@
             const studentView = document.getElementById('ns-student-view').checked;
             const boyGirl = document.getElementById('ns-boygirl').checked;
             const groups = Math.max(1, parseInt(document.getElementById('ns-groups').value) || 6);
+            const avoid = nsParseAvoid();
             let html = '';
-            if (formation === 'cooperative') html = nsRenderCooperative(groups, studentView, boyGirl);
+            if (formation === 'cooperative') html = nsRenderCooperative(groups, studentView, boyGirl, avoid);
             else if (formation === 'exam') html = nsRenderExam(groups, studentView);
-            else if (formation === 'columns') html = nsRenderColumns(groups, studentView, boyGirl);
-            else html = nsRenderDesks(nsMakePairs(nsStudents, boyGirl), studentView, 3);
+            else if (formation === 'columns') html = nsRenderColumns(groups, studentView, boyGirl, avoid);
+            else html = nsRenderDesks(nsMakePairsSafe(nsStudents, boyGirl, avoid), studentView, 3);
             document.getElementById('ns-board').style.display = 'block';
             document.getElementById('ns-result').innerHTML = html;
         }
