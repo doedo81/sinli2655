@@ -1735,9 +1735,9 @@
             } else if (formation === 'columns') {
                 const pairs = nsMakePairsSafe(nsStudents, boyGirl, avoid);
                 nsArr = { formation: formation, list: [].concat.apply([], pairs), cols: groupCount };
-            } else {
-                const pairs = nsMakePairsSafe(nsStudents, boyGirl, avoid);
-                nsArr = { formation: formation, list: [].concat.apply([], pairs), cols: 3 };
+            } else { // free — 자유 캔버스(네모칸 자유 이동 + 이름 수정)
+                const cols = Math.min(6, Math.max(1, nsStudents.length));
+                nsArr = { formation: formation, seats: nsStudents.map((s, i) => ({ name: s.name, x: 12 + (i % cols) * 150, y: 12 + Math.floor(i / cols) * 92 })) };
             }
             document.getElementById('ns-board').style.display = 'block';
             nsRerender();
@@ -1749,8 +1749,11 @@
             if (nsArr.formation === 'cooperative') html = nsHtmlCoop(nsArr.groups, sv);
             else if (nsArr.formation === 'exam') html = nsHtmlExam(nsArr.list, sv, nsArr.cols);
             else if (nsArr.formation === 'columns') html = nsHtmlColumns(nsArr.list, sv, nsArr.cols);
-            else html = nsHtmlDesks(nsArr.list, sv, nsArr.cols);
-            document.getElementById('ns-result').innerHTML = '<p style="font-size:12px; color:#999; margin:0 0 10px 0;" class="seating-controls">✋ 학생을 드래그해서 서로 자리를 바꿀 수 있어요.</p>' + html;
+            else html = nsHtmlFree(nsArr.seats);
+            const hint = nsArr.formation === 'free'
+                ? '✋ 네모칸의 “⠿ 이동”을 잡고 원하는 곳으로 옮기고, 이름을 눌러 바로 수정하세요.'
+                : '✋ 학생을 드래그해서 서로 자리를 바꿀 수 있어요.';
+            document.getElementById('ns-result').innerHTML = `<p style="font-size:12px; color:#999; margin:0 0 10px 0;" class="seating-controls">${hint}</p>` + html;
         }
         function nsHtmlCoop(groups, sv) {
             let html = '<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:16px;">';
@@ -1784,6 +1787,54 @@
             list.forEach(s => { html += nsChip(s, sv); });
             return html + '</div>';
         }
+        // 자유대형: 네모칸을 자유 위치로 옮기고 이름 수정
+        function nsHtmlFree(seats) {
+            let html = '<div id="ns-free-canvas" style="position:relative; width:100%; min-height:540px; background:#f4f7fb; border:2px dashed #cfd8dc; border-radius:12px; overflow:hidden;">';
+            seats.forEach((seat, i) => {
+                html += `<div class="ns-free-seat" data-idx="${i}" style="position:absolute; left:${seat.x}px; top:${seat.y}px; width:128px; background:#fff; border:1px solid #b0bec5; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+                    <div class="ns-free-grip" style="cursor:move; background:#eceff1; color:#78909c; font-size:11px; padding:3px 0; text-align:center; border-radius:9px 9px 0 0; user-select:none;">⠿ 이동</div>
+                    <div contenteditable="true" spellcheck="false" class="ns-free-name" data-idx="${i}" style="outline:none; font-weight:700; font-size:16px; text-align:center; padding:10px 6px; min-height:22px; color:#37474f;">${escapeHtml(seat.name)}</div>
+                </div>`;
+            });
+            return html + '</div>';
+        }
+        // 자유대형 네모칸 이동(마우스)
+        let nsFreeDrag = null;
+        document.addEventListener('mousedown', e => {
+            const grip = e.target.closest ? e.target.closest('.ns-free-grip') : null;
+            if (!grip) return;
+            const seat = grip.closest('.ns-free-seat');
+            const canvas = document.getElementById('ns-free-canvas');
+            if (!seat || !canvas) return;
+            const r = seat.getBoundingClientRect();
+            nsFreeDrag = { idx: parseInt(seat.dataset.idx), seat, canvas, ox: e.clientX - r.left, oy: e.clientY - r.top };
+            e.preventDefault();
+        });
+        document.addEventListener('mousemove', e => {
+            if (!nsFreeDrag) return;
+            const c = nsFreeDrag.canvas.getBoundingClientRect();
+            let x = e.clientX - c.left - nsFreeDrag.ox;
+            let y = e.clientY - c.top - nsFreeDrag.oy;
+            x = Math.max(0, Math.min(x, c.width - nsFreeDrag.seat.offsetWidth));
+            y = Math.max(0, Math.min(y, c.height - nsFreeDrag.seat.offsetHeight));
+            nsFreeDrag.seat.style.left = x + 'px';
+            nsFreeDrag.seat.style.top = y + 'px';
+        });
+        document.addEventListener('mouseup', () => {
+            if (!nsFreeDrag) return;
+            if (nsArr && nsArr.formation === 'free' && nsArr.seats[nsFreeDrag.idx]) {
+                nsArr.seats[nsFreeDrag.idx].x = parseFloat(nsFreeDrag.seat.style.left) || 0;
+                nsArr.seats[nsFreeDrag.idx].y = parseFloat(nsFreeDrag.seat.style.top) || 0;
+            }
+            nsFreeDrag = null;
+        });
+        // 자유대형 이름 수정 저장
+        document.addEventListener('input', e => {
+            const n = e.target.closest ? e.target.closest('.ns-free-name') : null;
+            if (n && nsArr && nsArr.formation === 'free' && nsArr.seats[parseInt(n.dataset.idx)]) {
+                nsArr.seats[parseInt(n.dataset.idx)].name = n.innerText;
+            }
+        });
         // 드래그로 두 학생 자리 맞교환
         function nsSwapById(idA, idB) {
             if (!nsArr) return;
