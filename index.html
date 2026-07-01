@@ -566,7 +566,7 @@
                         </div>
                         <div style="display:flex; flex-wrap:wrap; gap:14px; align-items:center; margin-bottom:12px;">
                             <span><b>대형:</b>
-                                <select id="ns-formation" style="padding:8px; border-radius:8px; border:1px solid #ccc; font-weight:700; margin-left:4px;">
+                                <select id="ns-formation" onchange="nsFormationChanged()" style="padding:8px; border-radius:8px; border:1px solid #ccc; font-weight:700; margin-left:4px;">
                                     <option value="cooperative">협동학습 (모둠 4인·등급)</option>
                                     <option value="free">자유대형 (랜덤 짝)</option>
                                     <option value="exam">시험대형 (한 칸씩 띄움)</option>
@@ -1706,6 +1706,12 @@
         // 배치 결과를 상태로 유지(드래그로 자리 교체하려면 필요)
         let nsArr = null;
         function nsChunk2(list) { const p = []; for (let i = 0; i < list.length; i += 2) p.push(list.slice(i, i + 2)); return p; }
+        // 대형을 바꾸면 분단/모둠 수 기본값을 알맞게 (분단=3열, 모둠·시험=6)
+        function nsFormationChanged() {
+            const f = document.getElementById('ns-formation').value;
+            document.getElementById('ns-groups').value = (f === 'columns') ? 3 : 6;
+            if (nsArr && document.getElementById('ns-roster').value.trim()) nsGenerate();
+        }
         function nsGenerate() {
             nsParseRoster();
             if (nsStudents.length === 0) { alert('학생 명단(이름/점수)을 입력해 주세요.'); return; }
