@@ -1338,7 +1338,7 @@
             const el = document.getElementById('day-pop-list');
             const evs = dayPopDate ? getCalendarEventsFor(dayPopDate) : [];
             if (evs.length === 0) { el.innerHTML = '<div style="color:#aaa; font-size:13px; padding:4px 0;">등록된 일정이 없어요. 아래에 입력하세요.</div>'; return; }
-            el.innerHTML = evs.map(e => `<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border:1px solid #eee; border-radius:7px; margin-bottom:5px;"><span style="font-weight:700; font-size:13px;">${EVENT_ICON[e.type] || ''} ${escapeHtml(e.text)}</span><span onclick="deleteCalendarEvent('${dayPopDate}','${e.id}')" style="cursor:pointer; color:#e57373; font-size:12px; font-weight:700; margin-left:8px;">삭제</span></div>`).join('');
+            el.innerHTML = evs.map(e => `<div style="padding:6px 8px; border:1px solid #eee; border-radius:7px; margin-bottom:5px;"><div style="display:flex; justify-content:space-between; align-items:center;"><span style="font-weight:700; font-size:13px;">${EVENT_ICON[e.type] || ''} ${escapeHtml(e.text)}</span><span onclick="deleteCalendarEvent('${dayPopDate}','${e.id}')" style="cursor:pointer; color:#e57373; font-size:12px; font-weight:700; margin-left:8px;">삭제</span></div>${e.detail ? `<div style="font-size:12px; color:#607d8b; margin-top:3px; line-height:1.4;">${escapeHtml(e.detail)}</div>` : ''}</div>`).join('');
         }
         function addDayPopEvent() {
             const inp = document.getElementById('day-pop-text');
@@ -1479,7 +1479,7 @@
 
         function getCalendarEventsFor(dateKey) {
             const obj = allCalendarEvents[dateKey] || {};
-            return Object.keys(obj).map(id => ({ id, type: obj[id].type, text: obj[id].text }));
+            return Object.keys(obj).map(id => ({ id, type: obj[id].type, text: obj[id].text, detail: obj[id].detail || '' }));
         }
 
         const EVENT_ICON = { birthday: '🎂', event: '🎈', work: '📌' };
@@ -1491,7 +1491,7 @@
             const evs = getCalendarEventsFor(getFormattedDate(d)).filter(e => e.type === 'event' || e.type === 'work');
             if (evs.length === 0) { el.style.display = 'none'; el.innerHTML = ''; return; }
             el.style.display = 'block';
-            el.innerHTML = evs.map(e => `<div>${EVENT_ICON[e.type]} ${escapeHtml(e.text)}</div>`).join('');
+            el.innerHTML = evs.map(e => `<div>${EVENT_ICON[e.type]} ${escapeHtml(e.text)}${e.detail ? ` <span style="font-weight:400; color:#607d8b;">— ${escapeHtml(e.detail)}</span>` : ''}</div>`).join('');
         }
 
         // 캘린더 일정을 현재 보고 있는 날짜의 칠판에 반영
@@ -1525,7 +1525,7 @@
 
             const today = getFormattedDate(new Date());
             const year = new Date().getFullYear();
-            const prompt = `오늘은 ${today}입니다. 아래는 초등학교 교사가 받은 메신저/공지 글입니다. 일정을 모두 찾아 JSON으로만 반환하세요.\n반환 형식: {"events":[{"date":"YYYY-MM-DD","type":"birthday|event|work","text":"25자 이내 한국어 요약"}]}\n규칙: date는 YYYY-MM-DD(상대표현은 오늘 기준 계산, 연도 없으면 ${year}년). type은 생일이면 birthday, 학생 대상 행사·수업·체험이면 event, 교사 업무·제출·회의면 work. 일정이 없으면 events를 빈 배열로. 설명 없이 JSON만 출력.\n\n[메신저 내용]\n${text}`;
+            const prompt = `오늘은 ${today}입니다. 아래는 초등학교 교사가 받은 메신저/공지 글입니다. 일정을 모두 찾아 JSON으로만 반환하세요.\n반환 형식: {"events":[{"date":"YYYY-MM-DD","type":"birthday|event|work","text":"짧은 제목","detail":"세부내용"}]}\n규칙:\n- date는 YYYY-MM-DD(상대표현은 오늘 기준 계산, 연도 없으면 ${year}년).\n- type은 생일이면 birthday, 학생 대상 행사·수업·체험이면 event, 교사 업무·제출·회의면 work.\n- text는 달력 칸에 보일 짧은 제목(12자 이내).\n- detail은 시간·장소·대상·준비물 등 원문의 구체적 정보를 간결히 담기(없으면 빈 문자열 ""). 세부를 임의로 버리지 말 것.\n- 일정이 없으면 events를 빈 배열로. 설명 없이 JSON만 출력.\n\n[메신저 내용]\n${text}`;
 
             const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(apiKey);
             const reqBody = JSON.stringify({
@@ -1559,10 +1559,10 @@
                 const events = (parsed.events || []).filter(e => e.date && e.type && e.text);
                 if (events.length === 0) { alert('일정을 찾지 못했어요. 내용을 확인해 주세요.'); return; }
 
-                const preview = events.map(e => `· ${e.date} ${EVENT_TYPE_LABEL[e.type] || ''} ${e.text}`).join('\n');
+                const preview = events.map(e => `· ${e.date} ${EVENT_TYPE_LABEL[e.type] || ''} ${e.text}${e.detail ? ` (${e.detail})` : ''}`).join('\n');
                 if (!confirm(`아래 ${events.length}개 일정을 캘린더에 추가할까요?\n\n${preview}`)) return;
 
-                events.forEach(e => calendarEventsRef.child(e.date).push({ type: e.type, text: e.text }));
+                events.forEach(e => calendarEventsRef.child(e.date).push({ type: e.type, text: e.text, detail: e.detail || '' }));
                 document.getElementById('ai-paste-input').value = '';
                 alert(`✅ ${events.length}개 일정을 추가했어요!`);
             } catch (err) {
