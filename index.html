@@ -110,20 +110,22 @@
         .cal-date.has-event::before { content: '•'; position: absolute; top: 0; right: 5px; font-size: 16px; color: #5b97d1; line-height: 1; }
         /* 🗓️ 캘린더 탭: 노션/데스크톱 달력처럼 칸 안에 일정 표시 */
         .cal-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); border-top: 1px solid #e6eef7; border-left: 1px solid #e6eef7; border-radius: 10px; overflow: hidden; }
-        .cal-mh { text-align: center; font-weight: 700; padding: 9px 0; font-size: 14px; color: #78909c; background: #f5f9fd; border-right: 1px solid #e6eef7; border-bottom: 1px solid #e6eef7; }
-        .cal-cell { min-height: 96px; padding: 5px 6px; cursor: pointer; text-align: left; background: #fff; border-right: 1px solid #e6eef7; border-bottom: 1px solid #e6eef7; transition: background 0.15s; }
+        .cal-mh { text-align: center; font-weight: 700; padding: 11px 0; font-size: 15px; color: #78909c; background: #f5f9fd; border-right: 1px solid #e6eef7; border-bottom: 1px solid #e6eef7; }
+        .cal-cell { position: relative; min-height: clamp(105px, 14vh, 165px); padding: 6px 7px; cursor: pointer; text-align: left; background: #fff; border-right: 1px solid #e6eef7; border-bottom: 1px solid #e6eef7; transition: background 0.15s; overflow: hidden; }
         .cal-cell:hover { background: #f3f8fe; }
         .cal-cell.empty { background: #fafbfc; cursor: default; }
         .cal-cell.today { background: #eaf3fb; }
-        .cal-cell .dnum { font-size: 14px; font-weight: 700; color: #51618a; }
+        .cal-cell .dnum { font-size: 15px; font-weight: 700; color: #51618a; }
         .cal-cell.sun .dnum { color: #d96a6a; }
         .cal-cell.sat .dnum { color: #4a86c5; }
-        .cal-cell.today .dnum { background: var(--accent-blue); color: #fff; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; }
-        .cal-chip { font-size: 11px; line-height: 1.35; padding: 2px 5px; border-radius: 5px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; }
+        .cal-cell.today .dnum { background: var(--accent-blue); color: #fff; border-radius: 50%; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; }
+        .cal-chip { font-size: 12.5px; line-height: 1.4; padding: 3px 7px; border-radius: 6px; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; }
         .chip-birthday { background: #fde7f0; color: #c2185b; }
         .chip-event { background: #e3f0fb; color: #1565c0; }
         .chip-work { background: #fdf0e0; color: #b5762f; }
-        .cal-more { font-size: 10px; color: #9aa3ad; margin-top: 2px; padding-left: 2px; }
+        .cal-more { font-size: 11px; color: #9aa3ad; margin-top: 3px; padding-left: 2px; }
+        .cell-add { position: absolute; bottom: 5px; right: 8px; font-size: 12px; color: var(--accent-blue); font-weight: 700; opacity: 0; transition: opacity 0.15s; pointer-events: none; }
+        .cal-cell:hover .cell-add { opacity: 1; }
         .cal-date.selected { background: var(--accent-blue) !important; color: white !important; }
 
         .full-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--main-sky); display:flex; justify-content:center; align-items:center; z-index:9999; flex-direction: column;}
@@ -447,7 +449,7 @@
 
             <!-- 🗓️ 캘린더 탭 -->
             <div id="calendar-tab" class="content-section">
-                <div class="picker-box" style="max-width:760px; margin:0 auto;">
+                <div class="picker-box" style="width:100%; margin:0;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:10px;">
                         <h2 style="color:var(--dark-blue); margin:0;"><i class="fa-solid fa-calendar-days"></i> 우리 반 일정 캘린더</h2>
                         <button class="action-btn" style="background:#7e57c2; padding:10px 16px;" onclick="openEventModal()">🤖 메신저로 일정 추가</button>
@@ -1300,11 +1302,11 @@
                 const evObj = allCalendarEvents[k] || {};
                 const evs = Object.keys(evObj).map(id => evObj[id]);
                 let chips = '';
-                evs.slice(0, 3).forEach(e => {
+                evs.slice(0, 4).forEach(e => {
                     chips += `<div class="cal-chip chip-${e.type}">${EVENT_ICON[e.type] || ''} ${escapeHtml(e.text)}</div>`;
                 });
-                if (evs.length > 3) chips += `<div class="cal-more">+${evs.length - 3}개 더</div>`;
-                html += `<div class="cal-cell ${cls}" onclick="openEventModalForDate('${k}')"><span class="dnum">${i}</span>${chips}</div>`;
+                if (evs.length > 4) chips += `<div class="cal-more">+${evs.length - 4}개 더</div>`;
+                html += `<div class="cal-cell ${cls}" onclick="openEventModalForDate('${k}')"><span class="dnum">${i}</span>${chips}<span class="cell-add">＋ 추가</span></div>`;
             }
             con.innerHTML = html;
         }
