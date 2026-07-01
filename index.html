@@ -570,11 +570,11 @@
                                     <option value="cooperative">협동학습 (모둠 4인·등급)</option>
                                     <option value="free">자유대형 (랜덤 짝)</option>
                                     <option value="exam">시험대형 (한 칸씩 띄움)</option>
-                                    <option value="columns">2열 분단</option>
+                                    <option value="columns">분단 대형 (짝꿍 · 분단 수 지정)</option>
                                 </select>
                             </span>
                             <label style="font-weight:600;"><input type="checkbox" id="ns-boygirl" checked> 짝은 되도록 남녀</label>
-                            <label style="font-weight:600; color:#c62828;"><input type="checkbox" id="ns-student-view" onchange="nsGenerate()"> 학생 배포용(이름만)</label>
+                            <label style="font-weight:600; color:#c62828;"><input type="checkbox" id="ns-student-view" onchange="nsRerender()"> 학생 배포용(이름만)</label>
                             <span>모둠/분단 수 <input type="number" id="ns-groups" value="6" min="1" max="12" style="width:52px; padding:6px; border-radius:6px; border:1px solid #ccc; text-align:center;"></span>
                         </div>
                         <div style="display:grid; grid-template-columns:2fr 1fr; gap:14px;" id="ns-input-grid">
@@ -1632,7 +1632,7 @@
                     else if (!isNaN(parseFloat(tok))) nums.push(parseFloat(tok));
                 });
                 if (!gender) gender = nsEstimateGender(name);
-                nsStudents.push({ name, gender, score: nums.reduce((x, y) => x + y, 0), hasScore: nums.length > 0 });
+                nsStudents.push({ id: 'ns' + nsStudents.length, name, gender, score: nums.reduce((x, y) => x + y, 0), hasScore: nums.length > 0 });
             });
         }
         function nsAssignTiers() {
@@ -1644,11 +1644,11 @@
         }
         const NS_TIER = { 4: '최상위', 3: '중상', 2: '중하', 1: '하' };
         function nsChip(s, studentView) {
-            if (!s) return '<div style="background:#eee; border-radius:8px; padding:10px; text-align:center; color:#aaa; font-weight:700;">공석</div>';
+            if (!s) return '<div style="background:#eee; border-radius:8px; padding:12px; text-align:center; color:#aaa; font-weight:700;">공석</div>';
             const bg = s.gender === '남' ? '#e3f2fd' : '#fde7f0';
             const gc = s.gender === '남' ? '#1565c0' : '#c2185b';
             const meta = studentView ? '' : `<div style="font-size:11px; color:${gc}; font-weight:600; margin-top:2px;">${s.gender}${s.hasScore ? ` · ${NS_TIER[s.tier] || ''} · ${s.score}점` : ''}</div>`;
-            return `<div style="background:${bg}; border-radius:8px; padding:9px 6px; text-align:center; font-weight:700; color:#37474f;"><div style="font-size:15px;">${escapeHtml(s.name)}</div>${meta}</div>`;
+            return `<div class="ns-chip" draggable="true" data-id="${s.id}" style="background:${bg}; border-radius:8px; padding:10px 6px; text-align:center; font-weight:700; color:#37474f; cursor:grab; user-select:none;"><div style="font-size:15px;">${escapeHtml(s.name)}</div>${meta}</div>`;
         }
         function nsMakePairs(list, boyGirl) {
             const arr = list.slice(); nsShuffle(arr);
@@ -1703,69 +1703,93 @@
             });
             return groups;
         }
-        function nsRenderCooperative(groupCount, studentView, boyGirl, avoid) {
-            let groups = nsBuildCoopGroups(groupCount, boyGirl);
-            for (let k = 0; k < 80 && avoid.length && groups.some(g => nsUnitHasForbidden(g.map(m => m.name), avoid)); k++) {
-                groups = nsBuildCoopGroups(groupCount, boyGirl);
+        // 배치 결과를 상태로 유지(드래그로 자리 교체하려면 필요)
+        let nsArr = null;
+        function nsChunk2(list) { const p = []; for (let i = 0; i < list.length; i += 2) p.push(list.slice(i, i + 2)); return p; }
+        function nsGenerate() {
+            nsParseRoster();
+            if (nsStudents.length === 0) { alert('학생 명단(이름/점수)을 입력해 주세요.'); return; }
+            const formation = document.getElementById('ns-formation').value;
+            const boyGirl = document.getElementById('ns-boygirl').checked;
+            const groupCount = Math.max(1, parseInt(document.getElementById('ns-groups').value) || 6);
+            const avoid = nsParseAvoid();
+            if (formation === 'cooperative') {
+                let groups = nsBuildCoopGroups(groupCount, boyGirl);
+                for (let k = 0; k < 80 && avoid.length && groups.some(g => nsUnitHasForbidden(g.map(m => m.name), avoid)); k++) groups = nsBuildCoopGroups(groupCount, boyGirl);
+                const seatGroups = groups.map(mem => {
+                    const males = mem.filter(m => m.gender === '남'), females = mem.filter(m => m.gender === '여');
+                    let seats;
+                    if (boyGirl && males.length === 2 && females.length === 2) seats = [males[0], females[0], females[1], males[1]];
+                    else { seats = nsShuffle(mem.slice()); while (seats.length < 4) seats.push(null); }
+                    return seats;
+                });
+                nsArr = { formation: formation, groups: seatGroups };
+            } else if (formation === 'exam') {
+                nsArr = { formation: formation, list: nsShuffle(nsStudents.slice()), cols: groupCount };
+            } else if (formation === 'columns') {
+                const pairs = nsMakePairsSafe(nsStudents, boyGirl, avoid);
+                nsArr = { formation: formation, list: [].concat.apply([], pairs), cols: groupCount };
+            } else {
+                const pairs = nsMakePairsSafe(nsStudents, boyGirl, avoid);
+                nsArr = { formation: formation, list: [].concat.apply([], pairs), cols: 3 };
             }
+            document.getElementById('ns-board').style.display = 'block';
+            nsRerender();
+        }
+        function nsRerender() {
+            if (!nsArr) return;
+            const sv = document.getElementById('ns-student-view').checked;
+            let html;
+            if (nsArr.formation === 'cooperative') html = nsHtmlCoop(nsArr.groups, sv);
+            else if (nsArr.formation === 'exam') html = nsHtmlExam(nsArr.list, sv, nsArr.cols);
+            else if (nsArr.formation === 'columns') html = nsHtmlColumns(nsArr.list, sv, nsArr.cols);
+            else html = nsHtmlDesks(nsArr.list, sv, nsArr.cols);
+            document.getElementById('ns-result').innerHTML = '<p style="font-size:12px; color:#999; margin:0 0 10px 0;" class="seating-controls">✋ 학생을 드래그해서 서로 자리를 바꿀 수 있어요.</p>' + html;
+        }
+        function nsHtmlCoop(groups, sv) {
             let html = '<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:16px;">';
-            groups.forEach((mem, gi) => {
-                const males = mem.filter(m => m.gender === '남');
-                const females = mem.filter(m => m.gender === '여');
-                let seats;
-                if (boyGirl && males.length === 2 && females.length === 2) {
-                    seats = [males[0], females[0], females[1], males[1]]; // 각 줄이 남-여 짝 (대각선은 같은 성 허용)
-                } else {
-                    seats = nsShuffle(mem.slice());
-                    while (seats.length < 4) seats.push(null);
-                }
-                html += `<div style="background:#f7f5fb; border:1px solid #e0d6f5; border-radius:12px; padding:12px;"><div style="font-weight:800; color:#6a4bb5; margin-bottom:8px;">${gi + 1}모둠</div><div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">${seats.map(s => nsChip(s, studentView)).join('')}</div></div>`;
+            groups.forEach((seats, gi) => {
+                html += `<div style="background:#f7f5fb; border:1px solid #e0d6f5; border-radius:12px; padding:12px;"><div style="font-weight:800; color:#6a4bb5; margin-bottom:8px;">${gi + 1}모둠</div><div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">${seats.map(s => nsChip(s, sv)).join('')}</div></div>`;
             });
             return html + '</div>';
         }
-        function nsRenderDesks(pairs, studentView, cols) {
+        function nsHtmlDesks(list, sv, cols) {
             let html = `<div style="display:grid; grid-template-columns:repeat(${cols},1fr); gap:14px;">`;
-            pairs.forEach(pair => {
-                html += `<div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; background:#eef1f6; border-radius:10px; padding:6px;">${pair.map(s => nsChip(s, studentView)).join('')}${pair.length === 1 ? '<div></div>' : ''}</div>`;
+            nsChunk2(list).forEach(pair => {
+                html += `<div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; background:#eef1f6; border-radius:10px; padding:6px;">${pair.map(s => nsChip(s, sv)).join('')}${pair.length === 1 ? '<div></div>' : ''}</div>`;
             });
             return html + '</div>';
         }
-        function nsRenderColumns(groupCount, studentView, boyGirl, avoid) {
-            const pairs = nsMakePairsSafe(nsStudents, boyGirl, avoid);
-            const cols = Array.from({ length: groupCount }, () => []);
-            pairs.forEach((p, i) => cols[i % groupCount].push(p));
-            let html = `<div style="display:grid; grid-template-columns:repeat(${groupCount},1fr); gap:16px; align-items:start;">`;
+        function nsHtmlColumns(list, sv, colCount) {
+            const cols = Array.from({ length: colCount }, () => []);
+            nsChunk2(list).forEach((p, i) => cols[i % colCount].push(p));
+            let html = `<div style="display:grid; grid-template-columns:repeat(${colCount},1fr); gap:16px; align-items:start;">`;
             cols.forEach((colPairs, ci) => {
                 html += `<div><div style="text-align:center; font-weight:700; color:#607d8b; margin-bottom:6px;">${ci + 1}분단</div>`;
                 colPairs.forEach(pair => {
-                    html += `<div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; background:#eef1f6; border-radius:9px; padding:5px; margin-bottom:8px;">${pair.map(s => nsChip(s, studentView)).join('')}${pair.length === 1 ? '<div></div>' : ''}</div>`;
+                    html += `<div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; background:#eef1f6; border-radius:9px; padding:5px; margin-bottom:8px;">${pair.map(s => nsChip(s, sv)).join('')}${pair.length === 1 ? '<div></div>' : ''}</div>`;
                 });
                 html += '</div>';
             });
             return html + '</div>';
         }
-        function nsRenderExam(groupCount, studentView) {
-            const arr = nsShuffle(nsStudents.slice());
-            let html = `<div style="display:grid; grid-template-columns:repeat(${groupCount},1fr); gap:22px;">`;
-            arr.forEach(s => { html += nsChip(s, studentView); });
+        function nsHtmlExam(list, sv, cols) {
+            let html = `<div style="display:grid; grid-template-columns:repeat(${cols},1fr); gap:22px;">`;
+            list.forEach(s => { html += nsChip(s, sv); });
             return html + '</div>';
         }
-        function nsGenerate() {
-            nsParseRoster();
-            if (nsStudents.length === 0) { alert('학생 명단(이름/점수)을 입력해 주세요.'); return; }
-            const formation = document.getElementById('ns-formation').value;
-            const studentView = document.getElementById('ns-student-view').checked;
-            const boyGirl = document.getElementById('ns-boygirl').checked;
-            const groups = Math.max(1, parseInt(document.getElementById('ns-groups').value) || 6);
-            const avoid = nsParseAvoid();
-            let html = '';
-            if (formation === 'cooperative') html = nsRenderCooperative(groups, studentView, boyGirl, avoid);
-            else if (formation === 'exam') html = nsRenderExam(groups, studentView);
-            else if (formation === 'columns') html = nsRenderColumns(groups, studentView, boyGirl, avoid);
-            else html = nsRenderDesks(nsMakePairsSafe(nsStudents, boyGirl, avoid), studentView, 3);
-            document.getElementById('ns-board').style.display = 'block';
-            document.getElementById('ns-result').innerHTML = html;
+        // 드래그로 두 학생 자리 맞교환
+        function nsSwapById(idA, idB) {
+            if (!nsArr) return;
+            let pa = null, pb = null;
+            const scan = c => c.forEach((s, i) => { if (s && s.id === idA) pa = { c: c, i: i }; if (s && s.id === idB) pb = { c: c, i: i }; });
+            if (nsArr.formation === 'cooperative') nsArr.groups.forEach(scan); else scan(nsArr.list);
+            if (pa && pb) { const t = pa.c[pa.i]; pa.c[pa.i] = pb.c[pb.i]; pb.c[pb.i] = t; nsRerender(); }
         }
+        let nsDragId = null;
+        document.addEventListener('dragstart', e => { const c = e.target.closest ? e.target.closest('.ns-chip') : null; if (c) { nsDragId = c.dataset.id; if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'; } });
+        document.addEventListener('dragover', e => { if (nsDragId && e.target.closest && e.target.closest('.ns-chip')) e.preventDefault(); });
+        document.addEventListener('drop', e => { if (!nsDragId) return; const c = e.target.closest ? e.target.closest('.ns-chip') : null; if (c) { e.preventDefault(); const tid = c.dataset.id; if (tid && tid !== nsDragId) nsSwapById(nsDragId, tid); } nsDragId = null; });
 
         function generateSmartSeating() {
             if (parsedRoster.length === 0) {
