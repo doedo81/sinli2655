@@ -728,8 +728,24 @@
                     <h2 style="margin:0; color:#7e57c2;">🤖 메신저로 일정 추가</h2>
                     <button class="reset-btn" onclick="closeEventModal()">닫기</button>
                 </div>
-                <p style="font-size:13px; color:#666; margin:0 0 10px 0; line-height:1.6;">받은 메신저·공지 내용을 그대로 붙여넣고 버튼을 누르면, AI가 <b>날짜·종류·요약</b>을 뽑아 캘린더에 자동으로 넣어줍니다. (기초세팅에 Gemini API 키 필요)<br>🎂생일은 생일칸, 🎈행사·📌업무는 전달사항에 그날 자동 표시돼요.</p>
-                <textarea id="ai-paste-input" placeholder="예) 7월 3일 3,4교시 전교생 안전교육 실시. 7/5 김서연 생일." style="width:100%; height:120px; padding:10px; border-radius:8px; border:1px solid #ccc; line-height:1.5;"></textarea>
+                <p style="font-size:13px; color:#666; margin:0 0 10px 0; line-height:1.6;">받은 메신저·공지 내용을 <b>글로 붙여넣거나</b> <b>캡처 이미지</b>를 붙여넣으면, AI가 <b>날짜·종류·요약</b>을 뽑아 캘린더에 자동으로 넣어줍니다. (기초세팅에 Gemini API 키 필요)<br>🎂생일은 생일칸, 🎈행사·📌업무는 전달사항에 그날 자동 표시돼요.</p>
+                <!-- 입력 방식 탭 -->
+                <div style="display:flex; gap:6px; margin-bottom:10px;">
+                    <button type="button" id="ai-tab-text" onclick="switchAiMode('text')" style="flex:1; padding:8px; border-radius:8px; border:1px solid #7e57c2; background:#7e57c2; color:#fff; font-weight:700; cursor:pointer;">📝 글 붙여넣기</button>
+                    <button type="button" id="ai-tab-image" onclick="switchAiMode('image')" style="flex:1; padding:8px; border-radius:8px; border:1px solid #7e57c2; background:#fff; color:#7e57c2; font-weight:700; cursor:pointer;">🖼️ 이미지(캡처)</button>
+                </div>
+                <!-- 글 붙여넣기 모드 -->
+                <div id="ai-mode-text">
+                    <textarea id="ai-paste-input" placeholder="예) 7월 3일 3,4교시 전교생 안전교육 실시. 7/5 김서연 생일." style="width:100%; height:120px; padding:10px; border-radius:8px; border:1px solid #ccc; line-height:1.5;"></textarea>
+                </div>
+                <!-- 이미지(캡처) 모드 -->
+                <div id="ai-mode-image" style="display:none;">
+                    <div id="ai-drop-zone" tabindex="0" onpaste="handleAiPaste(event)" onclick="document.getElementById('ai-file-input').click()" ondragover="event.preventDefault(); this.style.background='#f3ecfb'; this.style.borderColor='#7e57c2';" ondragleave="this.style.background='#faf7ff'; this.style.borderColor='#cbb9e6';" ondrop="handleAiDrop(event)" style="border:2px dashed #cbb9e6; background:#faf7ff; border-radius:10px; padding:22px 12px; text-align:center; color:#7e57c2; font-size:13px; line-height:1.7; cursor:pointer; outline:none;">
+                        📋 여기를 클릭한 뒤 <b>Ctrl+V</b>로 캡처를 붙여넣거나<br>이미지 파일을 <b>끌어다 놓으세요</b><br><span style="font-size:11px; color:#9d86bd;">(여러 장도 가능해요)</span>
+                    </div>
+                    <input type="file" id="ai-file-input" accept="image/*" multiple style="display:none;" onchange="handleAiFiles(this.files); this.value='';">
+                    <div id="ai-image-preview" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;"></div>
+                </div>
                 <button class="action-btn" id="ai-extract-btn" style="width:100%; margin-top:10px; background:#7e57c2;" onclick="aiExtractEvents()">🤖 AI로 일정 자동 추가</button>
             </div>
         </div>
@@ -1515,9 +1531,57 @@
 
         function openEventModal() {
             document.getElementById('calendar-event-modal').style.display = 'flex';
+            switchAiMode('text');
             setTimeout(() => { const t = document.getElementById('ai-paste-input'); if (t) t.focus(); }, 40);
         }
         function closeEventModal() { document.getElementById('calendar-event-modal').style.display = 'none'; }
+
+        // ===== 🖼️ 이미지(캡처) 붙여넣기 지원 =====
+        let aiPastedImages = []; // {mime, data(base64), url}
+        function switchAiMode(mode) {
+            const tabT = document.getElementById('ai-tab-text'), tabI = document.getElementById('ai-tab-image');
+            const boxT = document.getElementById('ai-mode-text'), boxI = document.getElementById('ai-mode-image');
+            const isImg = mode === 'image';
+            boxT.style.display = isImg ? 'none' : 'block';
+            boxI.style.display = isImg ? 'block' : 'none';
+            tabT.style.background = isImg ? '#fff' : '#7e57c2'; tabT.style.color = isImg ? '#7e57c2' : '#fff';
+            tabI.style.background = isImg ? '#7e57c2' : '#fff'; tabI.style.color = isImg ? '#fff' : '#7e57c2';
+            if (isImg) setTimeout(() => { const z = document.getElementById('ai-drop-zone'); if (z) z.focus(); }, 40);
+        }
+        function addAiImageFromFile(file) {
+            if (!file || !file.type || !file.type.startsWith('image/')) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                const dataUrl = e.target.result;
+                const mime = dataUrl.slice(5, dataUrl.indexOf(';'));
+                const data = dataUrl.slice(dataUrl.indexOf(',') + 1);
+                aiPastedImages.push({ mime, data, url: dataUrl });
+                renderAiImages();
+            };
+            reader.readAsDataURL(file);
+        }
+        function handleAiPaste(e) {
+            const items = (e.clipboardData && e.clipboardData.items) || [];
+            let found = false;
+            for (const it of items) { if (it.type && it.type.startsWith('image/')) { const f = it.getAsFile(); if (f) { addAiImageFromFile(f); found = true; } } }
+            if (found) e.preventDefault();
+        }
+        function handleAiDrop(e) {
+            e.preventDefault();
+            const z = e.currentTarget; z.style.background = '#faf7ff'; z.style.borderColor = '#cbb9e6';
+            const files = (e.dataTransfer && e.dataTransfer.files) || [];
+            for (const f of files) addAiImageFromFile(f);
+        }
+        function handleAiFiles(files) { for (const f of files) addAiImageFromFile(f); }
+        function removeAiImage(idx) { aiPastedImages.splice(idx, 1); renderAiImages(); }
+        function renderAiImages() {
+            const box = document.getElementById('ai-image-preview');
+            if (!box) return;
+            box.innerHTML = aiPastedImages.map((im, i) => `<div style="position:relative;">
+                <img src="${im.url}" style="width:72px; height:72px; object-fit:cover; border-radius:8px; border:1px solid #ddd;">
+                <span onclick="removeAiImage(${i})" style="position:absolute; top:-6px; right:-6px; background:#e53935; color:#fff; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px; line-height:1;">✕</span>
+            </div>`).join('');
+        }
 
         function deleteCalendarEvent(dateKey, id) {
             calendarEventsRef.child(dateKey).child(id).remove();
@@ -1529,7 +1593,7 @@
             const apiKey = localStorage.getItem('geminiApiKey');
             if (!apiKey) { alert('먼저 [기초 세팅]에서 구글(Gemini) API 키를 입력해 주세요.'); return; }
             const text = document.getElementById('ai-paste-input').value.trim();
-            if (!text) { alert('메신저 내용을 붙여넣어 주세요.'); return; }
+            if (!text && aiPastedImages.length === 0) { alert('메신저 글을 붙여넣거나 캡처 이미지를 추가해 주세요.'); return; }
 
             const btn = document.getElementById('ai-extract-btn');
             const orig = btn.innerText;
@@ -1537,11 +1601,15 @@
 
             const today = getFormattedDate(new Date());
             const year = new Date().getFullYear();
-            const prompt = `오늘은 ${today}입니다. 아래는 초등학교 교사가 받은 메신저/공지 글입니다. 일정을 모두 찾아 JSON으로만 반환하세요.\n반환 형식: {"events":[{"date":"YYYY-MM-DD","type":"birthday|event|work","text":"짧은 제목","detail":"세부내용"}]}\n규칙:\n- date는 YYYY-MM-DD. 본문에 적힌 구체적 날짜(예: 7/1, 7월 3일)를 최우선으로 사용. '내일/모레/다음주' 같은 상대표현이 본문의 명시 날짜와 같은 사안을 가리키면 그 명시 날짜로 통일하고, 근거 없이 오늘 기준으로 새 날짜를 만들지 말 것. 연도 없으면 ${year}년.\n- 하나의 사안(예: 회의와 그 준비물·파일 제출·출력물)은 여러 날짜로 쪼개지 말고 관련된 주 일정 날짜 하나에 정리하고, 준비물·제출물은 detail에 넣기.\n- 날짜가 분명하지 않은 요청은 무리하게 날짜를 만들지 말 것.\n- type은 생일이면 birthday, 학생 대상 행사·수업·체험이면 event, 교사 업무·제출·회의면 work.\n- text는 달력 칸에 보일 짧은 제목(12자 이내).\n- detail은 시간·장소·대상·준비물 등 원문의 구체적 정보를 간결히 담기(없으면 빈 문자열 ""). 세부를 임의로 버리지 말 것.\n- 일정이 없으면 events를 빈 배열로. 설명 없이 JSON만 출력.\n\n[메신저 내용]\n${text}`;
+            const source = aiPastedImages.length ? '메신저/공지 글 또는 그 캡처 이미지' : '메신저/공지 글';
+            const body = text || '(첨부한 이미지에서 내용을 읽어 주세요)';
+            const prompt = `오늘은 ${today}입니다. 아래는 초등학교 교사가 받은 ${source}입니다. 글과 첨부 이미지를 모두 읽어 일정을 모두 찾아 JSON으로만 반환하세요.\n반환 형식: {"events":[{"date":"YYYY-MM-DD","type":"birthday|event|work","text":"짧은 제목","detail":"세부내용"}]}\n규칙:\n- date는 YYYY-MM-DD. 본문에 적힌 구체적 날짜(예: 7/1, 7월 3일)를 최우선으로 사용. '내일/모레/다음주' 같은 상대표현이 본문의 명시 날짜와 같은 사안을 가리키면 그 명시 날짜로 통일하고, 근거 없이 오늘 기준으로 새 날짜를 만들지 말 것. 연도 없으면 ${year}년.\n- 하나의 사안(예: 회의와 그 준비물·파일 제출·출력물)은 여러 날짜로 쪼개지 말고 관련된 주 일정 날짜 하나에 정리하고, 준비물·제출물은 detail에 넣기.\n- 날짜가 분명하지 않은 요청은 무리하게 날짜를 만들지 말 것.\n- type은 생일이면 birthday, 학생 대상 행사·수업·체험이면 event, 교사 업무·제출·회의면 work.\n- text는 달력 칸에 보일 짧은 제목(12자 이내).\n- detail은 시간·장소·대상·준비물 등 원문의 구체적 정보를 간결히 담기(없으면 빈 문자열 ""). 세부를 임의로 버리지 말 것.\n- 일정이 없으면 events를 빈 배열로. 설명 없이 JSON만 출력.\n\n[메신저 내용]\n${body}`;
 
             const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(apiKey);
+            const parts = [{ text: prompt }];
+            aiPastedImages.forEach(im => parts.push({ inline_data: { mime_type: im.mime, data: im.data } }));
             const reqBody = JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
+                contents: [{ parts }],
                 generationConfig: { responseMimeType: 'application/json', temperature: 0 }
             });
 
@@ -1576,6 +1644,7 @@
 
                 events.forEach(e => calendarEventsRef.child(e.date).push({ type: e.type, text: e.text, detail: e.detail || '' }));
                 document.getElementById('ai-paste-input').value = '';
+                aiPastedImages = []; renderAiImages();
                 alert(`✅ ${events.length}개 일정을 추가했어요!`);
             } catch (err) {
                 alert('오류가 발생했어요: ' + err.message);
