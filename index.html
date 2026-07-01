@@ -576,6 +576,7 @@
                             <label style="font-weight:600;"><input type="checkbox" id="ns-boygirl" checked> 짝은 되도록 남녀</label>
                             <label style="font-weight:600; color:#c62828;"><input type="checkbox" id="ns-student-view" onchange="nsRerender()"> 학생 배포용(이름만)</label>
                             <span>모둠/분단 수 <input type="number" id="ns-groups" value="6" min="1" max="12" style="width:52px; padding:6px; border-radius:6px; border:1px solid #ccc; text-align:center;"></span>
+                            <span id="ns-view-toggle" style="display:none;">보기 <button type="button" id="ns-view-grid" onclick="nsSetView('grid')">모둠</button><button type="button" id="ns-view-list" onclick="nsSetView('list')" style="margin-left:4px;">목록</button></span>
                         </div>
                         <div style="display:grid; grid-template-columns:2fr 1fr; gap:14px;" id="ns-input-grid">
                             <div>
@@ -1722,12 +1723,10 @@
             if (formation === 'cooperative') {
                 let groups = nsBuildCoopGroups(groupCount, boyGirl);
                 for (let k = 0; k < 80 && avoid.length && groups.some(g => nsUnitHasForbidden(g.map(m => m.name), avoid)); k++) groups = nsBuildCoopGroups(groupCount, boyGirl);
+                // 대각선 배치: 좌상=최상위, 우상=중하, 좌하=중상, 우하=하 (짝은 최상+중하 / 중상+하)
                 const seatGroups = groups.map(mem => {
-                    const males = mem.filter(m => m.gender === '남'), females = mem.filter(m => m.gender === '여');
-                    let seats;
-                    if (boyGirl && males.length === 2 && females.length === 2) seats = [males[0], females[0], females[1], males[1]];
-                    else { seats = nsShuffle(mem.slice()); while (seats.length < 4) seats.push(null); }
-                    return seats;
+                    const byTier = {}; mem.forEach(m => { byTier[m.tier] = m; });
+                    return [byTier[4] || null, byTier[2] || null, byTier[3] || null, byTier[1] || null];
                 });
                 nsArr = { formation: formation, groups: seatGroups };
             } else if (formation === 'exam') {
@@ -1745,8 +1744,10 @@
         function nsRerender() {
             if (!nsArr) return;
             const sv = document.getElementById('ns-student-view').checked;
+            const vt = document.getElementById('ns-view-toggle');
+            if (vt) { vt.style.display = (nsArr.formation === 'cooperative') ? 'inline' : 'none'; nsUpdateViewButtons(); }
             let html;
-            if (nsArr.formation === 'cooperative') html = nsHtmlCoop(nsArr.groups, sv);
+            if (nsArr.formation === 'cooperative') html = (nsView === 'list') ? nsHtmlCoopList(nsArr.groups, sv) : nsHtmlCoop(nsArr.groups, sv);
             else if (nsArr.formation === 'exam') html = nsHtmlExam(nsArr.list, sv, nsArr.cols);
             else if (nsArr.formation === 'columns') html = nsHtmlColumns(nsArr.list, sv, nsArr.cols);
             else html = nsHtmlFree(nsArr.seats);
@@ -1755,10 +1756,47 @@
                 : '✋ 학생을 드래그해서 서로 자리를 바꿀 수 있어요.';
             document.getElementById('ns-result').innerHTML = `<p style="font-size:12px; color:#999; margin:0 0 10px 0;" class="seating-controls">${hint}</p>` + html;
         }
+        let nsView = 'grid';
+        function nsSetView(v) { nsView = v; nsUpdateViewButtons(); nsRerender(); }
+        function nsUpdateViewButtons() {
+            const g = document.getElementById('ns-view-grid'), l = document.getElementById('ns-view-list');
+            if (!g || !l) return;
+            const on = 'padding:5px 12px;border:none;border-radius:6px;font-weight:700;cursor:pointer;background:#6a4bb5;color:#fff;';
+            const off = 'padding:5px 12px;border:none;border-radius:6px;font-weight:700;cursor:pointer;background:#eceff1;color:#546e7a;';
+            g.setAttribute('style', nsView === 'grid' ? on : off);
+            l.setAttribute('style', (nsView === 'list' ? on : off) + 'margin-left:4px;');
+        }
+        function nsGroupAvg(seats) { const m = seats.filter(s => s && s.hasScore); return m.length ? m.reduce((a, s) => a + s.score, 0) / m.length : null; }
+        function nsHtmlStats(groups, sv) {
+            if (sv) return '';
+            const avgs = groups.map(nsGroupAvg).filter(a => a !== null);
+            const all = []; groups.forEach(g => g.forEach(s => { if (s && s.hasScore) all.push(s.score); }));
+            if (!all.length) return '';
+            const classAvg = all.reduce((a, b) => a + b, 0) / all.length;
+            const dev = avgs.length > 1 ? (Math.max.apply(null, avgs) - Math.min.apply(null, avgs)) : 0;
+            return `<div class="seating-controls" style="display:flex; gap:22px; margin-bottom:12px; font-size:13px; color:#546e7a;"><span>학급 평균 <b style="color:#6a4bb5;">${classAvg.toFixed(1)}점</b></span><span>모둠간 편차 <b style="color:${dev > (all.length ? 3 : 0) ? '#e53935' : '#6a4bb5'};">${dev.toFixed(1)}점</b></span></div>`;
+        }
         function nsHtmlCoop(groups, sv) {
-            let html = '<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:16px;">';
+            let html = nsHtmlStats(groups, sv) + '<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px;">';
             groups.forEach((seats, gi) => {
-                html += `<div style="background:#f7f5fb; border:1px solid #e0d6f5; border-radius:12px; padding:12px;"><div style="font-weight:800; color:#6a4bb5; margin-bottom:8px;">${gi + 1}모둠</div><div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">${seats.map(s => nsChip(s, sv)).join('')}</div></div>`;
+                const avg = nsGroupAvg(seats);
+                const badge = (!sv && avg !== null) ? `<span style="font-size:12px; color:#6a4bb5; font-weight:700;">평균 ${avg.toFixed(1)}점</span>` : '';
+                html += `<div style="background:#f7f5fb; border:1px solid #e0d6f5; border-radius:12px; padding:12px;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><span style="font-weight:800; color:#6a4bb5;">${gi + 1}모둠</span>${badge}</div><div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">${seats.map(s => nsChip(s, sv)).join('')}</div></div>`;
+            });
+            return html + '</div>';
+        }
+        function nsHtmlCoopList(groups, sv) {
+            let html = nsHtmlStats(groups, sv) + '<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px;">';
+            groups.forEach((seats, gi) => {
+                const avg = nsGroupAvg(seats);
+                const badge = (!sv && avg !== null) ? `<span style="font-size:12px; color:#6a4bb5; font-weight:700;">평균 ${avg.toFixed(1)}점</span>` : '';
+                const members = seats.filter(Boolean).slice().sort((a, b) => (b.tier || 0) - (a.tier || 0));
+                html += `<div style="background:#fff; border:1px solid #e0d6f5; border-radius:12px; padding:12px;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;"><span style="font-weight:800; color:#6a4bb5;">${gi + 1}모둠</span>${badge}</div>`;
+                members.forEach(s => {
+                    const bg = s.gender === '남' ? '#e3f2fd' : '#fde7f0';
+                    html += `<div class="ns-chip" draggable="true" data-id="${s.id}" style="display:flex; justify-content:space-between; align-items:center; background:${bg}; border-radius:7px; padding:8px 10px; margin-bottom:5px; cursor:grab; font-weight:700; color:#37474f;"><span>${escapeHtml(s.name)}</span>${sv ? '' : `<span style="font-size:12px; color:#607d8b;">${s.gender} · ${NS_TIER[s.tier] || ''} · ${s.score}점</span>`}</div>`;
+                });
+                html += '</div>';
             });
             return html + '</div>';
         }
