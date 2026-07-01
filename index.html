@@ -1525,7 +1525,7 @@
 
             const today = getFormattedDate(new Date());
             const year = new Date().getFullYear();
-            const prompt = `오늘은 ${today}입니다. 아래는 초등학교 교사가 받은 메신저/공지 글입니다. 일정을 모두 찾아 JSON으로만 반환하세요.\n반환 형식: {"events":[{"date":"YYYY-MM-DD","type":"birthday|event|work","text":"짧은 제목","detail":"세부내용"}]}\n규칙:\n- date는 YYYY-MM-DD(상대표현은 오늘 기준 계산, 연도 없으면 ${year}년).\n- type은 생일이면 birthday, 학생 대상 행사·수업·체험이면 event, 교사 업무·제출·회의면 work.\n- text는 달력 칸에 보일 짧은 제목(12자 이내).\n- detail은 시간·장소·대상·준비물 등 원문의 구체적 정보를 간결히 담기(없으면 빈 문자열 ""). 세부를 임의로 버리지 말 것.\n- 일정이 없으면 events를 빈 배열로. 설명 없이 JSON만 출력.\n\n[메신저 내용]\n${text}`;
+            const prompt = `오늘은 ${today}입니다. 아래는 초등학교 교사가 받은 메신저/공지 글입니다. 일정을 모두 찾아 JSON으로만 반환하세요.\n반환 형식: {"events":[{"date":"YYYY-MM-DD","type":"birthday|event|work","text":"짧은 제목","detail":"세부내용"}]}\n규칙:\n- date는 YYYY-MM-DD. 본문에 적힌 구체적 날짜(예: 7/1, 7월 3일)를 최우선으로 사용. '내일/모레/다음주' 같은 상대표현이 본문의 명시 날짜와 같은 사안을 가리키면 그 명시 날짜로 통일하고, 근거 없이 오늘 기준으로 새 날짜를 만들지 말 것. 연도 없으면 ${year}년.\n- 하나의 사안(예: 회의와 그 준비물·파일 제출·출력물)은 여러 날짜로 쪼개지 말고 관련된 주 일정 날짜 하나에 정리하고, 준비물·제출물은 detail에 넣기.\n- 날짜가 분명하지 않은 요청은 무리하게 날짜를 만들지 말 것.\n- type은 생일이면 birthday, 학생 대상 행사·수업·체험이면 event, 교사 업무·제출·회의면 work.\n- text는 달력 칸에 보일 짧은 제목(12자 이내).\n- detail은 시간·장소·대상·준비물 등 원문의 구체적 정보를 간결히 담기(없으면 빈 문자열 ""). 세부를 임의로 버리지 말 것.\n- 일정이 없으면 events를 빈 배열로. 설명 없이 JSON만 출력.\n\n[메신저 내용]\n${text}`;
 
             const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(apiKey);
             const reqBody = JSON.stringify({
