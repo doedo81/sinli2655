@@ -226,6 +226,10 @@
         .link-delete-btn:hover { background: #c62828; transform: scale(1.1);}
 
         /* 🖨️ 인쇄 전용 CSS */
+        /* 🗓️ 노션식 일정 창 속성줄 */
+        .day-prop-row { display: flex; align-items: center; gap: 12px; padding: 7px 0; border-top: 1px solid #f0f3f8; font-size: 13px; }
+        .day-prop-label { color: #90a4ae; width: 64px; font-weight: 600; flex-shrink: 0; }
+
         /* 🪑 자리배치 단계형 마법사 */
         #ns-layout { display: grid; grid-template-columns: 330px 1fr; gap: 18px; align-items: start; }
         @media (max-width: 1100px) { #ns-layout { grid-template-columns: 1fr; } }
@@ -764,29 +768,29 @@
             </div>
         </div>
 
-        <!-- 🗓️ 날짜 클릭 시 뜨는 노션식 일정 창 (큰 제목 → 속성 → 내용 → 이 날의 일정) -->
+        <!-- 🗓️ 노션식 일정 창: 자동 저장 (버튼 없음) -->
         <div class="modal-overlay" id="day-modal">
             <div class="modal-box" style="max-width:600px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                    <span id="day-pop-title" style="font-size:13px; font-weight:700; color:#78909c; background:#f2f6fc; border-radius:6px; padding:5px 12px;"></span>
+                <div style="display:flex; justify-content:flex-end;">
                     <button class="reset-btn" style="padding:6px 12px;" onclick="closeDayPopover()">닫기</button>
                 </div>
-                <input type="text" id="day-pop-text" placeholder="새 일정" style="width:100%; border:none; outline:none; font-size:27px; font-weight:800; color:#2c3440; padding:10px 0 4px 0; background:transparent; font-family:'Pretendard',sans-serif; letter-spacing:-0.02em;" onkeypress="if(event.key==='Enter') document.getElementById('day-pop-detail').focus()">
-                <div style="display:flex; align-items:center; gap:12px; padding:9px 0; border-top:1px solid #f0f3f8; border-bottom:1px solid #f0f3f8; margin-bottom:6px;">
-                    <span style="color:#90a4ae; font-size:13px; font-weight:600;"><i class="fa-solid fa-tag"></i> 종류</span>
-                    <select id="day-pop-type" style="padding:5px 8px; border-radius:7px; border:1px solid #e0e6ef; font-weight:700; background:#fff; color:#546e7a;">
+                <input type="text" id="day-pop-text" placeholder="제목" style="width:100%; border:none; outline:none; font-size:27px; font-weight:800; color:#2c3440; padding:6px 0 8px 0; background:transparent; font-family:'Pretendard',sans-serif; letter-spacing:-0.02em;" onblur="dayDraftSave()" onkeypress="if(event.key==='Enter') document.getElementById('day-pop-detail').focus()">
+                <div class="day-prop-row"><span class="day-prop-label"><i class="fa-regular fa-calendar"></i> 날짜</span><input type="date" id="day-pop-date" style="border:none; outline:none; font-weight:700; color:#455a64; background:transparent; font-family:'Pretendard',sans-serif; font-size:14px;" onchange="dayDraftMoveDate()"></div>
+                <div class="day-prop-row"><span class="day-prop-label"><i class="fa-solid fa-tag"></i> 종류</span>
+                    <select id="day-pop-type" style="padding:4px 8px; border-radius:7px; border:1px solid #e6ebf3; font-weight:700; background:#fff; color:#546e7a;" onchange="dayDraftSave()">
                         <option value="event" selected>🎈 행사</option>
                         <option value="work">📌 업무</option>
                         <option value="birthday">🎂 생일</option>
                     </select>
-                    <span style="font-size:12px; color:#b0bcc9;">캘린더엔 제목만 표시돼요</span>
                 </div>
-                <div style="border-bottom:1px solid #eef1f6; padding:4px 0 12px 0; margin-bottom:8px;">
-                    <div style="font-size:13px; font-weight:700; color:#78909c; margin-bottom:8px;">📋 이 날의 일정</div>
-                    <div id="day-pop-list" style="max-height:230px; overflow-y:auto;"></div>
+                <div style="border-bottom:1px solid #eef1f6; padding:8px 0 12px 0; margin-bottom:6px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span style="font-size:13px; font-weight:700; color:#78909c;">📋 이 날의 일정</span>
+                        <span onclick="dayDraftNew()" style="cursor:pointer; color:#5b97d1; font-size:13px; font-weight:700;">＋ 새 일정</span>
+                    </div>
+                    <div id="day-pop-list" style="max-height:220px; overflow-y:auto;"></div>
                 </div>
-                <textarea id="day-pop-detail" placeholder="내용을 입력하세요 (시간 · 장소 · 준비물 등)" style="width:100%; min-height:84px; border:none; outline:none; resize:vertical; font-size:14.5px; line-height:1.65; color:#455a64; background:transparent; font-family:'Pretendard',sans-serif; padding:4px 0;"></textarea>
-                <button class="action-btn" style="width:100%; margin-top:6px; padding:11px;" onclick="addDayPopEvent()">＋ 일정 추가</button>
+                <textarea id="day-pop-detail" placeholder="내용 입력…" style="width:100%; min-height:80px; border:none; outline:none; resize:vertical; font-size:14.5px; line-height:1.65; color:#455a64; background:transparent; font-family:'Pretendard',sans-serif; padding:4px 0;" onblur="dayDraftSave()"></textarea>
             </div>
         </div>
 
@@ -1361,43 +1365,94 @@
             con.innerHTML = html;
         }
         function changeCalTabMonth(v) { calDate.setMonth(calDate.getMonth() + v); renderCalendarTab(); renderCalendar(); }
-        // 🗓️ 날짜 칸 클릭 → 노션식 일정 창 (제목·내용·완료 체크)
-        let dayPopDate = null;
+        // 🗓️ 노션식 일정 창: 칸 밖을 클릭하면 자동 저장 (버튼 없음)
+        let dayPopDate = null, dayDraftId = null;
         function openDayPopover(key, evt) {
-            dayPopDate = key;
-            const parts = key.split('-');
-            document.getElementById('day-pop-title').innerText = `📅 ${parseInt(parts[1])}월 ${parseInt(parts[2])}일`;
-            renderDayPopList();
+            dayPopDate = key; dayDraftId = null;
+            document.getElementById('day-pop-date').value = key;
             document.getElementById('day-pop-text').value = '';
             document.getElementById('day-pop-detail').value = '';
+            document.getElementById('day-pop-type').value = 'event';
+            renderDayPopList();
             document.getElementById('day-modal').style.display = 'flex';
             setTimeout(() => document.getElementById('day-pop-text').focus(), 60);
         }
-        function closeDayPopover() { document.getElementById('day-modal').style.display = 'none'; dayPopDate = null; }
+        function closeDayPopover() { dayDraftSave(); document.getElementById('day-modal').style.display = 'none'; dayPopDate = null; dayDraftId = null; }
+        // 자동 저장: 제목이 있으면 새로 만들고, 이미 만든 일정이면 그 자리에서 수정
+        function dayDraftSave() {
+            if (!dayPopDate) return;
+            const text = document.getElementById('day-pop-text').value.trim();
+            const detail = document.getElementById('day-pop-detail').value.trim();
+            const type = document.getElementById('day-pop-type').value;
+            if (!text) return;
+            if (dayDraftId) {
+                calendarEventsRef.child(dayPopDate).child(dayDraftId).update({ type: type, text: text, detail: detail });
+            } else {
+                const ref = calendarEventsRef.child(dayPopDate).push({ type: type, text: text, detail: detail, done: false });
+                dayDraftId = ref.key;
+            }
+        }
+        function dayDraftNew() {
+            dayDraftSave();
+            dayDraftId = null;
+            document.getElementById('day-pop-text').value = '';
+            document.getElementById('day-pop-detail').value = '';
+            document.getElementById('day-pop-type').value = 'event';
+            renderDayPopList();
+            document.getElementById('day-pop-text').focus();
+        }
+        // 목록의 일정을 클릭하면 위 편집칸으로 불러와 바로 수정
+        function dayDraftEdit(id) {
+            dayDraftSave();
+            const e = getCalendarEventsFor(dayPopDate).find(x => x.id === id);
+            if (!e) return;
+            dayDraftId = id;
+            document.getElementById('day-pop-text').value = e.text;
+            document.getElementById('day-pop-detail').value = e.detail || '';
+            document.getElementById('day-pop-type').value = e.type || 'event';
+            renderDayPopList();
+            document.getElementById('day-pop-text').focus();
+        }
+        // 날짜 속성을 바꾸면 편집 중인 일정이 그 날짜로 이동
+        function dayDraftMoveDate() {
+            const newDate = document.getElementById('day-pop-date').value;
+            if (!newDate || newDate === dayPopDate) return;
+            if (dayDraftId) {
+                const cur = getCalendarEventsFor(dayPopDate).find(x => x.id === dayDraftId);
+                const text = document.getElementById('day-pop-text').value.trim() || (cur ? cur.text : '');
+                if (text) {
+                    const detail = document.getElementById('day-pop-detail').value.trim();
+                    const type = document.getElementById('day-pop-type').value;
+                    const done = cur ? cur.done : false;
+                    calendarEventsRef.child(dayPopDate).child(dayDraftId).remove();
+                    const ref = calendarEventsRef.child(newDate).push({ type: type, text: text, detail: detail, done: done });
+                    dayDraftId = ref.key;
+                }
+            }
+            dayPopDate = newDate;
+            renderDayPopList();
+        }
+        function dayDeleteEvent(id) {
+            if (id === dayDraftId) {
+                dayDraftId = null;
+                document.getElementById('day-pop-text').value = '';
+                document.getElementById('day-pop-detail').value = '';
+            }
+            deleteCalendarEvent(dayPopDate, id);
+        }
         function renderDayPopList() {
             const el = document.getElementById('day-pop-list');
             const evs = dayPopDate ? getCalendarEventsFor(dayPopDate) : [];
-            if (evs.length === 0) { el.innerHTML = '<div style="color:#b0bcc9; text-align:center; padding:16px 0; font-size:13px;">아직 일정이 없어요. 위에서 제목을 입력하고 추가하세요.</div>'; return; }
+            if (evs.length === 0) { el.innerHTML = '<div style="color:#b0bcc9; padding:10px 0; font-size:13px;">일정이 없어요. 위 제목칸에 쓰면 자동으로 저장돼요.</div>'; return; }
             el.innerHTML = evs.map(e => `
-                <div style="display:flex; gap:10px; align-items:flex-start; padding:11px 12px; border:1px solid #edf1f7; border-radius:10px; margin-bottom:8px; background:${e.done ? '#f7f9fb' : '#fff'};">
-                    <input type="checkbox" ${e.done ? 'checked' : ''} onchange="calToggleEventDone('${dayPopDate}','${e.id}', this.checked)" title="완료 체크" style="width:19px; height:19px; margin-top:1px; accent-color:#7b6cd9; cursor:pointer; flex-shrink:0;">
+                <div onclick="dayDraftEdit('${e.id}')" style="display:flex; gap:10px; align-items:flex-start; padding:8px 10px; border-radius:8px; margin-bottom:2px; cursor:pointer; background:${e.id === dayDraftId ? '#f1f5fc' : 'transparent'};">
+                    <input type="checkbox" ${e.done ? 'checked' : ''} onclick="event.stopPropagation()" onchange="calToggleEventDone('${dayPopDate}','${e.id}', this.checked)" title="완료 체크" style="width:18px; height:18px; margin-top:2px; accent-color:#7b6cd9; cursor:pointer; flex-shrink:0;">
                     <div style="flex:1; min-width:0;">
-                        <div style="font-weight:700; font-size:15px; color:${e.done ? '#9aa3ad' : '#37474f'}; ${e.done ? 'text-decoration:line-through;' : ''}">${EVENT_ICON[e.type] || ''} ${escapeHtml(e.text)}</div>
-                        ${e.detail ? `<div style="font-size:13px; color:${e.done ? '#b8bfc7' : '#607d8b'}; margin-top:3px; line-height:1.55; white-space:pre-wrap; ${e.done ? 'text-decoration:line-through;' : ''}">${escapeHtml(e.detail)}</div>` : ''}
+                        <div style="font-weight:700; font-size:14.5px; color:${e.done ? '#9aa3ad' : '#37474f'}; ${e.done ? 'text-decoration:line-through;' : ''}">${EVENT_ICON[e.type] || ''} ${escapeHtml(e.text)}</div>
+                        ${e.detail ? `<div style="font-size:12.5px; color:${e.done ? '#b8bfc7' : '#78909c'}; margin-top:2px; line-height:1.5; white-space:pre-wrap; ${e.done ? 'text-decoration:line-through;' : ''}">${escapeHtml(e.detail)}</div>` : ''}
                     </div>
-                    <span onclick="deleteCalendarEvent('${dayPopDate}','${e.id}')" style="cursor:pointer; color:#e57373; font-size:12px; font-weight:700; flex-shrink:0;">삭제</span>
+                    <span onclick="event.stopPropagation(); dayDeleteEvent('${e.id}')" title="삭제" style="cursor:pointer; color:#c9d2dc; font-size:15px; font-weight:700; flex-shrink:0; padding:0 3px;">✕</span>
                 </div>`).join('');
-        }
-        function addDayPopEvent() {
-            const inp = document.getElementById('day-pop-text');
-            const text = inp.value.trim();
-            if (!dayPopDate || !text) { inp.focus(); return; }
-            const type = document.getElementById('day-pop-type').value;
-            const detail = document.getElementById('day-pop-detail').value.trim();
-            calendarEventsRef.child(dayPopDate).push({ type: type, text: text, detail: detail, done: false });
-            inp.value = '';
-            document.getElementById('day-pop-detail').value = '';
-            inp.focus();
         }
         function calToggleEventDone(dateKey, id, done) {
             calendarEventsRef.child(dateKey).child(id).child('done').set(!!done);
