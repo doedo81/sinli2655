@@ -228,6 +228,39 @@
         .link-delete-btn:hover { background: #c62828; transform: scale(1.1);}
 
         /* 🖨️ 인쇄 전용 CSS */
+        /* 🎨 활동 칠판 (아이스크림 툴킷 스타일) */
+        #act-board { position: relative; width: 100%; height: calc(100vh - 90px); background: #ffffff; border-radius: 16px; box-shadow: var(--shadow-lg); overflow: hidden; border: 1px solid rgba(120,144,180,0.15); }
+        #act-board:fullscreen { border-radius: 0; height: 100vh; }
+        #act-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 20; cursor: crosshair; touch-action: none; }
+        #act-widgets { position: absolute; inset: 0; z-index: 10; }
+        #act-hint { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 15; background: rgba(240,244,250,0.9); color: #607d8b; font-size: 13px; font-weight: 600; padding: 7px 16px; border-radius: 20px; pointer-events: none; white-space: nowrap; }
+        #act-toolbar { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 40; display: flex; align-items: center; gap: 4px; background: #fff; border: 1px solid #e6ebf3; border-radius: 16px; padding: 8px 10px; box-shadow: 0 8px 26px rgba(56,78,126,0.18); max-width: 94%; flex-wrap: wrap; justify-content: center; }
+        .act-tool { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 42px; height: 42px; border: none; border-radius: 10px; background: transparent; color: #546e7a; font-size: 17px; cursor: pointer; transition: 0.15s; padding: 4px 6px; }
+        .act-tool small { font-size: 10px; font-weight: 700; }
+        .act-tool:hover { background: #f0f4fa; }
+        .act-tool.active { background: #eaf1fb; box-shadow: inset 0 0 0 2px var(--accent-blue); }
+        .act-widget-btn { background: #f6f8fc; }
+        .act-sep { width: 1px; height: 28px; background: #e6ebf3; margin: 0 3px; }
+        .act-widget { position: absolute; min-width: 220px; background: #fff; border-radius: 14px; box-shadow: 0 12px 34px rgba(56,78,126,0.24); border: 1px solid #e6ebf3; overflow: hidden; }
+        .act-w-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: linear-gradient(135deg,#5c6c95,#434f70); color: #fff; cursor: move; font-weight: 800; font-size: 14px; user-select: none; }
+        .act-w-close { cursor: pointer; opacity: 0.85; font-size: 15px; padding: 0 4px; }
+        .act-w-close:hover { opacity: 1; }
+        .act-w-body { padding: 12px; }
+        .act-seg { display: flex; gap: 4px; margin-bottom: 10px; }
+        .act-seg button { flex: 1; padding: 6px; border: 1px solid #dde4ee; background: #fafbfd; border-radius: 8px; font-weight: 700; font-size: 13px; color: #607d8b; cursor: pointer; font-family: 'Pretendard',sans-serif; }
+        .act-seg button.on { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
+        .act-count-ctl { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; font-weight: 700; color: #455a64; }
+        .act-count-ctl button { width: 30px; height: 30px; border: none; border-radius: 8px; background: #eef2f8; font-size: 18px; font-weight: 800; cursor: pointer; color: #455a64; }
+        .act-timer-display { font-size: 52px; font-weight: 800; color: var(--dark-blue); text-align: center; font-variant-numeric: tabular-nums; margin: 4px 0 10px; letter-spacing: 1px; }
+        .act-timer-display.warn { color: #e53935; }
+        .act-btn { border: none; border-radius: 9px; padding: 9px 12px; font-weight: 800; cursor: pointer; font-family: 'Pretendard',sans-serif; color: #fff; font-size: 14px; }
+        .act-draw-result { font-size: 46px; font-weight: 900; text-align: center; padding: 14px 8px; color: var(--accent-blue); line-height: 1.1; min-height: 60px; }
+        .act-score-grid { display: grid; gap: 8px; }
+        .act-score-item { border-radius: 10px; padding: 8px 6px; text-align: center; border: 2px solid #e6ebf3; }
+        .act-score-item .v { font-size: 26px; font-weight: 900; color: var(--dark-blue); margin: 2px 0; }
+        .act-score-item .r { display: flex; gap: 4px; justify-content: center; }
+        .act-score-item .r button { width: 26px; height: 26px; border: none; border-radius: 6px; font-weight: 800; cursor: pointer; }
+
         /* 🗓️ 노션식 일정 창 속성줄 */
         .day-prop-row { display: flex; align-items: center; gap: 12px; padding: 7px 0; border-top: 1px solid #f0f3f8; font-size: 13px; }
         .day-prop-label { color: #90a4ae; width: 64px; font-weight: 600; flex-shrink: 0; }
@@ -509,32 +542,28 @@
                 </div>
             </div>
 
-            <!-- 🎲 2. 활동&뽑기 탭 -->
+            <!-- 🎲 2. 활동&뽑기 탭 — 활동 칠판 (아이스크림 툴킷 스타일) -->
             <div id="picker-tab" class="content-section">
-                <div class="dashboard-grid" style="grid-template-columns: 1fr 1fr;">
-                    <div class="picker-box">
-                        <h2 style="color:var(--dark-blue);">👥 모둠 뽑기</h2>
-                        <div style="margin-bottom:10px; color:#78909c; font-size:14px;">(자리 배치 결과와 연동됩니다)</div>
-                        <div id="group-cards-container" class="card-container"></div>
-                        <div style="margin-top:20px;">
-                            <button class="action-btn" style="background:#2ecc71; padding:12px 25px; font-size:18px;" onclick="drawGroupCard()">모둠 뽑기!</button>
-                            <button class="reset-btn" style="padding:12px 20px;" onclick="resetGroupDraw()">다시 섞기</button>
-                        </div>
+                <div id="act-board">
+                    <canvas id="act-canvas"></canvas>
+                    <div id="act-widgets"></div>
+                    <div id="act-hint">✏️ 펜으로 칠판에 바로 필기하세요 · 아래 위젯을 추가하려면 <b>커서</b>를 켠 뒤 위젯 버튼을 누르세요</div>
+                    <div id="act-toolbar">
+                        <button class="act-tool" data-role="pen" onclick="actSetColor('#222222')" title="검정펜" style="color:#222;"><i class="fa-solid fa-pen"></i></button>
+                        <button class="act-tool" onclick="actSetColor('#e53935')" title="빨강펜" style="color:#e53935;"><i class="fa-solid fa-pen"></i></button>
+                        <button class="act-tool" onclick="actSetColor('#1e88e5')" title="파랑펜" style="color:#1e88e5;"><i class="fa-solid fa-pen"></i></button>
+                        <button class="act-tool" onclick="actSetColor('#43a047')" title="초록펜" style="color:#43a047;"><i class="fa-solid fa-pen"></i></button>
+                        <button class="act-tool" data-role="eraser" onclick="actSetColor('eraser')" title="지우개"><i class="fa-solid fa-eraser"></i></button>
+                        <button class="act-tool" onclick="actClear()" title="전체 지우기"><i class="fa-solid fa-trash-can"></i></button>
+                        <span class="act-sep"></span>
+                        <button class="act-tool" data-role="cursor" onclick="actSetMode('cursor')" title="커서 (위젯 사용)"><i class="fa-solid fa-arrow-pointer"></i></button>
+                        <span class="act-sep"></span>
+                        <button class="act-tool act-widget-btn" onclick="actAddWidget('score')" title="점수판"><i class="fa-solid fa-star"></i><small>점수판</small></button>
+                        <button class="act-tool act-widget-btn" onclick="actAddWidget('timer')" title="타이머"><i class="fa-solid fa-stopwatch"></i><small>타이머</small></button>
+                        <button class="act-tool act-widget-btn" onclick="actAddWidget('draw')" title="뽑기"><i class="fa-solid fa-dice"></i><small>뽑기</small></button>
+                        <span class="act-sep"></span>
+                        <button class="act-tool" onclick="actToggleFullscreen()" title="화면 크게 (전체화면)"><i class="fa-solid fa-expand"></i></button>
                     </div>
-                    <div class="picker-box">
-                        <h2 style="color:var(--dark-blue);">👤 개인 번호 뽑기</h2>
-                        <div style="margin-bottom:10px; font-weight:bold; color:var(--dark-blue);">결석: <input type="text" id="picker-absent" style="width:80px;" class="setting-input" placeholder="예: 3, 5"> <button class="reset-btn" onclick="initStudentPicker()">반영</button></div>
-                        <div id="student-cards-container" class="card-container"></div>
-                        <div style="margin-top:20px;">
-                            <button class="action-btn" style="background:#8e44ad; padding:12px 25px; font-size:18px;" onclick="drawStudentCard()">번호 뽑기!</button> 
-                            <button class="reset-btn" style="padding:12px 20px;" onclick="initStudentPicker()">다시 섞기</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="picker-box" style="margin-top:20px;">
-                    <h2 style="color:#2e7d32; margin-bottom:10px;">🕹️ 미니 점수판</h2>
-                    <div class="mini-score-grid" id="mini-scoreboard"></div>
-                    <button id="mini-reset-btn" class="reset-btn" style="margin-top:20px; background:#78909c; transition:0.3s;" onclick="resetMiniScores()">미니 점수 전체 초기화</button>
                 </div>
             </div>
 
@@ -663,7 +692,9 @@
                 <div id="quick-student-box" class="tool-box-popup">
                     <h3 style="margin:0 0 10px 0; color:var(--dark-blue); text-align:center;">👤 개인 번호 뽑기</h3>
                     <div id="quick-student-result" style="font-size: 45px; font-weight: 800; color: #8e44ad; text-align: center; margin-bottom: 15px;">-</div>
+                    <div style="font-size:13px; color:#78909c; margin-bottom:8px;">결석 <input type="text" id="picker-absent" style="width:90px; padding:5px; border-radius:6px; border:1px solid #ccc;" placeholder="예: 3, 5"> <button class="reset-btn" style="padding:5px 8px;" onclick="initStudentPicker()">반영</button></div>
                     <div style="display:flex; gap:5px;"><button class="action-btn" style="flex:1; background:#8e44ad;" onclick="drawStudentCard()">뽑기!</button><button class="reset-btn" style="flex:1;" onclick="initStudentPicker()">리셋</button></div>
+                    <div id="student-cards-container" style="display:none;"></div>
                 </div>
                 <button class="tool-btn-circle" style="background:#8e44ad;" onclick="toggleToolBox('quick-student-box')" title="개인 뽑기"><i class="fa-solid fa-user"></i></button>
             </div>
@@ -673,6 +704,7 @@
                     <h3 style="margin:0 0 10px 0; color:var(--dark-blue); text-align:center;">👥 모둠 뽑기</h3>
                     <div id="quick-group-result" style="font-size: 35px; font-weight: 800; color: #2ecc71; text-align: center; margin-bottom: 15px; line-height:1.2;">-</div>
                     <div style="display:flex; gap:5px;"><button class="action-btn" style="flex:1; background:#2ecc71;" onclick="drawGroupCard()">뽑기!</button><button class="reset-btn" style="flex:1;" onclick="resetGroupDraw()">리셋</button></div>
+                    <div id="group-cards-container" style="display:none;"></div>
                 </div>
                 <button class="tool-btn-circle" style="background:#2ecc71;" onclick="toggleToolBox('quick-group-box')" title="모둠 뽑기"><i class="fa-solid fa-users"></i></button>
             </div>
@@ -1500,6 +1532,7 @@
 
             if(t === 'calendar') renderCalendarTab();
             if(t === 'seating') nsUpdateStepUI();
+            if(t === 'picker') actOnShow();
 
             document.querySelectorAll('.tool-box-popup, .tool-box-inline').forEach(box => box.style.display = 'none');
         }
@@ -2360,7 +2393,7 @@
         function initStudentPicker() { const tot = globalTotalStudents; const absStr = document.getElementById('picker-absent').value; const abs = absStr ? absStr.split(',').map(n=>parseInt(n.trim())) : []; remS = []; for(let i=1;i<=tot;i++){if(!abs.includes(i))remS.push(i);} document.getElementById('student-cards-container').innerHTML = remS.map(n => `<div class="flip-card student-card-size"><div class="flip-card-inner"><div class="flip-card-front">👤</div><div class="flip-card-back" style="background-color: var(--accent-blue) !important; color: white !important; border: none !important;">${n}</div></div></div>`).join(''); document.getElementById('quick-student-result').innerText = "-"; }
         function drawStudentCard() { const c = document.querySelectorAll('#student-cards-container .flip-card:not(.flipped)'); if(c.length>0) { const t = c[Math.floor(Math.random()*c.length)]; t.classList.add('flipped'); pickSound.currentTime=0; pickSound.play().catch(e=>e); document.getElementById('quick-student-result').innerText = t.querySelector('.flip-card-back').innerText + "번"; } else { document.getElementById('quick-student-result').innerText = "끝!"; } }
         
-        function buildMiniScoreboard() { const div = document.getElementById('mini-scoreboard'); div.innerHTML = ''; for(let i=0; i<numberOfGroups; i++) {
+        function buildMiniScoreboard() { const div = document.getElementById('mini-scoreboard'); if(!div) return; div.innerHTML = ''; for(let i=0; i<numberOfGroups; i++) {
             let groupNum = (i % 6) + 1;
             div.innerHTML += `<div class="mini-card group-bg-${groupNum}" style="border-width:2px; padding:10px;"><div style="font-weight:bold;font-size:14px;color:var(--dark-blue);">${i+1}모둠</div><div class="mini-val" id="mini-score-${i}">${currentMiniScores[i]||0}</div><div style="display:flex;justify-content:center;gap:5px;"><button class="mini-btn mini-btn-plus" style="background:rgba(255,255,255,0.7); color:var(--dark-blue);" onclick="changeMiniS(${i},1)">+</button><button class="mini-btn mini-btn-minus" style="background:rgba(255,255,255,0.4); color:var(--dark-blue);" onclick="changeMiniS(${i},-1)">-</button></div></div>`; 
         } }
@@ -2379,6 +2412,200 @@
         function setTimer(m) { timerRef.set({isRunning:false, endTime:0, pausedRemaining: m*60}); }
         function toggleTimer() { if(localTimer.isRunning) timerRef.set({isRunning:false, endTime:0, pausedRemaining: Math.max(0, Math.ceil((localTimer.endTime - Date.now())/1000))}); else if(localTimer.pausedRemaining > 0) timerRef.set({isRunning:true, endTime: Date.now() + localTimer.pausedRemaining*1000, pausedRemaining: localTimer.pausedRemaining}); }
         function startCustomTimer() { const v = parseFloat(document.getElementById('custom-timer-input').value); if(v > 0) timerRef.set({isRunning:true, endTime: Date.now() + v*60*1000, pausedRemaining: v*60}); document.getElementById('custom-timer-input').value=''; }
+
+        /* ================= 🎨 활동 칠판 (아이스크림 툴킷 스타일) ================= */
+        let actMode = 'pen', actColor = '#222222', actSize = 4;
+        let actStrokes = [], actDrawing = false, actCur = null, actZ = 10, actSeq = 0, actInit = false;
+        const actState = {}; // 위젯별 상태 저장
+        function actCv() { return document.getElementById('act-canvas'); }
+        function actOnShow() {
+            if (!actInit) { actBindCanvas(); actInit = true; }
+            requestAnimationFrame(() => { actResize(); actSetColor('#222222'); });
+        }
+        function actResize() {
+            const c = actCv(), board = document.getElementById('act-board');
+            if (!c || !board) return;
+            const r = board.getBoundingClientRect();
+            c.width = r.width; c.height = r.height;
+            actRedraw();
+        }
+        window.addEventListener('resize', () => { if (document.getElementById('picker-tab').classList.contains('active')) actResize(); });
+        function actRedraw() {
+            const c = actCv(); if (!c) return;
+            const ctx = c.getContext('2d');
+            ctx.clearRect(0, 0, c.width, c.height);
+            ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+            actStrokes.forEach(s => {
+                ctx.globalCompositeOperation = s.erase ? 'destination-out' : 'source-over';
+                ctx.strokeStyle = s.color; ctx.lineWidth = s.size;
+                ctx.beginPath();
+                if (s.points.length === 1) { const p = s.points[0]; ctx.arc(p.x, p.y, s.size / 2, 0, Math.PI * 2); ctx.fillStyle = s.color; if (!s.erase) ctx.fill(); }
+                else s.points.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+                ctx.stroke();
+            });
+            ctx.globalCompositeOperation = 'source-over';
+        }
+        function actPos(e) { const r = actCv().getBoundingClientRect(); const t = (e.touches && e.touches[0]) ? e.touches[0] : e; return { x: t.clientX - r.left, y: t.clientY - r.top }; }
+        function actBindCanvas() {
+            const c = actCv();
+            const down = e => { if (actMode !== 'pen') return; actDrawing = true; const er = actColor === 'eraser'; actCur = { color: er ? '#000' : actColor, size: er ? 30 : actSize, erase: er, points: [actPos(e)] }; actStrokes.push(actCur); actRedraw(); e.preventDefault(); };
+            const move = e => { if (!actDrawing) return; actCur.points.push(actPos(e)); actRedraw(); e.preventDefault(); };
+            const up = () => { actDrawing = false; actCur = null; };
+            c.addEventListener('mousedown', down); c.addEventListener('mousemove', move); window.addEventListener('mouseup', up);
+            c.addEventListener('touchstart', down, { passive: false }); c.addEventListener('touchmove', move, { passive: false }); c.addEventListener('touchend', up);
+        }
+        function actUpdateToolUI() {
+            document.querySelectorAll('#act-toolbar .act-tool').forEach(b => b.classList.remove('active'));
+            if (actMode === 'cursor') { const b = document.querySelector('#act-toolbar [data-role="cursor"]'); if (b) b.classList.add('active'); }
+        }
+        function actSetMode(m) {
+            actMode = m;
+            const c = actCv(); if (c) { c.style.pointerEvents = m === 'pen' ? 'auto' : 'none'; c.style.cursor = m === 'pen' ? 'crosshair' : 'default'; }
+            actUpdateToolUI();
+        }
+        function actSetColor(col) {
+            actColor = col; actMode = 'pen';
+            const c = actCv(); if (c) { c.style.pointerEvents = 'auto'; c.style.cursor = 'crosshair'; }
+            document.querySelectorAll('#act-toolbar .act-tool').forEach(b => b.classList.remove('active'));
+            const sel = col === 'eraser' ? '#act-toolbar [data-role="eraser"]' : `#act-toolbar [onclick="actSetColor('${col}')"]`;
+            const b = document.querySelector(sel); if (b) b.classList.add('active');
+        }
+        function actClear() { if (actStrokes.length && !confirm('칠판 필기를 모두 지울까요?')) return; actStrokes = []; actRedraw(); }
+        function actToggleFullscreen() {
+            const el = document.getElementById('act-board');
+            if (!document.fullscreenElement) { el.requestFullscreen ? el.requestFullscreen() : (el.webkitRequestFullscreen && el.webkitRequestFullscreen()); }
+            else { document.exitFullscreen ? document.exitFullscreen() : (document.webkitExitFullscreen && document.webkitExitFullscreen()); }
+            setTimeout(actResize, 200);
+        }
+        document.addEventListener('fullscreenchange', () => setTimeout(actResize, 200));
+
+        // ----- 위젯 공통 -----
+        function actCloseWidget(id) { const el = document.getElementById(id); if (el) el.remove(); delete actState[id]; }
+        function actMakeDraggable(w) {
+            const head = w.querySelector('.act-w-head');
+            let sx, sy, ox, oy, drag = false;
+            const start = e => { if (e.target.classList.contains('act-w-close')) return; drag = true; w.style.zIndex = ++actZ; const t = (e.touches && e.touches[0]) ? e.touches[0] : e; sx = t.clientX; sy = t.clientY; ox = w.offsetLeft; oy = w.offsetTop; e.preventDefault(); };
+            const move = e => { if (!drag) return; const t = (e.touches && e.touches[0]) ? e.touches[0] : e; w.style.left = (ox + t.clientX - sx) + 'px'; w.style.top = (oy + t.clientY - sy) + 'px'; };
+            const end = () => drag = false;
+            head.addEventListener('mousedown', start); window.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
+            head.addEventListener('touchstart', start, { passive: false }); window.addEventListener('touchmove', move, { passive: false }); window.addEventListener('touchend', end);
+        }
+        function actAddWidget(type) {
+            actSetMode('cursor'); // 위젯을 쓰려면 커서 모드
+            const layer = document.getElementById('act-widgets');
+            const id = 'actw' + (++actSeq);
+            const titles = { score: '⭐ 점수판', timer: '⏱️ 타이머', draw: '🎲 뽑기' };
+            const w = document.createElement('div');
+            w.className = 'act-widget'; w.id = id;
+            w.style.left = (40 + (actSeq % 6) * 34) + 'px';
+            w.style.top = (60 + (actSeq % 6) * 30) + 'px';
+            w.style.zIndex = ++actZ;
+            w.innerHTML = `<div class="act-w-head"><span>${titles[type] || '위젯'}</span><span class="act-w-close" onclick="actCloseWidget('${id}')">✕</span></div><div class="act-w-body" id="${id}-body"></div>`;
+            layer.appendChild(w);
+            actMakeDraggable(w);
+            if (type === 'score') actInitScore(id);
+            else if (type === 'timer') actInitTimer(id);
+            else if (type === 'draw') actInitDraw(id);
+        }
+
+        // ----- 점수판 위젯 -----
+        function actInitScore(id) { actState[id] = { mode: 'group', n: numberOfGroups || 4, vals: {} }; actRenderScore(id); }
+        function actScoreSetMode(id, m) { const s = actState[id]; s.mode = m; s.n = m === 'group' ? (numberOfGroups || 4) : Math.min(s.n, 12); actRenderScore(id); }
+        function actScoreCount(id, d) { const s = actState[id]; s.n = Math.max(1, Math.min(30, s.n + d)); actRenderScore(id); }
+        function actScoreChange(id, i, d) { const s = actState[id]; s.vals[i] = (s.vals[i] || 0) + d; document.getElementById(`${id}-v${i}`).innerText = s.vals[i]; }
+        function actRenderScore(id) {
+            const s = actState[id], group = s.mode === 'group';
+            const cols = Math.min(s.n, group ? 3 : 4);
+            let cards = '';
+            for (let i = 0; i < s.n; i++) {
+                const bg = group ? `var(--main-sky)` : '#f3eefb';
+                cards += `<div class="act-score-item" style="background:${bg};"><div style="font-size:12px; font-weight:800; color:#607d8b;">${group ? (i + 1) + '모둠' : (i + 1) + '번'}</div><div class="v" id="${id}-v${i}">${s.vals[i] || 0}</div><div class="r"><button style="background:#e57373;color:#fff;" onclick="actScoreChange('${id}',${i},-1)">−</button><button style="background:#66bb6a;color:#fff;" onclick="actScoreChange('${id}',${i},1)">＋</button></div></div>`;
+            }
+            document.getElementById(`${id}-body`).innerHTML = `
+                <div class="act-seg"><button class="${group ? 'on' : ''}" onclick="actScoreSetMode('${id}','group')">모둠</button><button class="${!group ? 'on' : ''}" onclick="actScoreSetMode('${id}','indiv')">개인</button></div>
+                <div class="act-count-ctl"><span>칸 수</span><button onclick="actScoreCount('${id}',-1)">−</button><b>${s.n}</b><button onclick="actScoreCount('${id}',1)">＋</button></div>
+                <div class="act-score-grid" style="grid-template-columns:repeat(${cols},1fr);">${cards}</div>`;
+        }
+
+        // ----- 타이머 위젯 -----
+        function actInitTimer(id) { actState[id] = { remain: 300, running: false, iv: null }; actRenderTimer(id); }
+        function actTimerFmt(s) { return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
+        function actTimerSet(id, min) { const s = actState[id]; actTimerStop(id); s.remain = Math.round(min * 60); actTimerPaint(id); }
+        function actTimerCustom(id) { const el = document.getElementById(`${id}-custom`); const v = parseFloat(el.value); if (v > 0) { actTimerSet(id, v); el.value = ''; actTimerStart(id); } }
+        function actTimerStart(id) {
+            const s = actState[id]; if (s.running || s.remain <= 0) return; s.running = true;
+            s.iv = setInterval(() => { s.remain--; if (s.remain <= 0) { s.remain = 0; actTimerStop(id); try { timerSound.currentTime = 0; timerSound.play(); } catch (e) {} } actTimerPaint(id); }, 1000);
+            actTimerPaint(id);
+        }
+        function actTimerStop(id) { const s = actState[id]; if (s.iv) clearInterval(s.iv); s.iv = null; s.running = false; actTimerPaint(id); }
+        function actTimerToggle(id) { const s = actState[id]; s.running ? actTimerStop(id) : actTimerStart(id); }
+        function actTimerPaint(id) {
+            const s = actState[id], d = document.getElementById(`${id}-disp`), b = document.getElementById(`${id}-toggle`);
+            if (!d) return; d.innerText = actTimerFmt(s.remain); d.classList.toggle('warn', s.remain <= 10 && s.remain > 0);
+            if (b) b.innerText = s.running ? '⏸ 정지' : '▶ 시작';
+        }
+        function actRenderTimer(id) {
+            document.getElementById(`${id}-body`).innerHTML = `
+                <div class="act-timer-display" id="${id}-disp">05:00</div>
+                <div class="act-seg"><button onclick="actTimerSet('${id}',1)">1분</button><button onclick="actTimerSet('${id}',3)">3분</button><button onclick="actTimerSet('${id}',5)">5분</button></div>
+                <div style="display:flex; gap:6px; margin-bottom:8px;"><button class="act-btn" style="background:var(--accent-blue); flex:2;" id="${id}-toggle" onclick="actTimerToggle('${id}')">▶ 시작</button><button class="act-btn" style="background:#90a4ae; flex:1;" onclick="actTimerSet('${id}',0)">리셋</button></div>
+                <input type="number" id="${id}-custom" placeholder="직접 분 입력 후 Enter" style="width:100%; padding:8px; border-radius:8px; border:1px solid #ddd; text-align:center; font-family:'Pretendard'; font-weight:700;" onkeypress="if(event.key==='Enter')actTimerCustom('${id}')">`;
+            actTimerPaint(id);
+        }
+
+        // ----- 뽑기 위젯 -----
+        function actInitDraw(id) { actState[id] = { mode: 'indiv', total: globalTotalStudents || 24, groups: numberOfGroups || 4, absent: '', pool: [], showSettings: false }; actDrawReset(id); }
+        function actDrawSetMode(id, m) { actState[id].mode = m; actDrawReset(id); }
+        function actDrawToggleSettings(id) { actState[id].showSettings = !actState[id].showSettings; actRenderDraw(id); }
+        function actDrawReadSettings(id) {
+            const s = actState[id];
+            const t = document.getElementById(`${id}-total`); if (t) s.total = Math.max(1, parseInt(t.value) || 1);
+            const g = document.getElementById(`${id}-groups`); if (g) s.groups = Math.max(1, parseInt(g.value) || 1);
+            const a = document.getElementById(`${id}-absent`); if (a) s.absent = a.value;
+        }
+        function actDrawReset(id) {
+            const s = actState[id]; actDrawReadSettings(id);
+            const abs = s.absent ? s.absent.split(',').map(x => parseInt(x.trim())).filter(x => x) : [];
+            if (s.mode === 'group') { s.pool = Array.from({ length: s.groups }, (_, i) => i + 1); }
+            else { s.pool = []; for (let i = 1; i <= s.total; i++) if (!abs.includes(i)) s.pool.push(i); }
+            s.last = null; actRenderDraw(id);
+        }
+        function actDrawPick(id) {
+            const s = actState[id];
+            if (!s.pool.length) { document.getElementById(`${id}-result`).innerText = '끝!'; return; }
+            const idx = Math.floor(Math.random() * s.pool.length);
+            const val = s.pool.splice(idx, 1)[0];
+            s.last = val;
+            try { pickSound.currentTime = 0; pickSound.play(); } catch (e) {}
+            const res = document.getElementById(`${id}-result`);
+            if (s.mode === 'group') {
+                const mem = (typeof groupMembersMap !== 'undefined' && groupMembersMap[val]) ? groupMembersMap[val] : null;
+                res.innerHTML = `${val}모둠` + (mem && mem.length ? `<div style="font-size:18px; color:#607d8b; margin-top:4px;">(${mem.join(', ')}번)</div>` : '');
+            } else res.innerHTML = `${val}<span style="font-size:24px;">번</span>`;
+            actRenderDrawFoot(id);
+        }
+        function actRenderDrawFoot(id) {
+            const s = actState[id], f = document.getElementById(`${id}-remain`);
+            if (f) f.innerText = `남은 ${s.mode === 'group' ? '모둠' : '번호'}: ${s.pool.length}개`;
+        }
+        function actRenderDraw(id) {
+            const s = actState[id], group = s.mode === 'group';
+            let settings = '';
+            if (s.showSettings) {
+                settings = group
+                    ? `<div style="margin-bottom:8px;">모둠 수 <input type="number" id="${id}-groups" value="${s.groups}" min="1" style="width:54px; padding:5px; border-radius:6px; border:1px solid #ccc; text-align:center;" onchange="actDrawReset('${id}')"></div>`
+                    : `<div style="margin-bottom:6px;">총원 <input type="number" id="${id}-total" value="${s.total}" min="1" style="width:54px; padding:5px; border-radius:6px; border:1px solid #ccc; text-align:center;" onchange="actDrawReset('${id}')"></div>
+                       <div style="margin-bottom:8px;">결석 <input type="text" id="${id}-absent" value="${s.absent}" placeholder="예: 3, 5" style="width:100px; padding:5px; border-radius:6px; border:1px solid #ccc;" onchange="actDrawReset('${id}')"></div>`;
+            }
+            document.getElementById(`${id}-body`).innerHTML = `
+                <div class="act-seg"><button class="${group ? 'on' : ''}" onclick="actDrawSetMode('${id}','group')">모둠</button><button class="${!group ? 'on' : ''}" onclick="actDrawSetMode('${id}','indiv')">개인</button></div>
+                <div style="text-align:right; margin-bottom:6px;"><span style="cursor:pointer; color:#78909c; font-size:12px; font-weight:700;" onclick="actDrawToggleSettings('${id}')"><i class="fa-solid fa-gear"></i> 설정</span></div>
+                <div style="font-size:13px; color:#90a4ae;">${settings}</div>
+                <div class="act-draw-result" id="${id}-result">?</div>
+                <div style="display:flex; gap:6px;"><button class="act-btn" style="background:${group ? '#2ecc71' : '#8e44ad'}; flex:2;" onclick="actDrawPick('${id}')">뽑기!</button><button class="act-btn" style="background:#90a4ae; flex:1;" onclick="actDrawReset('${id}')">리셋</button></div>
+                <div id="${id}-remain" style="text-align:center; font-size:12px; color:#b0bcc9; margin-top:8px;"></div>`;
+            actRenderDrawFoot(id);
+        }
 
         function addHomework() {
             const d = document.getElementById('hw-date').value; const c = document.getElementById('hw-category').value || '미분류'; const t = document.getElementById('hw-title').value; 
