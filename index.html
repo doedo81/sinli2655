@@ -764,21 +764,26 @@
             </div>
         </div>
 
-        <!-- 🗓️ 날짜 클릭 시 바로 뜨는 인라인 일정 입력 팝오버 -->
-        <div id="day-popover" style="display:none; position:fixed; z-index:2500; background:#fff; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.18); border:1px solid #e6eef7; width:280px; padding:14px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <b id="day-pop-title" style="color:var(--dark-blue);"></b>
-                <span onclick="closeDayPopover()" style="cursor:pointer; color:#aaa; font-weight:700;">✕</span>
-            </div>
-            <div id="day-pop-list" style="max-height:170px; overflow-y:auto; margin-bottom:10px;"></div>
-            <div style="display:flex; gap:5px;">
-                <select id="day-pop-type" style="padding:8px 4px; border-radius:7px; border:1px solid #ccc; font-weight:700;">
-                    <option value="birthday">🎂</option>
-                    <option value="event" selected>🎈</option>
-                    <option value="work">📌</option>
-                </select>
-                <input type="text" id="day-pop-text" placeholder="일정 입력 후 Enter" style="flex:1; min-width:0; padding:8px; border-radius:7px; border:1px solid #ccc;" onkeypress="if(event.key==='Enter') addDayPopEvent()">
-                <button class="action-btn" style="padding:8px 12px;" onclick="addDayPopEvent()">＋</button>
+        <!-- 🗓️ 날짜 클릭 시 뜨는 노션식 일정 창 (제목 + 내용 + 완료 체크) -->
+        <div class="modal-overlay" id="day-modal">
+            <div class="modal-box" style="max-width:560px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid #eef1f6; padding-bottom:10px;">
+                    <h2 id="day-pop-title" style="margin:0; color:var(--dark-blue); font-size:20px;"></h2>
+                    <button class="reset-btn" onclick="closeDayPopover()">닫기</button>
+                </div>
+                <div id="day-pop-list" style="max-height:300px; overflow-y:auto; margin-bottom:16px;"></div>
+                <div style="background:#f6f8fc; border:1px solid #e3e9f2; border-radius:12px; padding:12px;">
+                    <div style="display:flex; gap:8px; margin-bottom:8px;">
+                        <select id="day-pop-type" style="padding:9px 6px; border-radius:8px; border:1px solid #ccc; font-weight:700;">
+                            <option value="event" selected>🎈 행사</option>
+                            <option value="work">📌 업무</option>
+                            <option value="birthday">🎂 생일</option>
+                        </select>
+                        <input type="text" id="day-pop-text" placeholder="제목 — 캘린더에 이것만 표시돼요" style="flex:1; min-width:0; padding:9px 10px; border-radius:8px; border:1px solid #ccc; font-weight:700;" onkeypress="if(event.key==='Enter') addDayPopEvent()">
+                    </div>
+                    <textarea id="day-pop-detail" placeholder="내용 (시간·장소·준비물 등) — 날짜를 클릭하면 보여요. 비워도 됩니다." style="width:100%; height:64px; padding:9px 10px; border-radius:8px; border:1px solid #ccc; line-height:1.5;"></textarea>
+                    <button class="action-btn" style="width:100%; margin-top:8px; padding:11px;" onclick="addDayPopEvent()">＋ 일정 추가</button>
+                </div>
             </div>
         </div>
 
@@ -1044,7 +1049,7 @@
                 renderCalendar();
                 renderCalendarTab();
                 applyCalendarToBoard();
-                if (document.getElementById('day-popover').style.display === 'block') renderDayPopList();
+                if (document.getElementById('day-modal').style.display === 'flex') renderDayPopList();
             });
         }
 
@@ -1345,7 +1350,7 @@
                 const evs = Object.keys(evObj).map(id => evObj[id]);
                 let chips = '';
                 evs.slice(0, 4).forEach(e => {
-                    chips += `<div class="cal-chip chip-${e.type}">${EVENT_ICON[e.type] || ''} ${escapeHtml(e.text)}</div>`;
+                    chips += `<div class="cal-chip chip-${e.type}" style="${e.done ? 'opacity:0.5; text-decoration:line-through;' : ''}">${e.done ? '✓ ' : ''}${EVENT_ICON[e.type] || ''} ${escapeHtml(e.text)}</div>`;
                 });
                 if (evs.length > 4) chips += `<div class="cal-more">+${evs.length - 4}개 더</div>`;
                 html += `<div class="cal-cell ${cls}" onclick="openDayPopover('${k}', event)"><span class="dnum">${i}</span>${chips}<span class="cell-add">＋ 추가</span></div>`;
@@ -1353,51 +1358,47 @@
             con.innerHTML = html;
         }
         function changeCalTabMonth(v) { calDate.setMonth(calDate.getMonth() + v); renderCalendarTab(); renderCalendar(); }
-        // 🗓️ 날짜 칸 클릭 → 그 자리에 인라인 일정 입력 팝오버
+        // 🗓️ 날짜 칸 클릭 → 노션식 일정 창 (제목·내용·완료 체크)
         let dayPopDate = null;
         function openDayPopover(key, evt) {
             dayPopDate = key;
             const parts = key.split('-');
-            document.getElementById('day-pop-title').innerText = `${parseInt(parts[1])}월 ${parseInt(parts[2])}일 일정`;
+            document.getElementById('day-pop-title').innerText = `🗓️ ${parseInt(parts[1])}월 ${parseInt(parts[2])}일 일정`;
             renderDayPopList();
             document.getElementById('day-pop-text').value = '';
-            const pop = document.getElementById('day-popover');
-            pop.style.display = 'block';
-            const rect = evt.currentTarget.getBoundingClientRect();
-            const popW = 280, popH = pop.offsetHeight || 240;
-            let left = rect.left;
-            if (left + popW > window.innerWidth - 8) left = window.innerWidth - popW - 8;
-            if (left < 8) left = 8;
-            let top = rect.bottom + 4;
-            if (top + popH > window.innerHeight - 8) top = rect.top - popH - 4;
-            if (top < 8) top = 8;
-            pop.style.left = left + 'px';
-            pop.style.top = top + 'px';
-            setTimeout(() => document.getElementById('day-pop-text').focus(), 40);
+            document.getElementById('day-pop-detail').value = '';
+            document.getElementById('day-modal').style.display = 'flex';
+            setTimeout(() => document.getElementById('day-pop-text').focus(), 60);
         }
-        function closeDayPopover() { document.getElementById('day-popover').style.display = 'none'; dayPopDate = null; }
+        function closeDayPopover() { document.getElementById('day-modal').style.display = 'none'; dayPopDate = null; }
         function renderDayPopList() {
             const el = document.getElementById('day-pop-list');
             const evs = dayPopDate ? getCalendarEventsFor(dayPopDate) : [];
-            if (evs.length === 0) { el.innerHTML = '<div style="color:#aaa; font-size:13px; padding:4px 0;">등록된 일정이 없어요. 아래에 입력하세요.</div>'; return; }
-            el.innerHTML = evs.map(e => `<div style="padding:6px 8px; border:1px solid #eee; border-radius:7px; margin-bottom:5px;"><div style="display:flex; justify-content:space-between; align-items:center;"><span style="font-weight:700; font-size:13px;">${EVENT_ICON[e.type] || ''} ${escapeHtml(e.text)}</span><span onclick="deleteCalendarEvent('${dayPopDate}','${e.id}')" style="cursor:pointer; color:#e57373; font-size:12px; font-weight:700; margin-left:8px;">삭제</span></div>${e.detail ? `<div style="font-size:12px; color:#607d8b; margin-top:3px; line-height:1.4;">${escapeHtml(e.detail)}</div>` : ''}</div>`).join('');
+            if (evs.length === 0) { el.innerHTML = '<div style="color:#aaa; text-align:center; padding:20px 0;">등록된 일정이 없어요. 아래에서 추가하세요.</div>'; return; }
+            el.innerHTML = evs.map(e => `
+                <div style="display:flex; gap:10px; align-items:flex-start; padding:11px 12px; border:1px solid #edf1f7; border-radius:10px; margin-bottom:8px; background:${e.done ? '#f7f9fb' : '#fff'};">
+                    <input type="checkbox" ${e.done ? 'checked' : ''} onchange="calToggleEventDone('${dayPopDate}','${e.id}', this.checked)" title="완료 체크" style="width:19px; height:19px; margin-top:1px; accent-color:#7b6cd9; cursor:pointer; flex-shrink:0;">
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-weight:700; font-size:15px; color:${e.done ? '#9aa3ad' : '#37474f'}; ${e.done ? 'text-decoration:line-through;' : ''}">${EVENT_ICON[e.type] || ''} ${escapeHtml(e.text)}</div>
+                        ${e.detail ? `<div style="font-size:13px; color:${e.done ? '#b8bfc7' : '#607d8b'}; margin-top:3px; line-height:1.55; white-space:pre-wrap; ${e.done ? 'text-decoration:line-through;' : ''}">${escapeHtml(e.detail)}</div>` : ''}
+                    </div>
+                    <span onclick="deleteCalendarEvent('${dayPopDate}','${e.id}')" style="cursor:pointer; color:#e57373; font-size:12px; font-weight:700; flex-shrink:0;">삭제</span>
+                </div>`).join('');
         }
         function addDayPopEvent() {
             const inp = document.getElementById('day-pop-text');
             const text = inp.value.trim();
             if (!dayPopDate || !text) { inp.focus(); return; }
             const type = document.getElementById('day-pop-type').value;
-            calendarEventsRef.child(dayPopDate).push({ type: type, text: text });
+            const detail = document.getElementById('day-pop-detail').value.trim();
+            calendarEventsRef.child(dayPopDate).push({ type: type, text: text, detail: detail, done: false });
             inp.value = '';
+            document.getElementById('day-pop-detail').value = '';
             inp.focus();
         }
-        // 팝오버 바깥 클릭 시 닫기 (날짜 칸이나 팝오버 내부 클릭은 유지)
-        document.addEventListener('click', function(e) {
-            const pop = document.getElementById('day-popover');
-            if (pop && pop.style.display === 'block' && !pop.contains(e.target) && !e.target.closest('.cal-cell')) {
-                closeDayPopover();
-            }
-        });
+        function calToggleEventDone(dateKey, id, done) {
+            calendarEventsRef.child(dateKey).child(id).child('done').set(!!done);
+        }
         function selectDate(key) {
             if(window.flushDashboardSave) window.flushDashboardSave();
             viewDate = new Date(key);
@@ -1522,7 +1523,7 @@
 
         function getCalendarEventsFor(dateKey) {
             const obj = allCalendarEvents[dateKey] || {};
-            return Object.keys(obj).map(id => ({ id, type: obj[id].type, text: obj[id].text, detail: obj[id].detail || '' }));
+            return Object.keys(obj).map(id => ({ id, type: obj[id].type, text: obj[id].text, detail: obj[id].detail || '', done: !!obj[id].done }));
         }
 
         const EVENT_ICON = { birthday: '🎂', event: '🎈', work: '📌' };
@@ -1534,7 +1535,7 @@
             const evs = getCalendarEventsFor(getFormattedDate(d)).filter(e => e.type === 'event' || e.type === 'work');
             if (evs.length === 0) { el.style.display = 'none'; el.innerHTML = ''; return; }
             el.style.display = 'block';
-            el.innerHTML = evs.map(e => `<div>${EVENT_ICON[e.type]} ${escapeHtml(e.text)}${e.detail ? ` <span style="font-weight:400; color:#607d8b;">— ${escapeHtml(e.detail)}</span>` : ''}</div>`).join('');
+            el.innerHTML = evs.map(e => `<div style="${e.done ? 'text-decoration:line-through; opacity:0.55;' : ''}">${e.done ? '✓ ' : ''}${EVENT_ICON[e.type]} ${escapeHtml(e.text)}${e.detail ? ` <span style="font-weight:400; color:#607d8b;">— ${escapeHtml(e.detail)}</span>` : ''}</div>`).join('');
         }
 
         // 캘린더 일정을 현재 보고 있는 날짜의 칠판에 반영
