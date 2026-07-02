@@ -764,25 +764,28 @@
             </div>
         </div>
 
-        <!-- 🗓️ 날짜 클릭 시 뜨는 노션식 일정 창 (제목 + 내용 + 완료 체크) -->
+        <!-- 🗓️ 날짜 클릭 시 뜨는 노션식 일정 창 (큰 제목 → 속성 → 내용 → 이 날의 일정) -->
         <div class="modal-overlay" id="day-modal">
-            <div class="modal-box" style="max-width:560px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid #eef1f6; padding-bottom:10px;">
-                    <h2 id="day-pop-title" style="margin:0; color:var(--dark-blue); font-size:20px;"></h2>
-                    <button class="reset-btn" onclick="closeDayPopover()">닫기</button>
+            <div class="modal-box" style="max-width:600px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <span id="day-pop-title" style="font-size:13px; font-weight:700; color:#78909c; background:#f2f6fc; border-radius:6px; padding:5px 12px;"></span>
+                    <button class="reset-btn" style="padding:6px 12px;" onclick="closeDayPopover()">닫기</button>
                 </div>
-                <div id="day-pop-list" style="max-height:300px; overflow-y:auto; margin-bottom:16px;"></div>
-                <div style="background:#f6f8fc; border:1px solid #e3e9f2; border-radius:12px; padding:12px;">
-                    <div style="display:flex; gap:8px; margin-bottom:8px;">
-                        <select id="day-pop-type" style="padding:9px 6px; border-radius:8px; border:1px solid #ccc; font-weight:700;">
-                            <option value="event" selected>🎈 행사</option>
-                            <option value="work">📌 업무</option>
-                            <option value="birthday">🎂 생일</option>
-                        </select>
-                        <input type="text" id="day-pop-text" placeholder="제목 — 캘린더에 이것만 표시돼요" style="flex:1; min-width:0; padding:9px 10px; border-radius:8px; border:1px solid #ccc; font-weight:700;" onkeypress="if(event.key==='Enter') addDayPopEvent()">
-                    </div>
-                    <textarea id="day-pop-detail" placeholder="내용 (시간·장소·준비물 등) — 날짜를 클릭하면 보여요. 비워도 됩니다." style="width:100%; height:64px; padding:9px 10px; border-radius:8px; border:1px solid #ccc; line-height:1.5;"></textarea>
-                    <button class="action-btn" style="width:100%; margin-top:8px; padding:11px;" onclick="addDayPopEvent()">＋ 일정 추가</button>
+                <input type="text" id="day-pop-text" placeholder="새 일정" style="width:100%; border:none; outline:none; font-size:27px; font-weight:800; color:#2c3440; padding:10px 0 4px 0; background:transparent; font-family:'Pretendard',sans-serif; letter-spacing:-0.02em;" onkeypress="if(event.key==='Enter') document.getElementById('day-pop-detail').focus()">
+                <div style="display:flex; align-items:center; gap:12px; padding:9px 0; border-top:1px solid #f0f3f8; border-bottom:1px solid #f0f3f8; margin-bottom:6px;">
+                    <span style="color:#90a4ae; font-size:13px; font-weight:600;"><i class="fa-solid fa-tag"></i> 종류</span>
+                    <select id="day-pop-type" style="padding:5px 8px; border-radius:7px; border:1px solid #e0e6ef; font-weight:700; background:#fff; color:#546e7a;">
+                        <option value="event" selected>🎈 행사</option>
+                        <option value="work">📌 업무</option>
+                        <option value="birthday">🎂 생일</option>
+                    </select>
+                    <span style="font-size:12px; color:#b0bcc9;">캘린더엔 제목만 표시돼요</span>
+                </div>
+                <textarea id="day-pop-detail" placeholder="내용을 입력하세요 (시간 · 장소 · 준비물 등)" style="width:100%; min-height:78px; border:none; outline:none; resize:vertical; font-size:14.5px; line-height:1.65; color:#455a64; background:transparent; font-family:'Pretendard',sans-serif; padding:4px 0;"></textarea>
+                <button class="action-btn" style="width:100%; margin:6px 0 18px 0; padding:11px;" onclick="addDayPopEvent()">＋ 일정 추가</button>
+                <div style="border-top:1px solid #eef1f6; padding-top:12px;">
+                    <div style="font-size:13px; font-weight:700; color:#78909c; margin-bottom:8px;">📋 이 날의 일정</div>
+                    <div id="day-pop-list" style="max-height:260px; overflow-y:auto;"></div>
                 </div>
             </div>
         </div>
@@ -1363,7 +1366,7 @@
         function openDayPopover(key, evt) {
             dayPopDate = key;
             const parts = key.split('-');
-            document.getElementById('day-pop-title').innerText = `🗓️ ${parseInt(parts[1])}월 ${parseInt(parts[2])}일 일정`;
+            document.getElementById('day-pop-title').innerText = `📅 ${parseInt(parts[1])}월 ${parseInt(parts[2])}일`;
             renderDayPopList();
             document.getElementById('day-pop-text').value = '';
             document.getElementById('day-pop-detail').value = '';
@@ -1374,7 +1377,7 @@
         function renderDayPopList() {
             const el = document.getElementById('day-pop-list');
             const evs = dayPopDate ? getCalendarEventsFor(dayPopDate) : [];
-            if (evs.length === 0) { el.innerHTML = '<div style="color:#aaa; text-align:center; padding:20px 0;">등록된 일정이 없어요. 아래에서 추가하세요.</div>'; return; }
+            if (evs.length === 0) { el.innerHTML = '<div style="color:#b0bcc9; text-align:center; padding:16px 0; font-size:13px;">아직 일정이 없어요. 위에서 제목을 입력하고 추가하세요.</div>'; return; }
             el.innerHTML = evs.map(e => `
                 <div style="display:flex; gap:10px; align-items:flex-start; padding:11px 12px; border:1px solid #edf1f7; border-radius:10px; margin-bottom:8px; background:${e.done ? '#f7f9fb' : '#fff'};">
                     <input type="checkbox" ${e.done ? 'checked' : ''} onchange="calToggleEventDone('${dayPopDate}','${e.id}', this.checked)" title="완료 체크" style="width:19px; height:19px; margin-top:1px; accent-color:#7b6cd9; cursor:pointer; flex-shrink:0;">
