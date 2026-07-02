@@ -245,7 +245,8 @@
         .act-w-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: linear-gradient(135deg,#5c6c95,#434f70); color: #fff; cursor: move; font-weight: 800; font-size: 14px; user-select: none; }
         .act-w-close { cursor: pointer; opacity: 0.85; font-size: 15px; padding: 0 4px; }
         .act-w-close:hover { opacity: 1; }
-        .act-w-body { padding: 12px; }
+        .act-w-body { padding: 12px; transform-origin: top left; }
+        .act-w-resize { position: absolute; right: 0; bottom: 0; width: 20px; height: 20px; cursor: nwse-resize; z-index: 3; background: linear-gradient(135deg, transparent 50%, #b0bcc9 50%, #b0bcc9 68%, transparent 68%, transparent 80%, #b0bcc9 80%); border-bottom-right-radius: 14px; }
         .act-seg { display: flex; gap: 4px; margin-bottom: 10px; }
         .act-seg button { flex: 1; padding: 6px; border: 1px solid #dde4ee; background: #fafbfd; border-radius: 8px; font-weight: 700; font-size: 13px; color: #607d8b; cursor: pointer; font-family: 'Pretendard',sans-serif; }
         .act-seg button.on { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
@@ -2490,6 +2491,29 @@
             head.addEventListener('mousedown', start); window.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
             head.addEventListener('touchstart', start, { passive: false }); window.addEventListener('touchmove', move, { passive: false }); window.addEventListener('touchend', end);
         }
+        // 위젯 우하단 핸들로 크기 조절 (본문 내용도 비율대로 확대)
+        function actMakeResizable(w, type) {
+            const handle = w.querySelector('.act-w-resize');
+            const body = w.querySelector('.act-w-body');
+            const baseW = { score: 260, timer: 240, draw: 240 }[type] || 240;
+            let sx, sy, ow, oh, rz = false;
+            const start = e => { rz = true; w.style.zIndex = ++actZ; const t = (e.touches && e.touches[0]) ? e.touches[0] : e; sx = t.clientX; sy = t.clientY; ow = w.offsetWidth; oh = w.offsetHeight; e.preventDefault(); e.stopPropagation(); };
+            const move = e => {
+                if (!rz) return;
+                const t = (e.touches && e.touches[0]) ? e.touches[0] : e;
+                const nw = Math.max(200, ow + (t.clientX - sx));
+                const nh = Math.max(150, oh + (t.clientY - sy));
+                w.style.width = nw + 'px'; w.style.height = nh + 'px';
+                const scale = nw / baseW;
+                body.style.transform = 'scale(' + scale + ')';
+                body.style.width = (100 / scale) + '%';
+                body.style.height = ((nh - 36) / scale) + 'px';
+                e.preventDefault();
+            };
+            const end = () => rz = false;
+            handle.addEventListener('mousedown', start); window.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
+            handle.addEventListener('touchstart', start, { passive: false }); window.addEventListener('touchmove', move, { passive: false }); window.addEventListener('touchend', end);
+        }
         function actAddWidget(type) {
             actSetMode('cursor'); // 위젯을 쓰려면 커서 모드
             const layer = document.getElementById('act-widgets');
@@ -2500,9 +2524,10 @@
             w.style.left = (40 + (actSeq % 6) * 34) + 'px';
             w.style.top = (60 + (actSeq % 6) * 30) + 'px';
             w.style.zIndex = ++actZ;
-            w.innerHTML = `<div class="act-w-head"><span>${titles[type] || '위젯'}</span><span class="act-w-close" onclick="actCloseWidget('${id}')">✕</span></div><div class="act-w-body" id="${id}-body"></div>`;
+            w.innerHTML = `<div class="act-w-head"><span>${titles[type] || '위젯'}</span><span class="act-w-close" onclick="actCloseWidget('${id}')">✕</span></div><div class="act-w-body" id="${id}-body"></div><div class="act-w-resize" title="크기 조절"></div>`;
             layer.appendChild(w);
             actMakeDraggable(w);
+            actMakeResizable(w, type);
             if (type === 'score') actInitScore(id);
             else if (type === 'timer') actInitTimer(id);
             else if (type === 'draw') actInitDraw(id);
