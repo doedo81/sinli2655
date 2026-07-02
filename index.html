@@ -1354,10 +1354,11 @@
                 const dow = new Date(y, m, i).getDay();
                 const cls = [todayKey === k ? 'today' : '', dow === 0 ? 'sun' : '', dow === 6 ? 'sat' : ''].join(' ');
                 const evObj = allCalendarEvents[k] || {};
-                const evs = Object.keys(evObj).map(id => evObj[id]);
+                const evs = Object.keys(evObj).map(id => Object.assign({ id: id }, evObj[id]));
                 let chips = '';
                 evs.slice(0, 4).forEach(e => {
-                    chips += `<div class="cal-chip chip-${e.type}" style="${e.done ? 'opacity:0.5; text-decoration:line-through;' : ''}">${e.done ? '✓ ' : ''}${EVENT_ICON[e.type] || ''} ${escapeHtml(e.text)}</div>`;
+                    const box = e.type === 'birthday' ? '' : `<input type="checkbox" ${e.done ? 'checked' : ''} onclick="event.stopPropagation()" onchange="calToggleEventDone('${k}','${e.id}', this.checked)" title="완료 체크" style="width:13px; height:13px; accent-color:#7b6cd9; cursor:pointer; flex-shrink:0; margin:0;">`;
+                    chips += `<div class="cal-chip chip-${e.type}" style="display:flex; align-items:center; gap:5px; ${e.done ? 'opacity:0.5;' : ''}">${box}<span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${e.done ? 'text-decoration:line-through;' : ''}">${EVENT_ICON[e.type] || ''} ${escapeHtml(e.text)}</span></div>`;
                 });
                 if (evs.length > 4) chips += `<div class="cal-more">+${evs.length - 4}개 더</div>`;
                 html += `<div class="cal-cell ${cls}" onclick="openDayPopover('${k}', event)"><span class="dnum">${i}</span>${chips}<span class="cell-add">＋ 추가</span></div>`;
