@@ -756,7 +756,7 @@
 
         <!-- 📅 일정 관리 모달 -->
         <!-- 🤖 메신저(AI) 전용 팝업 -->
-        <div class="modal-overlay" id="calendar-event-modal">
+        <div class="modal-overlay" id="calendar-event-modal" onclick="if(event.target===this) closeEventModal()">
             <div class="modal-box" style="max-width: 480px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
                     <h2 style="margin:0; color:#7e57c2;">🤖 메신저로 일정 추가</h2>
@@ -769,7 +769,7 @@
         </div>
 
         <!-- 🗓️ 노션식 일정 창: 자동 저장 (버튼 없음) -->
-        <div class="modal-overlay" id="day-modal">
+        <div class="modal-overlay" id="day-modal" onclick="if(event.target===this) closeDayPopover()">
             <div class="modal-box" style="max-width:600px;">
                 <div style="display:flex; justify-content:flex-end;">
                     <button class="reset-btn" style="padding:6px 12px;" onclick="closeDayPopover()">닫기</button>
