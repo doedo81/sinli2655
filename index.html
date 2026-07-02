@@ -606,9 +606,12 @@
                                 <div id="ns-row-view" class="ns-opt-row"><span id="ns-view-toggle" style="display:none;">보기 <button type="button" id="ns-view-grid" onclick="nsSetView('grid')">모둠</button><button type="button" id="ns-view-list" onclick="nsSetView('list')" style="margin-left:4px;">목록</button></span></div>
                             </div>
                             <div class="ns-step">
-                                <div class="ns-step-head"><span class="ns-step-num">3</span><h3>명단 입력</h3></div>
-                                <p id="ns-roster-hint" style="font-size:12px; color:#8a94a6; margin:0 0 6px 0; line-height:1.5;">한 줄에 <b>이름 [성별] 점수 점수…</b> 점수가 여러 개면 합산해 등급을 나눠요. 성별 생략 시 이름으로 추정.</p>
-                                <textarea id="ns-roster" style="width:100%; height:120px; padding:10px; border-radius:8px; border:1px solid #ccc; line-height:1.5;" placeholder="김민준 남 20 18 19&#10;이서연 여 17 20 18&#10;박도윤 18 17 19"></textarea>
+                                <div class="ns-step-head"><span class="ns-step-num">3</span><h3>점수 · 기피 입력</h3></div>
+                                <div id="ns-roster-status" style="font-size:12.5px; background:#f2f6fc; border:1px solid #dbe6f3; border-radius:8px; padding:8px 10px; margin-bottom:10px; line-height:1.6; color:#546e7a;"></div>
+                                <div id="ns-score-wrap">
+                                    <p id="ns-score-hint" style="font-size:12px; color:#8a94a6; margin:0 0 6px 0; line-height:1.5;"></p>
+                                    <textarea id="ns-scores" style="width:100%; height:100px; padding:10px; border-radius:8px; border:1px solid #ccc; line-height:1.5;" placeholder="김민준 20 18 19&#10;이서연 17 20 18"></textarea>
+                                </div>
                                 <div id="ns-avoid-wrap" style="margin-top:10px;">
                                     <p style="font-size:12px; color:#c62828; margin:0 0 6px 0; line-height:1.5;">🚫 <b>꼭 떨어뜨릴 학생</b> — 한 줄에 두 명. 절대 같은 모둠/짝 금지.</p>
                                     <textarea id="ns-avoid" style="width:100%; height:56px; padding:10px; border-radius:8px; border:1px solid #ef9a9a; line-height:1.5;" placeholder="김민준 이서연"></textarea>
@@ -698,9 +701,9 @@
                     
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
                         <div>
-                            <div style="font-weight:bold; color:var(--dark-blue); font-size:14px;">👥 학생 명단 성별 데이터</div>
-                            <p style="font-size:12px; color:#555; margin: 5px 0;">작성 예: 1번 남, 2번 여...</p>
-                            <textarea id="set-student-roster" style="height:100px; font-family:'Pretendard'; padding:10px; border-radius:8px; border:1px solid #ccc; width:100%; line-height:1.5;" placeholder="1번 남&#10;2번 여"></textarea>
+                            <div style="font-weight:bold; color:var(--dark-blue); font-size:14px;">👥 학생 명단 (번호 이름 성별)</div>
+                            <p style="font-size:12px; color:#555; margin: 5px 0;">작성 예: 1 김민준 남 — 한 줄에 한 명. 자리배치가 이 명단을 사용해요. (옛 형식 "1번 남"도 인식)</p>
+                            <textarea id="set-student-roster" style="height:100px; font-family:'Pretendard'; padding:10px; border-radius:8px; border:1px solid #ccc; width:100%; line-height:1.5;" placeholder="1 김민준 남&#10;2 이서연 여"></textarea>
                         </div>
                         <div>
                             <div style="font-weight:bold; color:var(--dark-blue); font-size:14px;">🚫 기피 학생 설정 (절대 같은 모둠 X)</div>
@@ -956,7 +959,7 @@
                     globalSeparatedStr = s.separatedPairs || "";
                     globalBirthdaysStr = s.birthdays || "";
                     pastGroupsRecord = s.pastGroups || {};
-                    parseStudentRoster(); parseSeparatedPairs(); parseBirthdays();
+                    parseStudentRoster(); parseSeparatedPairs(); parseBirthdays(); nsUpdateRosterStatus();
                     
                     document.getElementById('set-total-students').value = globalTotalStudents;
                     document.getElementById('set-class-name').value = s.className || "";
@@ -1433,6 +1436,7 @@
             else { document.getElementById(t + '-tab').classList.add('active'); }
 
             if(t === 'calendar') renderCalendarTab();
+            if(t === 'seating') nsUpdateStepUI();
 
             document.querySelectorAll('.tool-box-popup, .tool-box-inline').forEach(box => box.style.display = 'none');
         }
@@ -1654,20 +1658,53 @@
         function nsShuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
         function nsParseRoster() {
             nsStudents = [];
-            const text = document.getElementById('ns-roster').value.trim();
-            if (!text) return;
-            text.split('\n').forEach(line => {
+            // 점수칸 파싱: 한 줄에 "이름 점수 점수…" (이름만 있어도 됨)
+            const scoreEl = document.getElementById('ns-scores');
+            const scoreLines = [];
+            if (scoreEl && scoreEl.value.trim()) scoreEl.value.trim().split('\n').forEach(line => {
                 const t = line.trim(); if (!t) return;
                 const tokens = t.split(/\s+/);
-                const name = tokens[0];
-                let gender = null; const nums = [];
-                tokens.slice(1).forEach(tok => {
+                let key = null, gender = null; const nums = [];
+                tokens.forEach(tok => {
                     if (tok === '남' || tok === '여') gender = tok;
-                    else if (!isNaN(parseFloat(tok))) nums.push(parseFloat(tok));
+                    else if (/^[\d.]+$/.test(tok)) nums.push(parseFloat(tok));
+                    else if (!key) key = tok;
                 });
-                if (!gender) gender = nsEstimateGender(name);
-                nsStudents.push({ id: 'ns' + nsStudents.length, name, gender, score: nums.reduce((x, y) => x + y, 0), hasScore: nums.length > 0 });
+                if (key || nums.length) scoreLines.push({ key, gender, nums });
             });
+            const scoreMap = {};
+            scoreLines.forEach(sl => { if (sl.key) scoreMap[sl.key] = sl.nums; });
+
+            // ① 기초세팅 학생 명단(번호 이름 성별)에서 이름·성별을 불러오고, 점수는 이름으로 매칭
+            const src = (typeof globalStudentRosterStr === 'string' ? globalStudentRosterStr : '').trim();
+            if (src) {
+                src.split('\n').forEach(line => {
+                    const t = line.trim(); if (!t) return;
+                    const tokens = t.split(/\s+/);
+                    let name = '', gender = null, num = null;
+                    tokens.forEach(tok => {
+                        if (tok === '남' || tok === '여') gender = tok;
+                        else if (/^\d+[.번)]*$/.test(tok)) { if (num === null) num = parseInt(tok); }
+                        else if (!name) name = tok;
+                    });
+                    if (!name && num !== null) name = num + '번';
+                    if (!name) return;
+                    if (!gender) gender = nsEstimateGender(name);
+                    const nums = scoreMap[name] || [];
+                    nsStudents.push({ id: 'ns' + nsStudents.length, name, gender, score: nums.reduce((x, y) => x + y, 0), hasScore: nums.length > 0 });
+                });
+                // 점수칸에 이름+점수를 넣었는데 명단과 하나도 안 맞으면 → 점수칸을 명단으로 사용
+                const matched = nsStudents.filter(s => s.hasScore).length;
+                if (scoreLines.some(sl => sl.key && sl.nums.length) && matched === 0) nsStudents = [];
+            }
+            // ② 기초세팅 명단이 없거나 매칭 실패 시: 점수칸의 이름으로 명단 구성
+            if (nsStudents.length === 0) {
+                scoreLines.forEach(sl => {
+                    if (!sl.key) return;
+                    const g = sl.gender || nsEstimateGender(sl.key);
+                    nsStudents.push({ id: 'ns' + nsStudents.length, name: sl.key, gender: g, score: sl.nums.reduce((x, y) => x + y, 0), hasScore: sl.nums.length > 0 });
+                });
+            }
         }
         function nsAssignTiers() {
             const arr = nsStudents.slice().sort((a, b) => b.score - a.score);
@@ -1747,7 +1784,7 @@
             if (btn) btn.classList.add('active');
             document.getElementById('ns-groups').value = (f === 'columns') ? 3 : 6;
             nsUpdateStepUI();
-            if (nsArr && document.getElementById('ns-roster').value.trim()) nsGenerate();
+            if (nsArr && nsStudents.length) nsGenerate();
         }
         function nsUpdateStepUI() {
             const f = document.getElementById('ns-formation').value;
@@ -1766,11 +1803,35 @@
                 free: '네모칸을 자유롭게 끌어 옮기고, 이름을 눌러 수정할 수 있어요. 옵션이 필요 없어요.'
             };
             const h = document.getElementById('ns-step2-hint'); if (h) h.innerText = hints[f] || '';
+            const scoreHints = {
+                cooperative: '📝 점수 입력 — 한 줄에 이름 점수 점수… (합산해 등급 산출). 이름은 기초세팅 명단과 같게 쓰세요.',
+                columns: '(선택) 기초세팅 명단이 없으면 여기에 이름을 한 줄씩 입력해도 돼요.',
+                exam: '(선택) 기초세팅 명단이 없으면 여기에 이름을 한 줄씩 입력해도 돼요.',
+                free: '(선택) 기초세팅 명단이 없으면 여기에 이름을 한 줄씩 입력해도 돼요.'
+            };
+            const sh = document.getElementById('ns-score-hint'); if (sh) sh.innerText = scoreHints[f] || '';
+            nsUpdateRosterStatus();
+        }
+        // 기초세팅 명단 불러오기 상태 표시
+        function nsUpdateRosterStatus() {
+            const el = document.getElementById('ns-roster-status');
+            if (!el) return;
+            const src = (typeof globalStudentRosterStr === 'string' ? globalStudentRosterStr : '').trim();
+            if (!src) {
+                el.innerHTML = '⚠️ <b>기초세팅에 학생 명단이 없어요.</b> <a href="javascript:openSettingsModal()" style="color:#5b97d1; font-weight:700;">기초세팅 열기</a> — 또는 아래 점수 칸에 <b>이름 점수…</b>로 직접 입력해도 됩니다.';
+                return;
+            }
+            let n = 0, m = 0, f = 0;
+            src.split('\n').forEach(line => {
+                const t = line.trim(); if (!t) return; n++;
+                if (/(^|\s)남(\s|$)/.test(t)) m++; else if (/(^|\s)여(\s|$)/.test(t)) f++;
+            });
+            el.innerHTML = `👥 기초세팅 명단 <b>${n}명</b> 불러옴 (남 ${m} · 여 ${f}${n - m - f > 0 ? ` · 미표기 ${n - m - f}` : ''}) <a href="javascript:openSettingsModal()" style="color:#5b97d1; font-weight:700;">수정</a>`;
         }
         nsUpdateStepUI();
         function nsGenerate() {
             nsParseRoster();
-            if (nsStudents.length === 0) { alert('학생 명단(이름/점수)을 입력해 주세요.'); return; }
+            if (nsStudents.length === 0) { alert('학생 명단이 없어요.\n[기초 세팅]에서 학생 명단(번호 이름 성별)을 입력하거나,\n점수 칸에 "이름 점수…"로 직접 입력해 주세요.'); return; }
             const formation = document.getElementById('ns-formation').value;
             const boyGirl = document.getElementById('ns-boygirl').checked;
             const groupCount = Math.max(1, parseInt(document.getElementById('ns-groups').value) || 6);
@@ -2389,7 +2450,7 @@
             globalStudentRosterStr = data.roster;
             globalSeparatedStr = data.separatedPairs;
             globalBirthdaysStr = data.birthdays;
-            parseStudentRoster(); parseSeparatedPairs(); parseBirthdays();
+            parseStudentRoster(); parseSeparatedPairs(); parseBirthdays(); nsUpdateRosterStatus();
 
             // Gemini API 키는 Firebase가 아니라 이 브라우저에만 저장
             const geminiKey = document.getElementById('set-gemini-key').value.trim();
