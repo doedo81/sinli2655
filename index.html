@@ -256,6 +256,15 @@
         .act-timer-display.warn { color: #e53935; }
         .act-btn { border: none; border-radius: 9px; padding: 9px 12px; font-weight: 800; cursor: pointer; font-family: 'Pretendard',sans-serif; color: #fff; font-size: 14px; }
         .act-draw-result { font-size: 46px; font-weight: 900; text-align: center; padding: 14px 8px; color: var(--accent-blue); line-height: 1.1; min-height: 60px; }
+        /* 뽑기 카드 뒤집기 */
+        .actdraw-grid { display: grid; gap: 6px; margin-top: 4px; }
+        .actdraw-card { position: relative; height: 46px; perspective: 500px; cursor: pointer; }
+        .actdraw-inner { position: absolute; inset: 0; transition: transform 0.5s; transform-style: preserve-3d; }
+        .actdraw-card.flipped .actdraw-inner { transform: rotateY(180deg); }
+        .actdraw-face { position: absolute; inset: 0; -webkit-backface-visibility: hidden; backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; font-weight: 900; font-size: 18px; }
+        .actdraw-front { background: #d6dee6; color: #9aa8b5; }
+        .actdraw-back { background: var(--accent-blue); color: #fff; transform: rotateY(180deg); }
+        .actdraw-back.g { background: #2ecc71; }
         .act-score-grid { display: grid; gap: 8px; }
         .act-score-item { border-radius: 10px; padding: 8px 6px; text-align: center; border: 2px solid #e6ebf3; }
         .act-score-item .v { font-size: 26px; font-weight: 900; color: var(--dark-blue); margin: 2px 0; }
@@ -2491,23 +2500,33 @@
             head.addEventListener('mousedown', start); window.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
             head.addEventListener('touchstart', start, { passive: false }); window.addEventListener('touchmove', move, { passive: false }); window.addEventListener('touchend', end);
         }
-        // 위젯 우하단 핸들로 크기 조절 (본문 내용도 비율대로 확대)
+        // 스케일 적용: 본문을 비율대로 확대하고 위젯 높이를 내용에 맞게 자동 계산
+        function actApplyScale(id) {
+            const s = actState[id]; if (!s || !s.baseW) return;
+            const w = document.getElementById(id), body = document.getElementById(id + '-body');
+            if (!w || !body) return;
+            const scale = s.scale || 1;
+            const head = w.querySelector('.act-w-head');
+            w.style.width = (s.baseW * scale) + 'px';
+            body.style.transformOrigin = 'top left';
+            body.style.transform = 'scale(' + scale + ')';
+            body.style.width = (100 / scale) + '%';
+            body.style.height = 'auto';
+            const natH = body.offsetHeight; // transform 무시한 자연 높이
+            w.style.height = (head.offsetHeight + natH * scale) + 'px';
+        }
+        // 위젯 우하단 핸들로 크기 조절 (가로 드래그로 스케일, 높이는 내용에 맞게 자동)
         function actMakeResizable(w, type) {
             const handle = w.querySelector('.act-w-resize');
-            const body = w.querySelector('.act-w-body');
-            const baseW = { score: 260, timer: 240, draw: 240 }[type] || 240;
-            let sx, sy, ow, oh, rz = false;
-            const start = e => { rz = true; w.style.zIndex = ++actZ; const t = (e.touches && e.touches[0]) ? e.touches[0] : e; sx = t.clientX; sy = t.clientY; ow = w.offsetWidth; oh = w.offsetHeight; e.preventDefault(); e.stopPropagation(); };
+            const id = w.id;
+            let sx, ow, rz = false;
+            const start = e => { rz = true; w.style.zIndex = ++actZ; const t = (e.touches && e.touches[0]) ? e.touches[0] : e; sx = t.clientX; ow = w.offsetWidth; e.preventDefault(); e.stopPropagation(); };
             const move = e => {
-                if (!rz) return;
+                if (!rz || !actState[id]) return;
                 const t = (e.touches && e.touches[0]) ? e.touches[0] : e;
-                const nw = Math.max(200, ow + (t.clientX - sx));
-                const nh = Math.max(150, oh + (t.clientY - sy));
-                w.style.width = nw + 'px'; w.style.height = nh + 'px';
-                const scale = nw / baseW;
-                body.style.transform = 'scale(' + scale + ')';
-                body.style.width = (100 / scale) + '%';
-                body.style.height = ((nh - 36) / scale) + 'px';
+                const nw = Math.max(180, ow + (t.clientX - sx));
+                actState[id].scale = Math.max(0.7, Math.min(4, nw / actState[id].baseW));
+                actApplyScale(id);
                 e.preventDefault();
             };
             const end = () => rz = false;
@@ -2534,7 +2553,7 @@
         }
 
         // ----- 점수판 위젯 -----
-        function actInitScore(id) { actState[id] = { mode: 'group', n: numberOfGroups || 4, vals: {} }; actRenderScore(id); }
+        function actInitScore(id) { actState[id] = { mode: 'group', n: numberOfGroups || 4, vals: {}, scale: 1, baseW: 260 }; actRenderScore(id); }
         function actScoreSetMode(id, m) { const s = actState[id]; s.mode = m; s.n = m === 'group' ? (numberOfGroups || 4) : Math.min(s.n, 12); actRenderScore(id); }
         function actScoreCount(id, d) { const s = actState[id]; s.n = Math.max(1, Math.min(30, s.n + d)); actRenderScore(id); }
         function actScoreChange(id, i, d) { const s = actState[id]; s.vals[i] = (s.vals[i] || 0) + d; document.getElementById(`${id}-v${i}`).innerText = s.vals[i]; }
@@ -2550,10 +2569,11 @@
                 <div class="act-seg"><button class="${group ? 'on' : ''}" onclick="actScoreSetMode('${id}','group')">모둠</button><button class="${!group ? 'on' : ''}" onclick="actScoreSetMode('${id}','indiv')">개인</button></div>
                 <div class="act-count-ctl"><span>칸 수</span><button onclick="actScoreCount('${id}',-1)">−</button><b>${s.n}</b><button onclick="actScoreCount('${id}',1)">＋</button></div>
                 <div class="act-score-grid" style="grid-template-columns:repeat(${cols},1fr);">${cards}</div>`;
+            actApplyScale(id);
         }
 
         // ----- 타이머 위젯 -----
-        function actInitTimer(id) { actState[id] = { remain: 300, running: false, iv: null }; actRenderTimer(id); }
+        function actInitTimer(id) { actState[id] = { remain: 300, running: false, iv: null, scale: 1, baseW: 240 }; actRenderTimer(id); }
         function actTimerFmt(s) { return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
         function actTimerSet(id, min) { const s = actState[id]; actTimerStop(id); s.remain = Math.round(min * 60); actTimerPaint(id); }
         function actTimerCustom(id) { const el = document.getElementById(`${id}-custom`); const v = parseFloat(el.value); if (v > 0) { actTimerSet(id, v); el.value = ''; actTimerStart(id); } }
@@ -2576,10 +2596,11 @@
                 <div style="display:flex; gap:6px; margin-bottom:8px;"><button class="act-btn" style="background:var(--accent-blue); flex:2;" id="${id}-toggle" onclick="actTimerToggle('${id}')">▶ 시작</button><button class="act-btn" style="background:#90a4ae; flex:1;" onclick="actTimerSet('${id}',0)">리셋</button></div>
                 <input type="number" id="${id}-custom" placeholder="직접 분 입력 후 Enter" style="width:100%; padding:8px; border-radius:8px; border:1px solid #ddd; text-align:center; font-family:'Pretendard'; font-weight:700;" onkeypress="if(event.key==='Enter')actTimerCustom('${id}')">`;
             actTimerPaint(id);
+            actApplyScale(id);
         }
 
-        // ----- 뽑기 위젯 -----
-        function actInitDraw(id) { actState[id] = { mode: 'indiv', total: globalTotalStudents || 24, groups: numberOfGroups || 4, absent: '', pool: [], showSettings: false }; actDrawReset(id); }
+        // ----- 뽑기 위젯 (카드 뒤집기) -----
+        function actInitDraw(id) { actState[id] = { mode: 'indiv', total: globalTotalStudents || 24, groups: numberOfGroups || 4, absent: '', cards: [], showSettings: false, scale: 1, baseW: 300 }; actDrawReset(id); }
         function actDrawSetMode(id, m) { actState[id].mode = m; actDrawReset(id); }
         function actDrawToggleSettings(id) { actState[id].showSettings = !actState[id].showSettings; actRenderDraw(id); }
         function actDrawReadSettings(id) {
@@ -2591,30 +2612,47 @@
         function actDrawReset(id) {
             const s = actState[id]; actDrawReadSettings(id);
             const abs = s.absent ? s.absent.split(',').map(x => parseInt(x.trim())).filter(x => x) : [];
-            if (s.mode === 'group') { s.pool = Array.from({ length: s.groups }, (_, i) => i + 1); }
-            else { s.pool = []; for (let i = 1; i <= s.total; i++) if (!abs.includes(i)) s.pool.push(i); }
-            s.last = null; actRenderDraw(id);
+            let nums = [];
+            if (s.mode === 'group') nums = Array.from({ length: s.groups }, (_, i) => i + 1);
+            else { for (let i = 1; i <= s.total; i++) if (!abs.includes(i)) nums.push(i); }
+            s.cards = nums.map(n => ({ n, flipped: false }));
+            actRenderDraw(id);
         }
         function actDrawPick(id) {
             const s = actState[id];
-            if (!s.pool.length) { document.getElementById(`${id}-result`).innerText = '끝!'; return; }
-            const idx = Math.floor(Math.random() * s.pool.length);
-            const val = s.pool.splice(idx, 1)[0];
-            s.last = val;
+            const hidden = s.cards.map((c, i) => c.flipped ? -1 : i).filter(i => i >= 0);
+            if (!hidden.length) return;
+            const i = hidden[Math.floor(Math.random() * hidden.length)];
+            s.cards[i].flipped = true;
+            const el = document.getElementById(`${id}-card${i}`);
+            if (el) el.classList.add('flipped');
             try { pickSound.currentTime = 0; pickSound.play(); } catch (e) {}
-            const res = document.getElementById(`${id}-result`);
-            if (s.mode === 'group') {
-                const mem = (typeof groupMembersMap !== 'undefined' && groupMembersMap[val]) ? groupMembersMap[val] : null;
-                res.innerHTML = `${val}모둠` + (mem && mem.length ? `<div style="font-size:18px; color:#607d8b; margin-top:4px;">(${mem.join(', ')}번)</div>` : '');
-            } else res.innerHTML = `${val}<span style="font-size:24px;">번</span>`;
-            actRenderDrawFoot(id);
+            actDrawFoot(id);
         }
-        function actRenderDrawFoot(id) {
+        function actDrawToggle(id, i) {
+            const s = actState[id], c = s.cards[i]; if (!c) return;
+            c.flipped = !c.flipped;
+            const el = document.getElementById(`${id}-card${i}`);
+            if (el) el.classList.toggle('flipped', c.flipped);
+            if (c.flipped) { try { pickSound.currentTime = 0; pickSound.play(); } catch (e) {} }
+            actDrawFoot(id);
+        }
+        function actDrawFoot(id) {
             const s = actState[id], f = document.getElementById(`${id}-remain`);
-            if (f) f.innerText = `남은 ${s.mode === 'group' ? '모둠' : '번호'}: ${s.pool.length}개`;
+            if (!f) return;
+            const done = s.cards.filter(c => c.flipped).length;
+            f.innerText = `뽑힌 ${s.mode === 'group' ? '모둠' : '번호'}: ${done} / ${s.cards.length}`;
+        }
+        function actDrawCardFace(s, c) {
+            if (s.mode === 'group') {
+                const mem = (typeof groupMembersMap !== 'undefined' && groupMembersMap[c.n]) ? groupMembersMap[c.n] : null;
+                return `<div style="font-size:15px;">${c.n}모둠</div>` + (mem && mem.length ? `<div style="font-size:9px; font-weight:600; opacity:0.85;">${mem.join(',')}</div>` : '');
+            }
+            return c.n;
         }
         function actRenderDraw(id) {
             const s = actState[id], group = s.mode === 'group';
+            const cols = group ? Math.min(s.cards.length, 3) : Math.min(s.cards.length, 6) || 1;
             let settings = '';
             if (s.showSettings) {
                 settings = group
@@ -2622,14 +2660,23 @@
                     : `<div style="margin-bottom:6px;">총원 <input type="number" id="${id}-total" value="${s.total}" min="1" style="width:54px; padding:5px; border-radius:6px; border:1px solid #ccc; text-align:center;" onchange="actDrawReset('${id}')"></div>
                        <div style="margin-bottom:8px;">결석 <input type="text" id="${id}-absent" value="${s.absent}" placeholder="예: 3, 5" style="width:100px; padding:5px; border-radius:6px; border:1px solid #ccc;" onchange="actDrawReset('${id}')"></div>`;
             }
+            const front = group ? '<i class="fa-solid fa-users"></i>' : '<i class="fa-solid fa-user"></i>';
+            const cards = s.cards.map((c, i) => `
+                <div class="actdraw-card ${c.flipped ? 'flipped' : ''}" id="${id}-card${i}" onclick="actDrawToggle('${id}',${i})">
+                    <div class="actdraw-inner">
+                        <div class="actdraw-face actdraw-front">${front}</div>
+                        <div class="actdraw-face actdraw-back ${group ? 'g' : ''}">${actDrawCardFace(s, c)}</div>
+                    </div>
+                </div>`).join('');
             document.getElementById(`${id}-body`).innerHTML = `
                 <div class="act-seg"><button class="${group ? 'on' : ''}" onclick="actDrawSetMode('${id}','group')">모둠</button><button class="${!group ? 'on' : ''}" onclick="actDrawSetMode('${id}','indiv')">개인</button></div>
                 <div style="text-align:right; margin-bottom:6px;"><span style="cursor:pointer; color:#78909c; font-size:12px; font-weight:700;" onclick="actDrawToggleSettings('${id}')"><i class="fa-solid fa-gear"></i> 설정</span></div>
                 <div style="font-size:13px; color:#90a4ae;">${settings}</div>
-                <div class="act-draw-result" id="${id}-result">?</div>
-                <div style="display:flex; gap:6px;"><button class="act-btn" style="background:${group ? '#2ecc71' : '#8e44ad'}; flex:2;" onclick="actDrawPick('${id}')">뽑기!</button><button class="act-btn" style="background:#90a4ae; flex:1;" onclick="actDrawReset('${id}')">리셋</button></div>
+                <div class="actdraw-grid" style="grid-template-columns:repeat(${cols},1fr);">${cards}</div>
+                <div style="display:flex; gap:6px; margin-top:10px;"><button class="act-btn" style="background:${group ? '#2ecc71' : '#8e44ad'}; flex:2;" onclick="actDrawPick('${id}')">🎲 뽑기!</button><button class="act-btn" style="background:#90a4ae; flex:1;" onclick="actDrawReset('${id}')">리셋</button></div>
                 <div id="${id}-remain" style="text-align:center; font-size:12px; color:#b0bcc9; margin-top:8px;"></div>`;
-            actRenderDrawFoot(id);
+            actDrawFoot(id);
+            actApplyScale(id);
         }
 
         function addHomework() {
