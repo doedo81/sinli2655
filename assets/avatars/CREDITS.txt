@@ -1,12 +1,6 @@
-캐릭터 아바타 이미지 출처 (Character avatar credits)
-=================================================
-Liberated Pixel Cup (LPC) 스프라이트 기반으로 합성했습니다.
-Composited from Liberated Pixel Cup (LPC) sprites.
-
-라이선스 License: CC-BY-SA 3.0 / GPL 3.0
-원본 소스 Source: https://github.com/sanderfrenken/Universal-LPC-Spritesheet-Character-Generator
-LPC 프로젝트: https://lpc.opengameart.org/
-
-여러 아티스트의 기여로 제작되었습니다. 공개 서비스 출시 전
-각 레이어별 원작자 전체 목록을 이 파일에 추가할 것.
-(TODO before public launch: add full per-asset author list.)
+캐릭터 아바타 이미지
+=================
+ChatGPT(이미지 생성)로 만든 오리지널 치비 캐릭터입니다.
+특정 게임/작품을 모사하지 않은 창작물이며, 저작권 표기 의무 없음.
+클로드가 배경 제거·크기 조정 후 앱에 적용.
+파일: <직업>_<m|f>.png (남/여), 예: knight_m.png, mage_f.png

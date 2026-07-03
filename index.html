@@ -745,7 +745,7 @@
                     </div>
 
                     <div id="rpg-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:14px;"></div>
-                    <p style="text-align:center; font-size:11px; color:#b0bec5; margin-top:16px;">캐릭터 이미지: Liberated Pixel Cup (LPC) · CC-BY-SA</p>
+                    <p style="text-align:center; font-size:11px; color:#cbd3dc; margin-top:16px;">캐릭터: 오리지널 AI 생성</p>
                 </div>
             </div>
 
@@ -3329,7 +3329,7 @@
             const _check = _sel ? '<span style="position:absolute;top:-7px;right:-7px;background:#5b97d1;color:#fff;border-radius:50%;width:20px;height:20px;font-size:12px;line-height:20px;text-align:center;">✓</span>' : '';
             return '<div onclick="rpgCardClick(' + stu.id + ')" style="position:relative;cursor:pointer;background:' + (_sel?'#eaf2fb':'#fff') + ';border:' + (_sel?'2px solid #5b97d1':'1px solid #e6ebf3') + ';border-top:4px solid ' + (job ? '#7b6cd9' : '#b0bec5') + ';border-radius:14px;padding:12px;box-shadow:0 3px 10px rgba(120,144,180,0.10);transition:transform .12s;" onmouseover="this.style.transform=\'translateY(-3px)\'" onmouseout="this.style.transform=\'\'">'
                 + _check
-                + '<img src="assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '.png?v=4" alt="" loading="lazy" style="height:80px;width:auto;display:block;margin:2px auto 2px;">'
+                + '<img src="assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=5" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'assets/avatars/novice_m.png?v=5\'" style="height:80px;width:auto;display:block;margin:2px auto 2px;">'
                 + '<div style="display:flex;justify-content:space-between;align-items:center;gap:4px;">'
                 + '<span style="font-weight:800;color:#51618a;">' + stu.name + '</span>'
                 + '<span style="font-size:12px;color:#7b6cd9;font-weight:700;white-space:nowrap;">' + (job ? job.emoji + job.name : '견습생') + '</span>'
@@ -3381,7 +3381,7 @@
             document.getElementById('rpg-modal-body').innerHTML =
                 '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
                 + '<div style="display:flex;gap:10px;align-items:center;">'
-                + '<img src="assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '.png?v=4" alt="" style="height:110px;width:auto;">'
+                + '<img src="assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=5" alt="" onerror="this.onerror=null;this.src=\'assets/avatars/novice_m.png?v=5\'" style="height:110px;width:auto;">'
                 + '<div><div style="font-size:18px;font-weight:800;color:#51618a;">' + stu.name + ' <span style="font-size:13px;color:#7b6cd9;">' + (job ? job.emoji + job.name : '견습생') + '</span></div>'
                 + '<div style="font-size:13px;color:#888;">Lv.' + L.lv + ' · ' + stu.id + '번</div></div>'
                 + '</div>'
