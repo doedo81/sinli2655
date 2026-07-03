@@ -3245,6 +3245,22 @@
             return job + '_' + g + (tier > 1 ? '_' + tier : '');
         }
 
+        // 고레벨 오라/효과 (그림 없이 코드로). Lv15+ 은은/25+ 색오라/40+ 금빛
+        function rpgAuraTier(level){ return level >= 40 ? 3 : (level >= 25 ? 2 : (level >= 15 ? 1 : 0)); }
+        function rpgAuraOverlay(level, sizePx){
+            const t = rpgAuraTier(level); if(!t) return '';
+            const d = Math.round(sizePx * 1.55);
+            const glowCol = { 1:'rgba(120,180,255,0.5)', 2:'rgba(175,120,240,0.6)', 3:'rgba(255,205,80,0.8)' }[t];
+            let html = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-53%);width:' + d + 'px;height:' + d + 'px;z-index:0;pointer-events:none;border-radius:50%;background:radial-gradient(circle,' + glowCol + ' 0%,transparent 62%);"></div>';
+            if(t >= 2){
+                const sc = (t === 3) ? '#ffe07a' : '#d7b3ff';
+                [[10,12,10],[86,20,8],[82,82,10],[13,80,8],[50,3,7]].forEach(function(p){
+                    html += '<div style="position:absolute;top:' + p[1] + '%;left:' + p[0] + '%;z-index:0;pointer-events:none;font-size:' + p[2] + 'px;color:' + sc + ';line-height:1;">✦</div>';
+                });
+            }
+            return html;
+        }
+
         // 머리 장식 아이템 (레벨 달성 시 해금). svg는 캐릭터 머리 위에 겹쳐 표시.
         const RPG_ITEMS_HEAD = [
             { id:'flower', name:'🌸 꽃', level:2, svg:'<svg viewBox="0 0 64 42" width="100%"><g transform="translate(32,24)"><circle cx="0" cy="-11" r="6" fill="#ff9ec4"/><circle cx="10" cy="-3" r="6" fill="#ff9ec4"/><circle cx="6" cy="9" r="6" fill="#ff9ec4"/><circle cx="-6" cy="9" r="6" fill="#ff9ec4"/><circle cx="-10" cy="-3" r="6" fill="#ff9ec4"/><circle cx="0" cy="0" r="5.5" fill="#ffd23f"/></g></svg>' },
@@ -3358,7 +3374,8 @@
             return '<div onclick="rpgCardClick(' + stu.id + ')" style="position:relative;cursor:pointer;background:' + (_sel?'#eaf2fb':'#fff') + ';border:' + (_sel?'2px solid #5b97d1':'1px solid #e6ebf3') + ';border-top:4px solid ' + (job ? '#7b6cd9' : '#b0bec5') + ';border-radius:14px;padding:12px;box-shadow:0 3px 10px rgba(120,144,180,0.10);transition:transform .12s;" onmouseover="this.style.transform=\'translateY(-3px)\'" onmouseout="this.style.transform=\'\'">'
                 + _check
                 + '<div style="position:relative;width:max-content;margin:2px auto 2px;">'
-                + '<img src="assets/avatars/' + rpgAvatarKey(d.job, L.lv, stu.gender) + '.png?v=6" alt="" loading="lazy" onerror="this.onerror=function(){this.onerror=null;this.src=\'assets/avatars/novice_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=6\'};this.src=\'assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=6\'" style="height:80px;width:auto;display:block;">'
+                + rpgAuraOverlay(L.lv, 80)
+                + '<img src="assets/avatars/' + rpgAvatarKey(d.job, L.lv, stu.gender) + '.png?v=6" alt="" loading="lazy" onerror="this.onerror=function(){this.onerror=null;this.src=\'assets/avatars/novice_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=6\'};this.src=\'assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=6\'" style="height:80px;width:auto;display:block;position:relative;z-index:1;">'
                 + rpgHeadOverlay(d.head, 80)
                 + '</div>'
                 + '<div style="display:flex;justify-content:space-between;align-items:center;gap:4px;">'
@@ -3420,7 +3437,8 @@
                 '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
                 + '<div style="display:flex;gap:10px;align-items:center;">'
                 + '<div style="position:relative;">'
-                + '<img src="assets/avatars/' + rpgAvatarKey(d.job, L.lv, stu.gender) + '.png?v=6" alt="" onerror="this.onerror=function(){this.onerror=null;this.src=\'assets/avatars/novice_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=6\'};this.src=\'assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=6\'" style="height:110px;width:auto;">'
+                + rpgAuraOverlay(L.lv, 110)
+                + '<img src="assets/avatars/' + rpgAvatarKey(d.job, L.lv, stu.gender) + '.png?v=6" alt="" onerror="this.onerror=function(){this.onerror=null;this.src=\'assets/avatars/novice_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=6\'};this.src=\'assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=6\'" style="height:110px;width:auto;position:relative;z-index:1;">'
                 + rpgHeadOverlay(d.head, 110)
                 + '</div>'
                 + '<div><div style="font-size:18px;font-weight:800;color:#51618a;">' + stu.name + ' <span style="font-size:13px;color:#7b6cd9;">' + (job ? job.emoji + job.name : '견습생') + '</span></div>'
