@@ -854,6 +854,22 @@
                 </div>
             </div>
 
+            <!-- 성장: 과목 관리 -->
+            <div id="rpg-subject-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:2100; align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) rpgCloseSubjects()">
+                <div style="background:#fff; border-radius:18px; max-width:400px; width:100%; max-height:90vh; overflow-y:auto; padding:22px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <div style="font-size:16px; font-weight:800; color:#51618a;">⚙️ 과목 관리</div>
+                        <button onclick="rpgCloseSubjects()" style="border:none; background:#f0f2f5; border-radius:50%; width:32px; height:32px; cursor:pointer; font-size:16px;">✕</button>
+                    </div>
+                    <p style="font-size:12px; color:#888; margin:0 0 10px; line-height:1.5;">단원평가·평가기록에 나오는 과목이에요. 추가·삭제할 수 있어요. (삭제해도 이미 저장된 점수 기록은 남아요)</p>
+                    <div id="rpg-subject-list" style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px;"></div>
+                    <div style="display:flex; gap:8px; border-top:1px solid #eee; padding-top:12px;">
+                        <input id="rpg-subject-input" placeholder="추가할 과목 (예: 영어)" style="flex:1; padding:9px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box; font-family:'Pretendard';">
+                        <button class="action-btn" style="padding:9px 16px;" onclick="rpgAddSubject()">추가</button>
+                    </div>
+                </div>
+            </div>
+
         </main>
 
         <!-- ✨ 우측 하단 퀵 플로팅 툴 -->
@@ -1323,6 +1339,7 @@
                 if(rpgBulkMode) rpgRenderBulkActions();
                 var _am = document.getElementById('rpg-actions-modal'); if(_am && _am.style.display === 'flex') rpgRenderActionsList();
                 var _gm = document.getElementById('rpg-grade-modal'); if(_gm && _gm.style.display === 'flex') rpgRenderGrade();
+                var _sm = document.getElementById('rpg-subject-modal'); if(_sm && _sm.style.display === 'flex') rpgRenderSubjectList();
             });
 
             document.getElementById('auth-overlay').style.display = 'none'; 
@@ -3637,11 +3654,12 @@
         }
 
         // ---- 단원평가 → 향상/만점 자동 ----
-        const RPG_EXAM_SUBJECTS = ['국어', '사회', '수학', '과학'];
+        const RPG_EXAM_SUBJECTS = ['국어', '사회', '수학', '과학'];  // 기본 과목
+        function rpgSubjects(){ const s = (rpgData.config && rpgData.config.subjects); return (Array.isArray(s) && s.length) ? s : RPG_EXAM_SUBJECTS; }
         let rpgExamPreview = null;
         function rpgOpenExam(){
             if(!rpgRef){ alert('학급에 입장한 뒤 이용해주세요.'); return; }
-            document.getElementById('rpg-exam-subject').innerHTML = RPG_EXAM_SUBJECTS.map(function(s){ return '<option>' + s + '</option>'; }).join('');
+            document.getElementById('rpg-exam-subject').innerHTML = rpgSubjects().map(function(s){ return '<option>' + s + '</option>'; }).join('');
             document.getElementById('rpg-exam-scores').value = '';
             document.getElementById('rpg-exam-title').value = '';
             rpgExamShowStep(1);
@@ -3743,10 +3761,12 @@
         function rpgSetGradeSubject(s){ rpgGradeSubject = s; rpgRenderGrade(); }
         function rpgSetGradeType(t){ rpgGradeType = t; rpgRenderGrade(); }
         function rpgRenderGrade(){
-            document.getElementById('rpg-grade-subjects').innerHTML = RPG_EXAM_SUBJECTS.map(function(s){
+            const subs = rpgSubjects();
+            if(subs.indexOf(rpgGradeSubject) < 0) rpgGradeSubject = subs[0];
+            document.getElementById('rpg-grade-subjects').innerHTML = subs.map(function(s){
                 const on = s === rpgGradeSubject;
                 return '<button onclick="rpgSetGradeSubject(\'' + s + '\')" style="padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer;font-family:inherit;border:1px solid ' + (on?'#455a64':'#cfd8e3') + ';background:' + (on?'#455a64':'#fff') + ';color:' + (on?'#fff':'#555') + ';">' + s + '</button>';
-            }).join('');
+            }).join('') + '<button onclick="rpgOpenSubjects()" style="padding:6px 12px;border-radius:20px;font-size:13px;cursor:pointer;font-family:inherit;border:1px dashed #cfd8e3;background:#fff;color:#78909c;"><i class="fa-solid fa-gear"></i> 과목 관리</button>';
             function typeBtn(t, label){ const on = rpgGradeType === t; return '<button onclick="rpgSetGradeType(\'' + t + '\')" style="padding:6px 14px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;border:1px solid ' + (on?'#455a64':'#cfd8e3') + ';background:' + (on?'#455a64':'#fff') + ';color:' + (on?'#fff':'#555') + ';">' + label + '</button>'; }
             document.getElementById('rpg-grade-types').innerHTML = typeBtn('unit', '단원평가(점수)') + typeBtn('perf', '수행평가(상중하)')
                 + (rpgGradeType === 'perf' ? '<button onclick="rpgAddPerf()" style="margin-left:auto;padding:6px 14px;border-radius:8px;border:none;background:#00897b;color:#fff;cursor:pointer;font-family:inherit;font-size:13px;">+ 수행평가 추가</button>' : '');
@@ -3799,6 +3819,32 @@
             if(Object.keys(grades).length === 0){ alert('등급을 인식하지 못했어요. "번호 상/중/하" 형식으로 입력해주세요.'); return; }
             const key = rpgRef.child('perf/' + rpgGradeSubject).push().key;
             rpgRef.child('perf/' + rpgGradeSubject + '/' + key).set({ title:title, grades:grades, createdAt:Date.now() }).then(function(){ rpgToast('수행평가 저장: ' + title); rpgPerfClose(); rpgRenderGrade(); }).catch(function(e){ alert(e.message); });
+        }
+
+        // ---- 과목 관리 ----
+        function rpgOpenSubjects(){ rpgRenderSubjectList(); document.getElementById('rpg-subject-input').value = ''; document.getElementById('rpg-subject-modal').style.display = 'flex'; }
+        function rpgCloseSubjects(){ document.getElementById('rpg-subject-modal').style.display = 'none'; }
+        function rpgRenderSubjectList(){
+            const el = document.getElementById('rpg-subject-list'); if(!el) return;
+            el.innerHTML = rpgSubjects().map(function(s){
+                return '<div style="display:flex;justify-content:space-between;align-items:center;background:#f6f8fb;border-radius:8px;padding:8px 10px;"><span style="font-size:14px;color:#444;font-weight:700;">' + s + '</span><button onclick="rpgDeleteSubject(\'' + s + '\')" style="border:none;background:transparent;color:#e57373;cursor:pointer;font-size:13px;font-weight:700;">삭제</button></div>';
+            }).join('');
+        }
+        function rpgAddSubject(){
+            if(!rpgRef) return;
+            const name = document.getElementById('rpg-subject-input').value.trim();
+            if(!name){ alert('과목 이름을 입력해주세요.'); return; }
+            const list = rpgSubjects().slice();
+            if(list.indexOf(name) >= 0){ alert('이미 있는 과목이에요.'); return; }
+            list.push(name);
+            rpgRef.child('config/subjects').set(list).then(function(){ document.getElementById('rpg-subject-input').value = ''; rpgToast('과목 추가: ' + name); }).catch(function(e){ alert(e.message); });
+        }
+        function rpgDeleteSubject(name){
+            if(!rpgRef) return;
+            const list = rpgSubjects().slice();
+            if(list.length <= 1){ alert('과목은 최소 1개는 있어야 해요.'); return; }
+            if(!confirm('"' + name + '" 과목을 목록에서 삭제할까요?\n(이미 저장된 점수 기록은 남아요)')) return;
+            rpgRef.child('config/subjects').set(list.filter(function(x){ return x !== name; })).then(function(){ rpgToast('과목 삭제: ' + name); }).catch(function(e){ alert(e.message); });
         }
 
         function rpgToast(msg, big){
