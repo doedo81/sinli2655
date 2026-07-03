@@ -713,7 +713,16 @@
                 <div class="picker-box">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
                         <h2 style="color:var(--dark-blue); margin:0;"><i class="fa-solid fa-dragon"></i> 성장 (상벌점 RPG)</h2>
-                        <button class="action-btn" style="background:#7b6cd9; padding:10px 18px;" onclick="rpgToggleRoster()"><i class="fa-solid fa-user-pen"></i> 명단 입력/수정</button>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button class="action-btn" id="rpg-bulk-toggle" style="background:#5b97d1; padding:10px 18px;" onclick="rpgToggleBulk()"><i class="fa-solid fa-layer-group"></i> 일괄 지급</button>
+                            <button class="action-btn" style="background:#7b6cd9; padding:10px 18px;" onclick="rpgToggleRoster()"><i class="fa-solid fa-user-pen"></i> 명단 입력/수정</button>
+                        </div>
+                    </div>
+
+                    <div id="rpg-bulk-bar" style="display:none; background:#eef4fb; border:1px solid #cfe0f3; border-radius:12px; padding:12px 14px; margin-bottom:16px;">
+                        <div style="font-size:12px; color:#5a6a7e; margin-bottom:8px;">① 줄 행동을 고르고 → ② 학생을 톡톡 눌러 선택 → ③ 아래 버튼</div>
+                        <div id="rpg-bulk-actions" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;"></div>
+                        <button id="rpg-bulk-apply" onclick="rpgBulkApply()" style="width:100%; padding:12px; background:#5b97d1; color:#fff; border:none; border-radius:9px; font-weight:700; cursor:pointer; font-family:inherit;">선택한 0명에게 지급</button>
                     </div>
 
                     <div id="rpg-roster-box" style="display:none; background:#f6f4ff; border:1px solid #d9d2f5; border-radius:14px; padding:18px; margin-bottom:20px;">
@@ -1011,6 +1020,7 @@
         let currentRoom = "";
         let groupSettingsRef, scoresRef, miniScoresRef, timerRef, boardRef, settingsRef, historyRef, tasksRef, hwRef, seatingRef, groupMembersRef, seatingHistoryRef, bookmarksRef, rpgRef;
         let rpgData = {}, rpgModalId = null;
+        let rpgBulkMode = false, rpgBulkAction = null, rpgBulkSelected = new Set();
         let listenersSet = false, numberOfGroups = 6;
         let currentScores = [], currentMiniScores = [], currentTasks = [], historyCheck = {}, allHomeworks = [], allBookmarks = {};
         let viewDate = new Date(); let calDate = new Date(); 
@@ -3159,7 +3169,10 @@
             const warnBar = warn > 0
                 ? '<div style="height:5px;background:#f0d5d5;border-radius:20px;margin-top:6px;overflow:hidden;"><div style="width:' + warn + '%;height:100%;background:#e57373;"></div></div>'
                 : '';
-            return '<div onclick="rpgOpen(' + stu.id + ')" style="cursor:pointer;background:#fff;border:1px solid #e6ebf3;border-top:4px solid ' + (job ? '#7b6cd9' : '#b0bec5') + ';border-radius:14px;padding:12px;box-shadow:0 3px 10px rgba(120,144,180,0.10);transition:transform .12s;" onmouseover="this.style.transform=\'translateY(-3px)\'" onmouseout="this.style.transform=\'\'">'
+            const _sel = rpgBulkMode && rpgBulkSelected.has(stu.id);
+            const _check = _sel ? '<span style="position:absolute;top:-7px;right:-7px;background:#5b97d1;color:#fff;border-radius:50%;width:20px;height:20px;font-size:12px;line-height:20px;text-align:center;">✓</span>' : '';
+            return '<div onclick="rpgCardClick(' + stu.id + ')" style="position:relative;cursor:pointer;background:' + (_sel?'#eaf2fb':'#fff') + ';border:' + (_sel?'2px solid #5b97d1':'1px solid #e6ebf3') + ';border-top:4px solid ' + (job ? '#7b6cd9' : '#b0bec5') + ';border-radius:14px;padding:12px;box-shadow:0 3px 10px rgba(120,144,180,0.10);transition:transform .12s;" onmouseover="this.style.transform=\'translateY(-3px)\'" onmouseout="this.style.transform=\'\'">'
+                + _check
                 + '<div style="display:flex;justify-content:space-between;align-items:center;gap:4px;">'
                 + '<span style="font-weight:800;color:#51618a;">' + stu.name + '</span>'
                 + '<span style="font-size:12px;color:#7b6cd9;font-weight:700;white-space:nowrap;">' + (job ? job.emoji + job.name : '견습생') + '</span>'
@@ -3231,6 +3244,65 @@
         }
 
         function rpgClose(){ document.getElementById('rpg-modal').style.display = 'none'; rpgModalId = null; }
+
+        // ---- 일괄 지급 ----
+        function rpgCardClick(id){ if(rpgBulkMode) rpgToggleSelect(id); else rpgOpen(id); }
+
+        function rpgToggleBulk(){
+            rpgBulkMode = !rpgBulkMode;
+            rpgBulkSelected.clear(); rpgBulkAction = null;
+            document.getElementById('rpg-bulk-bar').style.display = rpgBulkMode ? 'block' : 'none';
+            const tg = document.getElementById('rpg-bulk-toggle');
+            tg.innerHTML = rpgBulkMode ? '<i class="fa-solid fa-xmark"></i> 일괄 지급 끄기' : '<i class="fa-solid fa-layer-group"></i> 일괄 지급';
+            tg.style.background = rpgBulkMode ? '#e57373' : '#5b97d1';
+            if(rpgBulkMode) rpgRenderBulkActions();
+            renderRpgGrid();
+        }
+
+        function rpgRenderBulkActions(){
+            function pill(id,label,color){ const sel = rpgBulkAction===id; return '<span onclick="rpgPickBulkAction(\''+id+'\')" style="cursor:pointer;padding:6px 12px;border-radius:20px;font-size:13px;'+(sel?('background:'+color+';color:#fff;font-weight:700;'):'background:#fff;border:1px solid #cfd8e3;color:#555;')+'">'+label+'</span>'; }
+            let html = '';
+            RPG_ACTIONS.forEach(function(a){ html += pill(a.id, a.label+' +'+a.xp, '#5b97d1'); });
+            html += pill('__warn','벌점 +20','#e57373');
+            html += pill('__good','선행 −10','#66bb6a');
+            document.getElementById('rpg-bulk-actions').innerHTML = html;
+        }
+
+        function rpgPickBulkAction(id){ rpgBulkAction = id; rpgRenderBulkActions(); rpgUpdateBulkBtn(); }
+
+        function rpgToggleSelect(id){
+            if(rpgBulkSelected.has(id)) rpgBulkSelected.delete(id); else rpgBulkSelected.add(id);
+            renderRpgGrid(); rpgUpdateBulkBtn();
+        }
+
+        function rpgUpdateBulkBtn(){
+            const b = document.getElementById('rpg-bulk-apply'); if(!b) return;
+            const a = RPG_ACTIONS.find(function(x){ return x.id===rpgBulkAction; });
+            const lbl = a ? (a.label+' +'+a.xp) : (rpgBulkAction==='__warn'?'벌점 +20':(rpgBulkAction==='__good'?'선행 −10':''));
+            b.textContent = '선택한 ' + rpgBulkSelected.size + '명에게 ' + (lbl?lbl+' ':'') + '지급';
+        }
+
+        function rpgBulkApply(){
+            if(!rpgRef) return;
+            if(!rpgBulkAction){ alert('먼저 줄 행동을 골라주세요.'); return; }
+            if(rpgBulkSelected.size===0){ alert('학생을 선택해주세요. (카드를 톡톡 누르면 선택돼요)'); return; }
+            const a = RPG_ACTIONS.find(function(x){ return x.id===rpgBulkAction; });
+            const updates = {}; let levelups = 0;
+            rpgBulkSelected.forEach(function(id){
+                const s = rpgStudentObj(id);
+                if(rpgBulkAction==='__warn'){ s.warning = Math.max(0, Math.min(100, s.warning+20)); }
+                else if(rpgBulkAction==='__good'){ s.warning = Math.max(0, Math.min(100, s.warning-10)); }
+                else if(a){ const before = rpgLevel(s.xp).lv; s.xp += a.xp; s.stats[a.stat] = (s.stats[a.stat]||0)+1; if(rpgLevel(s.xp).lv > before) levelups++; }
+                updates['students/'+id] = s;
+            });
+            const n = rpgBulkSelected.size;
+            rpgRef.update(updates).then(function(){
+                const lbl = a ? (a.label+' +'+a.xp) : (rpgBulkAction==='__warn'?'벌점 +20':'선행 −10');
+                rpgToast(n + '명에게 ' + lbl + ' 지급 완료');
+                if(levelups>0) setTimeout(function(){ rpgToast('🎉 레벨업 '+levelups+'명!', true); }, 400);
+                rpgBulkSelected.clear(); renderRpgGrid(); rpgUpdateBulkBtn();
+            }).catch(function(e){ alert('지급 오류: '+e.message); });
+        }
 
         function rpgStudentObj(id){
             const cur = (rpgData.students && rpgData.students[id]) || {};
