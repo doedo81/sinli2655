@@ -715,6 +715,7 @@
                         <h2 style="color:var(--dark-blue); margin:0;"><i class="fa-solid fa-dragon"></i> 성장 (상벌점 RPG)</h2>
                         <div style="display:flex; gap:8px; flex-wrap:wrap;">
                             <button class="action-btn" id="rpg-bulk-toggle" style="background:#5b97d1; padding:10px 18px;" onclick="rpgToggleBulk()"><i class="fa-solid fa-layer-group"></i> 일괄 지급</button>
+                            <button class="action-btn" style="background:#fb8c00; padding:10px 18px;" onclick="rpgOpenExam()"><i class="fa-solid fa-file-pen"></i> 단원평가</button>
                             <button class="action-btn" style="background:#00897b; padding:10px 18px;" onclick="rpgOpenActions()"><i class="fa-solid fa-sliders"></i> 상점 항목</button>
                             <button class="action-btn" style="background:#7b6cd9; padding:10px 18px;" onclick="rpgToggleRoster()"><i class="fa-solid fa-user-pen"></i> 명단 입력/수정</button>
                         </div>
@@ -788,6 +789,32 @@
                     </div>
                     <div id="rpg-award-ctx" style="font-size:13px; color:#00897b; font-weight:700; margin-bottom:12px;"></div>
                     <div id="rpg-award-body"></div>
+                </div>
+            </div>
+
+            <!-- 성장: 단원평가 입력 → 향상/만점 자동 -->
+            <div id="rpg-exam-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:2000; align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) rpgExamClose()">
+                <div style="background:#fff; border-radius:18px; max-width:460px; width:100%; max-height:90vh; overflow-y:auto; padding:22px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <div style="font-size:17px; font-weight:800; color:#51618a;">📝 단원평가 입력</div>
+                        <button onclick="rpgExamClose()" style="border:none; background:#f0f2f5; border-radius:50%; width:32px; height:32px; cursor:pointer; font-size:16px;">✕</button>
+                    </div>
+                    <div id="rpg-exam-step1">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                            <span style="font-size:14px; color:#555; font-weight:700;">과목</span>
+                            <select id="rpg-exam-subject" style="flex:1; padding:9px; border:1px solid #ccc; border-radius:8px;"></select>
+                        </div>
+                        <p style="font-size:12px; color:#8a94a6; margin:0 0 6px; line-height:1.5;">한 줄에 한 명 — <b>번호 점수</b> (예: <b>1 85</b>). 지난번 같은 과목보다 오르면 <b>향상</b>, 100점은 <b>만점</b> 상점을 자동으로 줘요. (첫 시험이면 향상은 다음 시험부터)</p>
+                        <textarea id="rpg-exam-scores" style="width:100%; height:150px; padding:10px; border-radius:8px; border:1px solid #ccc; line-height:1.6; font-family:'Pretendard'; box-sizing:border-box;" placeholder="1 85&#10;2 90&#10;3 100"></textarea>
+                        <button class="action-btn" style="width:100%; margin-top:10px; padding:12px; background:#fb8c00;" onclick="rpgExamGrade()">채점하기 →</button>
+                    </div>
+                    <div id="rpg-exam-step2" style="display:none;">
+                        <div id="rpg-exam-preview" style="margin-bottom:12px;"></div>
+                        <div style="display:flex; gap:8px;">
+                            <button style="padding:12px 16px; border:1px solid #ccc; background:#fff; color:#888; border-radius:10px; cursor:pointer; font-family:inherit;" onclick="rpgExamShowStep(1)">← 뒤로</button>
+                            <button class="action-btn" id="rpg-exam-apply" style="flex:1; padding:12px; background:#fb8c00;" onclick="rpgExamApply()">상점 지급하기</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -3527,6 +3554,100 @@
         function rpgAwardClose(){ document.getElementById('rpg-award-modal').style.display = 'none'; }
         function rpgAwardPick(actionId){
             rpgApplyActionToIds(actionId, rpgAwardTargets).then(function(){ rpgAwardClose(); }).catch(function(e){ alert('지급 오류: ' + e.message); });
+        }
+
+        // ---- 단원평가 → 향상/만점 자동 ----
+        const RPG_EXAM_SUBJECTS = ['국어', '사회', '수학', '과학'];
+        let rpgExamPreview = null;
+        function rpgOpenExam(){
+            if(!rpgRef){ alert('학급에 입장한 뒤 이용해주세요.'); return; }
+            document.getElementById('rpg-exam-subject').innerHTML = RPG_EXAM_SUBJECTS.map(function(s){ return '<option>' + s + '</option>'; }).join('');
+            document.getElementById('rpg-exam-scores').value = '';
+            rpgExamShowStep(1);
+            document.getElementById('rpg-exam-modal').style.display = 'flex';
+        }
+        function rpgExamClose(){ document.getElementById('rpg-exam-modal').style.display = 'none'; }
+        function rpgExamShowStep(n){
+            document.getElementById('rpg-exam-step1').style.display = (n === 1) ? 'block' : 'none';
+            document.getElementById('rpg-exam-step2').style.display = (n === 2) ? 'block' : 'none';
+        }
+        function rpgExamParseScores(txt){
+            const map = {};
+            (txt || '').split('\n').forEach(function(line){
+                const nums = line.match(/\d+/g);
+                if(nums && nums.length >= 2){ map[parseInt(nums[0])] = parseInt(nums[nums.length - 1]); }
+            });
+            return map;
+        }
+        function rpgExamGrade(){
+            const subject = document.getElementById('rpg-exam-subject').value;
+            const scores = rpgExamParseScores(document.getElementById('rpg-exam-scores').value);
+            const nums = Object.keys(scores);
+            if(nums.length === 0){ alert('점수를 입력해주세요. (예: 1 85)'); return; }
+            const exams = (rpgData.exams && rpgData.exams[subject]) || {};
+            let prevScores = {};
+            const examKeys = Object.keys(exams);
+            if(examKeys.length){
+                const latest = examKeys.map(function(k){ return exams[k]; }).sort(function(a, b){ return (b.createdAt || 0) - (a.createdAt || 0); })[0];
+                prevScores = (latest && latest.scores) || {};
+            }
+            const all = rpgAllActions();
+            const upA = all.find(function(x){ return x.id === 'test_up'; });
+            const fullA = all.find(function(x){ return x.id === 'test_full'; });
+            const awards = [];
+            nums.forEach(function(n){
+                const sc = scores[n];
+                const prev = prevScores[n];
+                const improved = (prev !== undefined && sc > prev);
+                const perfect = (sc === 100);
+                if(improved || perfect) awards.push({ num:parseInt(n), score:sc, prev:(prev === undefined ? null : prev), improved:improved, perfect:perfect });
+            });
+            rpgExamPreview = { subject:subject, scores:scores, awards:awards, upA:upA, fullA:fullA };
+            rpgExamRenderPreview();
+            rpgExamShowStep(2);
+        }
+        function rpgExamRenderPreview(){
+            const p = rpgExamPreview;
+            const roster = rpgParseRoster();
+            function nameOf(n){ const s = roster.find(function(x){ return x.id === n; }); return s ? s.name : (n + '번'); }
+            const upXp = p.upA ? p.upA.xp : 0, fullXp = p.fullA ? p.fullA.xp : 0;
+            const improvedCount = p.awards.filter(function(a){ return a.improved; }).length;
+            const perfectCount = p.awards.filter(function(a){ return a.perfect; }).length;
+            let html = '';
+            if(p.awards.length === 0){
+                html = '<div style="color:#888; padding:16px; text-align:center; line-height:1.6;">이번엔 향상·만점 대상이 없어요.<br><span style="font-size:12px;">(첫 시험이면 향상은 다음 시험부터 계산돼요)</span></div>';
+            } else {
+                html = '<div style="font-size:13px; color:#555; margin-bottom:8px; font-weight:700;">📈 향상 ' + improvedCount + '명(+' + upXp + ') · 🏆 만점 ' + perfectCount + '명(+' + fullXp + ')</div>';
+                html += p.awards.map(function(a){
+                    let badges = '';
+                    if(a.perfect) badges += '<span style="background:#fff3e0;color:#e65100;font-size:11px;padding:2px 8px;border-radius:10px;margin-left:4px;">🏆 만점 +' + fullXp + '</span>';
+                    if(a.improved) badges += '<span style="background:#e8f5e9;color:#2e7d32;font-size:11px;padding:2px 8px;border-radius:10px;margin-left:4px;">📈 향상 +' + upXp + '</span>';
+                    const prevTxt = (a.prev === null) ? '' : ' <span style="color:#bbb;">(' + a.prev + '→' + a.score + ')</span>';
+                    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 4px;border-bottom:1px solid #f0f0f0;font-size:13px;"><span>' + nameOf(a.num) + ' <span style="color:#888;">' + a.score + '점</span>' + prevTxt + '</span><span style="white-space:nowrap;">' + badges + '</span></div>';
+                }).join('');
+            }
+            document.getElementById('rpg-exam-preview').innerHTML = html;
+            document.getElementById('rpg-exam-apply').style.display = p.awards.length ? 'block' : 'none';
+        }
+        function rpgExamApply(){
+            if(!rpgRef || !rpgExamPreview) return;
+            const p = rpgExamPreview;
+            const updates = {}; let levelups = 0;
+            p.awards.forEach(function(a){
+                const s = rpgStudentObj(a.num);
+                const before = rpgLevel(s.xp).lv;
+                if(a.perfect && p.fullA){ s.xp += p.fullA.xp; s.stats[p.fullA.stat] = (s.stats[p.fullA.stat] || 0) + 1; }
+                if(a.improved && p.upA){ s.xp += p.upA.xp; s.stats[p.upA.stat] = (s.stats[p.upA.stat] || 0) + 1; }
+                if(rpgLevel(s.xp).lv > before) levelups++;
+                updates['students/' + a.num] = s;
+            });
+            const examKey = rpgRef.child('exams/' + p.subject).push().key;
+            updates['exams/' + p.subject + '/' + examKey] = { scores:p.scores, createdAt:Date.now() };
+            rpgRef.update(updates).then(function(){
+                rpgToast(p.subject + ' 단원평가 · ' + p.awards.length + '명 지급 완료');
+                if(levelups > 0) setTimeout(function(){ rpgToast('🎉 레벨업 ' + levelups + '명!', true); }, 400);
+                rpgExamClose();
+            }).catch(function(e){ alert('지급 오류: ' + e.message); });
         }
 
         function rpgToast(msg, big){
