@@ -757,10 +757,10 @@
                         <div style="font-size:17px; font-weight:800; color:#51618a;">🛠️ 상점 항목 관리</div>
                         <button onclick="rpgCloseActions()" style="border:none; background:#f0f2f5; border-radius:50%; width:32px; height:32px; cursor:pointer; font-size:16px;">✕</button>
                     </div>
-                    <p style="font-size:12px; color:#888; margin:0 0 12px; line-height:1.5;">내가 만든 항목이 상점·일괄지급에 함께 나와요. (기본 항목은 그대로 유지)</p>
-                    <div id="rpg-custom-list" style="display:flex; flex-direction:column; gap:6px; margin-bottom:14px;"></div>
+                    <p style="font-size:12px; color:#888; margin:0 0 12px; line-height:1.5;">상점 항목을 자유롭게 추가·수정·삭제할 수 있어요. <b>기본 항목도 수정 가능</b>해요. (학급마다 따로 저장)</p>
+                    <div id="rpg-actions-list" style="display:flex; flex-direction:column; gap:6px; margin-bottom:14px;"></div>
                     <div style="border-top:1px solid #eee; padding-top:14px;">
-                        <div style="font-weight:700; color:#51618a; margin-bottom:8px; font-size:14px;">➕ 새 항목 추가</div>
+                        <div id="rpg-na-title" style="font-weight:700; color:#51618a; margin-bottom:8px; font-size:14px;">➕ 새 항목 추가</div>
                         <input id="rpg-na-label" placeholder="항목 이름 (예: 청소 도우미)" style="width:100%; padding:9px; border:1px solid #ccc; border-radius:8px; margin-bottom:8px; box-sizing:border-box; font-family:'Pretendard';">
                         <div style="display:flex; gap:8px; margin-bottom:10px;">
                             <input id="rpg-na-xp" type="number" value="10" min="1" style="width:74px; padding:9px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box;" title="경험치(XP)">
@@ -771,7 +771,10 @@
                                 <option value="특별">특별</option>
                             </select>
                         </div>
-                        <button class="action-btn" style="width:100%; padding:12px;" onclick="rpgAddAction()">추가하기</button>
+                        <div style="display:flex; gap:8px;">
+                            <button class="action-btn" id="rpg-na-save" style="flex:1; padding:12px;" onclick="rpgSaveAction()">추가하기</button>
+                            <button id="rpg-na-cancel" style="display:none; padding:12px 16px; border:1px solid #ccc; background:#fff; color:#888; border-radius:10px; cursor:pointer; font-family:inherit;" onclick="rpgCancelEdit()">편집 취소</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1242,7 +1245,7 @@
                 rpgData = snap.val() || {};
                 if(document.getElementById('rpg-grid')) renderRpgGrid();
                 if(rpgBulkMode) rpgRenderBulkActions();
-                var _am = document.getElementById('rpg-actions-modal'); if(_am && _am.style.display === 'flex') rpgRenderCustomList();
+                var _am = document.getElementById('rpg-actions-modal'); if(_am && _am.style.display === 'flex') rpgRenderActionsList();
             });
 
             document.getElementById('auth-overlay').style.display = 'none'; 
@@ -3141,9 +3144,30 @@
         function rpgStatName(k){ const s = RPG_STATS.find(x => x.key === k); return s ? s.name : k; }
 
         // 기본 항목 + 선생님이 추가한 커스텀 항목(rpg/config/customActions)을 합친 전체 목록
+        // 학급별 상점 항목 전체 목록. config/actions가 있으면 그것(전부 편집 가능), 없으면 기본값.
+        let rpgEditingActionId = null;
         function rpgAllActions(){
-            const custom = (rpgData.config && rpgData.config.customActions) || {};
-            return RPG_ACTIONS.concat(Object.keys(custom).map(function(k){ return Object.assign({ id:k, custom:true }, custom[k]); }));
+            const cfg = (rpgData.config && rpgData.config.actions);
+            let arr;
+            if(cfg && Object.keys(cfg).length){
+                arr = Object.keys(cfg).map(function(k){ return Object.assign({ id:k }, cfg[k]); });
+            } else {
+                arr = RPG_ACTIONS.map(function(a, i){ return Object.assign({ order:i }, a); });
+            }
+            arr.sort(function(a, b){ return (a.order || 0) - (b.order || 0); });
+            return arr;
+        }
+        // 처음 관리할 때 기본 항목을 config/actions로 복사(=이후 전부 편집 가능). 옛 customActions도 흡수.
+        function rpgEnsureActions(){
+            if(!rpgRef) return Promise.resolve();
+            const cfg = rpgData.config && rpgData.config.actions;
+            if(cfg && Object.keys(cfg).length) return Promise.resolve();
+            const seed = {};
+            RPG_ACTIONS.forEach(function(a, i){ seed[a.id] = { label:a.label, xp:a.xp, stat:a.stat, group:a.group, order:i }; });
+            const legacy = (rpgData.config && rpgData.config.customActions) || {};
+            let i = RPG_ACTIONS.length;
+            Object.keys(legacy).forEach(function(k){ seed[k] = { label:legacy[k].label, xp:legacy[k].xp, stat:legacy[k].stat, group:legacy[k].group, order:i++ }; });
+            return rpgRef.child('config/actions').set(seed).then(function(){ return rpgRef.child('config/customActions').remove(); });
         }
 
         // 레벨 곡선(조정 가능): L→L+1 필요 XP = 50 + (L-1)*30 (초반 빠르게, 뒤로 갈수록 천천히)
@@ -3381,35 +3405,74 @@
         function rpgOpenActions(){
             const sel = document.getElementById('rpg-na-stat');
             sel.innerHTML = RPG_STATS.map(function(s){ return '<option value="'+s.key+'">'+s.emoji+' '+s.name+'</option>'; }).join('');
-            rpgRenderCustomList();
             document.getElementById('rpg-actions-modal').style.display = 'flex';
+            rpgCancelEdit();
+            rpgEnsureActions().then(function(){ rpgRenderActionsList(); });
         }
         function rpgCloseActions(){ document.getElementById('rpg-actions-modal').style.display = 'none'; }
-        function rpgRenderCustomList(){
-            const custom = (rpgData.config && rpgData.config.customActions) || {};
-            const keys = Object.keys(custom);
-            const el = document.getElementById('rpg-custom-list');
+
+        function rpgRenderActionsList(){
+            const el = document.getElementById('rpg-actions-list');
             if(!el) return;
-            if(keys.length === 0){ el.innerHTML = '<div style="color:#aaa; font-size:13px; padding:8px 4px;">아직 내가 만든 항목이 없어요.</div>'; return; }
-            el.innerHTML = keys.map(function(k){ const a = custom[k]; return '<div style="display:flex; justify-content:space-between; align-items:center; background:#f6f8fb; border-radius:8px; padding:8px 10px;"><span style="font-size:13px; color:#444;">' + a.label + ' <span style="color:#8a94a6;">+' + a.xp + ' · ' + rpgStatName(a.stat) + ' · ' + a.group + '</span></span><button onclick="rpgDeleteAction(\'' + k + '\')" style="border:none; background:transparent; color:#e57373; cursor:pointer; font-size:13px; font-weight:700;">삭제</button></div>'; }).join('');
+            el.innerHTML = rpgAllActions().map(function(a){
+                const editing = rpgEditingActionId === a.id;
+                return '<div style="display:flex; justify-content:space-between; align-items:center; background:' + (editing?'#eaf2fb':'#f6f8fb') + '; border-radius:8px; padding:8px 10px;">'
+                    + '<span style="font-size:13px; color:#444;">' + a.label + ' <span style="color:#8a94a6;">+' + a.xp + ' · ' + rpgStatName(a.stat) + ' · ' + a.group + '</span></span>'
+                    + '<span style="white-space:nowrap;">'
+                    + '<button onclick="rpgEditAction(\'' + a.id + '\')" style="border:none; background:transparent; color:#5b97d1; cursor:pointer; font-size:13px; font-weight:700; margin-right:8px;">수정</button>'
+                    + '<button onclick="rpgDeleteAction(\'' + a.id + '\')" style="border:none; background:transparent; color:#e57373; cursor:pointer; font-size:13px; font-weight:700;">삭제</button>'
+                    + '</span></div>';
+            }).join('');
         }
-        function rpgAddAction(){
+
+        function rpgEditAction(id){
+            const a = rpgAllActions().find(function(x){ return x.id === id; });
+            if(!a) return;
+            rpgEditingActionId = id;
+            document.getElementById('rpg-na-label').value = a.label;
+            document.getElementById('rpg-na-xp').value = a.xp;
+            document.getElementById('rpg-na-stat').value = a.stat;
+            document.getElementById('rpg-na-group').value = a.group;
+            document.getElementById('rpg-na-title').textContent = '✏️ 항목 수정: ' + a.label;
+            document.getElementById('rpg-na-save').textContent = '수정 저장';
+            document.getElementById('rpg-na-cancel').style.display = 'inline-block';
+            rpgRenderActionsList();
+        }
+
+        function rpgCancelEdit(){
+            rpgEditingActionId = null;
+            document.getElementById('rpg-na-label').value = '';
+            document.getElementById('rpg-na-xp').value = '10';
+            document.getElementById('rpg-na-title').textContent = '➕ 새 항목 추가';
+            document.getElementById('rpg-na-save').textContent = '추가하기';
+            document.getElementById('rpg-na-cancel').style.display = 'none';
+            if(document.getElementById('rpg-actions-list')) rpgRenderActionsList();
+        }
+
+        function rpgSaveAction(){
             if(!rpgRef){ alert('학급에 입장한 뒤 이용해주세요.'); return; }
             const label = document.getElementById('rpg-na-label').value.trim();
             if(!label){ alert('항목 이름을 입력해주세요.'); return; }
             const xp = parseInt(document.getElementById('rpg-na-xp').value) || 10;
             const stat = document.getElementById('rpg-na-stat').value;
             const group = document.getElementById('rpg-na-group').value;
-            const key = rpgRef.child('config/customActions').push().key;
-            rpgRef.child('config/customActions/' + key).set({ label:label, xp:xp, stat:stat, group:group }).then(function(){
-                document.getElementById('rpg-na-label').value = '';
-                rpgToast('항목 추가: ' + label);
-            }).catch(function(e){ alert('추가 오류: ' + e.message); });
+            rpgEnsureActions().then(function(){
+                if(rpgEditingActionId){
+                    return rpgRef.child('config/actions/' + rpgEditingActionId).update({ label:label, xp:xp, stat:stat, group:group }).then(function(){ rpgToast('수정됨: ' + label); });
+                }
+                const key = rpgRef.child('config/actions').push().key;
+                const order = rpgAllActions().length;
+                return rpgRef.child('config/actions/' + key).set({ label:label, xp:xp, stat:stat, group:group, order:order }).then(function(){ rpgToast('항목 추가: ' + label); });
+            }).then(function(){ rpgCancelEdit(); }).catch(function(e){ alert('저장 오류: ' + e.message); });
         }
-        function rpgDeleteAction(key){
+
+        function rpgDeleteAction(id){
             if(!rpgRef) return;
             if(!confirm('이 항목을 삭제할까요?')) return;
-            rpgRef.child('config/customActions/' + key).remove().then(function(){ rpgToast('삭제됨'); }).catch(function(e){ alert('삭제 오류: ' + e.message); });
+            rpgEnsureActions().then(function(){ return rpgRef.child('config/actions/' + id).remove(); }).then(function(){
+                if(rpgEditingActionId === id) rpgCancelEdit();
+                rpgToast('삭제됨');
+            }).catch(function(e){ alert('삭제 오류: ' + e.message); });
         }
 
         function rpgToast(msg, big){
