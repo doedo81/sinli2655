@@ -3237,6 +3237,26 @@
 
         function rpgStatName(k){ const s = RPG_STATS.find(x => x.key === k); return s ? s.name : k; }
 
+        // 머리 장식 아이템 (레벨 달성 시 해금). svg는 캐릭터 머리 위에 겹쳐 표시.
+        const RPG_ITEMS_HEAD = [
+            { id:'flower', name:'🌸 꽃', level:2, svg:'<svg viewBox="0 0 64 42" width="100%"><g transform="translate(32,24)"><circle cx="0" cy="-11" r="6" fill="#ff9ec4"/><circle cx="10" cy="-3" r="6" fill="#ff9ec4"/><circle cx="6" cy="9" r="6" fill="#ff9ec4"/><circle cx="-6" cy="9" r="6" fill="#ff9ec4"/><circle cx="-10" cy="-3" r="6" fill="#ff9ec4"/><circle cx="0" cy="0" r="5.5" fill="#ffd23f"/></g></svg>' },
+            { id:'star', name:'⭐ 별 장식', level:4, svg:'<svg viewBox="0 0 64 42" width="100%"><path d="M32,4 l5,12 13,1 -10,8 3,13 -11,-7 -11,7 3,-13 -10,-8 13,-1 z" fill="#ffd83a" stroke="#e0a91e" stroke-width="2" stroke-linejoin="round"/></svg>' },
+            { id:'horns', name:'😈 도깨비 뿔', level:6, svg:'<svg viewBox="0 0 64 42" width="100%"><path d="M20,42 Q6,22 18,8 Q20,24 28,40 Z" fill="#c96b4a" stroke="#8a4530" stroke-width="2" stroke-linejoin="round"/><path d="M44,42 Q58,22 46,8 Q44,24 36,40 Z" fill="#c96b4a" stroke="#8a4530" stroke-width="2" stroke-linejoin="round"/></svg>' },
+            { id:'halo', name:'😇 천사 후광', level:9, svg:'<svg viewBox="0 0 64 42" width="100%"><ellipse cx="32" cy="24" rx="21" ry="7" fill="none" stroke="#ffd76b" stroke-width="5"/><ellipse cx="32" cy="24" rx="21" ry="7" fill="none" stroke="#fff2c0" stroke-width="1.5"/></svg>' },
+            { id:'crown', name:'👑 왕관', level:12, svg:'<svg viewBox="0 0 64 42" width="100%"><path d="M10,40 L10,15 L22,26 L32,7 L42,26 L54,15 L54,40 Z" fill="#ffd23f" stroke="#c9901a" stroke-width="2.5" stroke-linejoin="round"/><rect x="9" y="34" width="46" height="6.5" rx="2" fill="#e6ad1e" stroke="#c9901a" stroke-width="1.5"/><circle cx="32" cy="7" r="3.5" fill="#ff5d5d" stroke="#c9901a" stroke-width="1.2"/><circle cx="12" cy="15" r="2.5" fill="#7ec8ff"/><circle cx="52" cy="15" r="2.5" fill="#7ec8ff"/></svg>' }
+        ];
+        function rpgHeadOverlay(headId, sizePx){
+            if(!headId) return '';
+            const it = RPG_ITEMS_HEAD.find(function(x){ return x.id === headId; });
+            if(!it) return '';
+            const w = Math.round(sizePx * 0.52);
+            return '<div style="position:absolute;top:' + Math.round(-sizePx * 0.05) + 'px;left:50%;transform:translateX(-50%);width:' + w + 'px;line-height:0;pointer-events:none;z-index:2;">' + it.svg + '</div>';
+        }
+        function rpgEquipHead(id, itemId){
+            if(!rpgRef) return;
+            rpgRef.child('students/' + id + '/head').set(itemId || null).then(function(){ rpgToast(itemId ? '머리 장식 착용' : '머리 장식 벗음'); });
+        }
+
         // 기본 항목 + 선생님이 추가한 커스텀 항목(rpg/config/customActions)을 합친 전체 목록
         // 학급별 상점 항목 전체 목록. config/actions가 있으면 그것(전부 편집 가능), 없으면 기본값.
         let rpgEditingActionId = null;
@@ -3329,7 +3349,10 @@
             const _check = _sel ? '<span style="position:absolute;top:-7px;right:-7px;background:#5b97d1;color:#fff;border-radius:50%;width:20px;height:20px;font-size:12px;line-height:20px;text-align:center;">✓</span>' : '';
             return '<div onclick="rpgCardClick(' + stu.id + ')" style="position:relative;cursor:pointer;background:' + (_sel?'#eaf2fb':'#fff') + ';border:' + (_sel?'2px solid #5b97d1':'1px solid #e6ebf3') + ';border-top:4px solid ' + (job ? '#7b6cd9' : '#b0bec5') + ';border-radius:14px;padding:12px;box-shadow:0 3px 10px rgba(120,144,180,0.10);transition:transform .12s;" onmouseover="this.style.transform=\'translateY(-3px)\'" onmouseout="this.style.transform=\'\'">'
                 + _check
-                + '<img src="assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=5" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'assets/avatars/novice_m.png?v=5\'" style="height:80px;width:auto;display:block;margin:2px auto 2px;">'
+                + '<div style="position:relative;width:max-content;margin:2px auto 2px;">'
+                + '<img src="assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=5" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'assets/avatars/novice_m.png?v=5\'" style="height:80px;width:auto;display:block;">'
+                + rpgHeadOverlay(d.head, 80)
+                + '</div>'
                 + '<div style="display:flex;justify-content:space-between;align-items:center;gap:4px;">'
                 + '<span style="font-weight:800;color:#51618a;">' + stu.name + '</span>'
                 + '<span style="font-size:12px;color:#7b6cd9;font-weight:700;white-space:nowrap;">' + (job ? job.emoji + job.name : '견습생') + '</span>'
@@ -3378,10 +3401,20 @@
                     + '</div></div>';
             }
 
+            const headPick = '<div style="font-size:12px;color:#888;margin:14px 0 6px;">👒 머리 장식 <span style="color:#bbb;">(레벨 달성 시 해금)</span></div><div style="display:flex;flex-wrap:wrap;gap:6px;">'
+                + '<button onclick="rpgEquipHead(' + id + ',null)" style="border:' + (!d.head ? '2px solid #5b97d1' : '1px solid #d7deea') + ';background:#fff;border-radius:9px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;">없음</button>'
+                + RPG_ITEMS_HEAD.map(function(it){
+                    const unlocked = L.lv >= it.level, eq = d.head === it.id;
+                    if(unlocked) return '<button onclick="rpgEquipHead(' + id + ',\'' + it.id + '\')" style="border:' + (eq ? '2px solid #5b97d1' : '1px solid #d7deea') + ';background:' + (eq ? '#eaf2fb' : '#fff') + ';border-radius:9px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;">' + it.name + '</button>';
+                    return '<span style="border:1px dashed #dcdcdc;color:#bbb;border-radius:9px;padding:6px 10px;font-size:12px;">🔒 ' + it.name + ' Lv' + it.level + '</span>';
+                }).join('') + '</div>';
             document.getElementById('rpg-modal-body').innerHTML =
                 '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
                 + '<div style="display:flex;gap:10px;align-items:center;">'
+                + '<div style="position:relative;">'
                 + '<img src="assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=5" alt="" onerror="this.onerror=null;this.src=\'assets/avatars/novice_m.png?v=5\'" style="height:110px;width:auto;">'
+                + rpgHeadOverlay(d.head, 110)
+                + '</div>'
                 + '<div><div style="font-size:18px;font-weight:800;color:#51618a;">' + stu.name + ' <span style="font-size:13px;color:#7b6cd9;">' + (job ? job.emoji + job.name : '견습생') + '</span></div>'
                 + '<div style="font-size:13px;color:#888;">Lv.' + L.lv + ' · ' + stu.id + '번</div></div>'
                 + '</div>'
@@ -3389,6 +3422,7 @@
                 + '<div style="height:10px;background:#eef1f6;border-radius:20px;overflow:hidden;margin:10px 0 4px;"><div style="width:' + pct + '%;height:100%;background:#5b97d1;"></div></div>'
                 + '<div style="font-size:12px;color:#aaa;text-align:right;">' + L.into + ' / ' + L.need + ' XP</div>'
                 + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:14px 0;">' + statHtml + '</div>'
+                + headPick
                 + jobSection
                 + '<div style="font-size:12px;color:#888;margin:14px 0 6px;">🟢 매일 습관 +5</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' + grp('습관') + '</div>'
                 + '<div style="font-size:12px;color:#888;margin:12px 0 6px;">💪 노력·성취 +10~20</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' + grp('노력') + '</div>'
