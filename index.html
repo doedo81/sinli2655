@@ -715,6 +715,7 @@
                         <h2 style="color:var(--dark-blue); margin:0;"><i class="fa-solid fa-dragon"></i> 성장 (상벌점 RPG)</h2>
                         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
                             <button class="action-btn" id="rpg-lock-btn" style="background:#78909c; padding:10px 18px;" onclick="rpgToggleLock()"><i class="fa-solid fa-lock"></i> 잠금</button>
+                            <button class="action-btn" id="rpg-exit-student" style="background:#e53935; padding:10px 18px; display:none;" onclick="rpgExitStudentMode()"><i class="fa-solid fa-chalkboard-user"></i> 선생님 모드로</button>
                             <div id="rpg-teacher-btns" style="display:flex; gap:8px; flex-wrap:wrap;">
                                 <button class="action-btn" id="rpg-bulk-toggle" style="background:#5b97d1; padding:10px 18px;" onclick="rpgToggleBulk()"><i class="fa-solid fa-layer-group"></i> 일괄 지급</button>
                                 <button class="action-btn" style="background:#e91e8c; padding:10px 18px;" onclick="rpgOpenMissions()"><i class="fa-solid fa-bullseye"></i> 미션</button>
@@ -722,6 +723,7 @@
                                 <button class="action-btn" id="rpg-grade-btn" style="background:#455a64; padding:10px 18px; display:none;" onclick="rpgOpenGrade()"><i class="fa-solid fa-table-list"></i> 평가 기록</button>
                                 <button class="action-btn" style="background:#00897b; padding:10px 18px;" onclick="rpgOpenActions()"><i class="fa-solid fa-sliders"></i> 상점 항목</button>
                                 <button class="action-btn" style="background:#7b6cd9; padding:10px 18px;" onclick="rpgToggleRoster()"><i class="fa-solid fa-user-pen"></i> 명단 입력/수정</button>
+                                <button class="action-btn" style="background:#26a69a; padding:10px 18px;" onclick="rpgEnterStudentMode()"><i class="fa-solid fa-child-reaching"></i> 학생 모드</button>
                             </div>
                         </div>
                     </div>
@@ -1164,6 +1166,7 @@
         let rpgData = {}, rpgModalId = null;
         let rpgBulkMode = false, rpgBulkAction = null, rpgBulkSelected = new Set();
         let rpgLocked = false;
+        let rpgStudentMode = false;
         let listenersSet = false, numberOfGroups = 6;
         let currentScores = [], currentMiniScores = [], currentTasks = [], historyCheck = {}, allHomeworks = [], allBookmarks = {};
         let viewDate = new Date(); let calDate = new Date(); 
@@ -3467,6 +3470,10 @@
             const empty = document.getElementById('rpg-empty');
             if(!grid) return;
             rpgLocked = localStorage.getItem('rpgLock_' + currentRoom) === '1'; rpgUpdateLockUI();
+            rpgStudentMode = localStorage.getItem('rpgStu_' + currentRoom) === '1';
+            var _tb = document.getElementById('rpg-teacher-btns'); if(_tb) _tb.style.display = rpgStudentMode ? 'none' : 'flex';
+            var _lb2 = document.getElementById('rpg-lock-btn'); if(_lb2 && rpgStudentMode) _lb2.style.display = 'none';
+            var _es = document.getElementById('rpg-exit-student'); if(_es) _es.style.display = rpgStudentMode ? '' : 'none';
             if(students.length === 0){ grid.innerHTML = ''; empty.style.display = 'block'; return; }
             empty.style.display = 'none';
             grid.innerHTML = students.map(rpgCardHtml).join('');
@@ -3520,7 +3527,8 @@
                 + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:14px 0;">' + statHtml + '</div>'
                 + headPick
                 + jobSection
-                + '<div style="font-size:12px;color:#888;margin:14px 0 6px;">🟢 매일 습관 +5</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' + grp('습관') + '</div>'
+                + (rpgStudentMode ? '' : (
+                  '<div style="font-size:12px;color:#888;margin:14px 0 6px;">🟢 매일 습관 +5</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' + grp('습관') + '</div>'
                 + '<div style="font-size:12px;color:#888;margin:12px 0 6px;">💪 노력·성취 +10~20</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' + grp('노력') + '</div>'
                 + '<div style="font-size:12px;color:#888;margin:12px 0 6px;">🏆 특별 이벤트 +20~30</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' + grp('특별') + '</div>'
                 + '<div style="border-top:1px solid #eee;margin-top:16px;padding-top:12px;">'
@@ -3529,7 +3537,7 @@
                 + '<div style="display:flex;gap:8px;margin-top:10px;">'
                 + '<button onclick="rpgWarn(' + id + ',20)" style="flex:1;border:1px solid #ef9a9a;background:#fff5f5;color:#c62828;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">벌점 +20</button>'
                 + '<button onclick="rpgWarn(' + id + ',-10)" style="flex:1;border:1px solid #a5d6a7;background:#f4fbf4;color:#2e7d32;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">선행 −10</button></div>'
-                + '<p style="font-size:11px;color:#bbb;margin:6px 0 0;">선행: 쓰레기 줍기, 친구 1인1역 돕기 등</p></div>';
+                + '<p style="font-size:11px;color:#bbb;margin:6px 0 0;">선행: 쓰레기 줍기, 친구 1인1역 돕기 등</p></div>'));
 
             document.getElementById('rpg-modal').style.display = 'flex';
         }
@@ -3543,6 +3551,20 @@
             var lb = document.getElementById('rpg-lock-btn');
             if(lb){ lb.innerHTML = rpgLocked ? '<i class="fa-solid fa-lock-open"></i> 평가 잠금 해제' : '<i class="fa-solid fa-lock"></i> 평가 잠금'; lb.style.background = rpgLocked ? '#e57373' : '#78909c'; lb.style.display = (currentRole === 'owner') ? '' : 'none'; }
         }
+        function rpgEnterStudentMode(){
+            rpgStudentMode = true; rpgBulkMode = false;
+            localStorage.setItem('rpgStu_' + currentRoom, '1');
+            rpgClose(); renderRpgGrid();
+            rpgToast('🎒 학생 모드 — 학생이 자기 캐릭터를 꾸밀 수 있어요');
+        }
+        function rpgExitStudentMode(){
+            const pin = (rpgData.config && rpgData.config.pin) || '';
+            if(pin){ const e = prompt('선생님 비밀번호를 입력하세요'); if(e === null) return; if(e.trim() !== pin){ alert('비밀번호가 틀렸어요.'); return; } }
+            rpgStudentMode = false; localStorage.removeItem('rpgStu_' + currentRoom);
+            rpgClose(); renderRpgGrid();
+            rpgToast('선생님 모드');
+        }
+
         function rpgToggleLock(){
             if(!rpgRef) return;
             if(!rpgLocked){
