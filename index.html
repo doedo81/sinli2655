@@ -3245,18 +3245,27 @@
             return job + '_' + g + (tier > 1 ? '_' + tier : '');
         }
 
-        // 고레벨 오라/효과 (그림 없이 코드로). Lv15+ 은은/25+ 색오라/40+ 금빛
+        // 고레벨 강화 효과 (그림 없이). 직업별 색·기호 + 레벨별 세기. Lv15+/25+/40+
+        const RPG_AURA = {
+            knight:  { rgb:'120,170,255', spark:'✦', sc:'#bcd6ff' },
+            mage:    { rgb:'175,120,240', spark:'✦', sc:'#d7b3ff' },
+            priest:  { rgb:'255,220,120', spark:'✧', sc:'#fff0b0' },
+            archer:  { rgb:'110,205,130', spark:'✿', sc:'#c2f0ce' },
+            bard:    { rgb:'255,150,110', spark:'♪', sc:'#ffd6ad' },
+            novice:  { rgb:'150,190,255', spark:'✦', sc:'#cfe0ff' }
+        };
         function rpgAuraTier(level){ return level >= 40 ? 3 : (level >= 25 ? 2 : (level >= 15 ? 1 : 0)); }
-        function rpgAuraOverlay(level, sizePx){
+        function rpgAuraOverlay(level, sizePx, job){
             const t = rpgAuraTier(level); if(!t) return '';
+            const a = RPG_AURA[(job && RPG_JOBS[job]) ? job : 'novice'];
+            const op = t === 3 ? 0.85 : (t === 2 ? 0.62 : 0.42);
             const d = Math.round(sizePx * 1.55);
-            const glowCol = { 1:'rgba(120,180,255,0.5)', 2:'rgba(175,120,240,0.6)', 3:'rgba(255,205,80,0.8)' }[t];
-            let html = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-53%);width:' + d + 'px;height:' + d + 'px;z-index:0;pointer-events:none;border-radius:50%;background:radial-gradient(circle,' + glowCol + ' 0%,transparent 62%);"></div>';
+            let html = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-53%);width:' + d + 'px;height:' + d + 'px;z-index:0;pointer-events:none;border-radius:50%;background:radial-gradient(circle,rgba(' + a.rgb + ',' + op + ') 0%,transparent 62%);"></div>';
+            if(t === 3){ html += '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-53%);width:' + Math.round(d * 0.72) + 'px;height:' + Math.round(d * 0.72) + 'px;z-index:0;pointer-events:none;border-radius:50%;background:radial-gradient(circle,rgba(255,225,130,0.55) 0%,transparent 60%);"></div>'; }
             if(t >= 2){
-                const sc = (t === 3) ? '#ffe07a' : '#d7b3ff';
-                [[10,12,10],[86,20,8],[82,82,10],[13,80,8],[50,3,7]].forEach(function(p){
-                    html += '<div style="position:absolute;top:' + p[1] + '%;left:' + p[0] + '%;z-index:0;pointer-events:none;font-size:' + p[2] + 'px;color:' + sc + ';line-height:1;">✦</div>';
-                });
+                const pts = [[10,12],[86,20],[82,82],[13,80],[50,3],[92,56],[6,52]];
+                const cnt = t === 3 ? 7 : 5, fs = t === 3 ? 11 : 9;
+                for(let i = 0; i < cnt; i++){ html += '<div style="position:absolute;top:' + pts[i][1] + '%;left:' + pts[i][0] + '%;z-index:0;pointer-events:none;font-size:' + fs + 'px;color:' + a.sc + ';line-height:1;">' + a.spark + '</div>'; }
             }
             return html;
         }
@@ -3374,7 +3383,7 @@
             return '<div onclick="rpgCardClick(' + stu.id + ')" style="position:relative;cursor:pointer;background:' + (_sel?'#eaf2fb':'#fff') + ';border:' + (_sel?'2px solid #5b97d1':'1px solid #e6ebf3') + ';border-top:4px solid ' + (job ? '#7b6cd9' : '#b0bec5') + ';border-radius:14px;padding:12px;box-shadow:0 3px 10px rgba(120,144,180,0.10);transition:transform .12s;" onmouseover="this.style.transform=\'translateY(-3px)\'" onmouseout="this.style.transform=\'\'">'
                 + _check
                 + '<div style="position:relative;width:max-content;margin:2px auto 2px;">'
-                + rpgAuraOverlay(L.lv, 80)
+                + rpgAuraOverlay(L.lv, 80, d.job)
                 + '<img src="assets/avatars/' + rpgAvatarKey(d.job, L.lv, stu.gender) + '.png?v=6" alt="" loading="lazy" onerror="this.onerror=function(){this.onerror=null;this.src=\'assets/avatars/novice_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=6\'};this.src=\'assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=6\'" style="height:80px;width:auto;display:block;position:relative;z-index:1;">'
                 + rpgHeadOverlay(d.head, 80)
                 + '</div>'
@@ -3437,7 +3446,7 @@
                 '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
                 + '<div style="display:flex;gap:10px;align-items:center;">'
                 + '<div style="position:relative;">'
-                + rpgAuraOverlay(L.lv, 110)
+                + rpgAuraOverlay(L.lv, 110, d.job)
                 + '<img src="assets/avatars/' + rpgAvatarKey(d.job, L.lv, stu.gender) + '.png?v=6" alt="" onerror="this.onerror=function(){this.onerror=null;this.src=\'assets/avatars/novice_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=6\'};this.src=\'assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=6\'" style="height:110px;width:auto;position:relative;z-index:1;">'
                 + rpgHeadOverlay(d.head, 110)
                 + '</div>'
