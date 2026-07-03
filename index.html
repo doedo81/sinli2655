@@ -717,6 +717,7 @@
                             <button class="action-btn" id="rpg-lock-btn" style="background:#78909c; padding:10px 18px;" onclick="rpgToggleLock()"><i class="fa-solid fa-lock"></i> 잠금</button>
                             <div id="rpg-teacher-btns" style="display:flex; gap:8px; flex-wrap:wrap;">
                                 <button class="action-btn" id="rpg-bulk-toggle" style="background:#5b97d1; padding:10px 18px;" onclick="rpgToggleBulk()"><i class="fa-solid fa-layer-group"></i> 일괄 지급</button>
+                                <button class="action-btn" style="background:#e91e8c; padding:10px 18px;" onclick="rpgOpenMissions()"><i class="fa-solid fa-bullseye"></i> 미션</button>
                                 <button class="action-btn" style="background:#fb8c00; padding:10px 18px;" onclick="rpgOpenExam()"><i class="fa-solid fa-file-pen"></i> 단원평가</button>
                                 <button class="action-btn" id="rpg-grade-btn" style="background:#455a64; padding:10px 18px; display:none;" onclick="rpgOpenGrade()"><i class="fa-solid fa-table-list"></i> 평가 기록</button>
                                 <button class="action-btn" style="background:#00897b; padding:10px 18px;" onclick="rpgOpenActions()"><i class="fa-solid fa-sliders"></i> 상점 항목</button>
@@ -867,6 +868,26 @@
                         <input id="rpg-subject-input" placeholder="추가할 과목 (예: 영어)" style="flex:1; padding:9px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box; font-family:'Pretendard';">
                         <button class="action-btn" style="padding:9px 16px;" onclick="rpgAddSubject()">추가</button>
                     </div>
+                </div>
+            </div>
+
+            <!-- 성장: 미션 -->
+            <div id="rpg-mission-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:2000; align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) rpgCloseMissions()">
+                <div style="background:#fff; border-radius:18px; max-width:580px; width:100%; max-height:90vh; overflow:auto; padding:22px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <div style="font-size:17px; font-weight:800; color:#51618a;">🎯 미션</div>
+                        <button onclick="rpgCloseMissions()" style="border:none; background:#f0f2f5; border-radius:50%; width:32px; height:32px; cursor:pointer; font-size:16px;">✕</button>
+                    </div>
+                    <div style="background:#fdf0f6; border:1px solid #f6d4e6; border-radius:12px; padding:12px 14px; margin-bottom:14px;">
+                        <div style="font-weight:700; color:#c2185b; margin-bottom:8px; font-size:14px;">➕ 새 미션</div>
+                        <input id="rpg-mi-title" placeholder="미션 제목 (예: 독서록 3편 쓰기)" style="width:100%; padding:9px; border:1px solid #ccc; border-radius:8px; margin-bottom:8px; box-sizing:border-box; font-family:'Pretendard';">
+                        <div style="display:flex; gap:8px;">
+                            <input id="rpg-mi-xp" type="number" value="30" min="0" style="width:78px; padding:9px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box;" title="보상 XP">
+                            <select id="rpg-mi-stat" style="flex:1; padding:9px; border:1px solid #ccc; border-radius:8px;"></select>
+                            <button class="action-btn" style="background:#e91e8c; padding:9px 16px;" onclick="rpgAddMission()">추가</button>
+                        </div>
+                    </div>
+                    <div id="rpg-mission-list"></div>
                 </div>
             </div>
 
@@ -1340,6 +1361,7 @@
                 var _am = document.getElementById('rpg-actions-modal'); if(_am && _am.style.display === 'flex') rpgRenderActionsList();
                 var _gm = document.getElementById('rpg-grade-modal'); if(_gm && _gm.style.display === 'flex') rpgRenderGrade();
                 var _sm = document.getElementById('rpg-subject-modal'); if(_sm && _sm.style.display === 'flex') rpgRenderSubjectList();
+                var _mm = document.getElementById('rpg-mission-modal'); if(_mm && _mm.style.display === 'flex') rpgRenderMissions();
             });
 
             document.getElementById('auth-overlay').style.display = 'none'; 
@@ -3913,6 +3935,69 @@
             if(list.length <= 1){ alert('과목은 최소 1개는 있어야 해요.'); return; }
             if(!confirm('"' + name + '" 과목을 목록에서 삭제할까요?\n(이미 저장된 점수 기록은 남아요)')) return;
             rpgRef.child('config/subjects').set(list.filter(function(x){ return x !== name; })).then(function(){ rpgToast('과목 삭제: ' + name); }).catch(function(e){ alert(e.message); });
+        }
+
+        // ---- 미션 ----
+        function rpgOpenMissions(){
+            document.getElementById('rpg-mi-stat').innerHTML = '<option value="">능력치 없음</option>' + RPG_STATS.map(function(s){ return '<option value="' + s.key + '">' + s.emoji + ' ' + s.name + '</option>'; }).join('');
+            document.getElementById('rpg-mi-title').value = ''; document.getElementById('rpg-mi-xp').value = '30';
+            rpgRenderMissions();
+            document.getElementById('rpg-mission-modal').style.display = 'flex';
+        }
+        function rpgCloseMissions(){ document.getElementById('rpg-mission-modal').style.display = 'none'; }
+        function rpgAddMission(){
+            if(!rpgRef) return;
+            const title = document.getElementById('rpg-mi-title').value.trim(); if(!title){ alert('미션 제목을 입력해주세요.'); return; }
+            const xp = parseInt(document.getElementById('rpg-mi-xp').value) || 0;
+            const stat = document.getElementById('rpg-mi-stat').value;
+            const key = rpgRef.child('missions').push().key;
+            rpgRef.child('missions/' + key).set({ title:title, xp:xp, stat:stat || null, createdAt:Date.now() }).then(function(){ document.getElementById('rpg-mi-title').value = ''; rpgToast('미션 추가: ' + title); });
+        }
+        function rpgDeleteMission(id){ if(!rpgRef || !confirm('이 미션을 삭제할까요?')) return; rpgRef.child('missions/' + id).remove().then(function(){ rpgToast('미션 삭제'); }); }
+        function rpgRenderMissions(){
+            const el = document.getElementById('rpg-mission-list'); if(!el) return;
+            const ms = rpgData.missions || {};
+            const keys = Object.keys(ms).sort(function(a, b){ return (ms[b].createdAt || 0) - (ms[a].createdAt || 0); });
+            if(keys.length === 0){ el.innerHTML = '<div style="color:#999;padding:16px;text-align:center;">아직 미션이 없어요. 위에서 추가해 주세요.</div>'; return; }
+            const roster = rpgParseRoster();
+            el.innerHTML = keys.map(function(k){
+                const m = ms[k], done = m.done || {};
+                const rew = (m.xp ? '+' + m.xp + ' XP' : '') + (m.stat ? ' · ' + rpgStatName(m.stat) + ' +1' : '');
+                const doneCnt = roster.filter(function(st){ return done[st.id]; }).length;
+                const btns = roster.map(function(st){
+                    const isDone = done[st.id];
+                    return '<button onclick="rpgMissionToggle(\'' + k + '\',' + st.id + ')" title="' + st.name + '" style="width:30px;height:30px;border-radius:7px;border:1px solid ' + (isDone ? '#43a047' : '#d7deea') + ';background:' + (isDone ? '#66bb6a' : '#fff') + ';color:' + (isDone ? '#fff' : '#888') + ';font-size:12px;font-weight:700;cursor:pointer;">' + st.id + '</button>';
+                }).join('');
+                return '<div style="border:1px solid #eee;border-radius:12px;padding:12px;margin-bottom:10px;">'
+                    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">'
+                    + '<div><b style="color:#51618a;">' + m.title + '</b> <span style="font-size:12px;color:#e91e8c;font-weight:700;">' + rew + '</span></div>'
+                    + '<div style="white-space:nowrap;"><span style="font-size:12px;color:#888;margin-right:8px;">완료 ' + doneCnt + '/' + roster.length + '</span>'
+                    + '<button onclick="rpgMissionAll(\'' + k + '\')" style="border:none;background:#e0f0e5;color:#2e7d32;border-radius:7px;padding:5px 10px;font-size:12px;cursor:pointer;margin-right:4px;">전원 완료</button>'
+                    + '<button onclick="rpgDeleteMission(\'' + k + '\')" style="border:none;background:transparent;color:#e57373;font-size:12px;cursor:pointer;">삭제</button></div></div>'
+                    + '<div style="display:flex;flex-wrap:wrap;gap:5px;">' + btns + '</div>'
+                    + '<div style="font-size:11px;color:#bbb;margin-top:6px;">학생 번호를 누르면 완료+보상 (다시 누르면 완료 취소, 보상은 유지)</div>'
+                    + '</div>';
+            }).join('');
+        }
+        function rpgMissionToggle(mid, num){
+            if(!rpgRef) return;
+            const m = rpgData.missions && rpgData.missions[mid]; if(!m) return;
+            if(m.done && m.done[num]){ rpgRef.child('missions/' + mid + '/done/' + num).remove(); return; }
+            const s = rpgStudentObj(num); const before = rpgLevel(s.xp).lv;
+            s.xp += (m.xp || 0); if(m.stat) s.stats[m.stat] = (s.stats[m.stat] || 0) + 1;
+            const up = {}; up['students/' + num] = s; up['missions/' + mid + '/done/' + num] = true;
+            rpgRef.update(up).then(function(){ rpgToast(num + '번 미션 완료! +' + (m.xp || 0) + ' XP'); if(rpgLevel(s.xp).lv > before) setTimeout(function(){ rpgToast('🎉 레벨 업!', true); }, 400); });
+        }
+        function rpgMissionAll(mid){
+            if(!rpgRef) return;
+            const m = rpgData.missions && rpgData.missions[mid]; if(!m) return;
+            const roster = rpgParseRoster(), done = m.done || {};
+            const targets = roster.filter(function(st){ return !done[st.id]; });
+            if(targets.length === 0){ alert('이미 전원 완료예요.'); return; }
+            if(!confirm(targets.length + '명에게 미션 보상을 줄까요?')) return;
+            const up = {}; let lv = 0;
+            targets.forEach(function(st){ const s = rpgStudentObj(st.id); const b = rpgLevel(s.xp).lv; s.xp += (m.xp || 0); if(m.stat) s.stats[m.stat] = (s.stats[m.stat] || 0) + 1; if(rpgLevel(s.xp).lv > b) lv++; up['students/' + st.id] = s; up['missions/' + mid + '/done/' + st.id] = true; });
+            rpgRef.update(up).then(function(){ rpgToast(targets.length + '명 미션 완료 보상!'); if(lv > 0) setTimeout(function(){ rpgToast('🎉 레벨 업 ' + lv + '명!', true); }, 400); });
         }
 
         function rpgToast(msg, big){
