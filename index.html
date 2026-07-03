@@ -3347,7 +3347,6 @@
             const empty = document.getElementById('rpg-empty');
             if(!grid) return;
             rpgLocked = localStorage.getItem('rpgLock_' + currentRoom) === '1'; rpgUpdateLockUI();
-            var _gb = document.getElementById('rpg-grade-btn'); if(_gb) _gb.style.display = (currentRole === 'owner') ? '' : 'none';
             if(students.length === 0){ grid.innerHTML = ''; empty.style.display = 'block'; return; }
             empty.style.display = 'none';
             grid.innerHTML = students.map(rpgCardHtml).join('');
@@ -3390,8 +3389,7 @@
                 + '<div style="height:10px;background:#eef1f6;border-radius:20px;overflow:hidden;margin:10px 0 4px;"><div style="width:' + pct + '%;height:100%;background:#5b97d1;"></div></div>'
                 + '<div style="font-size:12px;color:#aaa;text-align:right;">' + L.into + ' / ' + L.need + ' XP</div>'
                 + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:14px 0;">' + statHtml + '</div>'
-                + (rpgLocked ? '<div style="text-align:center;color:#9aa7b4;font-size:12px;margin:18px 0 4px;"><i class="fa-solid fa-lock"></i> 잠금 상태예요 — 상벌점은 선생님만 줄 수 있어요</div>' : (
-                  jobSection
+                + jobSection
                 + '<div style="font-size:12px;color:#888;margin:14px 0 6px;">🟢 매일 습관 +5</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' + grp('습관') + '</div>'
                 + '<div style="font-size:12px;color:#888;margin:12px 0 6px;">💪 노력·성취 +10~20</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' + grp('노력') + '</div>'
                 + '<div style="font-size:12px;color:#888;margin:12px 0 6px;">🏆 특별 이벤트 +20~30</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' + grp('특별') + '</div>'
@@ -3401,7 +3399,7 @@
                 + '<div style="display:flex;gap:8px;margin-top:10px;">'
                 + '<button onclick="rpgWarn(' + id + ',20)" style="flex:1;border:1px solid #ef9a9a;background:#fff5f5;color:#c62828;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">벌점 +20</button>'
                 + '<button onclick="rpgWarn(' + id + ',-10)" style="flex:1;border:1px solid #a5d6a7;background:#f4fbf4;color:#2e7d32;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">선행 −10</button></div>'
-                + '<p style="font-size:11px;color:#bbb;margin:6px 0 0;">선행: 쓰레기 줍기, 친구 1인1역 돕기 등</p></div>'));
+                + '<p style="font-size:11px;color:#bbb;margin:6px 0 0;">선행: 쓰레기 줍기, 친구 1인1역 돕기 등</p></div>';
 
             document.getElementById('rpg-modal').style.display = 'flex';
         }
@@ -3410,16 +3408,17 @@
 
         // ---- 교사 잠금(비밀번호) ----
         function rpgUpdateLockUI(){
-            var tb = document.getElementById('rpg-teacher-btns'); if(tb) tb.style.display = rpgLocked ? 'none' : 'flex';
+            // 잠가도 상벌점은 그대로. '평가 기록' 버튼만 숨김(담임 & 잠금해제 상태에서만 보임)
+            var gb = document.getElementById('rpg-grade-btn'); if(gb) gb.style.display = (currentRole === 'owner' && !rpgLocked) ? '' : 'none';
             var lb = document.getElementById('rpg-lock-btn');
-            if(lb){ lb.innerHTML = rpgLocked ? '<i class="fa-solid fa-lock-open"></i> 잠금 해제' : '<i class="fa-solid fa-lock"></i> 잠금'; lb.style.background = rpgLocked ? '#e57373' : '#78909c'; }
+            if(lb){ lb.innerHTML = rpgLocked ? '<i class="fa-solid fa-lock-open"></i> 평가 잠금 해제' : '<i class="fa-solid fa-lock"></i> 평가 잠금'; lb.style.background = rpgLocked ? '#e57373' : '#78909c'; lb.style.display = (currentRole === 'owner') ? '' : 'none'; }
         }
         function rpgToggleLock(){
             if(!rpgRef) return;
             if(!rpgLocked){
                 var pin = (rpgData.config && rpgData.config.pin) || '';
                 if(!pin){
-                    var np = prompt('잠금 비밀번호를 정하세요 (숫자 4자리 권장)\n학생이 상벌점·평가를 만지지 못하게 막아요.');
+                    var np = prompt('평가 기록을 보호할 비밀번호를 정하세요 (숫자 4자리 권장)\n잠가도 상벌점은 그대로 쓸 수 있고, 평가 기록만 숨겨져요.');
                     if(np === null) return;
                     np = np.trim();
                     if(!np){ alert('비밀번호를 입력해주세요.'); return; }
@@ -3428,7 +3427,7 @@
                 rpgLocked = true;
                 localStorage.setItem('rpgLock_' + currentRoom, '1');
                 rpgUpdateLockUI(); renderRpgGrid();
-                rpgToast('🔒 잠금 — 학생이 상벌점·평가를 만질 수 없어요');
+                rpgToast('🔒 평가 기록 잠금 — 상벌점은 그대로 쓸 수 있어요');
             } else {
                 var entered = prompt('잠금 해제 비밀번호를 입력하세요');
                 if(entered === null) return;
@@ -3507,7 +3506,6 @@
         }
 
         function rpgGive(id, actionId){
-            if(rpgLocked) return;
             const a = rpgAllActions().find(x => x.id === actionId); if(!a || !rpgRef) return;
             const s = rpgStudentObj(id);
             const beforeLv = rpgLevel(s.xp).lv;
@@ -3521,7 +3519,7 @@
         }
 
         function rpgWarn(id, delta){
-            if(rpgLocked || !rpgRef) return;
+            if(!rpgRef) return;
             const s = rpgStudentObj(id);
             s.warning = Math.max(0, Math.min(100, s.warning + delta));
             rpgRef.child('students/' + id).set(s).then(() => {
@@ -3754,6 +3752,7 @@
         let rpgGradeSubject = '수학', rpgGradeType = 'unit';
         function rpgOpenGrade(){
             if(currentRole !== 'owner'){ alert('담임 선생님만 볼 수 있어요.'); return; }
+            if(rpgLocked){ alert('평가 잠금 상태예요. 먼저 [평가 잠금 해제]를 눌러주세요.'); return; }
             rpgRenderGrade();
             document.getElementById('rpg-grade-modal').style.display = 'flex';
         }
