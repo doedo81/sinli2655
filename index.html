@@ -715,6 +715,7 @@
                         <h2 style="color:var(--dark-blue); margin:0;"><i class="fa-solid fa-dragon"></i> 성장 (상벌점 RPG)</h2>
                         <div style="display:flex; gap:8px; flex-wrap:wrap;">
                             <button class="action-btn" id="rpg-bulk-toggle" style="background:#5b97d1; padding:10px 18px;" onclick="rpgToggleBulk()"><i class="fa-solid fa-layer-group"></i> 일괄 지급</button>
+                            <button class="action-btn" style="background:#00897b; padding:10px 18px;" onclick="rpgOpenActions()"><i class="fa-solid fa-sliders"></i> 상점 항목</button>
                             <button class="action-btn" style="background:#7b6cd9; padding:10px 18px;" onclick="rpgToggleRoster()"><i class="fa-solid fa-user-pen"></i> 명단 입력/수정</button>
                         </div>
                     </div>
@@ -746,6 +747,32 @@
             <div id="rpg-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:2000; align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) rpgClose()">
                 <div style="background:#fff; border-radius:18px; max-width:460px; width:100%; max-height:90vh; overflow-y:auto; padding:22px;">
                     <div id="rpg-modal-body"></div>
+                </div>
+            </div>
+
+            <!-- 성장: 상점 항목 관리 모달 -->
+            <div id="rpg-actions-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:2000; align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) rpgCloseActions()">
+                <div style="background:#fff; border-radius:18px; max-width:440px; width:100%; max-height:90vh; overflow-y:auto; padding:22px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <div style="font-size:17px; font-weight:800; color:#51618a;">🛠️ 상점 항목 관리</div>
+                        <button onclick="rpgCloseActions()" style="border:none; background:#f0f2f5; border-radius:50%; width:32px; height:32px; cursor:pointer; font-size:16px;">✕</button>
+                    </div>
+                    <p style="font-size:12px; color:#888; margin:0 0 12px; line-height:1.5;">내가 만든 항목이 상점·일괄지급에 함께 나와요. (기본 항목은 그대로 유지)</p>
+                    <div id="rpg-custom-list" style="display:flex; flex-direction:column; gap:6px; margin-bottom:14px;"></div>
+                    <div style="border-top:1px solid #eee; padding-top:14px;">
+                        <div style="font-weight:700; color:#51618a; margin-bottom:8px; font-size:14px;">➕ 새 항목 추가</div>
+                        <input id="rpg-na-label" placeholder="항목 이름 (예: 청소 도우미)" style="width:100%; padding:9px; border:1px solid #ccc; border-radius:8px; margin-bottom:8px; box-sizing:border-box; font-family:'Pretendard';">
+                        <div style="display:flex; gap:8px; margin-bottom:10px;">
+                            <input id="rpg-na-xp" type="number" value="10" min="1" style="width:74px; padding:9px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box;" title="경험치(XP)">
+                            <select id="rpg-na-stat" style="flex:1; padding:9px; border:1px solid #ccc; border-radius:8px;"></select>
+                            <select id="rpg-na-group" style="padding:9px; border:1px solid #ccc; border-radius:8px;">
+                                <option value="습관">습관</option>
+                                <option value="노력" selected>노력</option>
+                                <option value="특별">특별</option>
+                            </select>
+                        </div>
+                        <button class="action-btn" style="width:100%; padding:12px;" onclick="rpgAddAction()">추가하기</button>
+                    </div>
                 </div>
             </div>
 
@@ -1211,7 +1238,12 @@
             bookmarksRef = db.ref('rooms/' + currentRoom + '/bookmarks');
             calendarEventsRef = db.ref('rooms/' + currentRoom + '/calendarEvents');
             rpgRef = db.ref('rooms/' + currentRoom + '/rpg');
-            rpgRef.on('value', snap => { rpgData = snap.val() || {}; if(document.getElementById('rpg-grid')) renderRpgGrid(); });
+            rpgRef.on('value', snap => {
+                rpgData = snap.val() || {};
+                if(document.getElementById('rpg-grid')) renderRpgGrid();
+                if(rpgBulkMode) rpgRenderBulkActions();
+                var _am = document.getElementById('rpg-actions-modal'); if(_am && _am.style.display === 'flex') rpgRenderCustomList();
+            });
 
             document.getElementById('auth-overlay').style.display = 'none'; 
             document.getElementById('main-app').style.display = 'flex';
@@ -3108,6 +3140,12 @@
 
         function rpgStatName(k){ const s = RPG_STATS.find(x => x.key === k); return s ? s.name : k; }
 
+        // 기본 항목 + 선생님이 추가한 커스텀 항목(rpg/config/customActions)을 합친 전체 목록
+        function rpgAllActions(){
+            const custom = (rpgData.config && rpgData.config.customActions) || {};
+            return RPG_ACTIONS.concat(Object.keys(custom).map(function(k){ return Object.assign({ id:k, custom:true }, custom[k]); }));
+        }
+
         // 레벨 곡선(조정 가능): L→L+1 필요 XP = 50 + (L-1)*30 (초반 빠르게, 뒤로 갈수록 천천히)
         const RPG_XP_BASE = 50, RPG_XP_STEP = 30;
         function rpgLevel(xp){
@@ -3209,7 +3247,7 @@
                 '<div style="background:#f6f8fb;border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;font-size:13px;"><span style="color:#666;">' + st.emoji + ' ' + st.name + '</span><span style="font-weight:800;color:#51618a;">' + (stats[st.key] || 0) + '</span></div>'
             ).join('');
 
-            const grp = g => RPG_ACTIONS.filter(a => a.group === g).map(a =>
+            const grp = g => rpgAllActions().filter(a => a.group === g).map(a =>
                 '<button onclick="rpgGive(' + id + ',\'' + a.id + '\')" style="border:1px solid #d7deea;background:#fff;border-radius:9px;padding:9px 6px;font-size:13px;cursor:pointer;font-family:inherit;">' + a.label + ' <span style="color:#aaa;">+' + a.xp + '</span></button>'
             ).join('');
 
@@ -3262,7 +3300,7 @@
         function rpgRenderBulkActions(){
             function pill(id,label,color){ const sel = rpgBulkAction===id; return '<span onclick="rpgPickBulkAction(\''+id+'\')" style="cursor:pointer;padding:6px 12px;border-radius:20px;font-size:13px;'+(sel?('background:'+color+';color:#fff;font-weight:700;'):'background:#fff;border:1px solid #cfd8e3;color:#555;')+'">'+label+'</span>'; }
             let html = '';
-            RPG_ACTIONS.forEach(function(a){ html += pill(a.id, a.label+' +'+a.xp, '#5b97d1'); });
+            rpgAllActions().forEach(function(a){ html += pill(a.id, a.label+' +'+a.xp, '#5b97d1'); });
             html += pill('__warn','벌점 +20','#e57373');
             html += pill('__good','선행 −10','#66bb6a');
             document.getElementById('rpg-bulk-actions').innerHTML = html;
@@ -3277,7 +3315,7 @@
 
         function rpgUpdateBulkBtn(){
             const b = document.getElementById('rpg-bulk-apply'); if(!b) return;
-            const a = RPG_ACTIONS.find(function(x){ return x.id===rpgBulkAction; });
+            const a = rpgAllActions().find(function(x){ return x.id===rpgBulkAction; });
             const lbl = a ? (a.label+' +'+a.xp) : (rpgBulkAction==='__warn'?'벌점 +20':(rpgBulkAction==='__good'?'선행 −10':''));
             b.textContent = '선택한 ' + rpgBulkSelected.size + '명에게 ' + (lbl?lbl+' ':'') + '지급';
         }
@@ -3286,7 +3324,7 @@
             if(!rpgRef) return;
             if(!rpgBulkAction){ alert('먼저 줄 행동을 골라주세요.'); return; }
             if(rpgBulkSelected.size===0){ alert('학생을 선택해주세요. (카드를 톡톡 누르면 선택돼요)'); return; }
-            const a = RPG_ACTIONS.find(function(x){ return x.id===rpgBulkAction; });
+            const a = rpgAllActions().find(function(x){ return x.id===rpgBulkAction; });
             const updates = {}; let levelups = 0;
             rpgBulkSelected.forEach(function(id){
                 const s = rpgStudentObj(id);
@@ -3310,7 +3348,7 @@
         }
 
         function rpgGive(id, actionId){
-            const a = RPG_ACTIONS.find(x => x.id === actionId); if(!a || !rpgRef) return;
+            const a = rpgAllActions().find(x => x.id === actionId); if(!a || !rpgRef) return;
             const s = rpgStudentObj(id);
             const beforeLv = rpgLevel(s.xp).lv;
             s.xp += a.xp;
@@ -3337,6 +3375,41 @@
             rpgRef.child('students/' + id + '/job').set(jobKey).then(() => {
                 rpgToast('✨ ' + RPG_JOBS[jobKey].emoji + ' ' + RPG_JOBS[jobKey].name + '(으)로 전직!', true);
             });
+        }
+
+        // ---- 상점 항목 관리(커스텀) ----
+        function rpgOpenActions(){
+            const sel = document.getElementById('rpg-na-stat');
+            sel.innerHTML = RPG_STATS.map(function(s){ return '<option value="'+s.key+'">'+s.emoji+' '+s.name+'</option>'; }).join('');
+            rpgRenderCustomList();
+            document.getElementById('rpg-actions-modal').style.display = 'flex';
+        }
+        function rpgCloseActions(){ document.getElementById('rpg-actions-modal').style.display = 'none'; }
+        function rpgRenderCustomList(){
+            const custom = (rpgData.config && rpgData.config.customActions) || {};
+            const keys = Object.keys(custom);
+            const el = document.getElementById('rpg-custom-list');
+            if(!el) return;
+            if(keys.length === 0){ el.innerHTML = '<div style="color:#aaa; font-size:13px; padding:8px 4px;">아직 내가 만든 항목이 없어요.</div>'; return; }
+            el.innerHTML = keys.map(function(k){ const a = custom[k]; return '<div style="display:flex; justify-content:space-between; align-items:center; background:#f6f8fb; border-radius:8px; padding:8px 10px;"><span style="font-size:13px; color:#444;">' + a.label + ' <span style="color:#8a94a6;">+' + a.xp + ' · ' + rpgStatName(a.stat) + ' · ' + a.group + '</span></span><button onclick="rpgDeleteAction(\'' + k + '\')" style="border:none; background:transparent; color:#e57373; cursor:pointer; font-size:13px; font-weight:700;">삭제</button></div>'; }).join('');
+        }
+        function rpgAddAction(){
+            if(!rpgRef){ alert('학급에 입장한 뒤 이용해주세요.'); return; }
+            const label = document.getElementById('rpg-na-label').value.trim();
+            if(!label){ alert('항목 이름을 입력해주세요.'); return; }
+            const xp = parseInt(document.getElementById('rpg-na-xp').value) || 10;
+            const stat = document.getElementById('rpg-na-stat').value;
+            const group = document.getElementById('rpg-na-group').value;
+            const key = rpgRef.child('config/customActions').push().key;
+            rpgRef.child('config/customActions/' + key).set({ label:label, xp:xp, stat:stat, group:group }).then(function(){
+                document.getElementById('rpg-na-label').value = '';
+                rpgToast('항목 추가: ' + label);
+            }).catch(function(e){ alert('추가 오류: ' + e.message); });
+        }
+        function rpgDeleteAction(key){
+            if(!rpgRef) return;
+            if(!confirm('이 항목을 삭제할까요?')) return;
+            rpgRef.child('config/customActions/' + key).remove().then(function(){ rpgToast('삭제됨'); }).catch(function(e){ alert('삭제 오류: ' + e.message); });
         }
 
         function rpgToast(msg, big){
