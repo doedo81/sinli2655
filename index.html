@@ -779,6 +779,18 @@
                 </div>
             </div>
 
+            <!-- 성장: 과제→상점 항목 선택 모달 -->
+            <div id="rpg-award-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:2000; align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) rpgAwardClose()">
+                <div style="background:#fff; border-radius:18px; max-width:440px; width:100%; max-height:90vh; overflow-y:auto; padding:22px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <div style="font-size:16px; font-weight:800; color:#51618a;">🎁 상점 주기</div>
+                        <button onclick="rpgAwardClose()" style="border:none; background:#f0f2f5; border-radius:50%; width:32px; height:32px; cursor:pointer; font-size:16px;">✕</button>
+                    </div>
+                    <div id="rpg-award-ctx" style="font-size:13px; color:#00897b; font-weight:700; margin-bottom:12px;"></div>
+                    <div id="rpg-award-body"></div>
+                </div>
+            </div>
+
         </main>
 
         <!-- ✨ 우측 하단 퀵 플로팅 툴 -->
@@ -2968,7 +2980,7 @@
                     btns += `<button class="student-btn ${btnClass}" onclick="cycleH('${hw.id}',${i})">${i}</button>`;
                 }
                 const catStr = hw.category && hw.category !== '미분류' ? `[${hw.category}] ` : "";
-                div.innerHTML += `<div class="hw-card"><div style="display:flex; justify-content:space-between; align-items:center;"><div><b style="font-size:18px; color:var(--dark-blue);">${catStr}${hw.title}</b> <span style="font-size:14px; color:#666; margin-left:5px;">(${hw.date}) | 제출 ${done}/${act}</span></div><div><button class="reset-btn" style="padding:6px 12px;font-size:13px;" onclick="archiveH('${hw.id}',${hw.isArchived})">${hw.isArchived?'보관해제':'보관함 넣기'}</button> <button class="reset-btn" style="padding:6px 12px;font-size:13px;background:#e53935;" onclick="deleteH('${hw.id}')">삭제</button></div></div><div class="student-grid">${btns}</div></div>`;
+                div.innerHTML += `<div class="hw-card"><div style="display:flex; justify-content:space-between; align-items:center;"><div><b style="font-size:18px; color:var(--dark-blue);">${catStr}${hw.title}</b> <span style="font-size:14px; color:#666; margin-left:5px;">(${hw.date}) | 제출 ${done}/${act}</span></div><div><button class="reset-btn" style="padding:6px 12px;font-size:13px;background:#00897b;" onclick="rpgAwardHomework('${hw.id}')">🎁 상점 주기</button> <button class="reset-btn" style="padding:6px 12px;font-size:13px;" onclick="archiveH('${hw.id}',${hw.isArchived})">${hw.isArchived?'보관해제':'보관함 넣기'}</button> <button class="reset-btn" style="padding:6px 12px;font-size:13px;background:#e53935;" onclick="deleteH('${hw.id}')">삭제</button></div></div><div class="student-grid">${btns}</div></div>`;
             });
         }
         function cycleH(id, n) { const hw = allHomeworks.find(x => x.id === id); const s = hw.checklist ? hw.checklist[n] : false; const next = (s===false||s===undefined) ? true : (s===true?'excused':false); hwRef.child(id).child('checklist').child(String(n)).set(next); }
@@ -3473,6 +3485,48 @@
                 if(rpgEditingActionId === id) rpgCancelEdit();
                 rpgToast('삭제됨');
             }).catch(function(e){ alert('삭제 오류: ' + e.message); });
+        }
+
+        // ---- 과제관리 → 상점 지급 ----
+        let rpgAwardTargets = [];
+        function rpgApplyActionToIds(actionId, ids){
+            const a = rpgAllActions().find(function(x){ return x.id === actionId; });
+            const updates = {}; let levelups = 0;
+            ids.forEach(function(id){
+                const s = rpgStudentObj(id);
+                if(actionId === '__warn'){ s.warning = Math.max(0, Math.min(100, s.warning + 20)); }
+                else if(actionId === '__good'){ s.warning = Math.max(0, Math.min(100, s.warning - 10)); }
+                else if(a){ const before = rpgLevel(s.xp).lv; s.xp += a.xp; s.stats[a.stat] = (s.stats[a.stat] || 0) + 1; if(rpgLevel(s.xp).lv > before) levelups++; }
+                updates['students/' + id] = s;
+            });
+            return rpgRef.update(updates).then(function(){
+                const lbl = a ? (a.label + ' +' + a.xp) : (actionId === '__warn' ? '벌점 +20' : '선행 −10');
+                rpgToast(ids.length + '명에게 ' + lbl + ' 지급 완료');
+                if(levelups > 0) setTimeout(function(){ rpgToast('🎉 레벨업 ' + levelups + '명!', true); }, 400);
+            });
+        }
+        function rpgAwardHomework(hwId){
+            if(!rpgRef){ alert('학급 정보가 없어요. 먼저 학급에 입장해주세요.'); return; }
+            const hw = allHomeworks.find(function(x){ return x.id === hwId; });
+            if(!hw){ return; }
+            const cl = hw.checklist || {};
+            const ids = Object.keys(cl).filter(function(k){ return cl[k] === true; }).map(function(k){ return parseInt(k); });
+            if(ids.length === 0){ alert('이 과제에 제출완료로 체크된 학생이 없어요.\n(학생 번호를 눌러 제출완료로 표시한 뒤 다시 눌러주세요)'); return; }
+            rpgOpenAwardPicker(ids, '과제: ' + (hw.title || ''));
+        }
+        function rpgOpenAwardPicker(ids, ctx){
+            rpgAwardTargets = ids;
+            document.getElementById('rpg-award-ctx').textContent = ctx + ' · 제출 ' + ids.length + '명에게';
+            const grp = function(g){ return rpgAllActions().filter(function(a){ return a.group === g; }).map(function(a){ return '<button onclick="rpgAwardPick(\'' + a.id + '\')" style="border:1px solid #d7deea;background:#fff;border-radius:9px;padding:9px 6px;font-size:13px;cursor:pointer;font-family:inherit;">' + a.label + ' <span style="color:#aaa;">+' + a.xp + '</span></button>'; }).join(''); };
+            document.getElementById('rpg-award-body').innerHTML =
+                '<div style="font-size:12px;color:#888;margin:6px 0;">🟢 습관</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' + grp('습관') + '</div>'
+              + '<div style="font-size:12px;color:#888;margin:10px 0 6px;">💪 노력·성취</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' + grp('노력') + '</div>'
+              + '<div style="font-size:12px;color:#888;margin:10px 0 6px;">🏆 특별</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' + grp('특별') + '</div>';
+            document.getElementById('rpg-award-modal').style.display = 'flex';
+        }
+        function rpgAwardClose(){ document.getElementById('rpg-award-modal').style.display = 'none'; }
+        function rpgAwardPick(actionId){
+            rpgApplyActionToIds(actionId, rpgAwardTargets).then(function(){ rpgAwardClose(); }).catch(function(e){ alert('지급 오류: ' + e.message); });
         }
 
         function rpgToast(msg, big){
