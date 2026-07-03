@@ -3329,7 +3329,7 @@
             const _check = _sel ? '<span style="position:absolute;top:-7px;right:-7px;background:#5b97d1;color:#fff;border-radius:50%;width:20px;height:20px;font-size:12px;line-height:20px;text-align:center;">✓</span>' : '';
             return '<div onclick="rpgCardClick(' + stu.id + ')" style="position:relative;cursor:pointer;background:' + (_sel?'#eaf2fb':'#fff') + ';border:' + (_sel?'2px solid #5b97d1':'1px solid #e6ebf3') + ';border-top:4px solid ' + (job ? '#7b6cd9' : '#b0bec5') + ';border-radius:14px;padding:12px;box-shadow:0 3px 10px rgba(120,144,180,0.10);transition:transform .12s;" onmouseover="this.style.transform=\'translateY(-3px)\'" onmouseout="this.style.transform=\'\'">'
                 + _check
-                + '<img src="assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '.png?v=2" alt="" loading="lazy" style="width:54px;height:54px;image-rendering:pixelated;display:block;margin:2px auto 4px;">'
+                + '<img src="assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '.png?v=3" alt="" loading="lazy" style="height:64px;width:auto;image-rendering:pixelated;display:block;margin:2px auto 2px;">'
                 + '<div style="display:flex;justify-content:space-between;align-items:center;gap:4px;">'
                 + '<span style="font-weight:800;color:#51618a;">' + stu.name + '</span>'
                 + '<span style="font-size:12px;color:#7b6cd9;font-weight:700;white-space:nowrap;">' + (job ? job.emoji + job.name : '견습생') + '</span>'
@@ -3381,7 +3381,7 @@
             document.getElementById('rpg-modal-body').innerHTML =
                 '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
                 + '<div style="display:flex;gap:10px;align-items:center;">'
-                + '<img src="assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '.png?v=2" alt="" style="width:64px;height:64px;image-rendering:pixelated;">'
+                + '<img src="assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '.png?v=3" alt="" style="height:88px;width:auto;image-rendering:pixelated;">'
                 + '<div><div style="font-size:18px;font-weight:800;color:#51618a;">' + stu.name + ' <span style="font-size:13px;color:#7b6cd9;">' + (job ? job.emoji + job.name : '견습생') + '</span></div>'
                 + '<div style="font-size:13px;color:#888;">Lv.' + L.lv + ' · ' + stu.id + '번</div></div>'
                 + '</div>'
