@@ -358,13 +358,26 @@
                 Google 계정으로 로그인
             </button>
         </div>
-        <div class="login-box" id="room-box">
+        <div class="login-box" id="class-box" style="display:none;">
+            <div style="color:var(--accent-blue); font-size:30px; margin-bottom:6px;"><i class="fa-solid fa-chalkboard-user"></i></div>
+            <h2 style="margin:0 0 4px 0; color:var(--dark-blue);">🌤️ 내 학급</h2>
+            <p style="color:#7f8c8d; font-size:13px; margin-bottom:16px;">입장할 학급을 선택하거나 새로 만드세요.</p>
+            <div id="my-class-list" style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px; max-height:240px; overflow-y:auto;"></div>
+            <div style="display:flex; gap:8px;">
+                <button class="action-btn" style="flex:1; padding:13px;" onclick="createClass()"><i class="fa-solid fa-plus"></i> 학급 만들기</button>
+                <button class="action-btn" style="flex:1; padding:13px; background:#00897b;" onclick="joinClassByCode()"><i class="fa-solid fa-right-to-bracket"></i> 코드로 참여</button>
+            </div>
+            <button class="reset-btn" style="width:100%; margin-top:10px; background:transparent; color:#999; box-shadow:none; font-size:13px;" onclick="showLegacyRoom()">방 이름으로 직접 입장 (기존 방식)</button>
+            <button class="reset-btn" style="width:100%; margin-top:2px; background:transparent; color:#bbb; box-shadow:none; font-size:13px;" onclick="logout()">로그아웃</button>
+        </div>
+        <div class="login-box" id="room-box" style="display:none;">
             <div style="color:var(--accent-blue); font-size:30px; margin-bottom:10px;"><i class="fa-solid fa-chalkboard-user"></i></div>
             <h2 style="margin:0 0 10px 0; color:var(--dark-blue);">🌤️ 스카이 클래스</h2>
             <p style="color:#7f8c8d; font-size:14px; margin-bottom:20px;">접속할 방 이름을 입력하세요.<br>(예: 신리초5학년5반)</p>
             <input type="text" id="room-name-input" style="width:100%; padding:15px; font-size:18px; border:2px solid var(--sub-sky); border-radius:12px; margin-bottom:15px; text-align:center; font-family:'Pretendard';" placeholder="방 이름" onkeypress="if(event.key === 'Enter') enterRoom()">
             <button class="action-btn" style="width:100%; padding: 15px; font-size: 16px;" id="enter-room-btn" onclick="enterRoom()">교실 입장하기</button>
-            <button class="reset-btn" style="width:100%; margin-top:10px; background:transparent; color:#999; box-shadow:none;" onclick="logout()">로그아웃</button>
+            <button class="reset-btn" style="width:100%; margin-top:10px; background:transparent; color:#5b97d1; box-shadow:none;" onclick="backToClasses()">← 내 학급으로</button>
+            <button class="reset-btn" style="width:100%; margin-top:2px; background:transparent; color:#999; box-shadow:none;" onclick="logout()">로그아웃</button>
         </div>
     </div>
 
@@ -952,7 +965,8 @@
         let parsedSeparated = [];
         let pastGroupsRecord = {}; 
         let allSeatingHistories = {}; 
-        let isTeacherView = false; 
+        let isTeacherView = false;
+        let currentRole = 'owner';  // 'owner'(담임) | 'subject'(전담)
 
         // 태블릿 읽기 전용 모드 판별
         const isTabletMode = window.location.search.includes('mode=view');
@@ -980,8 +994,8 @@
                 const savedRoom = localStorage.getItem('classRoomName');
                 if(savedRoom) {
                     document.getElementById('auth-overlay').style.display = 'none';
-                    document.getElementById('room-name-input').value = savedRoom;
-                    enterRoom();
+                    currentRole = localStorage.getItem('classRole') || 'owner';
+                    enterRoom(savedRoom);
                 } else {
                     alert("PC에서 먼저 방에 접속한 후 태블릿 모드를 사용해주세요.");
                 }
@@ -996,12 +1010,14 @@
 
             auth.onAuthStateChanged(user => {
                 if(user) {
-                    document.getElementById('login-box').style.display = 'none'; document.getElementById('room-box').style.display = 'block'; 
+                    document.getElementById('login-box').style.display = 'none';
                     const teacherName = user.displayName || (user.email ? user.email.split('@')[0] : '');
                     document.querySelector('.user-profile-text').innerText = teacherName ? `${teacherName} 선생님` : `선생님`;
-                    const savedRoom = localStorage.getItem('classRoomName'); if(savedRoom) { document.getElementById('room-name-input').value = savedRoom; enterRoom(); }
+                    const savedRoom = localStorage.getItem('classRoomName');
+                    if(savedRoom) { currentRole = localStorage.getItem('classRole') || 'owner'; enterRoom(savedRoom); }
+                    else { document.getElementById('room-box').style.display = 'none'; document.getElementById('class-box').style.display = 'block'; loadMyClasses(user); }
                 } else {
-                    document.getElementById('auth-overlay').style.display = 'flex'; document.getElementById('login-box').style.display = 'block'; document.getElementById('room-box').style.display = 'none'; document.getElementById('main-app').style.display = 'none';
+                    document.getElementById('auth-overlay').style.display = 'flex'; document.getElementById('login-box').style.display = 'block'; document.getElementById('room-box').style.display = 'none'; document.getElementById('class-box').style.display = 'none'; document.getElementById('main-app').style.display = 'none';
                 }
             });
             
@@ -1013,12 +1029,103 @@
         };
 
         function loginWithGoogle() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err => alert("로그인 실패: "+err.message)); }
-        function logout() { auth.signOut().then(() => { localStorage.removeItem('classRoomName'); location.reload(); }); }
+        function logout() { auth.signOut().then(() => { localStorage.removeItem('classRoomName'); localStorage.removeItem('classRole'); location.reload(); }); }
 
-        function enterRoom() {
-            const roomInput = document.getElementById('room-name-input').value.trim();
-            if(!roomInput) return alert("방 이름을 입력해주세요!");
-            currentRoom = roomInput.replace(/[^a-zA-Z0-9가-힣]/g, ""); localStorage.setItem('classRoomName', currentRoom);
+        // ==========================================
+        // 🏫 다중 학급·역할 (담임/전담) — 1단계
+        // ==========================================
+        function genClassCode() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 헷갈리는 I,O,0,1 제외
+            let c = ''; for(let i=0;i<6;i++) c += chars[Math.floor(Math.random()*chars.length)];
+            return c;
+        }
+
+        function showLegacyRoom() {
+            document.getElementById('class-box').style.display = 'none';
+            document.getElementById('room-box').style.display = 'block';
+        }
+        function backToClasses() {
+            document.getElementById('room-box').style.display = 'none';
+            document.getElementById('class-box').style.display = 'block';
+        }
+
+        function enterClassById(classId, role) {
+            currentRole = role || 'owner';
+            enterRoom(classId);
+        }
+
+        // 내 학급 목록 불러오기 (users/<uid>/classes → rooms/<cid>/_meta)
+        function loadMyClasses(user) {
+            const listEl = document.getElementById('my-class-list');
+            listEl.innerHTML = '<div style="color:#aaa; font-size:13px; padding:10px;">불러오는 중…</div>';
+            db.ref('users/' + user.uid + '/classes').once('value').then(async snap => {
+                const classes = snap.val() || {};
+                const ids = Object.keys(classes);
+                if(ids.length === 0) {
+                    listEl.innerHTML = '<div style="color:#8a94a6; font-size:13px; padding:14px; background:#f6f8fb; border-radius:10px; line-height:1.6;">아직 학급이 없어요.<br>아래 <b>학급 만들기</b>로 시작하거나, 기존 방이 있으면 <b>방 이름으로 직접 입장</b>을 눌러주세요.</div>';
+                    return;
+                }
+                let html = '';
+                for(const cid of ids) {
+                    const role = classes[cid];
+                    let nm = cid;
+                    try { const m = await db.ref('rooms/' + cid + '/_meta').once('value'); if(m.val() && m.val().name) nm = m.val().name; } catch(e) {}
+                    const roleLabel = role === 'owner' ? '담임' : '전담';
+                    const roleColor = role === 'owner' ? '#5b97d1' : '#00897b';
+                    html += '<button class="action-btn" style="background:#fff; color:var(--dark-blue); border:1px solid #dbe3ef; box-shadow:none; text-align:left; display:flex; justify-content:space-between; align-items:center; padding:13px 15px;" onclick="enterClassById(\'' + cid + '\',\'' + role + '\')"><span><i class="fa-solid fa-chalkboard"></i> ' + nm + '</span><span style="font-size:12px; color:' + roleColor + '; font-weight:700;">' + roleLabel + '</span></button>';
+                }
+                listEl.innerHTML = html;
+            }).catch(e => { listEl.innerHTML = '<div style="color:#c62828; font-size:13px;">불러오기 오류: ' + e.message + '</div>'; });
+        }
+
+        // 학급 만들기 → classId·코드 생성, 나를 담임(owner)으로 등록
+        function createClass() {
+            const user = auth.currentUser; if(!user) return alert('로그인이 필요해요.');
+            const name = prompt('학급 이름을 입력하세요\n(예: 신리초 5학년 5반)');
+            if(!name || !name.trim()) return;
+            const classId = db.ref('rooms').push().key;
+            const code = genClassCode();
+            const teacherName = user.displayName || (user.email || '').split('@')[0] || '선생님';
+            const updates = {};
+            updates['rooms/' + classId + '/_meta'] = { name: name.trim(), ownerUid: user.uid, code: code, createdAt: Date.now() };
+            updates['rooms/' + classId + '/_members/' + user.uid] = { role: 'owner', name: teacherName };
+            updates['users/' + user.uid + '/classes/' + classId] = 'owner';
+            updates['classCodes/' + code] = classId;
+            db.ref().update(updates).then(() => {
+                alert('✅ 학급이 만들어졌어요!\n\n참여 코드:  ' + code + '\n\n전담 선생님이 이 코드로 참여할 수 있어요.\n(설정에서 다시 확인할 수 있게 만들 예정)');
+                enterClassById(classId, 'owner');
+            }).catch(e => alert('생성 오류: ' + e.message));
+        }
+
+        // 코드로 참여 → 전담(subject)으로 등록
+        function joinClassByCode() {
+            const user = auth.currentUser; if(!user) return alert('로그인이 필요해요.');
+            const code = (prompt('참여 코드를 입력하세요 (예: 5A7Q2B)') || '').trim().toUpperCase();
+            if(!code) return;
+            db.ref('classCodes/' + code).once('value').then(snap => {
+                const classId = snap.val();
+                if(!classId) { alert('그런 코드의 학급을 찾을 수 없어요. 코드를 다시 확인해 주세요.'); return; }
+                const teacherName = user.displayName || (user.email || '').split('@')[0] || '선생님';
+                const updates = {};
+                updates['rooms/' + classId + '/_members/' + user.uid] = { role: 'subject', name: teacherName };
+                updates['users/' + user.uid + '/classes/' + classId] = 'subject';
+                db.ref().update(updates).then(() => { alert('✅ 학급에 참여했어요! (전담)'); enterClassById(classId, 'subject'); }).catch(e => alert('참여 오류: ' + e.message));
+            }).catch(e => alert('조회 오류: ' + e.message));
+        }
+
+        function enterRoom(roomIdArg) {
+            if(roomIdArg) {
+                // 새 방식: classId(고유 ID)를 그대로 사용 (문자 정리 안 함 — push키의 '-','_' 보존)
+                currentRoom = roomIdArg;
+            } else {
+                // 기존 방식: 사람이 입력한 방 이름
+                const roomInput = document.getElementById('room-name-input').value.trim();
+                if(!roomInput) return alert("방 이름을 입력해주세요!");
+                currentRoom = roomInput.replace(/[^a-zA-Z0-9가-힣]/g, "");
+                currentRole = 'owner';
+            }
+            localStorage.setItem('classRoomName', currentRoom);
+            localStorage.setItem('classRole', currentRole);
             
             groupSettingsRef = db.ref('rooms/' + currentRoom + '/settings/groupCount'); settingsRef = db.ref('rooms/' + currentRoom + '/settings/dashboardDefaults');
             scoresRef = db.ref('rooms/' + currentRoom + '/groupScores'); miniScoresRef = db.ref('rooms/' + currentRoom + '/miniScores');
