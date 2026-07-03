@@ -388,6 +388,7 @@
                 <button class="tab-btn" onclick="switchTab('picker')" title="활동&뽑기"><i class="fa-solid fa-dice"></i> <span class="tab-text">활동&뽑기</span></button>
                 <button class="tab-btn" onclick="switchTab('homework')" title="과제 관리"><i class="fa-solid fa-book"></i> <span class="tab-text">과제 관리</span></button>
                 <button class="tab-btn" onclick="switchTab('seating')" title="자리 배치"><i class="fa-solid fa-chair"></i> <span class="tab-text">자리 배치</span></button>
+                <button class="tab-btn" onclick="switchTab('rpg')" title="성장(상벌점)"><i class="fa-solid fa-dragon"></i> <span class="tab-text">성장</span></button>
                 <button class="tab-btn" onclick="switchTab('bookmark')" title="바로가기"><i class="fa-solid fa-link"></i> <span class="tab-text">바로가기</span></button>
             </div>
             <div class="sidebar-bottom">
@@ -694,6 +695,38 @@
                 </div>
             </div>
 
+            <!-- ⚔️ 성장 탭 (상벌점 RPG) -->
+            <div id="rpg-tab" class="content-section">
+                <div class="picker-box">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                        <h2 style="color:var(--dark-blue); margin:0;"><i class="fa-solid fa-dragon"></i> 성장 (상벌점 RPG)</h2>
+                        <button class="action-btn" style="background:#7b6cd9; padding:10px 18px;" onclick="rpgToggleRoster()"><i class="fa-solid fa-user-pen"></i> 명단 입력/수정</button>
+                    </div>
+
+                    <div id="rpg-roster-box" style="display:none; background:#f6f4ff; border:1px solid #d9d2f5; border-radius:14px; padding:18px; margin-bottom:20px;">
+                        <div style="font-weight:bold; color:#5b4bb5; margin-bottom:6px;">👥 학생 명단 (번호 이름 성별)</div>
+                        <p style="font-size:12px; color:#666; margin:4px 0 8px;">한 줄에 한 명 — 예: <b>1 김민준 남</b> / <b>2 이서연 여</b>. 아침칠판·자리배치와 같은 명단을 함께 씁니다.</p>
+                        <textarea id="rpg-roster-input" style="width:100%; height:150px; padding:10px; border-radius:8px; border:1px solid #ccc; line-height:1.6; font-family:'Pretendard';" placeholder="1 김민준 남&#10;2 이서연 여&#10;3 박도윤 남"></textarea>
+                        <div style="margin-top:10px; text-align:right;">
+                            <button class="action-btn" style="background:#7b6cd9;" onclick="rpgSaveRoster()"><i class="fa-solid fa-floppy-disk"></i> 저장하고 카드 만들기</button>
+                        </div>
+                    </div>
+
+                    <div id="rpg-empty" style="display:none; text-align:center; color:#888; padding:40px 20px; line-height:1.7;">
+                        아직 학생 명단이 없어요.<br>위 <b>[명단 입력/수정]</b> 버튼을 눌러 학생을 추가해 주세요.
+                    </div>
+
+                    <div id="rpg-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:14px;"></div>
+                </div>
+            </div>
+
+            <!-- 성장: 학생 개인 패널 모달 -->
+            <div id="rpg-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:2000; align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) rpgClose()">
+                <div style="background:#fff; border-radius:18px; max-width:460px; width:100%; max-height:90vh; overflow-y:auto; padding:22px;">
+                    <div id="rpg-modal-body"></div>
+                </div>
+            </div>
+
         </main>
 
         <!-- ✨ 우측 하단 퀵 플로팅 툴 -->
@@ -882,10 +915,24 @@
         const db = firebase.database(); const auth = firebase.auth();
         const pointSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'); 
         const timerSound = new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'); 
-        const pickSound = new Audio('https://assets.mixkit.co/active_storage/sfx/3005/3005-preview.mp3'); 
+        // 🔔 뽑기 효과음: 외부 파일 대신 WebAudio로 '반짝(청량)' 종소리 합성
+        let _pickAC = null;
+        function _pickCtx() { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; if (!_pickAC) _pickAC = new AC(); if (_pickAC.state === 'suspended') _pickAC.resume(); return _pickAC; }
+        function _pickTone(c, freq, t0, dur, type, vol) {
+            const o = c.createOscillator(), g = c.createGain();
+            o.type = type; o.frequency.value = freq; o.connect(g); g.connect(c.destination);
+            const t = c.currentTime + t0;
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+            o.start(t); o.stop(t + dur + 0.02);
+        }
+        // 도·미·솔·도 상승 + 반짝
+        const pickSound = { currentTime: 0, play() { const c = _pickCtx(); if (!c) return Promise.resolve(); [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => _pickTone(c, f, i * 0.08, 0.35, 'triangle', 0.28)); _pickTone(c, 1567.98, 0.34, 0.5, 'sine', 0.18); return Promise.resolve(); } }; 
 
         let currentRoom = "";
-        let groupSettingsRef, scoresRef, miniScoresRef, timerRef, boardRef, settingsRef, historyRef, tasksRef, hwRef, seatingRef, groupMembersRef, seatingHistoryRef, bookmarksRef;
+        let groupSettingsRef, scoresRef, miniScoresRef, timerRef, boardRef, settingsRef, historyRef, tasksRef, hwRef, seatingRef, groupMembersRef, seatingHistoryRef, bookmarksRef, rpgRef;
+        let rpgData = {}, rpgModalId = null;
         let listenersSet = false, numberOfGroups = 6;
         let currentScores = [], currentMiniScores = [], currentTasks = [], historyCheck = {}, allHomeworks = [], allBookmarks = {};
         let viewDate = new Date(); let calDate = new Date(); 
@@ -981,6 +1028,8 @@
             seatingHistoryRef = db.ref('rooms/' + currentRoom + '/seatingHistory'); 
             bookmarksRef = db.ref('rooms/' + currentRoom + '/bookmarks');
             calendarEventsRef = db.ref('rooms/' + currentRoom + '/calendarEvents');
+            rpgRef = db.ref('rooms/' + currentRoom + '/rpg');
+            rpgRef.on('value', snap => { rpgData = snap.val() || {}; if(document.getElementById('rpg-grid')) renderRpgGrid(); });
 
             document.getElementById('auth-overlay').style.display = 'none'; 
             document.getElementById('main-app').style.display = 'flex';
@@ -1543,6 +1592,7 @@
             if(t === 'calendar') renderCalendarTab();
             if(t === 'seating') nsUpdateStepUI();
             if(t === 'picker') actOnShow();
+            if(t === 'rpg') renderRpgGrid();
 
             document.querySelectorAll('.tool-box-popup, .tool-box-inline').forEach(box => box.style.display = 'none');
         }
@@ -2829,6 +2879,218 @@
             }).catch(e => {
                 alert("저장 중 오류가 발생했습니다: " + e.message);
             });
+        }
+
+        // ==========================================
+        // ⚔️ 성장 시스템 (상벌점 RPG) — 1단계 MVP
+        // ==========================================
+        const RPG_STATS = [
+            { key:'int', name:'지력', emoji:'🧠' },
+            { key:'wis', name:'지혜', emoji:'📖' },
+            { key:'str', name:'체력', emoji:'💪' },
+            { key:'dex', name:'민첩', emoji:'🏹' },
+            { key:'cha', name:'매력', emoji:'👑' },
+            { key:'mnd', name:'정신', emoji:'🛡️' }
+        ];
+        const RPG_JOBS = {
+            knight: { name:'기사',    emoji:'⚔️' },
+            mage:   { name:'마법사',  emoji:'🔮' },
+            priest: { name:'성직자',  emoji:'✨' },
+            archer: { name:'궁수',    emoji:'🏹' },
+            bard:   { name:'음유시인', emoji:'🎵' }
+        };
+        // 상점 편성표(§3-2): group=습관/노력/특별, stat=능력치, xp=경험치
+        const RPG_ACTIONS = [
+            { id:'prep',      label:'수업준비',      xp:5,  stat:'mnd', group:'습관' },
+            { id:'duty',      label:'1인1역',        xp:5,  stat:'cha', group:'습관' },
+            { id:'meal',      label:'밥 완료',       xp:5,  stat:'str', group:'습관' },
+            { id:'milk',      label:'우유 완료',     xp:5,  stat:'str', group:'습관' },
+            { id:'present',   label:'발표',          xp:10, stat:'cha', group:'노력' },
+            { id:'hw',        label:'숙제',          xp:10, stat:'mnd', group:'노력' },
+            { id:'diary',     label:'주제일기',      xp:20, stat:'wis', group:'노력' },
+            { id:'diary_top', label:'주제일기 최고', xp:30, stat:'wis', group:'특별' },
+            { id:'test_up',   label:'단원평가 향상', xp:20, stat:'int', group:'특별' },
+            { id:'test_full', label:'단원평가 만점', xp:30, stat:'int', group:'특별' }
+        ];
+
+        function rpgStatName(k){ const s = RPG_STATS.find(x => x.key === k); return s ? s.name : k; }
+
+        // 레벨 곡선(조정 가능): L→L+1 필요 XP = 50 + (L-1)*30 (초반 빠르게, 뒤로 갈수록 천천히)
+        const RPG_XP_BASE = 50, RPG_XP_STEP = 30;
+        function rpgLevel(xp){
+            xp = xp || 0;
+            let lv = 1, need = RPG_XP_BASE, acc = 0;
+            while(xp >= acc + need){ acc += need; lv++; need = RPG_XP_BASE + (lv - 1) * RPG_XP_STEP; }
+            return { lv:lv, into:xp - acc, need:need };
+        }
+
+        // 명단(번호 이름 성별) 파싱 → [{id,name,gender}]
+        // 성별은 줄의 마지막 토큰만 판단(이름에 '남/여'가 있어도 안전: 남주희, 여민지 등)
+        function rpgParseRoster(){
+            const arr = [];
+            (globalStudentRosterStr || '').split('\n').forEach(line => {
+                let t = line.trim(); if(!t) return;
+                let idm = t.match(/\d+/); if(!idm) return;
+                let id = parseInt(idm[0]);
+                let parts = t.split(/\s+/);
+                let last = parts[parts.length - 1];
+                let gender = /^(남|남자|M)$/i.test(last) ? 'M' : (/^(여|여자|F)$/i.test(last) ? 'F' : 'U');
+                let nameParts = parts.filter((p, i) => {
+                    if(i === 0 && /\d/.test(p)) return false;                 // 맨 앞 번호(1, 1번, 1.)
+                    if(i === parts.length - 1 && gender !== 'U') return false; // 맨 뒤 성별
+                    return true;
+                });
+                let name = nameParts.join(' ').replace(/^\d+\s*번?/, '').trim();
+                if(!name) name = id + '번';
+                arr.push({ id:id, name:name, gender:gender });
+            });
+            arr.sort((a, b) => a.id - b.id);
+            return arr;
+        }
+
+        function rpgToggleRoster(){
+            const box = document.getElementById('rpg-roster-box');
+            if(box.style.display === 'none' || !box.style.display){
+                document.getElementById('rpg-roster-input').value = globalStudentRosterStr || '';
+                box.style.display = 'block';
+            } else box.style.display = 'none';
+        }
+
+        function rpgSaveRoster(){
+            const txt = document.getElementById('rpg-roster-input').value;
+            settingsRef.update({ roster: txt }).then(() => {
+                globalStudentRosterStr = txt;
+                if(typeof parseStudentRoster === 'function'){ parseStudentRoster(); if(typeof nsUpdateRosterStatus === 'function') nsUpdateRosterStatus(); }
+                document.getElementById('rpg-roster-box').style.display = 'none';
+                renderRpgGrid();
+                rpgToast('명단 저장 완료 (' + rpgParseRoster().length + '명)');
+            }).catch(e => alert('저장 오류: ' + e.message));
+        }
+
+        function rpgCardHtml(stu){
+            const d = (rpgData.students && rpgData.students[stu.id]) || {};
+            const L = rpgLevel(d.xp);
+            const job = d.job && RPG_JOBS[d.job];
+            const warn = d.warning || 0;
+            const pct = Math.round(L.into / L.need * 100);
+            const warnBar = warn > 0
+                ? '<div style="height:5px;background:#f0d5d5;border-radius:20px;margin-top:6px;overflow:hidden;"><div style="width:' + warn + '%;height:100%;background:#e57373;"></div></div>'
+                : '';
+            return '<div onclick="rpgOpen(' + stu.id + ')" style="cursor:pointer;background:#fff;border:1px solid #e6ebf3;border-top:4px solid ' + (job ? '#7b6cd9' : '#b0bec5') + ';border-radius:14px;padding:12px;box-shadow:0 3px 10px rgba(120,144,180,0.10);transition:transform .12s;" onmouseover="this.style.transform=\'translateY(-3px)\'" onmouseout="this.style.transform=\'\'">'
+                + '<div style="display:flex;justify-content:space-between;align-items:center;gap:4px;">'
+                + '<span style="font-weight:800;color:#51618a;">' + stu.name + '</span>'
+                + '<span style="font-size:12px;color:#7b6cd9;font-weight:700;white-space:nowrap;">' + (job ? job.emoji + job.name : '견습생') + '</span>'
+                + '</div>'
+                + '<div style="font-size:13px;color:#888;margin:4px 0 6px;">Lv.' + L.lv + ' <span style="color:#ccc;">·</span> ' + stu.id + '번</div>'
+                + '<div style="height:8px;background:#eef1f6;border-radius:20px;overflow:hidden;"><div style="width:' + pct + '%;height:100%;background:#5b97d1;"></div></div>'
+                + '<div style="font-size:11px;color:#aaa;text-align:right;margin-top:3px;">' + L.into + '/' + L.need + ' XP</div>'
+                + warnBar + '</div>';
+        }
+
+        function renderRpgGrid(){
+            if(!rpgRef) return;
+            const students = rpgParseRoster();
+            const grid = document.getElementById('rpg-grid');
+            const empty = document.getElementById('rpg-empty');
+            if(!grid) return;
+            if(students.length === 0){ grid.innerHTML = ''; empty.style.display = 'block'; return; }
+            empty.style.display = 'none';
+            grid.innerHTML = students.map(rpgCardHtml).join('');
+            if(rpgModalId != null && document.getElementById('rpg-modal').style.display === 'flex') rpgOpen(rpgModalId);
+        }
+
+        function rpgOpen(id){
+            rpgModalId = id;
+            const stu = rpgParseRoster().find(s => s.id === id); if(!stu) return;
+            const d = (rpgData.students && rpgData.students[id]) || {};
+            const L = rpgLevel(d.xp);
+            const job = d.job && RPG_JOBS[d.job];
+            const warn = d.warning || 0;
+            const stats = d.stats || {};
+            const pct = Math.round(L.into / L.need * 100);
+
+            const statHtml = RPG_STATS.map(st =>
+                '<div style="background:#f6f8fb;border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;font-size:13px;"><span style="color:#666;">' + st.emoji + ' ' + st.name + '</span><span style="font-weight:800;color:#51618a;">' + (stats[st.key] || 0) + '</span></div>'
+            ).join('');
+
+            const grp = g => RPG_ACTIONS.filter(a => a.group === g).map(a =>
+                '<button onclick="rpgGive(' + id + ',\'' + a.id + '\')" style="border:1px solid #d7deea;background:#fff;border-radius:9px;padding:9px 6px;font-size:13px;cursor:pointer;font-family:inherit;">' + a.label + ' <span style="color:#aaa;">+' + a.xp + '</span></button>'
+            ).join('');
+
+            let jobSection = '';
+            if(L.lv >= 10 && !d.job){
+                jobSection = '<div style="background:#f6f4ff;border:1px solid #d9d2f5;border-radius:12px;padding:12px;margin-top:14px;"><div style="font-weight:700;color:#5b4bb5;margin-bottom:8px;">✨ 레벨 10 달성! 전직할 직업을 고르세요</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">'
+                    + Object.keys(RPG_JOBS).map(k => '<button onclick="rpgSetJob(' + id + ',\'' + k + '\')" style="border:1px solid #d9d2f5;background:#fff;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">' + RPG_JOBS[k].emoji + ' ' + RPG_JOBS[k].name + '</button>').join('')
+                    + '</div></div>';
+            }
+
+            document.getElementById('rpg-modal-body').innerHTML =
+                '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
+                + '<div><div style="font-size:18px;font-weight:800;color:#51618a;">' + stu.name + ' <span style="font-size:13px;color:#7b6cd9;">' + (job ? job.emoji + job.name : '견습생') + '</span></div>'
+                + '<div style="font-size:13px;color:#888;">Lv.' + L.lv + ' · ' + stu.id + '번</div></div>'
+                + '<button onclick="rpgClose()" style="border:none;background:#f0f2f5;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;">✕</button></div>'
+                + '<div style="height:10px;background:#eef1f6;border-radius:20px;overflow:hidden;margin:10px 0 4px;"><div style="width:' + pct + '%;height:100%;background:#5b97d1;"></div></div>'
+                + '<div style="font-size:12px;color:#aaa;text-align:right;">' + L.into + ' / ' + L.need + ' XP</div>'
+                + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:14px 0;">' + statHtml + '</div>'
+                + jobSection
+                + '<div style="font-size:12px;color:#888;margin:14px 0 6px;">🟢 매일 습관 +5</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' + grp('습관') + '</div>'
+                + '<div style="font-size:12px;color:#888;margin:12px 0 6px;">💪 노력·성취 +10~20</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' + grp('노력') + '</div>'
+                + '<div style="font-size:12px;color:#888;margin:12px 0 6px;">🏆 특별 이벤트 +20~30</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' + grp('특별') + '</div>'
+                + '<div style="border-top:1px solid #eee;margin-top:16px;padding-top:12px;">'
+                + '<div style="display:flex;justify-content:space-between;font-size:12px;color:#888;margin-bottom:5px;"><span>⚠️ 경고 게이지</span><span>' + warn + '/100</span></div>'
+                + '<div style="height:8px;background:#f0e0e0;border-radius:20px;overflow:hidden;"><div style="width:' + warn + '%;height:100%;background:#e57373;"></div></div>'
+                + '<div style="display:flex;gap:8px;margin-top:10px;">'
+                + '<button onclick="rpgWarn(' + id + ',20)" style="flex:1;border:1px solid #ef9a9a;background:#fff5f5;color:#c62828;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">벌점 +20</button>'
+                + '<button onclick="rpgWarn(' + id + ',-10)" style="flex:1;border:1px solid #a5d6a7;background:#f4fbf4;color:#2e7d32;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">선행 −10</button></div>'
+                + '<p style="font-size:11px;color:#bbb;margin:6px 0 0;">선행: 쓰레기 줍기, 친구 1인1역 돕기 등</p></div>';
+
+            document.getElementById('rpg-modal').style.display = 'flex';
+        }
+
+        function rpgClose(){ document.getElementById('rpg-modal').style.display = 'none'; rpgModalId = null; }
+
+        function rpgStudentObj(id){
+            const cur = (rpgData.students && rpgData.students[id]) || {};
+            return { xp:cur.xp || 0, stats:Object.assign({}, cur.stats), job:cur.job || null, warning:cur.warning || 0 };
+        }
+
+        function rpgGive(id, actionId){
+            const a = RPG_ACTIONS.find(x => x.id === actionId); if(!a || !rpgRef) return;
+            const s = rpgStudentObj(id);
+            const beforeLv = rpgLevel(s.xp).lv;
+            s.xp += a.xp;
+            s.stats[a.stat] = (s.stats[a.stat] || 0) + 1;
+            const afterLv = rpgLevel(s.xp).lv;
+            rpgRef.child('students/' + id).set(s).then(() => {
+                rpgToast('+' + a.xp + ' XP · ' + rpgStatName(a.stat) + ' +1');
+                if(afterLv > beforeLv) setTimeout(() => rpgToast('🎉 레벨 업! Lv.' + afterLv, true), 400);
+            });
+        }
+
+        function rpgWarn(id, delta){
+            if(!rpgRef) return;
+            const s = rpgStudentObj(id);
+            s.warning = Math.max(0, Math.min(100, s.warning + delta));
+            rpgRef.child('students/' + id).set(s).then(() => {
+                rpgToast(delta > 0 ? '⚠️ 경고 +' + delta : '💚 선행 회복 ' + delta);
+                if(s.warning >= 60 && delta > 0) setTimeout(() => rpgToast('🚨 경고 게이지 60 이상!', true), 400);
+            });
+        }
+
+        function rpgSetJob(id, jobKey){
+            if(!rpgRef) return;
+            rpgRef.child('students/' + id + '/job').set(jobKey).then(() => {
+                rpgToast('✨ ' + RPG_JOBS[jobKey].emoji + ' ' + RPG_JOBS[jobKey].name + '(으)로 전직!', true);
+            });
+        }
+
+        function rpgToast(msg, big){
+            const t = document.createElement('div');
+            t.textContent = msg;
+            t.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:' + (big ? '50%' : '30px') + ';background:' + (big ? '#7b6cd9' : '#51618a') + ';color:#fff;padding:' + (big ? '16px 26px' : '10px 20px') + ';border-radius:30px;font-weight:700;font-size:' + (big ? '18px' : '14px') + ';z-index:3000;box-shadow:0 6px 20px rgba(0,0,0,0.2);opacity:0;transition:opacity .2s;pointer-events:none;';
+            document.body.appendChild(t);
+            requestAnimationFrame(() => t.style.opacity = '1');
+            setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, big ? 1500 : 1000);
         }
     </script>
 </body>
