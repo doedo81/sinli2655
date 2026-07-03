@@ -1,0 +1,12 @@
+캐릭터 아바타 이미지 출처 (Character avatar credits)
+=================================================
+Liberated Pixel Cup (LPC) 스프라이트 기반으로 합성했습니다.
+Composited from Liberated Pixel Cup (LPC) sprites.
+
+라이선스 License: CC-BY-SA 3.0 / GPL 3.0
+원본 소스 Source: https://github.com/sanderfrenken/Universal-LPC-Spritesheet-Character-Generator
+LPC 프로젝트: https://lpc.opengameart.org/
+
+여러 아티스트의 기여로 제작되었습니다. 공개 서비스 출시 전
+각 레이어별 원작자 전체 목록을 이 파일에 추가할 것.
+(TODO before public launch: add full per-asset author list.)
