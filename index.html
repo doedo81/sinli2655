@@ -820,13 +820,78 @@
                 </div>
 
                 <div class="setting-group"><label>당번 기본 할 일</label><textarea id="set-duty-tasks" style="height:60px; font-weight:700;"></textarea></div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    <div class="setting-group"><label>월요일</label><input type="text" id="set-mon-m" placeholder="자습내용" style="font-weight:700;"><textarea id="set-mon-t" style="height:120px; font-weight:700;" placeholder="국어: 내용&#10;수학: 내용"></textarea></div>
-                    <div class="setting-group"><label>화요일</label><input type="text" id="set-tue-m" style="font-weight:700;"><textarea id="set-tue-t" style="height:120px; font-weight:700;"></textarea></div>
-                    <div class="setting-group"><label>수요일</label><input type="text" id="set-wed-m" style="font-weight:700;"><textarea id="set-wed-t" style="height:120px; font-weight:700;"></textarea></div>
-                    <div class="setting-group"><label>목요일</label><input type="text" id="set-thu-m" style="font-weight:700;"><textarea id="set-thu-t" style="height:120px; font-weight:700;"></textarea></div>
-                    <div class="setting-group" style="grid-column: span 2;"><label>금요일</label><input type="text" id="set-fri-m" style="font-weight:700;"><textarea id="set-fri-t" style="height:120px; font-weight:700;"></textarea></div>
+                <div class="setting-group"><label>📅 시간표 (아침자습 · 1~6교시)</label></div>
+                <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
+                <table style="width:100%; border-collapse:separate; border-spacing:5px; min-width:540px;">
+                    <thead><tr>
+                        <th style="width:52px;"></th>
+                        <th style="color:#4285f4; font-size:14px; font-weight:800;">월</th>
+                        <th style="color:#4285f4; font-size:14px; font-weight:800;">화</th>
+                        <th style="color:#4285f4; font-size:14px; font-weight:800;">수</th>
+                        <th style="color:#4285f4; font-size:14px; font-weight:800;">목</th>
+                        <th style="color:#4285f4; font-size:14px; font-weight:800;">금</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr>
+                            <td style="font-size:11px; color:#e0964a; text-align:right; font-weight:800; white-space:nowrap;">⭐아침<br>자습</td>
+                            <td><input type="text" id="set-mon-m" placeholder="독서" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #f0d9b5; background:#fff8e6; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-tue-m" placeholder="독서" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #f0d9b5; background:#fff8e6; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-wed-m" placeholder="독서" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #f0d9b5; background:#fff8e6; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-thu-m" placeholder="독서" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #f0d9b5; background:#fff8e6; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-fri-m" placeholder="독서" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #f0d9b5; background:#fff8e6; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                        </tr>
+                        <tr>
+                            <td style="font-size:12px; color:#888; text-align:right; font-weight:700;">1교시</td>
+                            <td><input type="text" id="set-mon-p1" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-tue-p1" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-wed-p1" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-thu-p1" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-fri-p1" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                        </tr>
+                        <tr>
+                            <td style="font-size:12px; color:#888; text-align:right; font-weight:700;">2교시</td>
+                            <td><input type="text" id="set-mon-p2" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-tue-p2" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-wed-p2" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-thu-p2" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-fri-p2" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                        </tr>
+                        <tr>
+                            <td style="font-size:12px; color:#888; text-align:right; font-weight:700;">3교시</td>
+                            <td><input type="text" id="set-mon-p3" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-tue-p3" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-wed-p3" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-thu-p3" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-fri-p3" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                        </tr>
+                        <tr>
+                            <td style="font-size:12px; color:#888; text-align:right; font-weight:700;">4교시</td>
+                            <td><input type="text" id="set-mon-p4" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-tue-p4" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-wed-p4" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-thu-p4" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-fri-p4" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                        </tr>
+                        <tr>
+                            <td style="font-size:12px; color:#888; text-align:right; font-weight:700;">5교시</td>
+                            <td><input type="text" id="set-mon-p5" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-tue-p5" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-wed-p5" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-thu-p5" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-fri-p5" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                        </tr>
+                        <tr>
+                            <td style="font-size:12px; color:#888; text-align:right; font-weight:700;">6교시</td>
+                            <td><input type="text" id="set-mon-p6" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-tue-p6" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-wed-p6" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-thu-p6" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                            <td><input type="text" id="set-fri-p6" style="width:100%; padding:7px 3px; text-align:center; border:1px solid #ccc; border-radius:6px; font-weight:700; box-sizing:border-box; font-family:'Pretendard';"></td>
+                        </tr>
+                    </tbody>
+                </table>
                 </div>
+                <p style="font-size:12px; color:#8a94a6; margin:8px 2px 0; line-height:1.5;">⭐ <b>아침자습</b> 칸은 아침칠판 <b>[⭐ 아침 자습]</b> 공지란에 표시돼요. 각 칸은 <b>과목</b>만(예: 수학) 쓰거나 <b>과목: 내용</b>(예: 수학: 12쪽)까지 써도 됩니다.</p>
                 <button class="action-btn" style="width:100%; margin-top:10px; padding:15px; font-size:18px;" onclick="saveSettingsData()">💾 설정 저장 및 반영</button>
             </div>
         </div>
@@ -2941,16 +3006,27 @@
                 document.getElementById('set-birthdays').value = d.birthdays || "";
                 document.getElementById('set-gemini-key').value = localStorage.getItem('geminiApiKey') || "";
                 document.getElementById('set-duty-tasks').value = d.duty || "";
-                document.getElementById('set-mon-m').value = d.monM || ""; document.getElementById('set-mon-t').value = d.monT || "";
-                document.getElementById('set-tue-m').value = d.tueM || ""; document.getElementById('set-tue-t').value = d.tueT || "";
-                document.getElementById('set-wed-m').value = d.wedM || ""; document.getElementById('set-wed-t').value = d.wedT || "";
-                document.getElementById('set-thu-m').value = d.thuM || ""; document.getElementById('set-thu-t').value = d.thuT || "";
-                document.getElementById('set-fri-m').value = d.friM || ""; document.getElementById('set-fri-t').value = d.friT || "";
+                document.getElementById('set-mon-m').value = d.monM || ""; ttSetDay('mon', d.monT);
+                document.getElementById('set-tue-m').value = d.tueM || ""; ttSetDay('tue', d.tueT);
+                document.getElementById('set-wed-m').value = d.wedM || ""; ttSetDay('wed', d.wedT);
+                document.getElementById('set-thu-m').value = d.thuM || ""; ttSetDay('thu', d.thuT);
+                document.getElementById('set-fri-m').value = d.friM || ""; ttSetDay('fri', d.friT);
                 document.getElementById('settings-modal').style.display = 'flex';
             });
         }
         
         function closeSettingsModal() { document.getElementById('settings-modal').style.display = 'none'; }
+
+        // 시간표 격자 ↔ 저장 문자열(줄바꿈) 변환 — 저장 형식은 기존과 동일(1교시=1줄…6교시=6줄)
+        function ttGetDay(day) {
+            let arr = [];
+            for(let i=1;i<=6;i++){ const el = document.getElementById('set-' + day + '-p' + i); arr.push(el ? el.value : ''); }
+            return arr.join('\n');
+        }
+        function ttSetDay(day, str) {
+            const lines = (str || '').split('\n');
+            for(let i=1;i<=6;i++){ const el = document.getElementById('set-' + day + '-p' + i); if(el) el.value = lines[i-1] || ''; }
+        }
         
         function saveSettingsData() {
             const data = {
@@ -2960,9 +3036,9 @@
                 separatedPairs: document.getElementById('set-separated-pairs').value || "",
                 birthdays: document.getElementById('set-birthdays').value || "",
                 pastGroups: pastGroupsRecord, 
-                duty: document.getElementById('set-duty-tasks').value, monM: document.getElementById('set-mon-m').value, monT: document.getElementById('set-mon-t').value,
-                tueM: document.getElementById('set-tue-m').value, tueT: document.getElementById('set-tue-t').value, wedM: document.getElementById('set-wed-m').value, wedT: document.getElementById('set-wed-t').value,
-                thuM: document.getElementById('set-thu-m').value, thuT: document.getElementById('set-thu-t').value, friM: document.getElementById('set-fri-m').value, friT: document.getElementById('set-fri-t').value
+                duty: document.getElementById('set-duty-tasks').value, monM: document.getElementById('set-mon-m').value, monT: ttGetDay('mon'),
+                tueM: document.getElementById('set-tue-m').value, tueT: ttGetDay('tue'), wedM: document.getElementById('set-wed-m').value, wedT: ttGetDay('wed'),
+                thuM: document.getElementById('set-thu-m').value, thuT: ttGetDay('thu'), friM: document.getElementById('set-fri-m').value, friT: ttGetDay('fri')
             };
             
             globalTotalStudents = data.totalStudents;
