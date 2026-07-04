@@ -3493,9 +3493,9 @@
             const _check = _sel ? '<span style="position:absolute;top:-7px;right:-7px;background:#5b97d1;color:#fff;border-radius:50%;width:20px;height:20px;font-size:12px;line-height:20px;text-align:center;">✓</span>' : '';
             return '<div onclick="rpgCardClick(' + stu.id + ')" style="position:relative;cursor:pointer;background:' + (_sel?'#eaf2fb':'#fff') + ';border:' + (_sel?'2px solid #5b97d1':'1px solid #e6ebf3') + ';border-top:4px solid ' + (job ? '#7b6cd9' : '#b0bec5') + ';border-radius:14px;padding:12px;box-shadow:0 3px 10px rgba(120,144,180,0.10);transition:transform .12s;' + rpgFrameStyle(d.frame) + '" onmouseover="this.style.transform=\'translateY(-3px)\'" onmouseout="this.style.transform=\'\'">'
                 + _check
-                + (d.head ? '<div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);z-index:4;">' + rpgHeadVisual(d.head, 34) + '</div>' : '')
-                + (d.pet ? '<div style="position:absolute;bottom:26px;right:3px;z-index:4;">' + rpgPetVisual(d.pet, 36, L.lv) + '</div>' : '')
-                + '<div style="position:relative;width:max-content;margin:6px auto 2px;">'
+                + (d.head ? '<div style="position:absolute;top:-3px;left:50%;transform:translateX(-50%);z-index:4;">' + rpgHeadVisual(d.head, 42) + '</div>' : '')
+                + (d.pet ? '<div style="position:absolute;bottom:26px;right:3px;z-index:4;">' + rpgPetVisual(d.pet, 38, L.lv) + '</div>' : '')
+                + '<div style="position:relative;width:max-content;margin:14px auto 2px;">'
                 + rpgAuraOverlay(L.lv, 80, d.job)
                 + '<img src="assets/avatars/' + rpgAvatarKey(d.job, L.lv, stu.gender) + '.png?v=6" alt="" loading="lazy" onerror="this.onerror=function(){this.onerror=null;this.src=\'assets/avatars/novice_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=6\'};this.src=\'assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=6\'" style="height:80px;width:auto;display:block;position:relative;z-index:1;">'
                 + '</div>'
