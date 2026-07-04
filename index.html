@@ -3351,7 +3351,9 @@
             if(!it) return '';
             const w = Math.round(sizePx * 0.46);
             const hx = ((RPG_HEAD_X[avatarKey] != null ? RPG_HEAD_X[avatarKey] : 0.5) * 100).toFixed(1);
-            return '<div style="position:absolute;top:' + Math.round(-sizePx * 0.14) + 'px;left:' + hx + '%;transform:translateX(-50%);width:' + w + 'px;line-height:0;pointer-events:none;z-index:2;">' + it.svg + '</div>';
+            return '<div style="position:absolute;top:' + Math.round(-sizePx * 0.14) + 'px;left:' + hx + '%;transform:translateX(-50%);width:' + w + 'px;line-height:0;pointer-events:none;z-index:2;">'
+                + '<img src="assets/items/head/' + it.id + '.png?v=1" alt="" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'inline-block\'" style="width:100%;vertical-align:top;">'
+                + '<span style="display:none;width:100%;">' + it.svg + '</span></div>';
         }
         function rpgEquipItem(id, slot, itemId){
             if(!rpgRef) return;
@@ -3368,14 +3370,17 @@
             { id:'unicorn', name:'🦄 유니콘', emoji:'🦄', level:22 },
             { id:'dragon', name:'🐉 용', emoji:'🐉', level:30 }
         ];
-        function rpgPetOverlay(petId, sizePx){
+        function rpgPetOverlay(petId, sizePx, level){
             if(!petId) return '';
             const it = RPG_ITEMS_PET.find(function(x){ return x.id === petId; }); if(!it) return '';
             const ps = Math.round(sizePx * 0.5);
-            // 펫 이미지가 있으면 이미지, 없으면(onerror) 이모지. 오른쪽 아래 바깥.
+            // 알에서 시작 → 부화 레벨 넘으면 성체. 이미지 있으면 이미지, 없으면 이모지 폴백.
+            const hatched = (level || 0) >= (it.level + (it.hatch || 4));
+            const src = hatched ? ('assets/items/pet/' + it.id + '.png?v=1') : 'assets/items/pet/egg.png?v=1';
+            const emo = hatched ? it.emoji : '🥚';
             return '<div style="position:absolute;bottom:-' + Math.round(sizePx * 0.02) + 'px;right:-' + Math.round(sizePx * 0.26) + 'px;z-index:3;pointer-events:none;width:' + ps + 'px;height:' + ps + 'px;display:flex;align-items:flex-end;justify-content:center;">'
-                + '<img src="assets/items/pet/' + it.id + '.png?v=1" alt="" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'block\'" style="width:100%;height:100%;object-fit:contain;">'
-                + '<span style="display:none;font-size:' + Math.round(sizePx * 0.4) + 'px;line-height:1;">' + it.emoji + '</span></div>';
+                + '<img src="' + src + '" alt="" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'block\'" style="width:100%;height:100%;object-fit:contain;">'
+                + '<span style="display:none;font-size:' + Math.round(sizePx * 0.4) + 'px;line-height:1;">' + emo + '</span></div>';
         }
 
         // 프레임 (카드 테두리, 레벨 해금)
@@ -3498,7 +3503,7 @@
                 + rpgAuraOverlay(L.lv, 80, d.job)
                 + '<img src="assets/avatars/' + rpgAvatarKey(d.job, L.lv, stu.gender) + '.png?v=6" alt="" loading="lazy" onerror="this.onerror=function(){this.onerror=null;this.src=\'assets/avatars/novice_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=6\'};this.src=\'assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=6\'" style="height:80px;width:auto;display:block;position:relative;z-index:1;">'
                 + rpgHeadOverlay(d.head, 80, rpgAvatarKey(d.job, L.lv, stu.gender))
-                + rpgPetOverlay(d.pet, 80)
+                + rpgPetOverlay(d.pet, 80, L.lv)
                 + '</div>'
                 + '<div style="display:flex;justify-content:space-between;align-items:center;gap:4px;">'
                 + '<span style="font-weight:800;color:#51618a;">' + stu.name + '</span>'
@@ -3563,7 +3568,7 @@
                 + rpgAuraOverlay(L.lv, 110, d.job)
                 + '<img src="assets/avatars/' + rpgAvatarKey(d.job, L.lv, stu.gender) + '.png?v=6" alt="" onerror="this.onerror=function(){this.onerror=null;this.src=\'assets/avatars/novice_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=6\'};this.src=\'assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=6\'" style="height:110px;width:auto;position:relative;z-index:1;">'
                 + rpgHeadOverlay(d.head, 110, rpgAvatarKey(d.job, L.lv, stu.gender))
-                + rpgPetOverlay(d.pet, 110)
+                + rpgPetOverlay(d.pet, 110, L.lv)
                 + '</div>'
                 + '<div><div style="font-size:18px;font-weight:800;color:#51618a;">' + stu.name + ' <span style="font-size:13px;color:#7b6cd9;">' + (job ? job.emoji + job.name : '견습생') + '</span></div>'
                 + '<div style="font-size:13px;color:#888;">Lv.' + L.lv + ' · ' + stu.id + '번</div></div>'
@@ -4159,7 +4164,7 @@
             document.getElementById('student-page-body').innerHTML =
                 '<div style="text-align:center;"><div style="position:relative;display:inline-block;">' + rpgAuraOverlay(L.lv, 150, d.job)
                 + '<img src="assets/avatars/' + akey + '.png?v=6" onerror="this.onerror=function(){this.onerror=null;this.src=\'assets/avatars/novice_' + g + '.png?v=6\'};this.src=\'assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '_' + g + '.png?v=6\'" style="height:150px;width:auto;position:relative;z-index:1;">'
-                + rpgHeadOverlay(d.head, 150, akey) + rpgPetOverlay(d.pet, 150) + '</div>'
+                + rpgHeadOverlay(d.head, 150, akey) + rpgPetOverlay(d.pet, 150, L.lv) + '</div>'
                 + '<div style="font-size:20px;font-weight:800;color:#51618a;margin-top:8px;">' + stu.name + ' <span style="font-size:13px;color:#7b6cd9;">' + (job ? job.emoji + job.name : '견습생') + '</span></div>'
                 + '<div style="font-size:13px;color:#888;">Lv.' + L.lv + ' · ' + stu.id + '번</div></div>'
                 + '<div style="height:12px;background:#eef1f6;border-radius:20px;overflow:hidden;margin:12px 0 4px;"><div style="width:' + pct + '%;height:100%;background:#5b97d1;"></div></div>'
