@@ -381,6 +381,30 @@
         </div>
     </div>
 
+    <!-- 🎮 학생 로그인 (핸드폰) -->
+    <div id="student-login" style="display:none; position:fixed; inset:0; background:#eef4fb; z-index:5000; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:#fff; border-radius:18px; max-width:360px; width:100%; padding:26px; box-shadow:0 10px 30px rgba(0,0,0,0.12); text-align:center;">
+            <div style="font-size:34px;">🎮</div>
+            <h2 style="color:#51618a; margin:6px 0 2px;">성장 로그인</h2>
+            <div id="student-classname" style="color:#7b6cd9; font-weight:700; margin-bottom:18px;">우리 반</div>
+            <input id="student-num" type="number" inputmode="numeric" placeholder="내 번호" style="width:100%; padding:13px; font-size:17px; border:2px solid #cfe0f3; border-radius:12px; margin-bottom:10px; text-align:center; box-sizing:border-box; font-family:'Pretendard';">
+            <input id="student-pw" type="password" placeholder="비밀번호 (기본 123456)" style="width:100%; padding:13px; font-size:16px; border:2px solid #cfe0f3; border-radius:12px; margin-bottom:14px; text-align:center; box-sizing:border-box; font-family:'Pretendard';" onkeypress="if(event.key==='Enter')rpgStudentDoLogin()">
+            <button onclick="rpgStudentDoLogin()" style="width:100%; padding:14px; font-size:16px; background:#5b97d1; color:#fff; border:none; border-radius:12px; font-weight:700; cursor:pointer;">로그인</button>
+            <p style="font-size:12px; color:#aaa; margin-top:12px;">내 번호와 비밀번호로 로그인해요</p>
+        </div>
+    </div>
+    <!-- 🎮 학생 개인 화면 -->
+    <div id="student-page" style="display:none; position:fixed; inset:0; background:#eef4fb; z-index:5000; overflow-y:auto;">
+        <div style="max-width:420px; margin:0 auto; padding:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div style="font-weight:800; color:#51618a; font-size:17px;">🎮 내 캐릭터</div>
+                <button onclick="rpgStudentLogout()" style="border:1px solid #ccc; background:#fff; color:#888; border-radius:10px; padding:6px 12px; font-size:13px; cursor:pointer; font-family:'Pretendard';">로그아웃</button>
+            </div>
+            <div id="student-page-body" style="background:#fff; border-radius:18px; padding:20px;"></div>
+            <p style="text-align:center; font-size:11px; color:#b0bec5; margin-top:14px;">상벌점·평가는 선생님만 줄 수 있어요</p>
+        </div>
+    </div>
+
     <!-- 🌟 메인 앱 레이아웃 -->
     <div id="main-app">
         
@@ -724,6 +748,7 @@
                                 <button class="action-btn" style="background:#00897b; padding:10px 18px;" onclick="rpgOpenActions()"><i class="fa-solid fa-sliders"></i> 상점 항목</button>
                                 <button class="action-btn" style="background:#7b6cd9; padding:10px 18px;" onclick="rpgToggleRoster()"><i class="fa-solid fa-user-pen"></i> 명단 입력/수정</button>
                                 <button class="action-btn" style="background:#26a69a; padding:10px 18px;" onclick="rpgEnterStudentMode()"><i class="fa-solid fa-child-reaching"></i> 학생 모드</button>
+                                <button class="action-btn" style="background:#3949ab; padding:10px 18px;" onclick="rpgOpenStudentGuide()"><i class="fa-solid fa-mobile-screen"></i> 학생 로그인</button>
                             </div>
                         </div>
                     </div>
@@ -890,6 +915,17 @@
                         </div>
                     </div>
                     <div id="rpg-mission-list"></div>
+                </div>
+            </div>
+
+            <!-- 성장: 학생 로그인 안내(교사용) -->
+            <div id="rpg-slogin-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:2000; align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) document.getElementById('rpg-slogin-modal').style.display='none'">
+                <div style="background:#fff; border-radius:18px; max-width:420px; width:100%; max-height:90vh; overflow:auto; padding:22px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <div style="font-size:17px; font-weight:800; color:#51618a;">📱 학생 로그인 안내</div>
+                        <button onclick="document.getElementById('rpg-slogin-modal').style.display='none'" style="border:none; background:#f0f2f5; border-radius:50%; width:32px; height:32px; cursor:pointer; font-size:16px;">✕</button>
+                    </div>
+                    <div id="rpg-slogin-body"></div>
                 </div>
             </div>
 
@@ -1195,7 +1231,11 @@
         window.onload = () => {
             const savedSize = localStorage.getItem('myCustomFontSize');
             if(savedSize) { currentBoardFontSize = parseInt(savedSize); applyFontSize(); }
-            
+
+            // 학생 로그인(핸드폰): ?s=코드 로 접속하면 학생 화면
+            const _sCode = new URLSearchParams(location.search).get('s');
+            if(_sCode){ rpgStudentInit(_sCode); return; }
+
             // 태블릿 모드면 화면 상단 UI 요소들 숨김 및 편집 막기
             if(isTabletMode) {
                 document.body.classList.add('read-only-mode');
@@ -4066,6 +4106,92 @@
             const up = {}; let lv = 0;
             targets.forEach(function(st){ const s = rpgStudentObj(st.id); const b = rpgLevel(s.xp).lv; s.xp += (m.xp || 0); if(m.stat) s.stats[m.stat] = (s.stats[m.stat] || 0) + 1; if(rpgLevel(s.xp).lv > b) lv++; up['students/' + st.id] = s; up['missions/' + mid + '/done/' + st.id] = true; });
             rpgRef.update(up).then(function(){ rpgToast(targets.length + '명 미션 완료 보상!'); if(lv > 0) setTimeout(function(){ rpgToast('🎉 레벨 업 ' + lv + '명!', true); }, 400); });
+        }
+
+        // ---- 학생 로그인(핸드폰) ----
+        let studentNum = null, studentCodeCur = null;
+        function rpgStudentInit(code){
+            studentCodeCur = code;
+            var ov = document.getElementById('auth-overlay'); if(ov) ov.style.display = 'none';
+            var app = document.getElementById('main-app'); if(app) app.style.display = 'none';
+            db.ref('studentCodes/' + code).once('value').then(function(snap){
+                var room = snap.val();
+                var login = document.getElementById('student-login');
+                if(!room){ login.innerHTML = '<div style="background:#fff;border-radius:16px;padding:30px;text-align:center;color:#888;max-width:340px;">잘못된 접속 코드예요.<br>선생님께 링크를 다시 받아주세요.</div>'; login.style.display = 'flex'; return; }
+                currentRoom = room;
+                settingsRef = db.ref('rooms/' + room + '/settings/dashboardDefaults');
+                rpgRef = db.ref('rooms/' + room + '/rpg');
+                settingsRef.once('value').then(function(s){ var v = s.val() || {}; globalStudentRosterStr = v.roster || ''; document.getElementById('student-classname').innerText = v.className || '우리 반'; });
+                rpgRef.on('value', function(s){ rpgData = s.val() || {}; if(studentNum != null) rpgRenderStudentPage(studentNum); });
+                var saved = localStorage.getItem('studentNum_' + code);
+                if(saved){ studentNum = parseInt(saved); login.style.display = 'none'; document.getElementById('student-page').style.display = 'block'; setTimeout(function(){ rpgRenderStudentPage(studentNum); }, 300); }
+                else { login.style.display = 'flex'; }
+            }).catch(function(e){ alert('접속 오류: ' + e.message); });
+        }
+        function rpgStudentDoLogin(){
+            var num = parseInt(document.getElementById('student-num').value);
+            var pw = document.getElementById('student-pw').value;
+            if(!num){ alert('내 번호를 입력해주세요.'); return; }
+            var stu = rpgParseRoster().find(function(x){ return x.id === num; });
+            if(!stu){ alert('그 번호의 학생이 명단에 없어요.'); return; }
+            var d = (rpgData.students && rpgData.students[num]) || {};
+            var realpw = d.pw || '123456';
+            if(pw !== realpw){ alert('비밀번호가 틀렸어요. (기본 비밀번호는 123456)'); return; }
+            studentNum = num; localStorage.setItem('studentNum_' + studentCodeCur, num);
+            document.getElementById('student-login').style.display = 'none';
+            document.getElementById('student-page').style.display = 'block';
+            rpgRenderStudentPage(num);
+        }
+        function rpgStudentLogout(){
+            localStorage.removeItem('studentNum_' + studentCodeCur); studentNum = null;
+            document.getElementById('student-page').style.display = 'none';
+            document.getElementById('student-num').value = ''; document.getElementById('student-pw').value = '';
+            document.getElementById('student-login').style.display = 'flex';
+        }
+        function rpgRenderStudentPage(num){
+            var stu = rpgParseRoster().find(function(x){ return x.id === num; }); if(!stu) return;
+            var d = (rpgData.students && rpgData.students[num]) || {};
+            var L = rpgLevel(d.xp), job = d.job && RPG_JOBS[d.job], pct = Math.round(L.into / L.need * 100);
+            var akey = rpgAvatarKey(d.job, L.lv, stu.gender), g = stu.gender === 'F' ? 'f' : 'm';
+            var statHtml = RPG_STATS.map(function(st){ return '<div style="background:#f6f8fb;border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;font-size:13px;"><span style="color:#666;">' + st.emoji + ' ' + st.name + '</span><span style="font-weight:800;color:#51618a;">' + ((d.stats && d.stats[st.key]) || 0) + '</span></div>'; }).join('');
+            var jobSection = '';
+            if(L.lv >= 10 && !d.job){ jobSection = '<div style="background:#f6f4ff;border:1px solid #d9d2f5;border-radius:12px;padding:12px;margin-top:14px;"><div style="font-weight:700;color:#5b4bb5;margin-bottom:8px;">✨ 레벨 10 달성! 전직할 직업을 고르세요</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">' + Object.keys(RPG_JOBS).map(function(k){ return '<button onclick="rpgSetJob(' + num + ',\'' + k + '\')" style="border:1px solid #d9d2f5;background:#fff;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">' + RPG_JOBS[k].emoji + ' ' + RPG_JOBS[k].name + '</button>'; }).join('') + '</div></div>'; }
+            document.getElementById('student-page-body').innerHTML =
+                '<div style="text-align:center;"><div style="position:relative;display:inline-block;">' + rpgAuraOverlay(L.lv, 150, d.job)
+                + '<img src="assets/avatars/' + akey + '.png?v=6" onerror="this.onerror=function(){this.onerror=null;this.src=\'assets/avatars/novice_' + g + '.png?v=6\'};this.src=\'assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '_' + g + '.png?v=6\'" style="height:150px;width:auto;position:relative;z-index:1;">'
+                + rpgHeadOverlay(d.head, 150, akey) + rpgPetOverlay(d.pet, 150) + '</div>'
+                + '<div style="font-size:20px;font-weight:800;color:#51618a;margin-top:8px;">' + stu.name + ' <span style="font-size:13px;color:#7b6cd9;">' + (job ? job.emoji + job.name : '견습생') + '</span></div>'
+                + '<div style="font-size:13px;color:#888;">Lv.' + L.lv + ' · ' + stu.id + '번</div></div>'
+                + '<div style="height:12px;background:#eef1f6;border-radius:20px;overflow:hidden;margin:12px 0 4px;"><div style="width:' + pct + '%;height:100%;background:#5b97d1;"></div></div>'
+                + '<div style="font-size:12px;color:#aaa;text-align:right;">' + L.into + ' / ' + L.need + ' XP</div>'
+                + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:14px 0;">' + statHtml + '</div>'
+                + jobSection
+                + '<div style="font-size:11px;color:#bbb;margin:14px 0 -2px;">✨ 꾸미기 (레벨 달성 시 해금)</div>'
+                + rpgPickerRow(num, '👒 머리 장식', 'head', RPG_ITEMS_HEAD, d.head, L.lv)
+                + rpgPickerRow(num, '🐾 펫', 'pet', RPG_ITEMS_PET, d.pet, L.lv)
+                + rpgPickerRow(num, '🖼️ 프레임', 'frame', RPG_ITEMS_FRAME, d.frame, L.lv);
+        }
+        // 교사용: 학생 로그인 안내(코드·링크·QR)
+        function rpgOpenStudentGuide(){
+            if(!rpgRef) return;
+            var show = function(code){
+                var url = location.origin + location.pathname + '?s=' + code;
+                var qr = 'https://api.qrserver.com/v1/create-qr-code/?size=190x190&data=' + encodeURIComponent(url);
+                document.getElementById('rpg-slogin-body').innerHTML =
+                    '<p style="font-size:13px;color:#555;line-height:1.6;margin-top:0;">학생들이 <b>자기 핸드폰</b>으로 아래 QR·링크에 접속해서 <b>자기 번호 + 비밀번호</b>로 로그인해요.</p>'
+                    + '<div style="text-align:center;margin:12px 0;"><img src="' + qr + '" style="width:190px;height:190px;border:1px solid #eee;border-radius:8px;"></div>'
+                    + '<div style="background:#f6f8fb;border-radius:10px;padding:10px 12px;font-size:12px;word-break:break-all;margin-bottom:8px;">🔗 ' + url + '</div>'
+                    + '<div style="font-size:14px;">접속 코드: <b style="font-size:20px;color:#5b97d1;">' + code + '</b></div>'
+                    + '<p style="font-size:12px;color:#888;margin-top:10px;line-height:1.7;">• 학생: <b>자기 번호</b> + 기본 비밀번호 <b>123456</b><br>• QR을 TV·칠판에 띄우면 각자 바로 접속<br>• ⚠️ 지금은 간편 로그인이에요 (진짜 보안은 Firebase 규칙 단계에서).</p>';
+            };
+            var code = rpgData.config && rpgData.config.studentCode;
+            if(code){ show(code); }
+            else {
+                var nc = String(Math.floor(1000 + Math.random() * 9000));
+                rpgRef.child('config/studentCode').set(nc);
+                db.ref('studentCodes/' + nc).set(currentRoom).then(function(){ show(nc); }).catch(function(e){ alert(e.message); });
+            }
+            document.getElementById('rpg-slogin-modal').style.display = 'flex';
         }
 
         function rpgToast(msg, big){
