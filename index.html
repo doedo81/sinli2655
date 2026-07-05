@@ -772,6 +772,11 @@
                         아직 학생 명단이 없어요.<br>위 <b>[명단 입력/수정]</b> 버튼을 눌러 학생을 추가해 주세요.
                     </div>
 
+                    <div id="rpg-view-modes" style="display:none; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
+                        <button type="button" class="rpg-vm-btn" data-mode="number" onclick="rpgSetViewMode('number')">🔢 번호순</button>
+                        <button type="button" class="rpg-vm-btn" data-mode="seating" onclick="rpgSetViewMode('seating')">🪑 자리배치</button>
+                        <button type="button" class="rpg-vm-btn" data-mode="rank" onclick="rpgSetViewMode('rank')">🏆 랭킹</button>
+                    </div>
                     <div id="rpg-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:14px;"></div>
                     <p style="text-align:center; font-size:11px; color:#cbd3dc; margin-top:16px;">캐릭터: 오리지널 AI 생성</p>
                 </div>
@@ -3480,18 +3485,25 @@
             }).catch(e => alert('저장 오류: ' + e.message));
         }
 
-        function rpgCardHtml(stu){
+        function rpgCardHtml(stu, rank){
             const d = (rpgData.students && rpgData.students[stu.id]) || {};
             const L = rpgLevel(d.xp);
             const job = d.job && RPG_JOBS[d.job];
             const warn = d.warning || 0;
             const pct = Math.round(L.into / L.need * 100);
+            let rankBadge = '';
+            if(rank){
+                const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';
+                const bg = rank === 1 ? '#f6c945' : rank === 2 ? '#c3ccd6' : rank === 3 ? '#d99a63' : '#8a9bb5';
+                rankBadge = '<span style="position:absolute;top:-9px;left:-9px;z-index:5;background:' + bg + ';color:#fff;border-radius:50%;min-width:26px;height:26px;padding:0 4px;font-size:' + (medal ? '15' : '13') + 'px;font-weight:800;line-height:26px;text-align:center;box-shadow:0 2px 5px rgba(0,0,0,.2);">' + (medal || rank) + '</span>';
+            }
             const warnBar = warn > 0
                 ? '<div style="height:5px;background:#f0d5d5;border-radius:20px;margin-top:6px;overflow:hidden;"><div style="width:' + warn + '%;height:100%;background:#e57373;"></div></div>'
                 : '';
             const _sel = rpgBulkMode && rpgBulkSelected.has(stu.id);
             const _check = _sel ? '<span style="position:absolute;top:-7px;right:-7px;background:#5b97d1;color:#fff;border-radius:50%;width:20px;height:20px;font-size:12px;line-height:20px;text-align:center;">✓</span>' : '';
             return '<div onclick="rpgCardClick(' + stu.id + ')" style="position:relative;cursor:pointer;background:' + (_sel?'#eaf2fb':'#fff') + ';border:' + (_sel?'2px solid #5b97d1':'1px solid #e6ebf3') + ';border-top:4px solid ' + (job ? '#7b6cd9' : '#b0bec5') + ';border-radius:14px;padding:12px;box-shadow:0 3px 10px rgba(120,144,180,0.10);transition:transform .12s;' + rpgFrameStyle(d.frame) + '" onmouseover="this.style.transform=\'translateY(-3px)\'" onmouseout="this.style.transform=\'\'">'
+                + rankBadge
                 + _check
                 + (d.head ? '<div style="position:absolute;top:-3px;left:50%;transform:translateX(-50%);z-index:4;">' + rpgHeadVisual(d.head, 42) + '</div>' : '')
                 + (d.pet ? '<div style="position:absolute;top:44px;right:2px;z-index:4;">' + rpgPetVisual(d.pet, 40, L.lv) + '</div>' : '')
@@ -3509,6 +3521,20 @@
                 + warnBar + '</div>';
         }
 
+        let rpgViewMode = 'number';
+        function rpgSetViewMode(m){
+            rpgViewMode = m;
+            try{ localStorage.setItem('rpgView_' + currentRoom, m); }catch(e){}
+            renderRpgGrid();
+        }
+        function rpgUpdateViewModeBtns(){
+            document.querySelectorAll('.rpg-vm-btn').forEach(b => {
+                const on = b.dataset.mode === rpgViewMode;
+                b.style.cssText = 'border:1px solid ' + (on ? '#5b97d1' : '#d7deea') + ';background:' + (on ? '#5b97d1' : '#fff') + ';color:' + (on ? '#fff' : '#7089a5') + ';border-radius:20px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;';
+            });
+        }
+        function rpgXpOf(id){ return (rpgData.students && rpgData.students[id] && rpgData.students[id].xp) || 0; }
+
         function renderRpgGrid(){
             if(!rpgRef) return;
             const students = rpgParseRoster();
@@ -3520,10 +3546,44 @@
             var _tb = document.getElementById('rpg-teacher-btns'); if(_tb) _tb.style.display = rpgStudentMode ? 'none' : 'flex';
             var _lb2 = document.getElementById('rpg-lock-btn'); if(_lb2 && rpgStudentMode) _lb2.style.display = 'none';
             var _es = document.getElementById('rpg-exit-student'); if(_es) _es.style.display = rpgStudentMode ? '' : 'none';
-            if(students.length === 0){ grid.innerHTML = ''; empty.style.display = 'block'; return; }
+            var _vm = document.getElementById('rpg-view-modes');
+            if(students.length === 0){ grid.innerHTML = ''; empty.style.display = 'block'; if(_vm) _vm.style.display = 'none'; return; }
             empty.style.display = 'none';
-            grid.innerHTML = students.map(rpgCardHtml).join('');
+            rpgViewMode = localStorage.getItem('rpgView_' + currentRoom) || 'number';
+            if(_vm) _vm.style.display = 'flex';
+            rpgUpdateViewModeBtns();
+
+            if(rpgViewMode === 'rank'){
+                const ranked = students.slice().sort((a,b) => (rpgXpOf(b.id) - rpgXpOf(a.id)) || (a.id - b.id));
+                grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(150px, 1fr))';
+                grid.innerHTML = ranked.map((s,i) => rpgCardHtml(s, i + 1)).join('');
+            } else if(rpgViewMode === 'seating'){
+                renderRpgSeatingGrid(students, grid);
+            } else {
+                grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(150px, 1fr))';
+                grid.innerHTML = students.map(s => rpgCardHtml(s)).join('');
+            }
             if(rpgModalId != null && document.getElementById('rpg-modal').style.display === 'flex') rpgOpen(rpgModalId);
+        }
+
+        function renderRpgSeatingGrid(students, grid){
+            if(!currentSeating || currentSeating.length === 0){
+                grid.style.gridTemplateColumns = '1fr';
+                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px 20px;color:#999;">아직 자리배치가 없어요.<br>위쪽 <b>[자리 배치]</b> 탭에서 자리를 먼저 만들어 주세요.</div>';
+                return;
+            }
+            const cols = 6;
+            const byId = {}; students.forEach(s => { byId[s.id] = s; });
+            let html = '';
+            currentSeating.forEach(num => {
+                if(num === null || num === undefined || !byId[num]){
+                    html += '<div style="border:2px dashed #e0e6ef;border-radius:14px;min-height:60px;"></div>';
+                } else {
+                    html += rpgCardHtml(byId[num]);
+                }
+            });
+            grid.style.gridTemplateColumns = 'repeat(' + cols + ', minmax(0, 1fr))';
+            grid.innerHTML = html;
         }
 
         function rpgOpen(id){
