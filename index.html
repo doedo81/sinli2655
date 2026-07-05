@@ -760,12 +760,29 @@
                     </div>
 
                     <div id="rpg-roster-box" style="display:none; background:#f6f4ff; border:1px solid #d9d2f5; border-radius:14px; padding:18px; margin-bottom:20px;">
-                        <div style="font-weight:bold; color:#5b4bb5; margin-bottom:6px;">👥 학생 명단 (번호 이름 성별)</div>
-                        <p style="font-size:12px; color:#666; margin:4px 0 8px;">한 줄에 한 명 — 예: <b>1 김민준 남</b> / <b>2 이서연 여</b>. 아침칠판·자리배치와 같은 명단을 함께 씁니다.</p>
-                        <textarea id="rpg-roster-input" style="width:100%; height:150px; padding:10px; border-radius:8px; border:1px solid #ccc; line-height:1.6; font-family:'Pretendard';" placeholder="1 김민준 남&#10;2 이서연 여&#10;3 박도윤 남"></textarea>
-                        <div style="margin-top:10px; text-align:right;">
-                            <button class="action-btn" style="background:#7b6cd9;" onclick="rpgSaveRoster()"><i class="fa-solid fa-floppy-disk"></i> 저장하고 카드 만들기</button>
+                        <div style="font-weight:bold; color:#5b4bb5; margin-bottom:6px;">👥 학생 명단 (전출입 관리)</div>
+                        <p style="font-size:12px; color:#666; margin:4px 0 12px;">전학 온 학생은 아래에서 <b>추가</b>, 전학 간 학생은 목록에서 <b>✕</b>로 빼세요. 이 명단은 아침칠판·자리배치와 함께 씁니다.</p>
+
+                        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; background:#fff; border:1px solid #e3dcf5; border-radius:10px; padding:10px; margin-bottom:12px;">
+                            <input type="number" id="rpg-add-num" min="1" placeholder="번호" style="width:64px; padding:8px; border-radius:7px; border:1px solid #ccc; text-align:center; font-family:inherit;">
+                            <input type="text" id="rpg-add-name" placeholder="이름" style="flex:1; min-width:90px; padding:8px; border-radius:7px; border:1px solid #ccc; font-family:inherit;" onkeypress="if(event.key==='Enter')rpgAddStudent()">
+                            <div id="rpg-add-gender" data-g="남" style="display:flex; border:1px solid #ccc; border-radius:7px; overflow:hidden;">
+                                <button type="button" onclick="rpgPickAddGender('남')" class="rpg-g-btn" data-g="남" style="border:none; padding:8px 12px; cursor:pointer; font-family:inherit; background:#5b97d1; color:#fff;">남</button>
+                                <button type="button" onclick="rpgPickAddGender('여')" class="rpg-g-btn" data-g="여" style="border:none; padding:8px 12px; cursor:pointer; font-family:inherit; background:#fff; color:#888;">여</button>
+                            </div>
+                            <button class="action-btn" style="background:#26a69a; padding:9px 16px;" onclick="rpgAddStudent()"><i class="fa-solid fa-user-plus"></i> 추가</button>
                         </div>
+
+                        <div id="rpg-roster-chips" style="display:flex; flex-wrap:wrap; gap:7px; margin-bottom:12px;"></div>
+
+                        <details style="margin-top:6px;">
+                            <summary style="cursor:pointer; font-size:12px; color:#7b6cd9; font-weight:600;">✏️ 여러 명 한꺼번에 입력/수정 (고급)</summary>
+                            <p style="font-size:12px; color:#666; margin:8px 0;">한 줄에 한 명 — 예: <b>1 김민준 남</b> / <b>2 이서연 여</b></p>
+                            <textarea id="rpg-roster-input" style="width:100%; height:150px; padding:10px; border-radius:8px; border:1px solid #ccc; line-height:1.6; font-family:'Pretendard';" placeholder="1 김민준 남&#10;2 이서연 여&#10;3 박도윤 남"></textarea>
+                            <div style="margin-top:10px; text-align:right;">
+                                <button class="action-btn" style="background:#7b6cd9;" onclick="rpgSaveRoster()"><i class="fa-solid fa-floppy-disk"></i> 저장하고 카드 만들기</button>
+                            </div>
+                        </details>
                     </div>
 
                     <div id="rpg-empty" style="display:none; text-align:center; color:#888; padding:40px 20px; line-height:1.7;">
@@ -3470,19 +3487,97 @@
             const box = document.getElementById('rpg-roster-box');
             if(box.style.display === 'none' || !box.style.display){
                 document.getElementById('rpg-roster-input').value = globalStudentRosterStr || '';
+                rpgRenderRosterChips();
+                var na = document.getElementById('rpg-add-num'); if(na) na.value = '';
+                rpgSuggestNextNum();
                 box.style.display = 'block';
             } else box.style.display = 'none';
         }
 
+        // 명단 문자열을 공유 노드(settings)에 저장 → 성장·기초세팅·자리배치 모두 연동
+        function rpgWriteRoster(txt, doneMsg){
+            globalStudentRosterStr = txt; // 로컬 상태 즉시 반영 (연속 조작 안전)
+            return settingsRef.update({ roster: txt }).then(() => {
+                var parsed = rpgParseRoster();
+                var cnt = parsed.length;
+                var maxNum = parsed.reduce(function(m,s){ return s.id > m ? s.id : m; }, 0);
+                var needTotal = Math.max((typeof globalTotalStudents === 'number' ? globalTotalStudents : 0), cnt, maxNum);
+                if(needTotal !== globalTotalStudents){ globalTotalStudents = needTotal; settingsRef.update({ totalStudents: needTotal }); var hwt = document.getElementById('hw-total'); if(hwt) hwt.value = needTotal; var stt = document.getElementById('set-total-students'); if(stt) stt.value = needTotal; }
+                if(typeof parseStudentRoster === 'function') parseStudentRoster();
+                if(typeof nsUpdateRosterStatus === 'function') nsUpdateRosterStatus();
+                if(typeof renderSeatingGrid === 'function') renderSeatingGrid();
+                renderRpgGrid();
+                rpgRenderRosterChips();
+                rpgToast(doneMsg || ('명단 저장 완료 (' + cnt + '명)'));
+            }).catch(function(e){ alert('저장 오류: ' + e.message); });
+        }
+
         function rpgSaveRoster(){
             const txt = document.getElementById('rpg-roster-input').value;
-            settingsRef.update({ roster: txt }).then(() => {
-                globalStudentRosterStr = txt;
-                if(typeof parseStudentRoster === 'function'){ parseStudentRoster(); if(typeof nsUpdateRosterStatus === 'function') nsUpdateRosterStatus(); }
-                document.getElementById('rpg-roster-box').style.display = 'none';
-                renderRpgGrid();
-                rpgToast('명단 저장 완료 (' + rpgParseRoster().length + '명)');
-            }).catch(e => alert('저장 오류: ' + e.message));
+            rpgWriteRoster(txt).then(function(){ document.getElementById('rpg-roster-box').style.display = 'none'; });
+        }
+
+        function rpgRosterToText(list){
+            return list.slice().sort(function(a,b){ return a.id - b.id; })
+                .map(function(s){ return s.id + ' ' + s.name + ' ' + (s.gender === 'F' ? '여' : '남'); }).join('\n');
+        }
+
+        function rpgPickAddGender(g){
+            var wrap = document.getElementById('rpg-add-gender'); if(!wrap) return;
+            wrap.dataset.g = g;
+            wrap.querySelectorAll('.rpg-g-btn').forEach(function(b){
+                var on = b.dataset.g === g;
+                b.style.background = on ? '#5b97d1' : '#fff';
+                b.style.color = on ? '#fff' : '#888';
+            });
+        }
+
+        function rpgSuggestNextNum(){
+            var el = document.getElementById('rpg-add-num'); if(!el || el.value) return;
+            var mx = rpgParseRoster().reduce(function(m,s){ return s.id > m ? s.id : m; }, 0);
+            el.value = mx + 1;
+        }
+
+        function rpgAddStudent(){
+            var numEl = document.getElementById('rpg-add-num'), nameEl = document.getElementById('rpg-add-name');
+            var num = parseInt(numEl.value), name = (nameEl.value || '').trim();
+            var g = (document.getElementById('rpg-add-gender').dataset.g) || '남';
+            if(!num || num < 1){ alert('번호를 입력해 주세요.'); numEl.focus(); return; }
+            if(!name){ alert('이름을 입력해 주세요.'); nameEl.focus(); return; }
+            var list = rpgParseRoster();
+            if(list.some(function(s){ return s.id === num; })){
+                if(!confirm(num + '번이 이미 있어요. 이 번호를 새 학생(' + name + ')으로 바꿀까요?')) return;
+                list = list.filter(function(s){ return s.id !== num; });
+                if(rpgRef) rpgRef.child('students/' + num).remove();
+            }
+            list.push({ id: num, name: name, gender: g === '여' ? 'F' : 'M' });
+            var txt = rpgRosterToText(list);
+            document.getElementById('rpg-roster-input').value = txt;
+            rpgWriteRoster(txt, name + ' 추가 완료 🎉');
+            numEl.value = ''; nameEl.value = ''; rpgSuggestNextNum(); nameEl.focus();
+        }
+
+        function rpgDeleteStudent(id){
+            var list = rpgParseRoster();
+            var s = list.find(function(x){ return x.id === id; }); if(!s) return;
+            if(!confirm(id + '번 ' + s.name + ' 학생을 명단에서 뺄까요?\n(전학 처리 — 성장 카드 기록도 함께 삭제됩니다)')) return;
+            var txt = rpgRosterToText(list.filter(function(x){ return x.id !== id; }));
+            document.getElementById('rpg-roster-input').value = txt;
+            if(rpgRef) rpgRef.child('students/' + id).remove();
+            rpgWriteRoster(txt, s.name + ' 전출 처리 완료');
+        }
+
+        function rpgRenderRosterChips(){
+            var box = document.getElementById('rpg-roster-chips'); if(!box) return;
+            var list = rpgParseRoster();
+            if(list.length === 0){ box.innerHTML = '<span style="font-size:12px;color:#999;">아직 학생이 없어요. 위에서 추가해 주세요.</span>'; return; }
+            box.innerHTML = list.map(function(s){
+                var gc = s.gender === 'F' ? '#c2185b' : (s.gender === 'M' ? '#1565c0' : '#777');
+                var bg = s.gender === 'F' ? '#fde7f0' : (s.gender === 'M' ? '#e3f2fd' : '#eeeeee');
+                return '<span style="display:inline-flex;align-items:center;gap:6px;background:' + bg + ';border-radius:20px;padding:5px 6px 5px 11px;font-size:13px;font-weight:600;color:#37474f;">'
+                    + '<span style="color:' + gc + ';font-size:11px;">' + s.id + '</span>' + escapeHtml(s.name)
+                    + '<button type="button" onclick="rpgDeleteStudent(' + s.id + ')" title="전출(삭제)" style="border:none;background:rgba(0,0,0,.08);color:#c62828;border-radius:50%;width:18px;height:18px;line-height:18px;cursor:pointer;font-family:inherit;font-size:12px;padding:0;">✕</button></span>';
+            }).join('');
         }
 
         function rpgCardHtml(stu, rank){
