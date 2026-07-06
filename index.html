@@ -2036,7 +2036,7 @@
             if(t === 'calendar') renderCalendarTab();
             if(t === 'seating') nsUpdateStepUI();
             if(t === 'picker') actOnShow();
-            if(t === 'rpg') renderRpgGrid();
+            if(t === 'rpg') rpgOnShow();
 
             document.querySelectorAll('.tool-box-popup, .tool-box-inline').forEach(box => box.style.display = 'none');
         }
@@ -3317,63 +3317,135 @@
             actApplyScale(id);
         }
 
-        // ----- 🐉 캐릭터 뽑기 위젯 (성장 연동) -----
-        function actRpgRoster() { return (typeof rpgParseRoster === 'function') ? rpgParseRoster() : []; }
-        function actInitRpgDraw(id) { actState[id] = { picked: [], last: null, scale: 1, baseW: 300 }; actRenderRpgDraw(id); }
+        // ----- 🐉 캐릭터 뽑기 위젯 (성장 연동 · 여러 반) -----
+        function actRpgClassLabel(cid, s) {
+            if (s && s.classNameMap && s.classNameMap[cid]) return s.classNameMap[cid];
+            if (cid === currentRoom) { const lt = document.querySelector('.logo-text'); return (lt && lt.innerText) || '우리 반'; }
+            return cid ? ('반 ' + cid.slice(-4)) : '반';
+        }
+        function actLoadClassData(cid) {
+            return Promise.all([
+                db.ref('rooms/' + cid + '/settings/dashboardDefaults/roster').once('value'),
+                db.ref('rooms/' + cid + '/rpg/students').once('value')
+            ]).then(res => ({ rosterStr: res[0].val() || '', students: res[1].val() || {} }));
+        }
+        function actRpgClassData(cid, s) {
+            if (cid === currentRoom) return Promise.resolve({ rosterStr: globalStudentRosterStr, students: (typeof rpgData !== 'undefined' && rpgData.students) ? rpgData.students : {} });
+            if (s.cache[cid]) return Promise.resolve(s.cache[cid]);
+            return actLoadClassData(cid).then(d => { s.cache[cid] = d; return d; });
+        }
+        function actInitRpgDraw(id) {
+            actState[id] = { picked: [], last: null, scale: 1, baseW: 320, selected: new Set([currentRoom]), classes: [], classNameMap: {}, cache: {}, pool: [], loading: false, showPicker: false };
+            actState[id].classNameMap[currentRoom] = actRpgClassLabel(currentRoom, actState[id]);
+            actRpgBuildPool(id);   // 현재 반으로 즉시 구성
+            actRpgLoadClasses(id); // 내 학급 목록 비동기 로드
+        }
+        function actRpgLoadClasses(id) {
+            const s = actState[id];
+            const user = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+            if (!user || typeof db === 'undefined') { s.classes = [{ id: currentRoom }]; actRenderRpgDraw(id); return; }
+            db.ref('users/' + user.uid + '/classes').once('value').then(snap => {
+                const cls = snap.val() || {}; let ids = Object.keys(cls);
+                if (ids.indexOf(currentRoom) === -1) ids = [currentRoom].concat(ids);
+                return Promise.all(ids.map(cid => db.ref('rooms/' + cid + '/_meta/name').once('value').then(m => ({ id: cid, name: m.val() || null }))));
+            }).then(list => {
+                s.classes = list;
+                list.forEach(c => { if (c.name) s.classNameMap[c.id] = c.name; });
+                actRenderRpgDraw(id);
+            }).catch(() => { s.classes = [{ id: currentRoom }]; actRenderRpgDraw(id); });
+        }
+        function actRpgBuildPool(id) {
+            const s = actState[id];
+            const sel = Array.from(s.selected);
+            if (!sel.length) { s.pool = []; s.picked = []; s.last = null; actRenderRpgDraw(id); return; }
+            s.loading = true; actRenderRpgDraw(id);
+            Promise.all(sel.map(cid => actRpgClassData(cid, s).then(d => ({ cid: cid, d: d }))))
+                .then(list => {
+                    const pool = [];
+                    list.forEach(c => {
+                        const label = actRpgClassLabel(c.cid, s);
+                        rpgParseRosterStr(c.d.rosterStr).forEach(st => {
+                            const sd = (c.d.students && c.d.students[st.id]) || {};
+                            pool.push({ key: c.cid + '#' + st.id, classId: c.cid, className: label, id: st.id, name: st.name, gender: st.gender, xp: sd.xp, job: sd.job });
+                        });
+                    });
+                    s.pool = pool; s.loading = false; s.picked = []; s.last = null;
+                    actRenderRpgDraw(id);
+                }).catch(() => { s.loading = false; actRenderRpgDraw(id); });
+        }
+        function actRpgToggleClassPicker(id) { actState[id].showPicker = !actState[id].showPicker; actRenderRpgDraw(id); }
+        function actRpgToggleClass(id, cid) {
+            const s = actState[id];
+            if (s.selected.has(cid)) s.selected.delete(cid); else s.selected.add(cid);
+            if (s.selected.size === 0) s.selected.add(cid); // 최소 한 반은 유지
+            actRpgBuildPool(id);
+        }
         function actRpgDrawReset(id) { const s = actState[id]; s.picked = []; s.last = null; actRenderRpgDraw(id); }
         function actRpgDrawPick(id) {
             const s = actState[id];
-            const roster = actRpgRoster();
-            const remaining = roster.filter(st => s.picked.indexOf(st.id) === -1);
+            const remaining = s.pool.filter(p => s.picked.indexOf(p.key) === -1);
             if (!remaining.length) return;
             const chosen = remaining[Math.floor(Math.random() * remaining.length)];
-            s.picked.push(chosen.id); s.last = chosen.id;
+            s.picked.push(chosen.key); s.last = chosen.key;
             try { pickSound.currentTime = 0; pickSound.play(); } catch (e) {}
             actRenderRpgDraw(id);
         }
-        function actRpgAvatarImg(stu, px) {
-            const d = (typeof rpgData !== 'undefined' && rpgData.students && rpgData.students[stu.id]) || {};
-            const L = (typeof rpgLevel === 'function') ? rpgLevel(d.xp) : { lv: 1 };
-            const g = stu.gender === 'F' ? 'f' : 'm';
-            const key = (typeof rpgAvatarKey === 'function') ? rpgAvatarKey(d.job, L.lv, stu.gender) : ('novice_' + g);
-            const fb = 'assets/avatars/' + ((d.job && typeof RPG_JOBS !== 'undefined' && RPG_JOBS[d.job]) ? d.job : 'novice') + '_' + g + '.png?v=6';
+        function actRpgAvatarFrom(item, px) {
+            const L = (typeof rpgLevel === 'function') ? rpgLevel(item.xp) : { lv: 1 };
+            const g = item.gender === 'F' ? 'f' : 'm';
+            const key = (typeof rpgAvatarKey === 'function') ? rpgAvatarKey(item.job, L.lv, item.gender) : ('novice_' + g);
+            const fb = 'assets/avatars/' + ((item.job && typeof RPG_JOBS !== 'undefined' && RPG_JOBS[item.job]) ? item.job : 'novice') + '_' + g + '.png?v=6';
             return '<img src="assets/avatars/' + key + '.png?v=6" onerror="this.onerror=null;this.src=\'' + fb + '\'" style="height:' + px + 'px;width:auto;display:block;margin:0 auto;">';
         }
         function actRenderRpgDraw(id) {
             const s = actState[id];
-            const roster = actRpgRoster();
             const body = document.getElementById(id + '-body'); if (!body) return;
-            if (!roster.length) {
-                body.innerHTML = '<div style="text-align:center; color:#90a4ae; font-size:13px; line-height:1.7; padding:12px 6px;">성장 탭에서 <b>학생 명단</b>을 먼저 입력하면<br>학생들의 <b>캐릭터로 뽑기</b>를 할 수 있어요.</div>';
+            // 반 선택 바
+            const selNames = Array.from(s.selected).map(cid => actRpgClassLabel(cid, s));
+            let classBar = '<div style="margin-bottom:8px;">'
+                + '<div onclick="actRpgToggleClassPicker(\'' + id + '\')" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:6px; background:#f2f6fc; border:1px solid #dbe6f3; border-radius:8px; padding:7px 10px; font-size:12.5px; color:#546e7a; font-weight:700;">'
+                + '<span>🏫 ' + escapeHtml(selNames.join(', ') || '반 선택') + '</span><span style="color:#90a4ae;">' + (s.showPicker ? '▲ 접기' : '▼ 반 고르기') + '</span></div>';
+            if (s.showPicker) {
+                const opts = (s.classes.length ? s.classes : [{ id: currentRoom }]).map(c => {
+                    const on = s.selected.has(c.id);
+                    return '<label style="display:flex; align-items:center; gap:6px; padding:6px 8px; font-size:13px; cursor:pointer;"><input type="checkbox" ' + (on ? 'checked' : '') + ' onchange="actRpgToggleClass(\'' + id + '\',\'' + c.id + '\')"> ' + escapeHtml(actRpgClassLabel(c.id, s)) + '</label>';
+                }).join('');
+                classBar += '<div style="border:1px solid #e6ebf3; border-radius:8px; margin-top:4px; padding:2px 0; max-height:150px; overflow-y:auto;">' + opts + '</div>';
+            }
+            classBar += '</div>';
+
+            if (s.loading) { body.innerHTML = classBar + '<div style="text-align:center; color:#90a4ae; padding:22px;">불러오는 중…</div>'; actApplyScale(id); return; }
+            if (!s.pool.length) {
+                body.innerHTML = classBar + '<div style="text-align:center; color:#90a4ae; font-size:13px; line-height:1.7; padding:12px 6px;">선택한 반에 학생이 없어요.<br>성장 탭에서 <b>학생 명단</b>을 입력해 주세요.</div>';
                 actApplyScale(id); return;
             }
-            const remaining = roster.length - s.picked.length;
+            const remaining = s.pool.length - s.picked.length;
+            const multi = s.selected.size > 1;
             let spotlight;
             if (s.last != null) {
-                const stu = roster.find(x => x.id === s.last) || { id: s.last, name: s.last + '번', gender: 'U' };
-                const d = (typeof rpgData !== 'undefined' && rpgData.students && rpgData.students[stu.id]) || {};
-                const L = (typeof rpgLevel === 'function') ? rpgLevel(d.xp) : { lv: 1 };
-                const job = (d.job && typeof RPG_JOBS !== 'undefined' && RPG_JOBS[d.job]) ? RPG_JOBS[d.job] : null;
-                spotlight = '<div style="text-align:center; background:#f6f4ff; border:1px solid #e0d6f5; border-radius:12px; padding:12px 8px; margin-bottom:10px;">'
-                    + actRpgAvatarImg(stu, 92)
-                    + '<div style="font-size:20px; font-weight:900; color:#51618a; margin-top:6px;">' + escapeHtml(stu.name) + '</div>'
-                    + '<div style="font-size:12px; color:#7b6cd9; font-weight:700;">' + (job ? job.emoji + job.name : '견습생') + ' · Lv.' + L.lv + ' · ' + stu.id + '번</div>'
-                    + '</div>';
+                const it = s.pool.find(p => p.key === s.last);
+                if (it) {
+                    const L = (typeof rpgLevel === 'function') ? rpgLevel(it.xp) : { lv: 1 };
+                    const job = (it.job && typeof RPG_JOBS !== 'undefined' && RPG_JOBS[it.job]) ? RPG_JOBS[it.job] : null;
+                    spotlight = '<div style="text-align:center; background:#f6f4ff; border:1px solid #e0d6f5; border-radius:12px; padding:12px 8px; margin-bottom:10px;">'
+                        + actRpgAvatarFrom(it, 92)
+                        + '<div style="font-size:20px; font-weight:900; color:#51618a; margin-top:6px;">' + escapeHtml(it.name) + '</div>'
+                        + '<div style="font-size:12px; color:#7b6cd9; font-weight:700;">' + (job ? job.emoji + job.name : '견습생') + ' · Lv.' + L.lv + ' · ' + it.id + '번' + (multi ? ' · ' + escapeHtml(it.className) : '') + '</div>'
+                        + '</div>';
+                } else spotlight = '';
             } else {
                 spotlight = '<div style="text-align:center; color:#b0bcc9; padding:26px 8px; margin-bottom:10px; border:2px dashed #e0e6ef; border-radius:12px;"><i class="fa-solid fa-dragon" style="font-size:38px; opacity:.4;"></i><div style="margin-top:8px; font-weight:700;">[🎲 뽑기!]를 눌러 주세요</div></div>';
             }
-            let pickedChips = '';
+            let chips = '';
             if (s.picked.length) {
-                pickedChips = '<div style="display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-top:8px;">'
-                    + s.picked.map(pid => {
-                        const st = roster.find(x => x.id === pid); if (!st) return '';
-                        return '<span style="display:inline-flex; align-items:center; gap:3px; background:#eef1f6; border-radius:20px; padding:2px 4px 2px 3px; font-size:11px; font-weight:700; color:#607d8b;">' + actRpgAvatarImg(st, 24) + escapeHtml(st.name) + '</span>';
-                    }).join('') + '</div>';
+                chips = '<div style="display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-top:8px;">'
+                    + s.picked.map(k => { const it = s.pool.find(p => p.key === k); if (!it) return ''; return '<span style="display:inline-flex; align-items:center; gap:3px; background:#eef1f6; border-radius:20px; padding:2px 4px 2px 3px; font-size:11px; font-weight:700; color:#607d8b;">' + actRpgAvatarFrom(it, 24) + escapeHtml(it.name) + '</span>'; }).join('')
+                    + '</div>';
             }
-            body.innerHTML = spotlight
+            body.innerHTML = classBar + spotlight
                 + '<div style="display:flex; gap:6px;"><button class="act-btn" style="background:#7b6cd9; flex:2;" onclick="actRpgDrawPick(\'' + id + '\')">🎲 뽑기!</button><button class="act-btn" style="background:#90a4ae; flex:1;" onclick="actRpgDrawReset(\'' + id + '\')">리셋</button></div>'
-                + '<div style="text-align:center; font-size:12px; color:#b0bcc9; margin-top:8px;">남은 학생 ' + remaining + ' / ' + roster.length + '</div>'
-                + pickedChips;
+                + '<div style="text-align:center; font-size:12px; color:#b0bcc9; margin-top:8px;">남은 학생 ' + remaining + ' / ' + s.pool.length + (multi ? ' (여러 반)' : '') + '</div>'
+                + chips;
             actApplyScale(id);
         }
 
@@ -3711,9 +3783,9 @@
 
         // 명단(번호 이름 성별) 파싱 → [{id,name,gender}]
         // 성별은 줄의 마지막 토큰만 판단(이름에 '남/여'가 있어도 안전: 남주희, 여민지 등)
-        function rpgParseRoster(){
+        function rpgParseRosterStr(str){
             const arr = [];
-            (globalStudentRosterStr || '').split('\n').forEach(line => {
+            (str || '').split('\n').forEach(line => {
                 let t = line.trim(); if(!t) return;
                 let idm = t.match(/\d+/); if(!idm) return;
                 let id = parseInt(idm[0]);
@@ -3732,6 +3804,7 @@
             arr.sort((a, b) => a.id - b.id);
             return arr;
         }
+        function rpgParseRoster(){ return rpgParseRosterStr(globalStudentRosterStr); }
 
         function rpgToggleRoster(){
             const box = document.getElementById('rpg-roster-box');
@@ -4071,6 +4144,19 @@
 
         // ---- 일괄 지급 ----
         function rpgCardClick(id){ if(rpgBulkMode) rpgToggleSelect(id); else rpgOpen(id); }
+
+        // 성장 탭 진입 시: 기본으로 '일괄 지급' 모드를 켜서 바로 점수를 줄 수 있게
+        function rpgOnShow(){
+            rpgStudentMode = localStorage.getItem('rpgStu_' + currentRoom) === '1';
+            if(!rpgStudentMode && !rpgBulkMode){
+                rpgBulkMode = true; rpgBulkSelected.clear(); rpgBulkAction = null;
+                var bar = document.getElementById('rpg-bulk-bar'); if(bar) bar.style.display = 'block';
+                var tg = document.getElementById('rpg-bulk-toggle');
+                if(tg){ tg.innerHTML = '<i class="fa-solid fa-xmark"></i> 일괄 지급 끄기'; tg.style.background = '#e57373'; }
+                rpgRenderBulkActions();
+            }
+            renderRpgGrid();
+        }
 
         function rpgToggleBulk(){
             rpgBulkMode = !rpgBulkMode;
