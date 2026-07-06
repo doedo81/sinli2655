@@ -472,6 +472,18 @@
             <!-- 🏫 상단 학급 전환 바 (전담 여러 반) -->
             <div id="class-switch-bar"></div>
 
+            <!-- 학급 관리(삭제) 모달 -->
+            <div id="class-manage-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:2000; align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) this.style.display='none'">
+                <div style="background:#fff; border-radius:18px; max-width:460px; width:100%; max-height:85vh; overflow-y:auto; padding:22px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #eee; padding-bottom:10px;">
+                        <h2 style="margin:0; color:var(--accent-blue); font-size:20px;">🏫 학급 관리</h2>
+                        <button class="reset-btn" onclick="document.getElementById('class-manage-modal').style.display='none'">닫기</button>
+                    </div>
+                    <p style="font-size:13px; color:#666; line-height:1.7; margin:0 0 12px;">연습용으로 만든 학급을 <b>삭제</b>할 수 있어요. 담임 학급은 내용까지 지워지고, 전담으로 참여한 반은 내 목록에서만 빠져요. (삭제는 되돌릴 수 없어요)</p>
+                    <div id="class-manage-list"></div>
+                </div>
+            </div>
+
             <!-- 📋 0. 대시보드 탭 -->
             <div id="board-tab" class="content-section active">
                 <div class="dashboard-grid">
@@ -1514,23 +1526,14 @@
             localStorage.setItem('classRoomName', currentRoom);
             localStorage.setItem('classRole', currentRole);
             
-            // 아침칠판·캘린더는 선생님별 '공유' 위치에 (여러 반이 한곳을 같이 사용). 나머지는 반별.
-            var sharedUid = (auth.currentUser && auth.currentUser.uid) || localStorage.getItem('teacherUid') || '';
+            // 모든 항목을 반별로 (아침칠판·캘린더·바로가기 포함) — 반마다 독립 운영(1학기/2학기 분리에 맞음)
             groupSettingsRef = db.ref('rooms/' + currentRoom + '/settings/groupCount'); settingsRef = db.ref('rooms/' + currentRoom + '/settings/dashboardDefaults');
             scoresRef = db.ref('rooms/' + currentRoom + '/groupScores'); miniScoresRef = db.ref('rooms/' + currentRoom + '/miniScores');
             timerRef = db.ref('rooms/' + currentRoom + '/timerState');
-            if(sharedUid){
-                boardRef = db.ref('users/' + sharedUid + '/shared/skyDashboard');
-                historyRef = db.ref('users/' + sharedUid + '/shared/boardHistory');
-                calendarEventsRef = db.ref('users/' + sharedUid + '/shared/calendarEvents');
-                bookmarksRef = db.ref('users/' + sharedUid + '/shared/bookmarks');
-                migrateSharedBoard(currentRoom, sharedUid);
-            } else {
-                boardRef = db.ref('rooms/' + currentRoom + '/skyDashboard');
-                historyRef = db.ref('rooms/' + currentRoom + '/boardHistory');
-                calendarEventsRef = db.ref('rooms/' + currentRoom + '/calendarEvents');
-                bookmarksRef = db.ref('rooms/' + currentRoom + '/bookmarks');
-            }
+            boardRef = db.ref('rooms/' + currentRoom + '/skyDashboard');
+            historyRef = db.ref('rooms/' + currentRoom + '/boardHistory');
+            calendarEventsRef = db.ref('rooms/' + currentRoom + '/calendarEvents');
+            bookmarksRef = db.ref('rooms/' + currentRoom + '/bookmarks');
             tasksRef = db.ref('rooms/' + currentRoom + '/groupTasks'); hwRef = db.ref('rooms/' + currentRoom + '/homeworks');
             seatingRef = db.ref('rooms/' + currentRoom + '/seating'); groupMembersRef = db.ref('rooms/' + currentRoom + '/groupMembers');
             seatingHistoryRef = db.ref('rooms/' + currentRoom + '/seatingHistory');
@@ -1653,8 +1656,55 @@
                 html += '<button class="class-chip' + (on ? ' on' : '') + '" onclick="switchToClass(\'' + c.id + '\',\'' + c.role + '\')" title="' + escapeHtml(c.name) + tag + '">' + escapeHtml(c.name) + '</button>';
             });
             html += '<button class="class-chip add" onclick="switchAddClass()" title="학급 추가"><i class="fa-solid fa-plus"></i> 학급 추가</button>';
+            html += '<button class="class-chip" style="background:#eceff4; color:#78909c;" onclick="classManageOpen()" title="학급 관리·삭제"><i class="fa-solid fa-gear"></i></button>';
             bar.innerHTML = html;
             bar.style.display = 'flex';
+        }
+
+        // 🗑 학급 관리(삭제)
+        function classManageOpen() {
+            document.getElementById('class-manage-modal').style.display = 'flex';
+            classManageRender();
+        }
+        function classManageRender() {
+            const box = document.getElementById('class-manage-list'); if(!box) return;
+            if(!myClassesCache.length) { box.innerHTML = '<div style="color:#999; padding:14px; text-align:center;">학급이 없어요.</div>'; return; }
+            box.innerHTML = myClassesCache.map(c => {
+                const cur = c.id === currentRoom;
+                const roleTxt = c.role === 'subject' ? '전담' : '담임';
+                return '<div style="display:flex; justify-content:space-between; align-items:center; padding:11px 6px; border-bottom:1px solid #f0f0f0;">'
+                    + '<div><div style="font-weight:700; color:#37474f;">' + escapeHtml(c.name) + (cur ? ' <span style="font-size:11px; color:#5b97d1;">(지금 보는 반)</span>' : '') + '</div><div style="font-size:11px; color:#aaa;">' + roleTxt + '</div></div>'
+                    + '<button class="reset-btn" style="padding:6px 12px; font-size:13px; background:#e57373; color:#fff;" onclick="classDelete(\'' + c.id + '\',\'' + escapeHtml(c.name).replace(/\x27/g, '') + '\',\'' + c.role + '\')">삭제</button>'
+                    + '</div>';
+            }).join('');
+        }
+        function classDelete(cid, name, role) {
+            const user = auth.currentUser; if(!user) return;
+            const isOwner = role !== 'subject';
+            const msg1 = isOwner
+                ? '"' + name + '" 학급을 삭제할까요?\n이 학급의 모든 내용(성장·자리·과제·명단 등)이 지워지고 되돌릴 수 없어요.'
+                : '"' + name + '" 학급을 내 목록에서 뺄까요?\n(전담으로 참여한 반이라 반 자체는 삭제되지 않아요.)';
+            if(!confirm(msg1)) return;
+            if(isOwner && !confirm('정말 삭제할까요? 이게 마지막 확인이에요.\n("' + name + '")')) return;
+            const doUpdate = (code) => {
+                const updates = {};
+                updates['users/' + user.uid + '/classes/' + cid] = null;
+                if(isOwner) { updates['rooms/' + cid] = null; if(code) updates['classCodes/' + code] = null; }
+                return db.ref().update(updates);
+            };
+            const chain = isOwner
+                ? db.ref('rooms/' + cid + '/_meta/code').once('value').then(s => doUpdate(s.val()))
+                : doUpdate(null);
+            chain.then(() => {
+                myClassesCache = myClassesCache.filter(c => c.id !== cid);
+                try { localStorage.setItem('myClasses_' + user.uid, JSON.stringify(myClassesCache)); } catch(e) {}
+                if(cid === currentRoom) {
+                    if(myClassesCache.length) { switchToClass(myClassesCache[0].id, myClassesCache[0].role); }
+                    else { localStorage.removeItem('classRoomName'); location.reload(); }
+                } else {
+                    renderClassSwitchBar(); classManageRender();
+                }
+            }).catch(e => alert('삭제 오류: ' + e.message));
         }
         function showSwitchingOverlay(msg) {
             if(document.getElementById('switching-overlay')) return;
