@@ -381,13 +381,33 @@
 
     <!-- 🔐 로그인 & 방 입장 -->
     <div class="full-overlay" id="auth-overlay">
-        <div class="login-box" id="login-box">
-            <h2 style="margin:0 0 10px 0; color:var(--dark-blue);">🔐 로그인 필요</h2>
-            <p style="color:#78909c; font-size:14px; margin-bottom:25px;">보안을 위해 선생님의 구글 계정으로<br>로그인해 주세요.</p>
+        <!-- 0) 교사 / 학생 선택 -->
+        <div class="login-box" id="role-choice">
+            <div style="font-size:34px; margin-bottom:4px;">🌤️</div>
+            <h2 style="margin:0 0 4px 0; color:var(--dark-blue);">스카이 클래스</h2>
+            <p style="color:#7f8c8d; font-size:13px; margin-bottom:20px;">누구로 접속하시나요?</p>
+            <div style="display:flex; gap:10px;">
+                <button class="action-btn" style="flex:1; padding:24px 10px; font-size:16px; background:#5b97d1; display:flex; flex-direction:column; gap:8px; align-items:center;" onclick="showRole('teacher')"><span style="font-size:30px;">👩‍🏫</span> 교사</button>
+                <button class="action-btn" style="flex:1; padding:24px 10px; font-size:16px; background:#26a69a; display:flex; flex-direction:column; gap:8px; align-items:center;" onclick="showRole('student')"><span style="font-size:30px;">🧑‍🎓</span> 학생</button>
+            </div>
+        </div>
+        <!-- 1) 교사 로그인 (구글 또는 이메일/비번) -->
+        <div class="login-box" id="login-box" style="display:none;">
+            <h2 style="margin:0 0 6px 0; color:var(--dark-blue);">👩‍🏫 교사 로그인</h2>
+            <p style="color:#78909c; font-size:13px; margin-bottom:16px;">구글 계정 또는 이메일로 로그인하세요.</p>
             <button class="google-btn" onclick="loginWithGoogle()">
                 <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="Google">
                 Google 계정으로 로그인
             </button>
+            <div style="display:flex; align-items:center; gap:8px; margin:16px 0; color:#bbb; font-size:12px;"><div style="flex:1; height:1px; background:#eee;"></div>또는<div style="flex:1; height:1px; background:#eee;"></div></div>
+            <input id="teacher-email" type="email" placeholder="이메일 (아이디)" autocomplete="username" style="width:100%; padding:12px; border:2px solid #cfe0f3; border-radius:10px; margin-bottom:8px; text-align:center; box-sizing:border-box; font-family:'Pretendard';">
+            <input id="teacher-pw" type="password" placeholder="비밀번호" autocomplete="current-password" style="width:100%; padding:12px; border:2px solid #cfe0f3; border-radius:10px; margin-bottom:10px; text-align:center; box-sizing:border-box; font-family:'Pretendard';" onkeypress="if(event.key==='Enter')teacherEmailLogin()">
+            <div style="display:flex; gap:8px;">
+                <button class="action-btn" style="flex:1; padding:12px;" onclick="teacherEmailLogin()">로그인</button>
+                <button class="action-btn" style="flex:1; padding:12px; background:#7b6cd9;" onclick="teacherEmailSignup()">회원가입</button>
+            </div>
+            <button class="reset-btn" style="width:100%; margin-top:8px; background:transparent; color:#5b97d1; box-shadow:none; font-size:12px;" onclick="teacherPasswordReset()">비밀번호를 잊으셨나요?</button>
+            <button class="reset-btn" style="width:100%; margin-top:2px; background:transparent; color:#999; box-shadow:none; font-size:13px;" onclick="backToRole()">← 처음으로</button>
         </div>
         <div class="login-box" id="class-box" style="display:none;">
             <div style="color:var(--accent-blue); font-size:30px; margin-bottom:6px;"><i class="fa-solid fa-chalkboard-user"></i></div>
@@ -417,11 +437,13 @@
         <div style="background:#fff; border-radius:18px; max-width:360px; width:100%; padding:26px; box-shadow:0 10px 30px rgba(0,0,0,0.12); text-align:center;">
             <div style="font-size:34px;">🎮</div>
             <h2 style="color:#51618a; margin:6px 0 2px;">성장 로그인</h2>
-            <div id="student-classname" style="color:#7b6cd9; font-weight:700; margin-bottom:18px;">우리 반</div>
+            <div id="student-classname" style="color:#7b6cd9; font-weight:700; margin-bottom:18px;">방 번호를 입력하세요</div>
+            <input id="student-code" type="text" placeholder="방 번호(코드)" autocapitalize="characters" style="width:100%; padding:13px; font-size:17px; border:2px solid #cfe0f3; border-radius:12px; margin-bottom:10px; text-align:center; box-sizing:border-box; font-family:'Pretendard'; text-transform:uppercase;">
             <input id="student-num" type="number" inputmode="numeric" placeholder="내 번호" style="width:100%; padding:13px; font-size:17px; border:2px solid #cfe0f3; border-radius:12px; margin-bottom:10px; text-align:center; box-sizing:border-box; font-family:'Pretendard';">
-            <input id="student-pw" type="password" placeholder="비밀번호 (기본 123456)" style="width:100%; padding:13px; font-size:16px; border:2px solid #cfe0f3; border-radius:12px; margin-bottom:14px; text-align:center; box-sizing:border-box; font-family:'Pretendard';" onkeypress="if(event.key==='Enter')rpgStudentDoLogin()">
-            <button onclick="rpgStudentDoLogin()" style="width:100%; padding:14px; font-size:16px; background:#5b97d1; color:#fff; border:none; border-radius:12px; font-weight:700; cursor:pointer;">로그인</button>
-            <p style="font-size:12px; color:#aaa; margin-top:12px;">내 번호와 비밀번호로 로그인해요</p>
+            <input id="student-pw" type="password" placeholder="비밀번호 (기본 123456)" style="width:100%; padding:13px; font-size:16px; border:2px solid #cfe0f3; border-radius:12px; margin-bottom:14px; text-align:center; box-sizing:border-box; font-family:'Pretendard';" onkeypress="if(event.key==='Enter')rpgStudentManualLogin()">
+            <button onclick="rpgStudentManualLogin()" style="width:100%; padding:14px; font-size:16px; background:#5b97d1; color:#fff; border:none; border-radius:12px; font-weight:700; cursor:pointer;">로그인</button>
+            <button class="reset-btn" style="width:100%; margin-top:8px; background:transparent; color:#999; box-shadow:none; font-size:13px;" onclick="backToRole()">← 처음으로</button>
+            <p style="font-size:12px; color:#aaa; margin-top:8px;">방 번호는 선생님께 받아요 · 기본 비밀번호 123456</p>
         </div>
     </div>
     <!-- 🎮 학생 개인 화면 -->
@@ -1409,6 +1431,7 @@
             auth.onAuthStateChanged(user => {
                 if(user) {
                     try { localStorage.setItem('teacherUid', user.uid); } catch(e) {}
+                    document.getElementById('role-choice').style.display = 'none';
                     document.getElementById('login-box').style.display = 'none';
                     const teacherName = user.displayName || (user.email ? user.email.split('@')[0] : '');
                     document.querySelector('.user-profile-text').innerText = teacherName ? `${teacherName} 선생님` : `선생님`;
@@ -1416,7 +1439,11 @@
                     if(savedRoom) { currentRole = localStorage.getItem('classRole') || 'owner'; enterRoom(savedRoom); }
                     else { document.getElementById('room-box').style.display = 'none'; document.getElementById('class-box').style.display = 'block'; loadMyClasses(user); }
                 } else {
-                    document.getElementById('auth-overlay').style.display = 'flex'; document.getElementById('login-box').style.display = 'block'; document.getElementById('room-box').style.display = 'none'; document.getElementById('class-box').style.display = 'none'; document.getElementById('main-app').style.display = 'none';
+                    document.getElementById('auth-overlay').style.display = 'flex';
+                    document.getElementById('role-choice').style.display = 'block';
+                    document.getElementById('login-box').style.display = 'none';
+                    document.getElementById('room-box').style.display = 'none'; document.getElementById('class-box').style.display = 'none'; document.getElementById('main-app').style.display = 'none';
+                    var _sl = document.getElementById('student-login'); if(_sl) _sl.style.display = 'none';
                 }
             });
             
@@ -1429,6 +1456,61 @@
 
         function loginWithGoogle() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err => alert("로그인 실패: "+err.message)); }
         function logout() { auth.signOut().then(() => { localStorage.removeItem('classRoomName'); localStorage.removeItem('classRole'); location.reload(); }); }
+
+        // 🚪 교사/학생 역할 선택
+        function showRole(role) {
+            document.getElementById('role-choice').style.display = 'none';
+            if(role === 'teacher') {
+                document.getElementById('auth-overlay').style.display = 'flex';
+                document.getElementById('login-box').style.display = 'block';
+            } else {
+                document.getElementById('auth-overlay').style.display = 'none';
+                var sl = document.getElementById('student-login');
+                if(sl) sl.style.display = 'flex';
+                var sp = document.getElementById('student-page'); if(sp) sp.style.display = 'none';
+                var sc = document.getElementById('student-classname'); if(sc) sc.innerText = '방 번호를 입력하세요';
+            }
+        }
+        function backToRole() {
+            document.getElementById('login-box').style.display = 'none';
+            var sl = document.getElementById('student-login'); if(sl) sl.style.display = 'none';
+            document.getElementById('auth-overlay').style.display = 'flex';
+            document.getElementById('role-choice').style.display = 'block';
+        }
+
+        // 👩‍🏫 교사 이메일/비밀번호 로그인 (구글과 병행)
+        function teacherEmailLogin() {
+            var email = (document.getElementById('teacher-email').value || '').trim();
+            var pw = document.getElementById('teacher-pw').value || '';
+            if(!email || !pw) { alert('이메일과 비밀번호를 입력해주세요.'); return; }
+            auth.signInWithEmailAndPassword(email, pw).catch(function(err) {
+                if(err.code === 'auth/user-not-found') alert('가입되지 않은 이메일이에요. [회원가입]을 먼저 눌러주세요.');
+                else if(err.code === 'auth/wrong-password') alert('비밀번호가 틀렸어요.');
+                else if(err.code === 'auth/operation-not-allowed') alert('이메일 로그인이 아직 켜져 있지 않아요.\n(Firebase 콘솔에서 이메일/비밀번호를 켜야 해요) 우선 구글 로그인을 이용해주세요.');
+                else alert('로그인 실패: ' + err.message);
+            });
+        }
+        function teacherEmailSignup() {
+            var email = (document.getElementById('teacher-email').value || '').trim();
+            var pw = document.getElementById('teacher-pw').value || '';
+            if(!email || !pw) { alert('이메일과 비밀번호(6자 이상)를 입력해주세요.'); return; }
+            if(pw.length < 6) { alert('비밀번호는 6자 이상이어야 해요.'); return; }
+            auth.createUserWithEmailAndPassword(email, pw).then(function() {
+                alert('✅ 가입 완료! 바로 로그인돼요.');
+            }).catch(function(err) {
+                if(err.code === 'auth/email-already-in-use') alert('이미 가입된 이메일이에요. [로그인]을 눌러주세요.');
+                else if(err.code === 'auth/invalid-email') alert('이메일 형식이 올바르지 않아요.');
+                else if(err.code === 'auth/operation-not-allowed') alert('이메일 가입이 아직 켜져 있지 않아요.\n(Firebase 콘솔에서 이메일/비밀번호를 켜야 해요) 우선 구글 로그인을 이용해주세요.');
+                else alert('가입 실패: ' + err.message);
+            });
+        }
+        function teacherPasswordReset() {
+            var email = (document.getElementById('teacher-email').value || '').trim();
+            if(!email) { alert('먼저 이메일을 입력한 뒤 눌러주세요.'); return; }
+            auth.sendPasswordResetEmail(email).then(function() {
+                alert('📧 비밀번호 재설정 메일을 보냈어요. 메일함을 확인해주세요.');
+            }).catch(function(err) { alert('메일 발송 실패: ' + err.message); });
+        }
 
         // ==========================================
         // 🏫 다중 학급·역할 (담임/전담) — 1단계
@@ -5160,24 +5242,37 @@
         }
 
         // ---- 학생 로그인(핸드폰) ----
-        let studentNum = null, studentCodeCur = null;
+        let studentNum = null, studentCodeCur = null, _studentRosterReady = false, _studentRpgReady = false, _studentPendingLogin = false;
         function rpgStudentInit(code){
-            studentCodeCur = code;
+            studentCodeCur = code; _studentRosterReady = false; _studentRpgReady = false;
+            var scEl = document.getElementById('student-code'); if(scEl) scEl.value = code;
             var ov = document.getElementById('auth-overlay'); if(ov) ov.style.display = 'none';
             var app = document.getElementById('main-app'); if(app) app.style.display = 'none';
             db.ref('studentCodes/' + code).once('value').then(function(snap){
                 var room = snap.val();
                 var login = document.getElementById('student-login');
-                if(!room){ login.innerHTML = '<div style="background:#fff;border-radius:16px;padding:30px;text-align:center;color:#888;max-width:340px;">잘못된 접속 코드예요.<br>선생님께 링크를 다시 받아주세요.</div>'; login.style.display = 'flex'; return; }
+                if(!room){ _studentPendingLogin = false; login.style.display = 'flex'; document.getElementById('student-classname').innerText = '방 번호를 다시 확인하세요'; alert('잘못된 방 번호(코드)예요. 선생님께 다시 받아주세요.'); return; }
                 currentRoom = room;
                 settingsRef = db.ref('rooms/' + room + '/settings/dashboardDefaults');
                 rpgRef = db.ref('rooms/' + room + '/rpg');
-                settingsRef.once('value').then(function(s){ var v = s.val() || {}; globalStudentRosterStr = v.roster || ''; document.getElementById('student-classname').innerText = v.className || '우리 반'; });
-                rpgRef.on('value', function(s){ rpgData = s.val() || {}; if(studentNum != null) rpgRenderStudentPage(studentNum); });
+                settingsRef.once('value').then(function(s){ var v = s.val() || {}; globalStudentRosterStr = v.roster || ''; document.getElementById('student-classname').innerText = v.className || '우리 반'; _studentRosterReady = true; _tryStudentPending(); });
+                rpgRef.on('value', function(s){ rpgData = s.val() || {}; _studentRpgReady = true; if(studentNum != null) rpgRenderStudentPage(studentNum); _tryStudentPending(); });
                 var saved = localStorage.getItem('studentNum_' + code);
                 if(saved){ studentNum = parseInt(saved); login.style.display = 'none'; document.getElementById('student-page').style.display = 'block'; setTimeout(function(){ rpgRenderStudentPage(studentNum); }, 300); }
                 else { login.style.display = 'flex'; }
-            }).catch(function(e){ alert('접속 오류: ' + e.message); });
+            }).catch(function(e){ _studentPendingLogin = false; alert('접속 오류: ' + e.message); });
+        }
+        function _tryStudentPending(){
+            if(_studentPendingLogin && _studentRosterReady && _studentRpgReady){ _studentPendingLogin = false; rpgStudentDoLogin(); }
+        }
+        // 학생: 방번호 + 번호 + 비번을 화면에서 입력해 로그인
+        function rpgStudentManualLogin(){
+            var code = (document.getElementById('student-code').value || '').trim().toUpperCase();
+            if(!code){ alert('방 번호(코드)를 입력해주세요.'); return; }
+            if(!document.getElementById('student-num').value){ alert('내 번호를 입력해주세요.'); return; }
+            if(code === studentCodeCur && _studentRosterReady && _studentRpgReady){ rpgStudentDoLogin(); return; }
+            _studentPendingLogin = true;
+            rpgStudentInit(code);
         }
         function rpgStudentDoLogin(){
             var num = parseInt(document.getElementById('student-num').value);
