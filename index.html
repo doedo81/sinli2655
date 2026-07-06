@@ -233,6 +233,9 @@
         #act-board:fullscreen { border-radius: 0; height: 100vh; }
         #act-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 20; cursor: crosshair; touch-action: none; }
         #act-widgets { position: absolute; inset: 0; z-index: 10; }
+        .act-screen-layer { position: absolute; inset: 0; }
+        #act-screens-bar { position: absolute; top: 14px; right: 14px; z-index: 35; display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.92); border: 1px solid #e6ebf3; border-radius: 20px; padding: 5px 8px; box-shadow: 0 6px 18px rgba(56,78,126,0.15); flex-wrap: wrap; max-width: 60%; justify-content: flex-end; }
+        .act-screen-btn { min-width: 28px; height: 28px; border: none; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer; font-family: 'Pretendard',sans-serif; }
         #act-hint { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 15; background: rgba(240,244,250,0.9); color: #607d8b; font-size: 13px; font-weight: 600; padding: 7px 16px; border-radius: 20px; pointer-events: none; white-space: nowrap; }
         #act-toolbar { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 40; display: flex; align-items: center; gap: 4px; background: #fff; border: 1px solid #e6ebf3; border-radius: 16px; padding: 8px 10px; box-shadow: 0 8px 26px rgba(56,78,126,0.18); max-width: 94%; flex-wrap: wrap; justify-content: center; }
         .act-tool { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 42px; height: 42px; border: none; border-radius: 10px; background: transparent; color: #546e7a; font-size: 17px; cursor: pointer; transition: 0.15s; padding: 4px 6px; }
@@ -595,20 +598,25 @@
                 <div id="act-board">
                     <canvas id="act-canvas"></canvas>
                     <div id="act-widgets"></div>
-                    <div id="act-hint">✏️ 펜으로 칠판에 바로 필기하세요 · 아래 위젯을 추가하려면 <b>커서</b>를 켠 뒤 위젯 버튼을 누르세요</div>
+                    <div id="act-hint">🖱️ <b>커서</b>로 위젯을 옮기고 · 필기하려면 <b>그리기</b>를 누르세요 · 오른쪽 <b>＋</b>로 화면을 추가할 수 있어요</div>
+                    <div id="act-screens-bar"></div>
                     <div id="act-toolbar">
-                        <button class="act-tool" data-role="pen" onclick="actSetColor('#222222')" title="검정펜" style="color:#222;"><i class="fa-solid fa-pen"></i></button>
-                        <button class="act-tool" onclick="actSetColor('#e53935')" title="빨강펜" style="color:#e53935;"><i class="fa-solid fa-pen"></i></button>
-                        <button class="act-tool" onclick="actSetColor('#1e88e5')" title="파랑펜" style="color:#1e88e5;"><i class="fa-solid fa-pen"></i></button>
-                        <button class="act-tool" onclick="actSetColor('#43a047')" title="초록펜" style="color:#43a047;"><i class="fa-solid fa-pen"></i></button>
-                        <button class="act-tool" data-role="eraser" onclick="actSetColor('eraser')" title="지우개"><i class="fa-solid fa-eraser"></i></button>
-                        <button class="act-tool" onclick="actClear()" title="전체 지우기"><i class="fa-solid fa-trash-can"></i></button>
-                        <span class="act-sep"></span>
-                        <button class="act-tool" data-role="cursor" onclick="actSetMode('cursor')" title="커서 (위젯 사용)"><i class="fa-solid fa-arrow-pointer"></i></button>
+                        <button class="act-tool" data-role="cursor" onclick="actSetMode('cursor')" title="커서 (위젯 이동·사용)"><i class="fa-solid fa-arrow-pointer"></i><small>커서</small></button>
+                        <button class="act-tool" data-role="draw-mode" onclick="actEnterDraw()" title="그리기 (펜 필기)"><i class="fa-solid fa-pen"></i><small>그리기</small></button>
+                        <span id="act-draw-tools" style="display:none; align-items:center; gap:4px;">
+                            <span class="act-sep"></span>
+                            <button class="act-tool" data-role="pen" onclick="actSetColor('#222222')" title="검정펜" style="color:#222;"><i class="fa-solid fa-pen"></i></button>
+                            <button class="act-tool" onclick="actSetColor('#e53935')" title="빨강펜" style="color:#e53935;"><i class="fa-solid fa-pen"></i></button>
+                            <button class="act-tool" onclick="actSetColor('#1e88e5')" title="파랑펜" style="color:#1e88e5;"><i class="fa-solid fa-pen"></i></button>
+                            <button class="act-tool" onclick="actSetColor('#43a047')" title="초록펜" style="color:#43a047;"><i class="fa-solid fa-pen"></i></button>
+                            <button class="act-tool" data-role="eraser" onclick="actSetColor('eraser')" title="지우개"><i class="fa-solid fa-eraser"></i></button>
+                            <button class="act-tool" onclick="actClear()" title="이 화면 필기 전체 지우기"><i class="fa-solid fa-trash-can"></i></button>
+                        </span>
                         <span class="act-sep"></span>
                         <button class="act-tool act-widget-btn" onclick="actAddWidget('score')" title="점수판"><i class="fa-solid fa-star"></i><small>점수판</small></button>
                         <button class="act-tool act-widget-btn" onclick="actAddWidget('timer')" title="타이머"><i class="fa-solid fa-stopwatch"></i><small>타이머</small></button>
                         <button class="act-tool act-widget-btn" onclick="actAddWidget('draw')" title="뽑기"><i class="fa-solid fa-dice"></i><small>뽑기</small></button>
+                        <button class="act-tool act-widget-btn" onclick="actAddWidget('rpgdraw')" title="캐릭터 뽑기 (성장 연동)"><i class="fa-solid fa-dragon"></i><small>캐릭터뽑기</small></button>
                         <span class="act-sep"></span>
                         <button class="act-tool" onclick="actToggleFullscreen()" title="화면 크게 (전체화면)"><i class="fa-solid fa-expand"></i></button>
                     </div>
@@ -2972,7 +2980,70 @@
         function actCv() { return document.getElementById('act-canvas'); }
         function actOnShow() {
             if (!actInit) { actBindCanvas(); actInit = true; }
-            requestAnimationFrame(() => { actResize(); actSetColor('#222222'); });
+            actInitScreens();
+            requestAnimationFrame(() => { actResize(); actSetMode('cursor'); });
+        }
+
+        // ===== 🖥️ 다중 화면 (여러 칠판 페이지) =====
+        let actScreens = [], actScreenIdx = 0;
+        function actNewLayer() {
+            const l = document.createElement('div');
+            l.className = 'act-screen-layer';
+            document.getElementById('act-widgets').appendChild(l);
+            return l;
+        }
+        function actInitScreens() {
+            if (actScreens.length) return;
+            const first = actNewLayer();
+            actScreens = [{ strokes: actStrokes, layer: first }];
+            actScreenIdx = 0;
+            actRenderScreens();
+        }
+        function actCurrentLayer() { actInitScreens(); return actScreens[actScreenIdx].layer; }
+        function actRenderScreens() {
+            const bar = document.getElementById('act-screens-bar'); if (!bar) return;
+            let html = '<span style="font-size:12px; color:#90a4ae; font-weight:700; margin-right:2px;">화면</span>';
+            actScreens.forEach((sc, i) => {
+                const on = i === actScreenIdx;
+                html += '<button class="act-screen-btn" onclick="actGoScreen(' + i + ')" title="화면 ' + (i + 1) + '" style="background:' + (on ? '#5b97d1' : '#eef2f8') + ';color:' + (on ? '#fff' : '#607d8b') + ';">' + (i + 1) + '</button>';
+            });
+            html += '<button class="act-screen-btn" onclick="actAddScreen()" title="화면 추가" style="background:#26a69a;color:#fff;">＋</button>';
+            if (actScreens.length > 1) html += '<button class="act-screen-btn" onclick="actDeleteScreen()" title="이 화면 삭제" style="background:#ef9a9a;color:#fff;font-size:13px;">🗑</button>';
+            bar.innerHTML = html;
+        }
+        function actAddScreen() {
+            actInitScreens();
+            actScreens[actScreenIdx].strokes = actStrokes;               // 현재 필기 저장
+            actScreens.forEach(sc => sc.layer.style.display = 'none');
+            const layer = actNewLayer();
+            actScreens.push({ strokes: [], layer: layer });
+            actScreenIdx = actScreens.length - 1;
+            actStrokes = actScreens[actScreenIdx].strokes;
+            layer.style.display = 'block';
+            actRedraw(); actRenderScreens();
+        }
+        function actGoScreen(i) {
+            actInitScreens();
+            if (i < 0 || i >= actScreens.length || i === actScreenIdx) return;
+            actScreens[actScreenIdx].strokes = actStrokes;               // 현재 필기 저장
+            actScreens[actScreenIdx].layer.style.display = 'none';
+            actScreenIdx = i;
+            actStrokes = actScreens[i].strokes;
+            actScreens[i].layer.style.display = 'block';
+            actRedraw(); actRenderScreens();
+        }
+        function actDeleteScreen() {
+            actInitScreens();
+            if (actScreens.length <= 1) return;
+            if (!confirm('이 화면의 필기와 위젯을 삭제할까요?')) return;
+            const cur = actScreens[actScreenIdx];
+            if (cur.layer) cur.layer.remove();
+            actScreens.splice(actScreenIdx, 1);
+            if (actScreenIdx >= actScreens.length) actScreenIdx = actScreens.length - 1;
+            const now = actScreens[actScreenIdx];
+            now.layer.style.display = 'block';
+            actStrokes = now.strokes;
+            actRedraw(); actRenderScreens();
         }
         function actResize() {
             const c = actCv(), board = document.getElementById('act-board');
@@ -3013,16 +3084,24 @@
         function actSetMode(m) {
             actMode = m;
             const c = actCv(); if (c) { c.style.pointerEvents = m === 'pen' ? 'auto' : 'none'; c.style.cursor = m === 'pen' ? 'crosshair' : 'default'; }
+            const tools = document.getElementById('act-draw-tools'); if (tools) tools.style.display = (m === 'pen') ? 'inline-flex' : 'none';
             actUpdateToolUI();
+        }
+        // 그리기 모드 진입: 도구(색·지우개·휴지통) 펼치고 기본 검정펜 선택
+        function actEnterDraw() {
+            const tools = document.getElementById('act-draw-tools'); if (tools) tools.style.display = 'inline-flex';
+            actSetColor(actColor && actColor !== 'eraser' ? actColor : '#222222');
         }
         function actSetColor(col) {
             actColor = col; actMode = 'pen';
             const c = actCv(); if (c) { c.style.pointerEvents = 'auto'; c.style.cursor = 'crosshair'; }
+            const tools = document.getElementById('act-draw-tools'); if (tools) tools.style.display = 'inline-flex';
             document.querySelectorAll('#act-toolbar .act-tool').forEach(b => b.classList.remove('active'));
+            const dm = document.querySelector('#act-toolbar [data-role="draw-mode"]'); if (dm) dm.classList.add('active');
             const sel = col === 'eraser' ? '#act-toolbar [data-role="eraser"]' : `#act-toolbar [onclick="actSetColor('${col}')"]`;
             const b = document.querySelector(sel); if (b) b.classList.add('active');
         }
-        function actClear() { if (actStrokes.length && !confirm('칠판 필기를 모두 지울까요?')) return; actStrokes = []; actRedraw(); }
+        function actClear() { if (actStrokes.length && !confirm('이 화면 필기를 모두 지울까요?')) return; actStrokes.length = 0; actRedraw(); }
         function actToggleFullscreen() {
             const el = document.getElementById('act-board');
             if (!document.fullscreenElement) { el.requestFullscreen ? el.requestFullscreen() : (el.webkitRequestFullscreen && el.webkitRequestFullscreen()); }
@@ -3077,9 +3156,9 @@
         }
         function actAddWidget(type) {
             actSetMode('cursor'); // 위젯을 쓰려면 커서 모드
-            const layer = document.getElementById('act-widgets');
+            const layer = actCurrentLayer();
             const id = 'actw' + (++actSeq);
-            const titles = { score: '⭐ 점수판', timer: '⏱️ 타이머', draw: '🎲 뽑기' };
+            const titles = { score: '⭐ 점수판', timer: '⏱️ 타이머', draw: '🎲 뽑기', rpgdraw: '🐉 캐릭터 뽑기' };
             const w = document.createElement('div');
             w.className = 'act-widget'; w.id = id;
             w.style.left = (40 + (actSeq % 6) * 34) + 'px';
@@ -3092,6 +3171,7 @@
             if (type === 'score') actInitScore(id);
             else if (type === 'timer') actInitTimer(id);
             else if (type === 'draw') actInitDraw(id);
+            else if (type === 'rpgdraw') actInitRpgDraw(id);
         }
 
         // ----- 점수판 위젯 -----
@@ -3218,6 +3298,66 @@
                 <div style="display:flex; gap:6px; margin-top:10px;"><button class="act-btn" style="background:${group ? '#2ecc71' : '#8e44ad'}; flex:2;" onclick="actDrawPick('${id}')">🎲 뽑기!</button><button class="act-btn" style="background:#90a4ae; flex:1;" onclick="actDrawReset('${id}')">리셋</button></div>
                 <div id="${id}-remain" style="text-align:center; font-size:12px; color:#b0bcc9; margin-top:8px;"></div>`;
             actDrawFoot(id);
+            actApplyScale(id);
+        }
+
+        // ----- 🐉 캐릭터 뽑기 위젯 (성장 연동) -----
+        function actRpgRoster() { return (typeof rpgParseRoster === 'function') ? rpgParseRoster() : []; }
+        function actInitRpgDraw(id) { actState[id] = { picked: [], last: null, scale: 1, baseW: 300 }; actRenderRpgDraw(id); }
+        function actRpgDrawReset(id) { const s = actState[id]; s.picked = []; s.last = null; actRenderRpgDraw(id); }
+        function actRpgDrawPick(id) {
+            const s = actState[id];
+            const roster = actRpgRoster();
+            const remaining = roster.filter(st => s.picked.indexOf(st.id) === -1);
+            if (!remaining.length) return;
+            const chosen = remaining[Math.floor(Math.random() * remaining.length)];
+            s.picked.push(chosen.id); s.last = chosen.id;
+            try { pickSound.currentTime = 0; pickSound.play(); } catch (e) {}
+            actRenderRpgDraw(id);
+        }
+        function actRpgAvatarImg(stu, px) {
+            const d = (typeof rpgData !== 'undefined' && rpgData.students && rpgData.students[stu.id]) || {};
+            const L = (typeof rpgLevel === 'function') ? rpgLevel(d.xp) : { lv: 1 };
+            const g = stu.gender === 'F' ? 'f' : 'm';
+            const key = (typeof rpgAvatarKey === 'function') ? rpgAvatarKey(d.job, L.lv, stu.gender) : ('novice_' + g);
+            const fb = 'assets/avatars/' + ((d.job && typeof RPG_JOBS !== 'undefined' && RPG_JOBS[d.job]) ? d.job : 'novice') + '_' + g + '.png?v=6';
+            return '<img src="assets/avatars/' + key + '.png?v=6" onerror="this.onerror=null;this.src=\'' + fb + '\'" style="height:' + px + 'px;width:auto;display:block;margin:0 auto;">';
+        }
+        function actRenderRpgDraw(id) {
+            const s = actState[id];
+            const roster = actRpgRoster();
+            const body = document.getElementById(id + '-body'); if (!body) return;
+            if (!roster.length) {
+                body.innerHTML = '<div style="text-align:center; color:#90a4ae; font-size:13px; line-height:1.7; padding:12px 6px;">성장 탭에서 <b>학생 명단</b>을 먼저 입력하면<br>학생들의 <b>캐릭터로 뽑기</b>를 할 수 있어요.</div>';
+                actApplyScale(id); return;
+            }
+            const remaining = roster.length - s.picked.length;
+            let spotlight;
+            if (s.last != null) {
+                const stu = roster.find(x => x.id === s.last) || { id: s.last, name: s.last + '번', gender: 'U' };
+                const d = (typeof rpgData !== 'undefined' && rpgData.students && rpgData.students[stu.id]) || {};
+                const L = (typeof rpgLevel === 'function') ? rpgLevel(d.xp) : { lv: 1 };
+                const job = (d.job && typeof RPG_JOBS !== 'undefined' && RPG_JOBS[d.job]) ? RPG_JOBS[d.job] : null;
+                spotlight = '<div style="text-align:center; background:#f6f4ff; border:1px solid #e0d6f5; border-radius:12px; padding:12px 8px; margin-bottom:10px;">'
+                    + actRpgAvatarImg(stu, 92)
+                    + '<div style="font-size:20px; font-weight:900; color:#51618a; margin-top:6px;">' + escapeHtml(stu.name) + '</div>'
+                    + '<div style="font-size:12px; color:#7b6cd9; font-weight:700;">' + (job ? job.emoji + job.name : '견습생') + ' · Lv.' + L.lv + ' · ' + stu.id + '번</div>'
+                    + '</div>';
+            } else {
+                spotlight = '<div style="text-align:center; color:#b0bcc9; padding:26px 8px; margin-bottom:10px; border:2px dashed #e0e6ef; border-radius:12px;"><i class="fa-solid fa-dragon" style="font-size:38px; opacity:.4;"></i><div style="margin-top:8px; font-weight:700;">[🎲 뽑기!]를 눌러 주세요</div></div>';
+            }
+            let pickedChips = '';
+            if (s.picked.length) {
+                pickedChips = '<div style="display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-top:8px;">'
+                    + s.picked.map(pid => {
+                        const st = roster.find(x => x.id === pid); if (!st) return '';
+                        return '<span style="display:inline-flex; align-items:center; gap:3px; background:#eef1f6; border-radius:20px; padding:2px 4px 2px 3px; font-size:11px; font-weight:700; color:#607d8b;">' + actRpgAvatarImg(st, 24) + escapeHtml(st.name) + '</span>';
+                    }).join('') + '</div>';
+            }
+            body.innerHTML = spotlight
+                + '<div style="display:flex; gap:6px;"><button class="act-btn" style="background:#7b6cd9; flex:2;" onclick="actRpgDrawPick(\'' + id + '\')">🎲 뽑기!</button><button class="act-btn" style="background:#90a4ae; flex:1;" onclick="actRpgDrawReset(\'' + id + '\')">리셋</button></div>'
+                + '<div style="text-align:center; font-size:12px; color:#b0bcc9; margin-top:8px;">남은 학생 ' + remaining + ' / ' + roster.length + '</div>'
+                + pickedChips;
             actApplyScale(id);
         }
 
