@@ -304,6 +304,8 @@
         .class-chip.on { background: #5b97d1; color: #fff; border-color: #5b97d1; }
         .class-chip.add { background: #26a69a; color: #fff; border-color: #26a69a; }
         @keyframes scSpin { to { transform: rotate(360deg); } }
+        .act-bg-opt { display: block; width: 100%; text-align: left; border: none; background: transparent; border-radius: 8px; padding: 9px 10px; font-size: 13px; font-weight: 700; color: #455a64; cursor: pointer; font-family: 'Pretendard', sans-serif; }
+        .act-bg-opt:hover { background: #f0f4fa; }
         .ns-opt-row:last-child { border-bottom: none; }
 
         @media print {
@@ -612,6 +614,7 @@
             <!-- 🎲 2. 활동&뽑기 탭 — 활동 칠판 (아이스크림 툴킷 스타일) -->
             <div id="picker-tab" class="content-section">
                 <div id="act-board">
+                    <canvas id="act-bg-canvas" style="position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none;"></canvas>
                     <canvas id="act-canvas"></canvas>
                     <div id="act-widgets"></div>
                     <div id="act-hint">🖱️ <b>커서</b>로 위젯을 옮기고 · 필기하려면 <b>그리기</b>를 누르세요 · 오른쪽 <b>＋</b>로 화면을 추가할 수 있어요</div>
@@ -627,6 +630,15 @@
                             <button class="act-tool" onclick="actSetColor('#43a047')" title="초록펜" style="color:#43a047;"><i class="fa-solid fa-pen"></i></button>
                             <button class="act-tool" data-role="eraser" onclick="actSetColor('eraser')" title="지우개"><i class="fa-solid fa-eraser"></i></button>
                             <button class="act-tool" onclick="actClear()" title="이 화면 필기 전체 지우기"><i class="fa-solid fa-trash-can"></i></button>
+                        </span>
+                        <span style="position:relative; display:inline-flex;">
+                            <button class="act-tool" data-role="bg" onclick="actToggleBgMenu(event)" title="판서 배경 (노트·오선지)"><i class="fa-solid fa-table-list"></i><small>판서</small></button>
+                            <div id="act-bg-menu" style="display:none; position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%); background:#fff; border:1px solid #e6ebf3; border-radius:12px; box-shadow:0 10px 28px rgba(56,78,126,0.22); padding:6px; z-index:50; width:160px;">
+                                <button class="act-bg-opt" onclick="actSetBg('none')">⬜ 없음 (빈 화면)</button>
+                                <button class="act-bg-opt" onclick="actSetBg('note')">📝 필기노트 (가로줄)</button>
+                                <button class="act-bg-opt" onclick="actSetBg('english')">🔤 영어 4선</button>
+                                <button class="act-bg-opt" onclick="actSetBg('staff')">🎵 오선지 (음악)</button>
+                            </div>
                         </span>
                         <span class="act-sep"></span>
                         <button class="act-tool act-widget-btn" onclick="actAddWidget('score')" title="점수판"><i class="fa-solid fa-star"></i><small>점수판</small></button>
@@ -1578,16 +1590,23 @@
         function loadClassSwitcher() {
             const user = auth.currentUser;
             if(!user) { myClassesCache = []; renderClassSwitchBar(); return; }
+            // 1) 캐시로 즉시 렌더 → 늦게 떠서 화면이 밀리는 깜빡임 방지
+            try {
+                const cached = JSON.parse(localStorage.getItem('myClasses_' + user.uid) || 'null');
+                if(cached && cached.length) { myClassesCache = cached; renderClassSwitchBar(); }
+            } catch(e) {}
+            // 2) 최신 목록으로 조용히 갱신
             db.ref('users/' + user.uid + '/classes').once('value').then(snap => {
                 const cls = snap.val() || {}; const ids = Object.keys(cls);
                 return Promise.all(ids.map(cid => db.ref('rooms/' + cid + '/_meta/name').once('value')
-                    .then(m => ({ id: cid, name: m.val() || ('반 ' + cid.slice(-4)), role: cls[cid], createdAt: 0 }))
+                    .then(m => ({ id: cid, name: m.val() || ('반 ' + cid.slice(-4)), role: cls[cid] }))
                     .catch(() => ({ id: cid, name: '반 ' + cid.slice(-4), role: cls[cid] }))));
             }).then(list => {
                 list.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
                 myClassesCache = list;
+                try { localStorage.setItem('myClasses_' + user.uid, JSON.stringify(list)); } catch(e) {}
                 renderClassSwitchBar();
-            }).catch(() => { myClassesCache = []; renderClassSwitchBar(); });
+            }).catch(() => { renderClassSwitchBar(); });
         }
         function renderClassSwitchBar() {
             const bar = document.getElementById('class-switch-bar'); if(!bar) return;
@@ -3188,6 +3207,45 @@
             const r = board.getBoundingClientRect();
             c.width = r.width; c.height = r.height;
             actRedraw();
+            actDrawBg();
+        }
+
+        // ===== 📝 판서 배경 (필기노트·영어4선·오선지) =====
+        let actBg = 'none';
+        function actToggleBgMenu(e) { if (e) e.stopPropagation(); const m = document.getElementById('act-bg-menu'); if (m) m.style.display = (m.style.display === 'block') ? 'none' : 'block'; }
+        function actCloseBgMenu() { const m = document.getElementById('act-bg-menu'); if (m) m.style.display = 'none'; }
+        document.addEventListener('click', function (e) {
+            const m = document.getElementById('act-bg-menu');
+            if (m && m.style.display === 'block' && e.target.closest && !e.target.closest('#act-bg-menu') && !e.target.closest('[onclick*="actToggleBgMenu"]')) actCloseBgMenu();
+        });
+        function actSetBg(type) {
+            actBg = type; actCloseBgMenu(); actDrawBg();
+            const btn = document.querySelector('#act-toolbar [data-role="bg"]');
+            if (btn) btn.classList.toggle('active', type !== 'none');
+        }
+        function actDrawBg() {
+            const c = document.getElementById('act-bg-canvas'), board = document.getElementById('act-board');
+            if (!c || !board) return;
+            const r = board.getBoundingClientRect();
+            c.width = r.width; c.height = r.height;
+            const ctx = c.getContext('2d'); ctx.clearRect(0, 0, c.width, c.height);
+            if (actBg === 'none') return;
+            const W = c.width, H = c.height;
+            const line = (y, color, lw, dash) => { ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = lw || 1; if (dash) ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(10, Math.round(y) + 0.5); ctx.lineTo(W - 10, Math.round(y) + 0.5); ctx.stroke(); ctx.restore(); };
+            if (actBg === 'note') {
+                const gap = 46; for (let y = 66; y < H - 10; y += gap) line(y, '#d5e4f2', 1.4);
+            } else if (actBg === 'english') {
+                const s = 16, groupGap = 42, groupH = s * 3 + groupGap;
+                for (let gy = 50; gy + s * 3 < H - 6; gy += groupH) {
+                    line(gy, '#e7bcbc', 1);
+                    line(gy + s, '#e7bcbc', 1, [5, 4]);
+                    line(gy + s * 2, '#c0392b', 1.7);
+                    line(gy + s * 3, '#e7bcbc', 1);
+                }
+            } else if (actBg === 'staff') {
+                const s = 12, groupGap = 48, groupH = s * 4 + groupGap;
+                for (let gy = 58; gy + s * 4 < H - 6; gy += groupH) { for (let i = 0; i < 5; i++) line(gy + i * s, '#9aa8b5', 1.2); }
+            }
         }
         window.addEventListener('resize', () => { if (document.getElementById('picker-tab').classList.contains('active')) actResize(); });
         function actRedraw() {
