@@ -306,6 +306,19 @@
         @keyframes scSpin { to { transform: rotate(360deg); } }
         .act-bg-opt { display: block; width: 100%; text-align: left; border: none; background: transparent; border-radius: 8px; padding: 9px 10px; font-size: 13px; font-weight: 700; color: #455a64; cursor: pointer; font-family: 'Pretendard', sans-serif; }
         .act-bg-opt:hover { background: #f0f4fa; }
+        /* ⌨️ 판서 글쓰기(키보드) 텍스트 상자 */
+        .act-textbox { position: absolute; z-index: 12; min-width: 60px; }
+        .act-tb-bar { display: none; position: absolute; top: -28px; left: 0; align-items: center; gap: 2px; background: #5c6c95; border-radius: 7px; padding: 2px 4px; white-space: nowrap; box-shadow: 0 3px 8px rgba(0,0,0,0.2); }
+        .act-textbox:hover .act-tb-bar, .act-textbox.editing .act-tb-bar { display: flex; }
+        .act-tb-bar > * { color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; background: transparent; border: none; padding: 2px 6px; font-family: 'Pretendard', sans-serif; border-radius: 5px; }
+        .act-tb-bar > *:hover { background: rgba(255,255,255,0.18); }
+        .act-tb-grip { cursor: move; }
+        .act-tb-text { outline: none; font-size: 40px; font-weight: 700; color: #1a1a1a; min-width: 44px; padding: 2px 8px; white-space: pre-wrap; font-family: 'Pretendard', sans-serif; caret-color: #5b97d1; }
+        .act-textbox.eng .act-tb-text {
+            font-family: 'Comic Sans MS', 'Segoe UI', Arial, sans-serif; font-weight: 600; font-size: 40px; line-height: 66px; padding: 0 10px; color: #1a3a5a;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='66'><line x1='0' y1='13' x2='12' y2='13' stroke='%23e7bcbc' stroke-width='1'/><line x1='0' y1='31' x2='12' y2='31' stroke='%23e0c4c4' stroke-width='1' stroke-dasharray='4 3'/><line x1='0' y1='50' x2='12' y2='50' stroke='%23c0392b' stroke-width='1.6'/><line x1='0' y1='59' x2='12' y2='59' stroke='%23e7bcbc' stroke-width='1'/></svg>");
+            background-repeat: repeat; background-size: 100% 66px;
+        }
         .ns-opt-row:last-child { border-bottom: none; }
 
         @media print {
@@ -630,6 +643,13 @@
                             <button class="act-tool" onclick="actSetColor('#43a047')" title="초록펜" style="color:#43a047;"><i class="fa-solid fa-pen"></i></button>
                             <button class="act-tool" data-role="eraser" onclick="actSetColor('eraser')" title="지우개"><i class="fa-solid fa-eraser"></i></button>
                             <button class="act-tool" onclick="actClear()" title="이 화면 필기 전체 지우기"><i class="fa-solid fa-trash-can"></i></button>
+                        </span>
+                        <span style="position:relative; display:inline-flex;">
+                            <button class="act-tool" data-role="text" onclick="actToggleTextMenu(event)" title="글쓰기 (키보드 입력)"><i class="fa-solid fa-keyboard"></i><small>글쓰기</small></button>
+                            <div id="act-text-menu" style="display:none; position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%); background:#fff; border:1px solid #e6ebf3; border-radius:12px; box-shadow:0 10px 28px rgba(56,78,126,0.22); padding:6px; z-index:50; width:180px;">
+                                <button class="act-bg-opt" onclick="actStartText('plain')">📝 일반 글쓰기</button>
+                                <button class="act-bg-opt" onclick="actStartText('english')">🔤 영어 4선 노트</button>
+                            </div>
                         </span>
                         <span style="position:relative; display:inline-flex;">
                             <button class="act-tool" data-role="bg" onclick="actToggleBgMenu(event)" title="판서 배경 (노트·오선지)"><i class="fa-solid fa-table-list"></i><small>판서</small></button>
@@ -3233,18 +3253,18 @@
             const W = c.width, H = c.height;
             const line = (y, color, lw, dash) => { ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = lw || 1; if (dash) ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(10, Math.round(y) + 0.5); ctx.lineTo(W - 10, Math.round(y) + 0.5); ctx.stroke(); ctx.restore(); };
             if (actBg === 'note') {
-                const gap = 46; for (let y = 66; y < H - 10; y += gap) line(y, '#d5e4f2', 1.4);
+                const gap = 68; for (let y = 74; y < H - 10; y += gap) line(y, '#d5e4f2', 1.5);
             } else if (actBg === 'english') {
-                const s = 16, groupGap = 42, groupH = s * 3 + groupGap;
-                for (let gy = 50; gy + s * 3 < H - 6; gy += groupH) {
+                const s = 22, groupGap = 66, groupH = s * 3 + groupGap;
+                for (let gy = 60; gy + s * 3 < H - 6; gy += groupH) {
                     line(gy, '#e7bcbc', 1);
                     line(gy + s, '#e7bcbc', 1, [5, 4]);
-                    line(gy + s * 2, '#c0392b', 1.7);
+                    line(gy + s * 2, '#c0392b', 1.8);
                     line(gy + s * 3, '#e7bcbc', 1);
                 }
             } else if (actBg === 'staff') {
-                const s = 12, groupGap = 48, groupH = s * 4 + groupGap;
-                for (let gy = 58; gy + s * 4 < H - 6; gy += groupH) { for (let i = 0; i < 5; i++) line(gy + i * s, '#9aa8b5', 1.2); }
+                const s = 16, groupGap = 66, groupH = s * 4 + groupGap;
+                for (let gy = 64; gy + s * 4 < H - 6; gy += groupH) { for (let i = 0; i < 5; i++) line(gy + i * s, '#9aa8b5', 1.2); }
             }
         }
         window.addEventListener('resize', () => { if (document.getElementById('picker-tab').classList.contains('active')) actResize(); });
@@ -3271,14 +3291,71 @@
             const up = () => { actDrawing = false; actCur = null; };
             c.addEventListener('mousedown', down); c.addEventListener('mousemove', move); window.addEventListener('mouseup', up);
             c.addEventListener('touchstart', down, { passive: false }); c.addEventListener('touchmove', move, { passive: false }); c.addEventListener('touchend', up);
+            // 글쓰기 모드: 빈 곳 클릭 → 텍스트 상자 생성
+            const board = document.getElementById('act-board');
+            if (board) board.addEventListener('click', e => {
+                if (actMode !== 'text') return;
+                if (e.target.closest('.act-textbox') || e.target.closest('.act-widget') || e.target.closest('#act-toolbar') || e.target.closest('#act-screens-bar') || e.target.closest('#act-hint')) return;
+                const r = board.getBoundingClientRect();
+                actAddTextbox(e.clientX - r.left, e.clientY - r.top, actTextStyle);
+            });
+        }
+
+        // ===== ⌨️ 판서 글쓰기 (키보드 입력 텍스트 상자) =====
+        let actTextStyle = 'plain';
+        function actToggleTextMenu(e) { if (e) e.stopPropagation(); const m = document.getElementById('act-text-menu'); if (m) m.style.display = (m.style.display === 'block') ? 'none' : 'block'; }
+        function actCloseTextMenu() { const m = document.getElementById('act-text-menu'); if (m) m.style.display = 'none'; }
+        document.addEventListener('click', function (e) {
+            const m = document.getElementById('act-text-menu');
+            if (m && m.style.display === 'block' && e.target.closest && !e.target.closest('#act-text-menu') && !e.target.closest('[onclick*="actToggleTextMenu"]')) actCloseTextMenu();
+        });
+        function actStartText(style) {
+            actTextStyle = style; actCloseTextMenu();
+            actSetMode('text');
+            const hint = document.getElementById('act-hint');
+            if (hint) hint.innerHTML = '⌨️ 빈 곳을 <b>클릭</b>한 뒤 키보드로 입력하세요 · 상자는 <b>✥</b>로 옮기고 <b>✕</b>로 지워요 · 그림은 <b>그리기</b>';
+        }
+        function actAddTextbox(x, y, style) {
+            const layer = actCurrentLayer();
+            const box = document.createElement('div');
+            box.className = 'act-textbox' + (style === 'english' ? ' eng' : '');
+            box.style.left = x + 'px'; box.style.top = y + 'px'; box.style.zIndex = ++actZ;
+            const bar = document.createElement('div'); bar.className = 'act-tb-bar';
+            bar.innerHTML = '<span class="act-tb-grip" title="이동">✥ 이동</span><button type="button" class="act-tb-style">' + (style === 'english' ? '영어4선' : '일반') + '</button><button type="button" class="act-tb-big" title="글자 크게">A+</button><button type="button" class="act-tb-small" title="글자 작게">A−</button><span class="act-tb-del" title="삭제">✕</span>';
+            const txt = document.createElement('div'); txt.className = 'act-tb-text'; txt.contentEditable = 'true'; txt.spellcheck = false;
+            box.appendChild(bar); box.appendChild(txt); layer.appendChild(box);
+            bar.querySelector('.act-tb-del').addEventListener('click', ev => { ev.stopPropagation(); box.remove(); });
+            bar.querySelector('.act-tb-style').addEventListener('click', function (ev) { ev.stopPropagation(); box.classList.toggle('eng'); this.textContent = box.classList.contains('eng') ? '영어4선' : '일반'; });
+            bar.querySelector('.act-tb-big').addEventListener('click', ev => { ev.stopPropagation(); actTbFont(txt, 4); });
+            bar.querySelector('.act-tb-small').addEventListener('click', ev => { ev.stopPropagation(); actTbFont(txt, -4); });
+            txt.addEventListener('focus', () => box.classList.add('editing'));
+            txt.addEventListener('blur', () => { box.classList.remove('editing'); if (!txt.textContent.trim()) box.remove(); });
+            txt.addEventListener('mousedown', e => e.stopPropagation());
+            actTbDrag(box, bar.querySelector('.act-tb-grip'));
+            setTimeout(() => txt.focus(), 0);
+        }
+        function actTbFont(txt, delta) {
+            const cur = parseFloat(getComputedStyle(txt).fontSize) || 40;
+            const next = Math.max(18, Math.min(120, cur + delta));
+            txt.style.fontSize = next + 'px';
+            if (txt.parentElement.classList.contains('eng')) { txt.style.lineHeight = Math.round(next * 1.65) + 'px'; txt.style.backgroundSize = '100% ' + Math.round(next * 1.65) + 'px'; }
+        }
+        function actTbDrag(box, grip) {
+            let sx, sy, ox, oy, drag = false;
+            const start = e => { drag = true; const t = (e.touches && e.touches[0]) ? e.touches[0] : e; sx = t.clientX; sy = t.clientY; ox = box.offsetLeft; oy = box.offsetTop; box.style.zIndex = ++actZ; e.preventDefault(); e.stopPropagation(); };
+            const move = e => { if (!drag) return; const t = (e.touches && e.touches[0]) ? e.touches[0] : e; box.style.left = (ox + t.clientX - sx) + 'px'; box.style.top = (oy + t.clientY - sy) + 'px'; };
+            const end = () => drag = false;
+            grip.addEventListener('mousedown', start); window.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
+            grip.addEventListener('touchstart', start, { passive: false }); window.addEventListener('touchmove', move, { passive: false }); window.addEventListener('touchend', end);
         }
         function actUpdateToolUI() {
             document.querySelectorAll('#act-toolbar .act-tool').forEach(b => b.classList.remove('active'));
             if (actMode === 'cursor') { const b = document.querySelector('#act-toolbar [data-role="cursor"]'); if (b) b.classList.add('active'); }
+            else if (actMode === 'text') { const b = document.querySelector('#act-toolbar [data-role="text"]'); if (b) b.classList.add('active'); }
         }
         function actSetMode(m) {
             actMode = m;
-            const c = actCv(); if (c) { c.style.pointerEvents = m === 'pen' ? 'auto' : 'none'; c.style.cursor = m === 'pen' ? 'crosshair' : 'default'; }
+            const c = actCv(); if (c) { c.style.pointerEvents = m === 'pen' ? 'auto' : 'none'; c.style.cursor = m === 'pen' ? 'crosshair' : (m === 'text' ? 'text' : 'default'); }
             const tools = document.getElementById('act-draw-tools'); if (tools) tools.style.display = (m === 'pen') ? 'inline-flex' : 'none';
             actUpdateToolUI();
         }
