@@ -1331,6 +1331,7 @@
 
             auth.onAuthStateChanged(user => {
                 if(user) {
+                    try { localStorage.setItem('teacherUid', user.uid); } catch(e) {}
                     document.getElementById('login-box').style.display = 'none';
                     const teacherName = user.displayName || (user.email ? user.email.split('@')[0] : '');
                     document.querySelector('.user-profile-text').innerText = teacherName ? `${teacherName} 선생님` : `선생님`;
@@ -1448,15 +1449,26 @@
             localStorage.setItem('classRoomName', currentRoom);
             localStorage.setItem('classRole', currentRole);
             
+            // 아침칠판·캘린더는 선생님별 '공유' 위치에 (여러 반이 한곳을 같이 사용). 나머지는 반별.
+            var sharedUid = (auth.currentUser && auth.currentUser.uid) || localStorage.getItem('teacherUid') || '';
             groupSettingsRef = db.ref('rooms/' + currentRoom + '/settings/groupCount'); settingsRef = db.ref('rooms/' + currentRoom + '/settings/dashboardDefaults');
             scoresRef = db.ref('rooms/' + currentRoom + '/groupScores'); miniScoresRef = db.ref('rooms/' + currentRoom + '/miniScores');
-            timerRef = db.ref('rooms/' + currentRoom + '/timerState'); boardRef = db.ref('rooms/' + currentRoom + '/skyDashboard');
-            historyRef = db.ref('rooms/' + currentRoom + '/boardHistory'); tasksRef = db.ref('rooms/' + currentRoom + '/groupTasks'); hwRef = db.ref('rooms/' + currentRoom + '/homeworks');
+            timerRef = db.ref('rooms/' + currentRoom + '/timerState');
+            if(sharedUid){
+                boardRef = db.ref('users/' + sharedUid + '/shared/skyDashboard');
+                historyRef = db.ref('users/' + sharedUid + '/shared/boardHistory');
+                calendarEventsRef = db.ref('users/' + sharedUid + '/shared/calendarEvents');
+                migrateSharedBoard(currentRoom, sharedUid);
+            } else {
+                boardRef = db.ref('rooms/' + currentRoom + '/skyDashboard');
+                historyRef = db.ref('rooms/' + currentRoom + '/boardHistory');
+                calendarEventsRef = db.ref('rooms/' + currentRoom + '/calendarEvents');
+            }
+            tasksRef = db.ref('rooms/' + currentRoom + '/groupTasks'); hwRef = db.ref('rooms/' + currentRoom + '/homeworks');
             seatingRef = db.ref('rooms/' + currentRoom + '/seating'); groupMembersRef = db.ref('rooms/' + currentRoom + '/groupMembers');
             seatingHistoryRef = db.ref('rooms/' + currentRoom + '/seatingHistory');
             seatingCurrentRef = db.ref('rooms/' + currentRoom + '/seatingV2/current'); seatingSavesRef = db.ref('rooms/' + currentRoom + '/seatingV2/saves');
             bookmarksRef = db.ref('rooms/' + currentRoom + '/bookmarks');
-            calendarEventsRef = db.ref('rooms/' + currentRoom + '/calendarEvents');
             rpgRef = db.ref('rooms/' + currentRoom + '/rpg');
             rpgRef.on('value', snap => {
                 rpgData = snap.val() || {};
@@ -1527,6 +1539,19 @@
         function switchClass() {
             if(!confirm('다른 학급으로 이동할까요?\n(내 학급 목록에서 학급을 고르거나 새로 만들 수 있어요)')) return;
             exitRoom();
+        }
+
+        // 아침칠판·캘린더를 반별 → 선생님 공유 위치로 최초 1회 '복사' 이전(원본은 그대로 보존)
+        function migrateSharedBoard(cid, uid) {
+            [['skyDashboard', 'skyDashboard'], ['boardHistory', 'boardHistory'], ['calendarEvents', 'calendarEvents']].forEach(function(pair) {
+                var sharedRef = db.ref('users/' + uid + '/shared/' + pair[0]);
+                sharedRef.once('value').then(function(snap) {
+                    if(snap.exists()) return; // 이미 공유본이 있으면 건드리지 않음 (덮어쓰기 방지)
+                    db.ref('rooms/' + cid + '/' + pair[1]).once('value').then(function(rs) {
+                        if(rs.exists()) sharedRef.set(rs.val());
+                    }).catch(function(){});
+                }).catch(function(){});
+            });
         }
 
         // ===== 🏫 상단 학급 전환 바 (전담이 여러 반을 빠르게 오가며 관리) =====
