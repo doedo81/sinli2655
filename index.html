@@ -1644,7 +1644,22 @@
                 myClassesCache = list;
                 try { localStorage.setItem('myClasses_' + user.uid, JSON.stringify(list)); } catch(e) {}
                 renderClassSwitchBar();
+                ensureClassOwnership(user, list);
             }).catch(() => { renderClassSwitchBar(); });
+        }
+        // 🔐 보안 규칙 적용 시 '내 반에서 잠기는' 사고 방지: 담임 학급에 소유자·멤버 정보 자동 채움
+        function ensureClassOwnership(user, list) {
+            (list || []).forEach(function(c) {
+                if(c.role !== 'owner') return;
+                db.ref('rooms/' + c.id + '/_meta/ownerUid').once('value').then(function(s) {
+                    var updates = {};
+                    if(!s.val()) updates['rooms/' + c.id + '/_meta/ownerUid'] = user.uid;
+                    updates['rooms/' + c.id + '/_members/' + user.uid] = { role: 'owner', name: (user.displayName || (user.email || '선생님').split('@')[0]) };
+                    db.ref('rooms/' + c.id + '/_members/' + user.uid).once('value').then(function(ms) {
+                        if(!s.val() || !ms.exists()) db.ref().update(updates).catch(function(){});
+                    });
+                }).catch(function(){});
+            });
         }
         function renderClassSwitchBar() {
             const bar = document.getElementById('class-switch-bar'); if(!bar) return;

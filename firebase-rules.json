@@ -1,0 +1,55 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+
+    "classCodes": {
+      "$code": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+
+    "studentCodes": {
+      "$code": {
+        ".read": true,
+        ".write": "auth != null"
+      }
+    },
+
+    "rooms": {
+      "$cid": {
+        ".read":  "auth != null && ( !data.child('_meta').exists() || data.child('_meta').child('ownerUid').val() === auth.uid || data.child('_members').child(auth.uid).exists() )",
+        ".write": "auth != null && ( !data.exists() || data.child('_meta').child('ownerUid').val() === auth.uid || data.child('_members').child(auth.uid).exists() )",
+
+        "_members": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid"
+          }
+        },
+
+        "settings": {
+          "dashboardDefaults": {
+            ".read": true
+          }
+        },
+
+        "rpg": {
+          ".read": true,
+          "students": {
+            "$num": {
+              "head":  { ".write": true },
+              "pet":   { ".write": true },
+              "frame": { ".write": true },
+              "job":   { ".write": true }
+            }
+          }
+        }
+      }
+    }
+  }
+}
