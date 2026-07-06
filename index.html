@@ -665,7 +665,11 @@
                 <div class="picker-box" style="text-align:left;">
                     <div class="seating-controls" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
                         <h2 style="color:var(--dark-blue); margin:0;"><i class="fa-solid fa-chair"></i> 자리 배치</h2>
-                        <button class="action-btn" style="background:#0288d1; padding:9px 16px;" onclick="window.print()"><i class="fa-solid fa-print"></i> 인쇄 / 화면 배포</button>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button class="action-btn" style="background:#7b6cd9; padding:9px 16px;" onclick="nsSaveSeating()"><i class="fa-solid fa-floppy-disk"></i> 기억하기</button>
+                            <button class="action-btn" style="background:#00897b; padding:9px 16px;" onclick="nsOpenSaves()"><i class="fa-solid fa-folder-open"></i> 불러오기</button>
+                            <button class="action-btn" style="background:#0288d1; padding:9px 16px;" onclick="window.print()"><i class="fa-solid fa-print"></i> 인쇄 / 화면 배포</button>
+                        </div>
                     </div>
                     <input type="hidden" id="ns-formation" value="cooperative">
                     <div id="ns-layout">
@@ -1220,7 +1224,7 @@
         const pickSound = { currentTime: 0, play() { const c = _pickCtx(); if (!c) return Promise.resolve(); [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => _pickTone(c, f, i * 0.08, 0.35, 'triangle', 0.28)); _pickTone(c, 1567.98, 0.34, 0.5, 'sine', 0.18); return Promise.resolve(); } }; 
 
         let currentRoom = "";
-        let groupSettingsRef, scoresRef, miniScoresRef, timerRef, boardRef, settingsRef, historyRef, tasksRef, hwRef, seatingRef, groupMembersRef, seatingHistoryRef, bookmarksRef, rpgRef;
+        let groupSettingsRef, scoresRef, miniScoresRef, timerRef, boardRef, settingsRef, historyRef, tasksRef, hwRef, seatingRef, groupMembersRef, seatingHistoryRef, bookmarksRef, rpgRef, seatingCurrentRef, seatingSavesRef;
         let rpgData = {}, rpgModalId = null;
         let rpgBulkMode = false, rpgBulkAction = null, rpgBulkSelected = new Set();
         let rpgLocked = false;
@@ -1415,7 +1419,8 @@
             timerRef = db.ref('rooms/' + currentRoom + '/timerState'); boardRef = db.ref('rooms/' + currentRoom + '/skyDashboard');
             historyRef = db.ref('rooms/' + currentRoom + '/boardHistory'); tasksRef = db.ref('rooms/' + currentRoom + '/groupTasks'); hwRef = db.ref('rooms/' + currentRoom + '/homeworks');
             seatingRef = db.ref('rooms/' + currentRoom + '/seating'); groupMembersRef = db.ref('rooms/' + currentRoom + '/groupMembers');
-            seatingHistoryRef = db.ref('rooms/' + currentRoom + '/seatingHistory'); 
+            seatingHistoryRef = db.ref('rooms/' + currentRoom + '/seatingHistory');
+            seatingCurrentRef = db.ref('rooms/' + currentRoom + '/seatingV2/current'); seatingSavesRef = db.ref('rooms/' + currentRoom + '/seatingV2/saves');
             bookmarksRef = db.ref('rooms/' + currentRoom + '/bookmarks');
             calendarEventsRef = db.ref('rooms/' + currentRoom + '/calendarEvents');
             rpgRef = db.ref('rooms/' + currentRoom + '/rpg');
@@ -1541,7 +1546,19 @@
             });
             
             groupMembersRef.on('value', snap => { groupMembersMap = snap.val() || {}; });
-            seatingHistoryRef.on('value', snap => { allSeatingHistories = snap.val() || {}; }); 
+            seatingHistoryRef.on('value', snap => { allSeatingHistories = snap.val() || {}; });
+            // 자리 마법사(ns) 현재 배치 복원 — 새로고침해도 유지
+            seatingCurrentRef.on('value', snap => {
+                const v = snap.val();
+                if(v && v.json && !nsArr){
+                    try {
+                        nsArr = JSON.parse(v.json);
+                        const ph = document.getElementById('ns-placeholder'); if(ph) ph.style.display = 'none';
+                        const b = document.getElementById('ns-board'); if(b) b.style.display = 'block';
+                        nsRerender();
+                    } catch(e){}
+                }
+            });
             bookmarksRef.on('value', snap => { allBookmarks = snap.val() || {}; renderBookmarks(); });
             calendarEventsRef.on('value', snap => {
                 allCalendarEvents = snap.val() || {};
@@ -2411,6 +2428,7 @@
             const ph = document.getElementById('ns-placeholder'); if (ph) ph.style.display = 'none';
             document.getElementById('ns-board').style.display = 'block';
             nsRerender();
+            nsPersistCurrent();
         }
         function nsRerender() {
             if (!nsArr) return;
@@ -2426,6 +2444,8 @@
                 ? '✋ 네모칸의 “⠿ 이동”을 잡고 원하는 곳으로 옮기고, 이름을 눌러 바로 수정하세요.'
                 : '✋ 학생을 드래그해서 서로 자리를 바꿀 수 있어요.';
             document.getElementById('ns-result').innerHTML = `<p style="font-size:12px; color:#999; margin:0 0 10px 0;" class="seating-controls">${hint}</p>` + html;
+            // 성장 탭이 자리배치 모드로 열려 있으면 함께 갱신
+            if(typeof rpgViewMode !== 'undefined' && rpgViewMode === 'seating' && typeof rpgRef !== 'undefined' && rpgRef && document.getElementById('rpg-grid')) renderRpgGrid();
         }
         let nsView = 'grid';
         function nsSetView(v) { nsView = v; nsUpdateViewButtons(); nsRerender(); }
@@ -2534,6 +2554,7 @@
             if (nsArr && nsArr.formation === 'free' && nsArr.seats[nsFreeDrag.idx]) {
                 nsArr.seats[nsFreeDrag.idx].x = parseFloat(nsFreeDrag.seat.style.left) || 0;
                 nsArr.seats[nsFreeDrag.idx].y = parseFloat(nsFreeDrag.seat.style.top) || 0;
+                nsPersistCurrent();
             }
             nsFreeDrag = null;
         });
@@ -2542,6 +2563,7 @@
             const n = e.target.closest ? e.target.closest('.ns-free-name') : null;
             if (n && nsArr && nsArr.formation === 'free' && nsArr.seats[parseInt(n.dataset.idx)]) {
                 nsArr.seats[parseInt(n.dataset.idx)].name = n.innerText;
+                nsPersistCurrent();
             }
         });
         // 드래그로 두 학생 자리 맞교환
@@ -2550,7 +2572,74 @@
             let pa = null, pb = null;
             const scan = c => c.forEach((s, i) => { if (s && s.id === idA) pa = { c: c, i: i }; if (s && s.id === idB) pb = { c: c, i: i }; });
             if (nsArr.formation === 'cooperative') nsArr.groups.forEach(scan); else scan(nsArr.list);
-            if (pa && pb) { const t = pa.c[pa.i]; pa.c[pa.i] = pb.c[pb.i]; pb.c[pb.i] = t; nsRerender(); }
+            if (pa && pb) { const t = pa.c[pa.i]; pa.c[pa.i] = pb.c[pb.i]; pb.c[pb.i] = t; nsRerender(); nsPersistCurrent(); }
+        }
+
+        // 현재 배치를 Firebase에 저장(새로고침 유지 + 성장 자리배치 모드 연동)
+        let nsPersistTimer = null;
+        function nsPersistCurrent(){
+            if(!seatingCurrentRef || !nsArr) return;
+            clearTimeout(nsPersistTimer);
+            nsPersistTimer = setTimeout(function(){
+                try { seatingCurrentRef.set({ json: JSON.stringify(nsArr), savedAt: Date.now() }); } catch(e){}
+            }, 400);
+        }
+
+        // 💾 자리 이름 지어 기억하기
+        function nsSaveSeating(){
+            if(!nsArr){ alert('먼저 [🪑 자리 만들기]로 자리를 만들어 주세요.'); return; }
+            if(!seatingSavesRef){ alert('학급에 입장한 뒤 이용해 주세요.'); return; }
+            const now = new Date();
+            const def = (now.getMonth()+1) + '월 ' + now.getDate() + '일 자리';
+            let name = prompt('저장할 자리 이름을 입력하세요.\n(나중에 [불러오기]에서 다시 꺼낼 수 있어요)', def);
+            if(name === null) return;
+            name = (name || def).trim();
+            seatingSavesRef.push({ name: name, savedAt: Date.now(), json: JSON.stringify(nsArr) })
+                .then(function(){ alert('✅ "' + name + '" 자리를 기억했어요.'); })
+                .catch(function(e){ alert('저장 오류: ' + e.message); });
+        }
+
+        // 📂 저장된 자리 목록 열기 (기존 보관함 모달 재사용)
+        function nsOpenSaves(){
+            if(!seatingSavesRef){ alert('학급에 입장한 뒤 이용해 주세요.'); return; }
+            const listDiv = document.getElementById('seating-history-list');
+            listDiv.innerHTML = '<div style="color:#999; padding:14px; text-align:center;">불러오는 중…</div>';
+            document.getElementById('seating-history-modal').style.display = 'flex';
+            seatingSavesRef.once('value').then(function(snap){
+                const data = snap.val() || {};
+                const keys = Object.keys(data).sort(function(a,b){ return (data[b].savedAt||0) - (data[a].savedAt||0); });
+                if(keys.length === 0){ listDiv.innerHTML = '<div style="color:#8a94a6; padding:20px; text-align:center; line-height:1.6;">아직 기억한 자리가 없어요.<br>자리를 만든 뒤 <b>[💾 기억하기]</b>를 눌러 저장해 보세요.</div>'; return; }
+                listDiv.innerHTML = keys.map(function(k){
+                    const it = data[k];
+                    const d = it.savedAt ? new Date(it.savedAt) : null;
+                    const when = d ? (d.getMonth()+1) + '/' + d.getDate() + ' ' + ('0'+d.getHours()).slice(-2) + ':' + ('0'+d.getMinutes()).slice(-2) : '';
+                    return '<div style="display:flex; justify-content:space-between; align-items:center; padding:11px 6px; border-bottom:1px solid #f0f0f0;">'
+                        + '<div><div style="font-weight:700; color:#37474f;">' + escapeHtml(it.name || '이름없음') + '</div><div style="font-size:11px; color:#aaa;">' + when + '</div></div>'
+                        + '<div style="display:flex; gap:6px; white-space:nowrap;">'
+                        + '<button class="action-btn" style="padding:6px 12px; font-size:13px; background:#00897b;" onclick="nsLoadSaved(\'' + k + '\')">불러오기</button>'
+                        + '<button class="reset-btn" style="padding:6px 10px; font-size:13px;" onclick="nsDeleteSaved(\'' + k + '\',\'' + escapeHtml(it.name||'').replace(/'/g,"") + '\')">삭제</button>'
+                        + '</div></div>';
+                }).join('');
+            }).catch(function(e){ listDiv.innerHTML = '<div style="color:#c62828; padding:14px;">불러오기 오류: ' + e.message + '</div>'; });
+        }
+
+        function nsLoadSaved(key){
+            seatingSavesRef.child(key).once('value').then(function(snap){
+                const it = snap.val();
+                if(!it || !it.json){ alert('불러올 자리 정보가 없어요.'); return; }
+                try { nsArr = JSON.parse(it.json); } catch(e){ alert('자리 정보를 읽을 수 없어요.'); return; }
+                const ph = document.getElementById('ns-placeholder'); if(ph) ph.style.display = 'none';
+                const b = document.getElementById('ns-board'); if(b) b.style.display = 'block';
+                nsRerender();
+                nsPersistCurrent();
+                document.getElementById('seating-history-modal').style.display = 'none';
+                switchTab('seating');
+            });
+        }
+
+        function nsDeleteSaved(key, name){
+            if(!confirm('"' + (name || '') + '" 저장된 자리를 삭제할까요?')) return;
+            seatingSavesRef.child(key).remove().then(function(){ nsOpenSaves(); });
         }
         let nsDragId = null;
         document.addEventListener('dragstart', e => { const c = e.target.closest ? e.target.closest('.ns-chip') : null; if (c) { nsDragId = c.dataset.id; if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'; } });
@@ -3650,35 +3739,55 @@
 
             if(rpgViewMode === 'rank'){
                 const ranked = students.slice().sort((a,b) => (rpgXpOf(b.id) - rpgXpOf(a.id)) || (a.id - b.id));
+                grid.style.display = 'grid';
                 grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(150px, 1fr))';
                 grid.innerHTML = ranked.map((s,i) => rpgCardHtml(s, i + 1)).join('');
             } else if(rpgViewMode === 'seating'){
                 renderRpgSeatingGrid(students, grid);
             } else {
+                grid.style.display = 'grid';
                 grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(150px, 1fr))';
                 grid.innerHTML = students.map(s => rpgCardHtml(s)).join('');
             }
             if(rpgModalId != null && document.getElementById('rpg-modal').style.display === 'flex') rpgOpen(rpgModalId);
         }
 
+        // 성장 자리배치 모드: 자리 배치 탭에서 만든 실제 배치(nsArr) 그대로 카드 배치
         function renderRpgSeatingGrid(students, grid){
-            if(!currentSeating || currentSeating.length === 0){
-                grid.style.gridTemplateColumns = '1fr';
-                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px 20px;color:#999;">아직 자리배치가 없어요.<br>위쪽 <b>[자리 배치]</b> 탭에서 자리를 먼저 만들어 주세요.</div>';
+            var arr = (typeof nsArr !== 'undefined') ? nsArr : null;
+            if(!arr){
+                grid.style.display = 'block';
+                grid.style.gridTemplateColumns = '';
+                grid.innerHTML = '<div style="text-align:center;padding:30px 20px;color:#999;line-height:1.8;">아직 자리배치가 없어요.<br><b>[자리 배치]</b> 탭에서 자리를 만들면(그리고 [기억하기]로 저장하면)<br>여기에도 똑같은 배치로 나타나요.</div>';
                 return;
             }
-            const cols = 6;
-            const byId = {}; students.forEach(s => { byId[s.id] = s; });
-            let html = '';
-            currentSeating.forEach(num => {
-                if(num === null || num === undefined || !byId[num]){
-                    html += '<div style="border:2px dashed #e0e6ef;border-radius:14px;min-height:60px;"></div>';
-                } else {
-                    html += rpgCardHtml(byId[num]);
-                }
-            });
-            grid.style.gridTemplateColumns = 'repeat(' + cols + ', minmax(0, 1fr))';
-            grid.innerHTML = html;
+            var byName = {}; students.forEach(function(s){ byName[s.name] = s; });
+            var cell = function(seat){
+                var stu = seat ? byName[seat.name] : null;
+                if(stu) return rpgCardHtml(stu);
+                var label = seat ? escapeHtml(seat.name) : '공석';
+                return '<div style="border:2px dashed #e0e6ef;border-radius:14px;min-height:72px;display:flex;align-items:center;justify-content:center;color:#b6c0cf;font-size:12px;">' + label + '</div>';
+            };
+            if(arr.formation === 'cooperative'){
+                grid.style.display = 'block';
+                grid.style.gridTemplateColumns = '';
+                grid.innerHTML = (arr.groups || []).map(function(g, gi){
+                    return '<div style="margin-bottom:18px;">'
+                        + '<div style="font-weight:800;color:#6a4bb5;margin-bottom:8px;">' + (gi + 1) + '모둠</div>'
+                        + '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;">' + g.map(cell).join('') + '</div>'
+                        + '</div>';
+                }).join('');
+            } else if(arr.formation === 'free'){
+                var seats = (arr.seats || []).slice().sort(function(a,b){ return (a.y - b.y) || (a.x - b.x); });
+                grid.style.display = 'grid';
+                grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(140px, 1fr))';
+                grid.innerHTML = seats.map(cell).join('');
+            } else { // exam / columns
+                var cols = Math.max(1, arr.cols || 6);
+                grid.style.display = 'grid';
+                grid.style.gridTemplateColumns = 'repeat(' + cols + ', minmax(0, 1fr))';
+                grid.innerHTML = (arr.list || []).map(cell).join('');
+            }
         }
 
         function rpgOpen(id){
