@@ -297,13 +297,19 @@
         .ns-form-btn.active { border-color: #7b6cd9; background: #f3effc; color: #5a48b8; box-shadow: 0 4px 12px rgba(123,108,217,0.18); }
         .ns-form-btn.active small { color: #8a7bd8; }
         .ns-opt-row { padding: 7px 0; border-bottom: 1px dashed #eef1f6; font-size: 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        /* 🏫 상단 학급 전환 바 (전담 여러 반 관리) */
+        #class-switch-bar { display: none; align-items: center; gap: 6px; flex-wrap: wrap; padding: 8px 10px; margin-bottom: 12px; background: #fff; border: 1px solid #e6ebf3; border-radius: 12px; box-shadow: 0 3px 10px rgba(120,144,180,0.08); }
+        .class-chip { border: 1px solid #dbe3ef; background: #f6f8fb; color: #546e7a; border-radius: 20px; padding: 6px 14px; font-size: 13px; font-weight: 800; cursor: pointer; font-family: 'Pretendard', sans-serif; }
+        .class-chip:hover { background: #eef2f8; }
+        .class-chip.on { background: #5b97d1; color: #fff; border-color: #5b97d1; }
+        .class-chip.add { background: #26a69a; color: #fff; border-color: #26a69a; }
         .ns-opt-row:last-child { border-bottom: none; }
 
         @media print {
             body * { visibility: hidden; }
             #seating-tab, #seating-tab * { visibility: visible; }
             #seating-tab { position: absolute; left: 0; top: 0; width: 100%; }
-            .sidebar, .floating-tools, .action-btn, .reset-btn, #auth-overlay { display: none !important; }
+            .sidebar, .floating-tools, .action-btn, .reset-btn, #auth-overlay, #class-switch-bar { display: none !important; }
             .seating-controls { display: none !important; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
@@ -446,6 +452,9 @@
 
         <!-- 🚀 메인 콘텐츠 영역 -->
         <main class="main-content-wrapper">
+
+            <!-- 🏫 상단 학급 전환 바 (전담 여러 반) -->
+            <div id="class-switch-bar"></div>
 
             <!-- 📋 0. 대시보드 탭 -->
             <div id="board-tab" class="content-section active">
@@ -1458,11 +1467,14 @@
                 var _mm = document.getElementById('rpg-mission-modal'); if(_mm && _mm.style.display === 'flex') rpgRenderMissions();
             });
 
-            document.getElementById('auth-overlay').style.display = 'none'; 
+            document.getElementById('auth-overlay').style.display = 'none';
             document.getElementById('main-app').style.display = 'flex';
-            
+            loadClassSwitcher();
+
             if(window.clockInterval) clearInterval(window.clockInterval);
             updateClock(); window.clockInterval = setInterval(updateClock, 1000);
+            // 마지막으로 보던 탭 복원 (반 전환해도 같은 화면 유지)
+            try { var _lt = localStorage.getItem('lastTab'); if(_lt && _lt !== 'board' && document.getElementById(_lt + '-tab')) setTimeout(function(){ switchTab(_lt); }, 0); } catch(e) {}
             
             if(!isTabletMode) {
                 let autoSaveTimer;
@@ -1514,6 +1526,60 @@
         function switchClass() {
             if(!confirm('다른 학급으로 이동할까요?\n(내 학급 목록에서 학급을 고르거나 새로 만들 수 있어요)')) return;
             exitRoom();
+        }
+
+        // ===== 🏫 상단 학급 전환 바 (전담이 여러 반을 빠르게 오가며 관리) =====
+        let myClassesCache = [];
+        function loadClassSwitcher() {
+            const user = auth.currentUser;
+            if(!user) { myClassesCache = []; renderClassSwitchBar(); return; }
+            db.ref('users/' + user.uid + '/classes').once('value').then(snap => {
+                const cls = snap.val() || {}; const ids = Object.keys(cls);
+                return Promise.all(ids.map(cid => db.ref('rooms/' + cid + '/_meta/name').once('value')
+                    .then(m => ({ id: cid, name: m.val() || ('반 ' + cid.slice(-4)), role: cls[cid], createdAt: 0 }))
+                    .catch(() => ({ id: cid, name: '반 ' + cid.slice(-4), role: cls[cid] }))));
+            }).then(list => {
+                list.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+                myClassesCache = list;
+                renderClassSwitchBar();
+            }).catch(() => { myClassesCache = []; renderClassSwitchBar(); });
+        }
+        function renderClassSwitchBar() {
+            const bar = document.getElementById('class-switch-bar'); if(!bar) return;
+            if(!myClassesCache || myClassesCache.length === 0) { bar.style.display = 'none'; return; }
+            let html = '<span style="font-size:12px; color:#90a4ae; font-weight:800; margin:0 4px;"><i class="fa-solid fa-chalkboard-user"></i> 학급</span>';
+            myClassesCache.forEach(c => {
+                const on = c.id === currentRoom;
+                const tag = c.role === 'subject' ? ' (전담)' : '';
+                html += '<button class="class-chip' + (on ? ' on' : '') + '" onclick="switchToClass(\'' + c.id + '\',\'' + c.role + '\')" title="' + escapeHtml(c.name) + tag + '">' + escapeHtml(c.name) + '</button>';
+            });
+            html += '<button class="class-chip add" onclick="switchAddClass()" title="학급 추가"><i class="fa-solid fa-plus"></i> 학급 추가</button>';
+            bar.innerHTML = html;
+            bar.style.display = 'flex';
+        }
+        function switchToClass(cid, role) {
+            if(cid === currentRoom) return;
+            if(window.flushDashboardSave) window.flushDashboardSave();
+            localStorage.setItem('classRoomName', cid);
+            localStorage.setItem('classRole', role || 'owner');
+            location.reload();
+        }
+        function switchAddClass() {
+            const user = auth.currentUser; if(!user) return alert('로그인이 필요해요.');
+            const name = prompt('추가할 학급 이름을 입력하세요\n(예: 6학년 3반)');
+            if(!name || !name.trim()) return;
+            const classId = db.ref('rooms').push().key;
+            const code = genClassCode();
+            const teacherName = user.displayName || (user.email || '').split('@')[0] || '선생님';
+            const updates = {};
+            updates['rooms/' + classId + '/_meta'] = { name: name.trim(), ownerUid: user.uid, code: code, createdAt: Date.now() };
+            updates['rooms/' + classId + '/_members/' + user.uid] = { role: 'owner', name: teacherName };
+            updates['users/' + user.uid + '/classes/' + classId] = 'owner';
+            updates['classCodes/' + code] = classId;
+            db.ref().update(updates).then(() => {
+                alert('✅ "' + name.trim() + '" 학급을 추가했어요!\n(전담 참여 코드: ' + code + ')');
+                switchToClass(classId, 'owner');
+            }).catch(e => alert('생성 오류: ' + e.message));
         }
 
         function toArray(data, length) {
@@ -2023,9 +2089,10 @@
         // 🌟 탭 관리 로직
         // ==========================================
         function switchTab(t) {
+            try { localStorage.setItem('lastTab', t); } catch(e) {}
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             let activeTarget = t;
-            if(t === 'stats') activeTarget = 'homework'; 
+            if(t === 'stats') activeTarget = 'homework';
             document.querySelector(`.tab-btn[onclick="switchTab('${activeTarget}')"]`).classList.add('active');
             
             document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
