@@ -2701,6 +2701,7 @@
         }
         function nsRerender() {
             if (!nsArr) return;
+            nsSelectedId = null; // 다시 그릴 때 선택 표시 초기화
             const sv = document.getElementById('ns-student-view').checked;
             const vt = document.getElementById('ns-view-toggle');
             if (vt) { vt.style.display = (nsArr.formation === 'cooperative') ? 'inline' : 'none'; nsUpdateViewButtons(); }
@@ -2711,7 +2712,7 @@
             else html = nsHtmlFree(nsArr.seats);
             const hint = nsArr.formation === 'free'
                 ? '✋ 네모칸의 “⠿ 이동”을 잡고 원하는 곳으로 옮기고, 이름을 눌러 바로 수정하세요.'
-                : '✋ 학생을 드래그해서 서로 자리를 바꿀 수 있어요.';
+                : '👆 학생을 <b>톡 눌러 두 명 선택</b>하면 자리가 바뀌어요. (드래그도 가능)';
             document.getElementById('ns-result').innerHTML = `<p style="font-size:12px; color:#999; margin:0 0 10px 0;" class="seating-controls">${hint}</p>` + html;
             // 성장 탭이 자리배치 모드로 열려 있으면 함께 갱신
             if(typeof rpgViewMode !== 'undefined' && rpgViewMode === 'seating' && typeof rpgRef !== 'undefined' && rpgRef && document.getElementById('rpg-grid')) renderRpgGrid();
@@ -2914,6 +2915,22 @@
         document.addEventListener('dragstart', e => { const c = e.target.closest ? e.target.closest('.ns-chip') : null; if (c) { nsDragId = c.dataset.id; if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'; } });
         document.addEventListener('dragover', e => { if (nsDragId && e.target.closest && e.target.closest('.ns-chip')) e.preventDefault(); });
         document.addEventListener('drop', e => { if (!nsDragId) return; const c = e.target.closest ? e.target.closest('.ns-chip') : null; if (c) { e.preventDefault(); const tid = c.dataset.id; if (tid && tid !== nsDragId) nsSwapById(nsDragId, tid); } nsDragId = null; });
+        // 👆 클릭(터치) 교체: 학생을 톡 눌러 두 명 선택하면 자리가 바뀜 (드래그가 어려운 경우)
+        let nsSelectedId = null;
+        document.addEventListener('click', e => {
+            const c = e.target.closest ? e.target.closest('.ns-chip') : null;
+            if (!c) return;
+            const id = c.dataset.id;
+            if (nsSelectedId === null) {
+                nsSelectedId = id;
+                c.style.outline = '3px solid #5b97d1'; c.style.outlineOffset = '1px';
+            } else if (nsSelectedId === id) {
+                nsSelectedId = null; c.style.outline = '';
+            } else {
+                const first = nsSelectedId; nsSelectedId = null;
+                nsSwapById(first, id); // nsRerender가 화면을 다시 그려 선택 표시 해제
+            }
+        });
 
         function generateSmartSeating() {
             if (parsedRoster.length === 0) {
