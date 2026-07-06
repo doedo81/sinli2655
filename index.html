@@ -236,6 +236,12 @@
         .act-screen-layer { position: absolute; inset: 0; }
         #act-screens-bar { position: absolute; top: 14px; right: 14px; z-index: 35; display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.92); border: 1px solid #e6ebf3; border-radius: 20px; padding: 5px 8px; box-shadow: 0 6px 18px rgba(56,78,126,0.15); flex-wrap: wrap; max-width: 60%; justify-content: flex-end; }
         .act-screen-btn { min-width: 28px; height: 28px; border: none; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer; font-family: 'Pretendard',sans-serif; }
+        /* 성장 탭 관리 드롭다운 메뉴 */
+        #rpg-menu { display: none; position: absolute; right: 0; top: calc(100% + 8px); background: #fff; border: 1px solid #e6ebf3; border-radius: 14px; box-shadow: 0 14px 36px rgba(56,78,126,0.22); padding: 8px; min-width: 232px; z-index: 60; }
+        #rpg-menu .rpg-menu-label { font-size: 11px; font-weight: 800; color: #9aa8bd; padding: 8px 10px 4px; }
+        #rpg-menu button { display: block; width: 100%; text-align: left; border: none; background: transparent; border-radius: 9px; padding: 10px 12px; font-size: 14px; font-weight: 700; color: #455a64; cursor: pointer; font-family: 'Pretendard',sans-serif; }
+        #rpg-menu button:hover { background: #f0f4fa; }
+        #rpg-menu .rpg-menu-sep { height: 1px; background: #eef1f6; margin: 6px 4px; }
         #act-hint { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 15; background: rgba(240,244,250,0.9); color: #607d8b; font-size: 13px; font-weight: 600; padding: 7px 16px; border-radius: 20px; pointer-events: none; white-space: nowrap; }
         #act-toolbar { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 40; display: flex; align-items: center; gap: 4px; background: #fff; border: 1px solid #e6ebf3; border-radius: 16px; padding: 8px 10px; box-shadow: 0 8px 26px rgba(56,78,126,0.18); max-width: 94%; flex-wrap: wrap; justify-content: center; }
         .act-tool { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 42px; height: 42px; border: none; border-radius: 10px; background: transparent; color: #546e7a; font-size: 17px; cursor: pointer; transition: 0.15s; padding: 4px 6px; }
@@ -750,17 +756,27 @@
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
                         <h2 style="color:var(--dark-blue); margin:0;"><i class="fa-solid fa-dragon"></i> 성장 (상벌점 RPG)</h2>
                         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-                            <button class="action-btn" id="rpg-lock-btn" style="background:#78909c; padding:10px 18px;" onclick="rpgToggleLock()"><i class="fa-solid fa-lock"></i> 잠금</button>
                             <button class="action-btn" id="rpg-exit-student" style="background:#e53935; padding:10px 18px; display:none;" onclick="rpgExitStudentMode()"><i class="fa-solid fa-chalkboard-user"></i> 선생님 모드로</button>
-                            <div id="rpg-teacher-btns" style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <div id="rpg-teacher-btns" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
                                 <button class="action-btn" id="rpg-bulk-toggle" style="background:#5b97d1; padding:10px 18px;" onclick="rpgToggleBulk()"><i class="fa-solid fa-layer-group"></i> 일괄 지급</button>
-                                <button class="action-btn" style="background:#e91e8c; padding:10px 18px;" onclick="rpgOpenMissions()"><i class="fa-solid fa-bullseye"></i> 미션</button>
-                                <button class="action-btn" style="background:#fb8c00; padding:10px 18px;" onclick="rpgOpenExam()"><i class="fa-solid fa-file-pen"></i> 단원평가</button>
-                                <button class="action-btn" id="rpg-grade-btn" style="background:#455a64; padding:10px 18px; display:none;" onclick="rpgOpenGrade()"><i class="fa-solid fa-table-list"></i> 평가 기록</button>
-                                <button class="action-btn" style="background:#00897b; padding:10px 18px;" onclick="rpgOpenActions()"><i class="fa-solid fa-sliders"></i> 상점 항목</button>
-                                <button class="action-btn" style="background:#7b6cd9; padding:10px 18px;" onclick="rpgToggleRoster()"><i class="fa-solid fa-user-pen"></i> 명단 입력/수정</button>
-                                <button class="action-btn" style="background:#26a69a; padding:10px 18px;" onclick="rpgEnterStudentMode()"><i class="fa-solid fa-child-reaching"></i> 학생 모드</button>
-                                <button class="action-btn" style="background:#3949ab; padding:10px 18px;" onclick="rpgOpenStudentGuide()"><i class="fa-solid fa-mobile-screen"></i> 학생 로그인</button>
+                                <div style="position:relative;">
+                                    <button class="action-btn" style="background:#5c6c95; padding:10px 18px;" onclick="rpgToggleMenu(event)"><i class="fa-solid fa-bars"></i> 관리 <i class="fa-solid fa-caret-down" style="margin-left:2px;"></i></button>
+                                    <div id="rpg-menu">
+                                        <div class="rpg-menu-label">수업 도구</div>
+                                        <button onclick="rpgOpenMissions(); rpgCloseMenu();"><i class="fa-solid fa-bullseye" style="color:#e91e8c; width:18px;"></i> 미션</button>
+                                        <button onclick="rpgOpenExam(); rpgCloseMenu();"><i class="fa-solid fa-file-pen" style="color:#fb8c00; width:18px;"></i> 단원평가</button>
+                                        <button id="rpg-grade-btn" style="display:none;" onclick="rpgOpenGrade(); rpgCloseMenu();"><i class="fa-solid fa-table-list" style="color:#455a64; width:18px;"></i> 평가 기록</button>
+                                        <div class="rpg-menu-sep"></div>
+                                        <div class="rpg-menu-label">관리 · 설정</div>
+                                        <button onclick="rpgOpenActions(); rpgCloseMenu();"><i class="fa-solid fa-sliders" style="color:#00897b; width:18px;"></i> 상점 항목</button>
+                                        <button onclick="rpgToggleRoster(); rpgCloseMenu();"><i class="fa-solid fa-user-pen" style="color:#7b6cd9; width:18px;"></i> 명단 입력/수정 (전출입)</button>
+                                        <button class="action-btn" id="rpg-lock-btn" style="background:#78909c; color:#fff; padding:10px 12px; margin-top:4px;" onclick="rpgToggleLock()"><i class="fa-solid fa-lock"></i> 평가 잠금</button>
+                                        <div class="rpg-menu-sep"></div>
+                                        <div class="rpg-menu-label">학생용</div>
+                                        <button onclick="rpgEnterStudentMode(); rpgCloseMenu();"><i class="fa-solid fa-child-reaching" style="color:#26a69a; width:18px;"></i> 학생 모드</button>
+                                        <button onclick="rpgOpenStudentGuide(); rpgCloseMenu();"><i class="fa-solid fa-mobile-screen" style="color:#3949ab; width:18px;"></i> 학생 로그인</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -4004,6 +4020,13 @@
             var lb = document.getElementById('rpg-lock-btn');
             if(lb){ lb.innerHTML = rpgLocked ? '<i class="fa-solid fa-lock-open"></i> 평가 잠금 해제' : '<i class="fa-solid fa-lock"></i> 평가 잠금'; lb.style.background = rpgLocked ? '#e57373' : '#78909c'; lb.style.display = (currentRole === 'owner') ? '' : 'none'; }
         }
+        function rpgToggleMenu(e){ if(e){ e.stopPropagation(); } var m = document.getElementById('rpg-menu'); if(!m) return; m.style.display = (m.style.display === 'block') ? 'none' : 'block'; }
+        function rpgCloseMenu(){ var m = document.getElementById('rpg-menu'); if(m) m.style.display = 'none'; }
+        document.addEventListener('click', function(e){
+            var m = document.getElementById('rpg-menu');
+            if(m && m.style.display === 'block' && e.target.closest && !e.target.closest('#rpg-menu') && !e.target.closest('[onclick*="rpgToggleMenu"]')) rpgCloseMenu();
+        });
+
         function rpgEnterStudentMode(){
             rpgStudentMode = true; rpgBulkMode = false;
             localStorage.setItem('rpgStu_' + currentRoom, '1');
