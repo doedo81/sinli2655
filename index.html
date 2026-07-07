@@ -4646,7 +4646,7 @@
             };
             if(arr.formation === 'cooperative'){
                 grid.style.display = 'grid';
-                grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(280px, 1fr))';
+                grid.style.gridTemplateColumns = 'repeat(3, minmax(0, 1fr))';
                 grid.innerHTML = (arr.groups || []).map(function(g, gi){
                     return '<div style="border:1px solid #e6e0f3;border-radius:14px;padding:10px;background:#faf9ff;">'
                         + '<div style="font-weight:800;color:#6a4bb5;margin-bottom:8px;text-align:center;font-size:14px;">' + (gi + 1) + '모둠</div>'
