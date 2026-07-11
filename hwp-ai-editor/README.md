@@ -10,14 +10,32 @@
 ```
 hwpxlib/
   core.py       검증된 HWPX 편집 엔진 (기존 hwpx_edit_v7.py, 로직 불변)
-                + 웹용 from_bytes() / save_bytes()
+                + 웹용 from_bytes() / save_bytes() / replace_regex()
   autotable.py  표 자동 레이아웃 autofit_table()          ★ 핵심
   template.py   표준 양식 준수 편집 apply_template()       ★ 핵심
-  cli.py        하위호환 CLI (기존 명령 + autofit + template)
+  cli.py        하위호환 CLI (기존 명령 + autofit + template + replace-re)
+server/
+  app.py        무외부의존 웹앱 백엔드 (stdlib http.server)
+web/
+  index.html    브라우저 SPA (업로드·표 편집·다운로드)
 tests/
-  fixtures.py   테스트용 최소 HWPX 생성기
-  test_engine.py  회귀 + AutoTable 검증
+  fixtures.py       테스트용 최소 HWPX 생성기
+  test_engine.py    회귀 + AutoTable 검증
+  test_template.py  양식 준수 편집 검증
+  test_replace_regex.py  안전 치환 검증
 ```
+
+## 웹앱 실행 (설치 불필요)
+
+```bash
+cd hwp-ai-editor
+python3 -m server.app          # → http://localhost:8000
+```
+
+브라우저에서 열고 → `.hwpx` 업로드 → 왼쪽 표 목록에서 표 선택 →
+셀 클릭 편집 · 자동맞춤 · 행/열 삭제 · 합계 재계산 · 정규식 바꾸기 · 구조검진 →
+⬇ 다운로드. 편집할 때마다 구조검진(verify)이 자동으로 갱신된다.
+(AI 자연어 편집은 다음 단계 — Claude API 연동 예정)
 
 ## CLI 사용법
 

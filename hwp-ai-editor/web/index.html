@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>한글(HWPX) 편집기</title>
+<style>
+  :root{
+    --bg:#f4f5f7; --panel:#ffffff; --line:#e2e5ea; --ink:#1c2330;
+    --muted:#6b7280; --accent:#2563eb; --ok:#16a34a; --bad:#dc2626;
+    --chip:#eef2ff;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0f1420; --panel:#171d2b; --line:#2a3040; --ink:#e7ebf3;
+      --muted:#9aa4b6; --accent:#5b8cff; --ok:#34d399; --bad:#f87171;
+      --chip:#1f2740; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.5 system-ui,"Malgun Gothic",sans-serif;
+    background:var(--bg);color:var(--ink)}
+  header{display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+    padding:12px 16px;background:var(--panel);border-bottom:1px solid var(--line);
+    position:sticky;top:0;z-index:5}
+  header h1{font-size:16px;margin:0 12px 0 0;white-space:nowrap}
+  button{font:inherit;padding:6px 12px;border:1px solid var(--line);
+    background:var(--panel);color:var(--ink);border-radius:8px;cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  input[type=text]{font:inherit;padding:6px 8px;border:1px solid var(--line);
+    border-radius:8px;background:var(--panel);color:var(--ink)}
+  .wrap{display:grid;grid-template-columns:270px 1fr;gap:14px;padding:14px;
+    align-items:start}
+  @media(max-width:820px){.wrap{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:12px}
+  .side h3{margin:0 0 8px;font-size:13px;color:var(--muted)}
+  .tlist{display:flex;flex-direction:column;gap:6px;max-height:70vh;overflow:auto}
+  .titem{padding:8px 10px;border:1px solid var(--line);border-radius:8px;
+    cursor:pointer;display:flex;justify-content:space-between;gap:8px}
+  .titem:hover{border-color:var(--accent)}
+  .titem.active{background:var(--chip);border-color:var(--accent)}
+  .titem small{color:var(--muted)}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+  .gridwrap{overflow:auto;max-width:100%}
+  table.grid{border-collapse:collapse;min-width:100%}
+  table.grid th,table.grid td{border:1px solid var(--line);padding:4px 8px;
+    min-width:44px;text-align:center;white-space:pre-wrap;vertical-align:middle}
+  table.grid th{background:var(--chip);color:var(--muted);font-weight:600;
+    position:sticky;top:0}
+  table.grid td.lab{background:var(--chip);color:var(--muted)}
+  table.grid td.cell:hover{outline:2px solid var(--accent);cursor:text}
+  table.grid td .ci{color:var(--muted);font-size:11px}
+  .status{display:inline-flex;align-items:center;gap:6px;font-weight:600}
+  .dot{width:10px;height:10px;border-radius:50%}
+  .ok{background:var(--ok)} .bad{background:var(--bad)}
+  #log{font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;color:var(--muted);
+    max-height:160px;overflow:auto;white-space:pre-wrap}
+  .empty{color:var(--muted);padding:40px;text-align:center}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<header>
+  <h1>📄 한글(HWPX) 편집기</h1>
+  <input type="file" id="file" accept=".hwpx" hidden>
+  <button class="primary" onclick="file.click()">📂 파일 열기</button>
+  <span id="fname" style="color:var(--muted)"></span>
+  <span style="flex:1"></span>
+  <input type="text" id="reFind" placeholder="찾기(정규식)" style="width:150px">
+  <input type="text" id="reRepl" placeholder="바꿀 말" style="width:120px">
+  <button onclick="doReplace()" id="btnRe" disabled>바꾸기</button>
+  <button onclick="doVerify()" id="btnV" disabled>구조검진</button>
+  <button onclick="doDownload()" id="btnD" disabled>⬇ 다운로드</button>
+</header>
+
+<div class="wrap">
+  <div class="card side">
+    <h3>표 목록 <span id="pcount"></span></h3>
+    <div class="tlist" id="tlist"><div class="empty">파일을 열어주세요</div></div>
+  </div>
+
+  <div>
+    <div class="card" id="editor">
+      <div class="toolbar" id="tbar" style="display:none">
+        <strong id="ttitle"></strong>
+        <span style="flex:1"></span>
+        <button onclick="op('autofit',{ti:cur})">↔ 자동맞춤</button>
+        <button onclick="promptDel('del_col','열')">열 삭제</button>
+        <button onclick="promptDel('del_row','행')">행 삭제</button>
+        <button onclick="promptSum()">합계 재계산</button>
+      </div>
+      <div class="gridwrap" id="grid"><div class="empty">표를 선택하면 여기에 표시됩니다</div></div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <div class="row" style="margin-bottom:8px">
+        <span class="status"><span class="dot" id="vd"></span><span id="vtext">문서 없음</span></span>
+        <span style="flex:1"></span>
+      </div>
+      <div id="log"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let S=null, cur=null;   // session, 현재 표 index
+const $=id=>document.getElementById(id);
+
+function log(msg){ const l=$('log'); l.textContent=('› '+msg+'\n')+l.textContent; }
+
+async function api(path,opts){
+  const r=await fetch(path,opts);
+  const j=await r.json().catch(()=>({ok:false,error:'응답 파싱 실패'}));
+  if(!r.ok||j.ok===false) throw new Error(j.error||('HTTP '+r.status));
+  return j;
+}
+
+function setVerify(issues){
+  const bad=issues && issues.length;
+  $('vd').className='dot '+(bad?'bad':'ok');
+  $('vtext').textContent = bad ? ('구조 문제 '+issues.length+'건: '+issues.map(i=>i.kind).join(', '))
+                               : '구조 이상 없음';
+}
+
+function renderTables(tables){
+  const el=$('tlist'); el.innerHTML='';
+  if(!tables.length){ el.innerHTML='<div class="empty">표 없음</div>'; return; }
+  tables.forEach(t=>{
+    const d=document.createElement('div');
+    d.className='titem'+(t.index===cur?' active':'');
+    d.innerHTML=`<span>표 ${t.index}</span><small>${t.rows}×${t.cols}${t.nested?' ⊃':''}</small>`;
+    d.onclick=()=>openTable(t.index);
+    el.appendChild(d);
+  });
+}
+
+async function openTable(i){
+  cur=i;
+  const d=await api('/api/table?session='+S+'&i='+i);
+  drawGrid(d);
+  document.querySelectorAll('.titem').forEach((e,idx)=>{});
+  renderTables(window._tables||[]);
+  $('tbar').style.display='flex';
+  $('ttitle').textContent=`표 ${i}  (${d.rows}행 × ${d.cols}열)`;
+}
+
+function drawGrid(d){
+  const map={};
+  d.cells.forEach(c=>map[c.row+','+c.col]=c.text);
+  let h='<table class="grid"><tr><th></th>';
+  for(let c=0;c<d.cols;c++) h+=`<th>${c}</th>`;
+  h+='</tr>';
+  for(let r=0;r<d.rows;r++){
+    h+=`<tr><td class="lab">${r}</td>`;
+    for(let c=0;c<d.cols;c++){
+      const key=r+','+c, has=key in map;
+      const txt=has?map[key]:'';
+      h+=`<td class="${has?'cell':''}" data-r="${r}" data-c="${c}" ${has?`onclick="editCell(this)"`:''}>${esc(txt)}</td>`;
+    }
+    h+='</tr>';
+  }
+  h+='</table>';
+  $('grid').innerHTML=h;
+}
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function editCell(td){
+  const r=+td.dataset.r, c=+td.dataset.c, old=td.textContent;
+  const inp=document.createElement('input');
+  inp.type='text'; inp.value=old; inp.style.width='100%';
+  td.textContent=''; td.appendChild(inp); inp.focus(); inp.select();
+  const done=async(save)=>{
+    if(save && inp.value!==old){
+      try{ await op('set_cell',{ti:cur,row:r,col:c,text:inp.value},true);
+           log(`표${cur} (${r},${c}) → "${inp.value}"`); }
+      catch(e){ log('오류: '+e.message); }
+    } else { td.textContent=old; }
+  };
+  inp.onblur=()=>done(true);
+  inp.onkeydown=e=>{ if(e.key==='Enter'){e.preventDefault();inp.blur();}
+                     if(e.key==='Escape'){inp.value=old;inp.blur();} };
+}
+
+async function op(name,args,silent){
+  const j=await api('/api/op',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({session:S,op:name,args})});
+  window._tables=j.tables; renderTables(j.tables); setVerify(j.verify);
+  if(j.table && (args.ti===cur)) drawGrid(j.table);
+  if(!silent && name!=='set_cell') log(name+' 완료'+(j.count!=null?` (${j.count}곳)`:'')
+      +(j.total!=null?` 합계=${j.total}`:'')+(j.report?` (행+${j.report.added_rows}, ${j.report.filled}칸)`:''));
+  return j;
+}
+
+function promptDel(name,label){
+  const idx=prompt(`삭제할 ${label} 번호(0부터):`); if(idx===null) return;
+  const key = name==='del_col'?'col':'row';
+  op(name,{ti:cur,[key]:+idx}).then(()=>log(`표${cur} ${label} ${idx} 삭제`))
+    .catch(e=>log('오류: '+e.message));
+}
+function promptSum(){
+  const row=prompt('합계를 계산할 행 번호:'); if(row===null) return;
+  const sc=prompt('합계를 넣을 열 번호(보통 마지막 열):'); if(sc===null) return;
+  op('sum_row',{ti:cur,row:+row,sum_col:+sc}).catch(e=>log('오류: '+e.message));
+}
+
+async function doReplace(){
+  const p=$('reFind').value, q=$('reRepl').value;
+  if(!p){ log('찾을 정규식을 입력하세요'); return; }
+  try{ const j=await op('replace_regex',{pattern:p,repl:q});
+       if(cur!=null) openTable(cur); }
+  catch(e){ log('치환 오류: '+e.message); }
+}
+async function doVerify(){
+  const d=await api('/api/table?session='+S+'&i='+(cur||0)).catch(()=>null);
+  // verify는 op 응답에 실려오므로, 강제로 no-op 없이 최신 상태 표시
+  log('구조검진: 최근 상태 기준 표시(편집 시마다 자동 갱신)');
+}
+function doDownload(){ window.location='/api/download?session='+S; log('다운로드'); }
+
+$('file').onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const buf=await f.arrayBuffer();
+  let bin=''; const b=new Uint8Array(buf);
+  for(let i=0;i<b.length;i++) bin+=String.fromCharCode(b[i]);
+  const b64=btoa(bin);
+  try{
+    const j=await api('/api/upload',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name:f.name,b64})});
+    S=j.session; cur=null; window._tables=j.tables;
+    $('fname').textContent=j.name+`  ·  표 ${j.tables.length}개 · 문단 ${j.paras}개`;
+    renderTables(j.tables); setVerify(j.verify);
+    ['btnRe','btnV','btnD'].forEach(id=>$(id).disabled=false);
+    $('grid').innerHTML='<div class="empty">왼쪽에서 표를 선택하세요</div>';
+    $('tbar').style.display='none';
+    log('업로드: '+f.name);
+  }catch(err){ log('업로드 실패: '+err.message); }
+};
+</script>
+</body>
+</html>
