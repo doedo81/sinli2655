@@ -1589,6 +1589,39 @@ class HwpxDoc:
             self.files[sec] = pat.sub(repl, xml).encode("utf-8")
         return count
 
+    def replace_regex(self, pattern, repl):
+        """정규식으로 문서 전체 찾아 바꾸기 (표 안 포함).
+        replace_text와 동일하게 <hp:t> 텍스트 노드만 대상으로 하고,
+        인라인 태그(tab/lineBreak 등)는 보존한다. 텍스트 조각을 unescape한
+        상태에서 re.sub을 적용하므로, 예: 앞뒤 문맥을 보는 lookbehind로
+        '2026학년도' 안의 '6학년'은 건드리지 않게 안전 치환할 수 있다."""
+        rx = re.compile(pattern)
+        count = 0
+        for sec in self.sections:
+            xml = self.files[sec].decode("utf-8")
+            pat = _t_pattern(_detect_prefix(xml, "t"))
+
+            def repl_node(m):
+                nonlocal count
+                raw = m.group(2)
+                parts = re.split(r'(<[^>]+>)', raw)   # 인라인 태그 보존
+                changed = False
+                for j, part in enumerate(parts):
+                    if part.startswith('<'):
+                        continue
+                    txt = _unescape(part)
+                    new_txt, n = rx.subn(repl, txt)
+                    if n:
+                        count += n
+                        parts[j] = escape(new_txt)
+                        changed = True
+                if changed:
+                    return m.group(1) + ''.join(parts) + m.group(3)
+                return m.group(0)
+
+            self.files[sec] = pat.sub(repl_node, xml).encode("utf-8")
+        return count
+
     def set_paragraph(self, index, new_text):
         paras = self.paragraphs()
         if not (0 <= index < len(paras)):

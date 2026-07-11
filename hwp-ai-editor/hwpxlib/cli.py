@@ -138,6 +138,10 @@ def main(argv):
         n = doc.replace_text(args[0], args[1])
         doc.save(out_path)
         print("%d곳 바꿈 → %s" % (n, out_path))
+    elif cmd == "replace-re":
+        n = doc.replace_regex(args[0], args[1])
+        doc.save(out_path)
+        print("정규식 %d곳 바꿈 → %s" % (n, out_path))
     elif cmd == "add-table":
         # 사용법: add-table 행 열 [--data "a|b;c|d"] [--after 문단번호]
         rows, cols = int(args[0]), int(args[1])
