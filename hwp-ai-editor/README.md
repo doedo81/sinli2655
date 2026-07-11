@@ -11,8 +11,9 @@
 hwpxlib/
   core.py       검증된 HWPX 편집 엔진 (기존 hwpx_edit_v7.py, 로직 불변)
                 + 웹용 from_bytes() / save_bytes()
-  autotable.py  표 자동 레이아웃 autofit_table()  ★ 핵심
-  cli.py        하위호환 CLI (기존 명령 + autofit)
+  autotable.py  표 자동 레이아웃 autofit_table()          ★ 핵심
+  template.py   표준 양식 준수 편집 apply_template()       ★ 핵심
+  cli.py        하위호환 CLI (기존 명령 + autofit + template)
 tests/
   fixtures.py   테스트용 최소 HWPX 생성기
   test_engine.py  회귀 + AutoTable 검증
@@ -30,6 +31,10 @@ python3 -m hwpxlib.cli 문서.hwpx set-cell 0 1 2 "홍길동" -o 결과.hwpx
 
 # ★ 표 자동 레이아웃 (전체 폭 유지, 긴 내용 열만 넓힘)
 python3 -m hwpxlib.cli 문서.hwpx autofit 0 -o 결과.hwpx
+
+# ★ 표준 양식 준수 편집 (채움 칸만, 행 자동 증설 + 자동 맞춤)
+python3 -m hwpxlib.cli 양식.hwpx template-info 0
+python3 -m hwpxlib.cli 양식.hwpx apply-template 0 --records "홍길동|총무과;이영희|기획과" -o 결과.hwpx
 
 # 구조 검진 (편집 마무리 권장)
 python3 -m hwpxlib.cli 문서.hwpx verify

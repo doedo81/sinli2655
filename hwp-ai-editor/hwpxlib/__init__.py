@@ -6,5 +6,7 @@ autotable: 표 자동 레이아웃 (autofit_table)
 """
 from .core import HwpxDoc, GOV_DOC_RULES
 from .autotable import autofit_table
+from .template import extract_schema, apply_template, validate_template
 
-__all__ = ["HwpxDoc", "GOV_DOC_RULES", "autofit_table"]
+__all__ = ["HwpxDoc", "GOV_DOC_RULES", "autofit_table",
+           "extract_schema", "apply_template", "validate_template"]

@@ -44,10 +44,12 @@
 - **넘침 처리 우선순위**: ① 열 확장 → ② 행 높이 상향(줄바꿈) → ③ 마지막 수단으로만 그 셀 글자 축소.
 - 마무리로 `verify`로 구조(rowCnt/colCnt·병합) 무결성 자동 확인.
 
-### 4.2 표준 양식 준수 (Template) — 설계 완료, 다음 단계
-- `extract_schema(표준문서)`: 열 구성·헤더·열별 스타일·**고정 칸 vs 채움 칸**·병합·규정 추출.
-- `apply_template(대상, 스키마, 내용)`: 채움 칸에만 매핑(고정 칸 불변), 데이터 많으면 행 자동 증설,
-  채운 뒤 AutoTable로 자동 맞춤, 스타일 강제 정합, 양식 검증.
+### 4.2 표준 양식 준수 (Template) — 구현 완료
+- `extract_schema(표, 표번호)`: 헤더행·라벨열·**고정 칸 vs 채움 칸**·열별 스타일·반복 행·헤더 라벨→열 추출.
+- `apply_template(표, 표번호, 레코드)`: 채움 칸에만 매핑(고정 칸·서식 불변), 데이터 많으면 `copy_row`로
+  행 자동 증설, 채운 뒤 `autofit_table`로 자동 맞춤, 스타일 정합, `validate_template`+`verify` 검증.
+- `validate_template`: 고정 칸 불변·글꼴/정렬 일관성·구조·날짜표기 규정 점검.
+- CLI: `template-info`, `apply-template --records "값|값;값|값"`.
 
 ### 4.3 AI 오케스트레이션 (다음 단계)
 Claude tool-use로 저수준 편집 도구 + **고수준 도구**(`autofit_table`, `apply_template`)를 노출.
@@ -67,8 +69,8 @@ Claude tool-use로 저수준 편집 도구 + **고수준 도구**(`autofit_table
 ## 6. 로드맵
 
 - **Phase 0 — 엔진 라이브러리화** ✅ : `hwpx_edit_v7.py` → `hwpxlib/`(로직 불변, 웹용 `from_bytes`/`save_bytes` 추가, CLI 하위호환)
-- **Phase A — AutoTable** ✅(초판) : `autofit_table` + 회귀 테스트
-- **Phase B — Template** : 양식 스키마 추출·준수 편집·양식 검증
+- **Phase A — AutoTable** ✅ : `autofit_table` + 회귀 테스트
+- **Phase B — Template** ✅ : `extract_schema`·`apply_template`·`validate_template` + 테스트
 - **Phase C — AI 오케스트레이션** : Claude tool-use 에이전트
 - **Phase D — 웹앱 UI** : 업로드·뷰어·AI 채팅·diff·다운로드
 - **Phase E — HWP 지원** : 위 3단계

@@ -38,6 +38,14 @@ hwpx_edit.py v2 — HWPX(.hwpx) 텍스트 + 표(셀) 편집기 (외부 라이브
         넘치면 행 높이 상향(줄바꿈) → 마지막 수단으로 그 셀 글자만 축소.
         (사람이 폭·높이를 지정하지 않아도 엔진이 치수를 자동 계산)
 
+  python3 hwpx_edit.py 양식.hwpx template-info 표번호
+      → 양식 스키마 확인: 헤더행·라벨열·채움 칸·헤더 라벨→열 매핑
+
+  python3 hwpx_edit.py 양식.hwpx apply-template 표번호 --records "값1|값2;값1|값2" [--no-autofit] -o 결과.hwpx
+      → 표준 양식 준수 편집: 데이터를 채움 칸에만 넣고(고정 칸·서식 불변),
+        데이터가 많으면 행 자동 증설 → autofit 자동 맞춤 → 양식·구조 검증.
+        (세미콜론=행, 파이프=채움 열 순서)
+
   python3 hwpx_edit.py 파일.hwpx cell-font 표번호 행 열 크기pt -o 결과.hwpx
       → 셀 글자 크기를 직접 지정 (예: cell-font 2 1 3 8.5)
 
@@ -95,6 +103,7 @@ import sys
 
 from .core import HwpxDoc
 from .autotable import autofit_table
+from .template import apply_template, extract_schema
 
 
 def main(argv):
@@ -317,6 +326,25 @@ def main(argv):
         doc.save(out_path)
         print("표 %s 자동 맞춤: 열폭 %s, 글자축소 %d칸 → %s"
               % (args[0], rep["widths"], len(rep["shrunk"]), out_path))
+    elif cmd == "apply-template":
+        # apply-template 표번호 --records "김철수|총무과;이영희|기획과" [--no-autofit]
+        raw = args[args.index("--records") + 1]
+        records = [row.split("|") for row in raw.split(";")]
+        autofit = "--no-autofit" not in args
+        rep = apply_template(doc, int(args[0]), records, autofit=autofit)
+        doc.save(out_path)
+        print("양식 적용: 행 +%d, %d칸 채움, 문제 %d건 → %s"
+              % (rep["added_rows"], rep["filled"], len(rep["issues"]), out_path))
+        for it in rep["issues"]:
+            print("  ⚠ %s %s" % (it["kind"], it.get("detail", "")))
+    elif cmd == "template-info":
+        sch = extract_schema(doc, int(args[0]))
+        print("열 %d · 헤더행 %s · 라벨열 %s"
+              % (sch["cols"], sch["header_rows"], sch["label_cols"]))
+        print("채움열 %s · 데이터행 %s · 반복행 %s"
+              % (sch["fill_cols"], sch["data_rows"], sch["repeat_row"]))
+        print("헤더 라벨→열: %s" % sch["label_to_col"])
+        print("채움 칸: %s" % sorted(sch["fillable"]))
     else:
         print("알 수 없는 명령: %s" % cmd)
         return 1
