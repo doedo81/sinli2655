@@ -51,15 +51,19 @@ python3 -m server.app          # → http://localhost:8000
 실행하고 `verify`로 자기검증한 뒤 결과를 보고한다. 사람이 행·열·치수를 지정하지
 않고 "무엇을 넣을지"만 말한다.
 
-- 예: `"3번 표 모든 과목 20으로 채워줘"`, `"6학년을 5학년으로 바꿔줘"`,
+- 편집 예: `"3번 표 모든 과목 20으로 채워줘"`, `"6학년을 5학년으로 바꿔줘"`,
   `"현황표 담임 열 삭제"`, `"표가 몇 개야?"`
+- **초안 생성 예**: `"과목별 시수 표 만들어줘"`, `"학급운영계획 표 넣고 항목 채워줘"`,
+  `"이 명단을 양식에 채워 초안 만들어줘"` — AI가 `add_table`로 표를 만들고 내용을
+  채운 뒤 `autofit`으로 정리하고 공문서 규정을 지켜 초안을 완성한다(현재 열린 문서에 추가).
 - **본인 Claude API 키**를 ⚙ 설정에 입력(브라우저 localStorage에만 저장, 요청마다
   Anthropic으로만 전송 — **서버에 저장·기록하지 않음**). AI 편집은 본인 API 사용량으로 과금.
 - 모델 선택(기본 `claude-opus-4-8`, 저비용 `claude-sonnet-5`/`claude-haiku-4-5`).
 - **↶ 실행취소** 버튼으로 직전 AI/수동 편집을 되돌린다.
 
 노출 도구: 조회(`list_tables`/`get_table`/`list_paragraphs`) + 편집(`set_cell`/
-`autofit`/`del_col`/`del_row`/`del_table`/`copy_row`/`replace_regex`/`sum_row`).
+`autofit`/`del_col`/`del_row`/`del_table`/`copy_row`/`replace_regex`/`sum_row`) +
+생성(`add_table`/`add_paragraph`/`apply_template`).
 SDK 없이 표준 라이브러리 `urllib`로 Messages API를 직접 호출한다(무외부의존 유지).
 
 ## 의존성

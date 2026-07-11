@@ -108,6 +108,52 @@ def test_tool_error_recovers():
     _assert(cell["text"] == "성명2", "재시도 편집 반영")
 
 
+def test_generate_table():
+    print("[test] add_table 생성 → new_table 번호로 채우기 → end_turn")
+    doc = HwpxDoc.from_bytes(make_sample_hwpx())
+    before = len(doc.tables())
+    mock = MockClaude([
+        ("tool_use", [_tool_use("g1", "add_table",
+                                {"rows": 2, "cols": 3,
+                                 "data": [["교과", "시수", "비고"], ["국어", "20", ""]]})]),
+        # 생성된 표(index=before)에 셀 하나 더 채움
+        ("tool_use", [_tool_use("g2", "set_cell",
+                                {"ti": before, "row": 1, "col": 2, "text": "확정"})]),
+        ("end_turn", [_text("과목별 시수 표를 만들었습니다.")]),
+    ])
+    res = run_agent(doc, "과목별 시수 표 만들어줘", "sk-fake", call=mock)
+    tbs = doc.tables()
+    _assert(len(tbs) == before + 1, "표 개수 %d→%d로 증가" % (before, len(tbs)))
+    cells = {(c["row"], c["col"]): c["text"] for c in tbs[before]["cells"]}
+    _assert(cells.get((0, 0)) == "교과" and cells.get((1, 1)) == "20",
+            "add_table data가 새 표에 채워짐")
+    _assert(cells.get((1, 2)) == "확정", "생성 후 set_cell로 새 표 편집됨")
+    tools_used = [a["tool"] for a in res["actions"]]
+    _assert("add_table" in tools_used and "set_cell" in tools_used,
+            "actions에 add_table·set_cell 기록")
+    _assert(res["verify"] == [], "생성 후 verify 이상 없음")
+    # 저장→재로딩 무결
+    doc2 = HwpxDoc.from_bytes(doc.save_bytes())
+    _assert(len(doc2.tables()) == before + 1, "저장→재로딩 후 표 수 유지")
+
+
+def test_generate_paragraph():
+    print("[test] add_paragraph 생성 → 문단 수 증가")
+    doc = HwpxDoc.from_bytes(make_sample_hwpx())
+    before = len(doc.paragraphs())
+    mock = MockClaude([
+        ("tool_use", [_tool_use("p1", "add_paragraph",
+                                {"text": "붙임. 세부 계획 1부."})]),
+        ("end_turn", [_text("본문 문단을 추가했습니다.")]),
+    ])
+    res = run_agent(doc, "붙임 문구 추가해줘", "sk-fake", call=mock)
+    paras = doc.paragraphs()
+    _assert(len(paras) == before + 1, "문단 수 %d→%d로 증가" % (before, len(paras)))
+    _assert(any("붙임. 세부 계획 1부." in t for _, _, _, t in paras),
+            "추가 문단 텍스트 반영")
+    _assert(res["actions"][0]["tool"] == "add_paragraph", "actions에 add_paragraph")
+
+
 def test_no_tool_immediate_reply():
     print("[test] 도구 없이 바로 답변(질의)")
     doc = HwpxDoc.from_bytes(make_sample_hwpx())

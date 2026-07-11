@@ -34,6 +34,19 @@ def _first_int(s):
     return int(m.group(0)) if m else 0
 
 
+def _table_index_by_id(doc, table_id):
+    """방금 만든 표의 index를 tbl id로 찾는다(중간 삽입도 정확).
+    span 시작부의 <...:tbl id="N" ...>에서 id를 읽어 대조. 못 찾으면 마지막."""
+    tables = doc.tables()
+    for t in tables:
+        xml = doc.files[t["sec"]].decode("utf-8")
+        s, e = t["span"]
+        m = re.search(r'<\w+:tbl\b[^>]*\bid="(\d+)"', xml[s:min(e, s + 300)])
+        if m and int(m.group(1)) == int(table_id):
+            return t["index"]
+    return len(tables) - 1
+
+
 def sum_row(doc, ti, row, sum_col, cols=None):
     """행의 데이터 칸 숫자를 더해 합계 칸에 넣는다.
     cols 미지정 시 0열(라벨)과 sum_col을 제외한 그 행의 모든 칸을 더한다."""
@@ -68,6 +81,22 @@ def do_op(doc, op, args):
     elif op == "apply_template":
         rep = apply_template(doc, int(args["ti"]), args["records"])
         return {"report": {k: rep[k] for k in ("added_rows", "filled")}}
+    elif op == "add_table":
+        style = {}
+        if args.get("style_from") is not None:
+            st = doc.table_style(int(args["style_from"]))
+            style = {"char_pr": st["charPr"], "para_pr": st["paraPr"],
+                     "border_fill": st["borderFill"]}
+        after = args.get("after_paragraph")
+        info = doc.add_table(int(args["rows"]), int(args["cols"]),
+                             data=args.get("data"),
+                             after_paragraph=(None if after is None else int(after)),
+                             **style)
+        new_ti = _table_index_by_id(doc, info["table_id"])
+        autofit_table(doc, new_ti)
+        return {"new_table": new_ti, "rows": info["rows"], "cols": info["cols"]}
+    elif op == "add_paragraph":
+        doc.add_paragraph(str(args.get("text", "")))
     elif op == "sum_row":
         total = sum_row(doc, int(args["ti"]), int(args["row"]),
                         int(args["sum_col"]), args.get("cols"))

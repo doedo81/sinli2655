@@ -126,6 +126,61 @@ _EDIT_TOOLS = [
         },
     },
     {
+        "name": "add_table",
+        "description": "새 표를 문서 끝(또는 지정 문단 뒤)에 생성한다. 초안을 만들 "
+                       "때 쓴다. 생성 후 반환된 new_table 번호로 set_cell로 셀을 "
+                       "채우고 autofit으로 정리한다. data로 셀을 한 번에 채울 수도 "
+                       "있다. 병합 없는 균일한 표만 생성된다(생성 후 autofit이 폭·"
+                       "높이를 자동 조정). 기존 표와 서식을 맞추려면 style_from에 "
+                       "본뜰 표 번호를 준다.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "rows": {"type": "integer", "description": "행 수"},
+                "cols": {"type": "integer", "description": "열 수"},
+                "data": {"type": "array",
+                         "items": {"type": "array", "items": {"type": "string"}},
+                         "description": "행×열 셀 텍스트(2차원 배열, 선택). "
+                                        "부족한 칸은 빈 셀."},
+                "after_paragraph": {"type": "integer",
+                                    "description": "이 문단 번호 뒤에 삽입(생략 시 "
+                                                   "문서 끝)"},
+                "style_from": {"type": "integer",
+                               "description": "이 표 번호의 글꼴·정렬·테두리 서식을 "
+                                              "상속(선택)"},
+            },
+            "required": ["rows", "cols"],
+        },
+    },
+    {
+        "name": "add_paragraph",
+        "description": "표 밖 본문에 새 문단을 추가한다(직전 문단의 스타일을 상속). "
+                       "제목·설명 문장 등을 초안에 넣을 때 쓴다.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"text": {"type": "string", "description": "문단 텍스트"}},
+            "required": ["text"],
+        },
+    },
+    {
+        "name": "apply_template",
+        "description": "표준 양식 표에 records를 채워 초안을 완성한다. 채움 칸만 "
+                       "채우고(헤더·라벨 등 고정 칸 불변), 데이터가 많으면 행을 "
+                       "자동 증설하고 autofit까지 한다. 명단 등을 양식에 넣을 때 쓴다. "
+                       "records는 {라벨:값} dict 배열 또는 [값,값] 배열. 병합이 있는 "
+                       "양식은 실패할 수 있다.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "ti": {"type": "integer", "description": "양식 표 번호"},
+                "records": {"type": "array",
+                            "description": "행별 데이터. 각 원소는 {헤더라벨:값} "
+                                           "객체이거나 채움 열 순서의 문자열 배열."},
+            },
+            "required": ["ti", "records"],
+        },
+    },
+    {
         "name": "sum_row",
         "description": "표의 한 행에서 데이터 칸 숫자를 더해 합계 칸에 넣는다. "
                        "cols 미지정 시 0열(라벨)과 합계 칸을 뺀 나머지를 더한다. "
