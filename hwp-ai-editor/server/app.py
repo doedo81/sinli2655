@@ -17,6 +17,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
 
 from hwpxlib import HwpxDoc, autofit_table, apply_template
+from hwpxlib.hwp_reader import read_hwp_text, is_hwp
 
 WEB_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                        "web")
@@ -163,11 +164,25 @@ class Handler(BaseHTTPRequestHandler):
             if u.path == "/api/upload":
                 body = self._body_json()
                 data = base64.b64decode(body["b64"])
+                # 구형 .hwp: 읽기 전용(문단 텍스트만). 편집은 .hwpx 변환 경유.
+                if is_hwp(data):
+                    try:
+                        r = read_hwp_text(data)
+                    except RuntimeError as e:
+                        return self._err(400, str(e))
+                    return self._send(200, {
+                        "ok": True, "kind": "hwp",
+                        "name": body.get("name", "문서.hwp"),
+                        "paragraphs": r["paragraphs"],
+                        "sections": r["sections"],
+                        "note": r.get("note",
+                            "구형 .hwp는 읽기 전용입니다(분석·요약용). "
+                            "편집하려면 한/글에서 .hwpx로 저장 후 업로드하세요.")})
                 doc = HwpxDoc.from_bytes(data)
                 sid = uuid.uuid4().hex
                 SESSIONS[sid] = doc
                 return self._send(200, {
-                    "ok": True, "session": sid,
+                    "ok": True, "kind": "hwpx", "session": sid,
                     "name": body.get("name", "문서.hwpx"),
                     "tables": _tables_summary(doc),
                     "paras": len(doc.paragraphs()),

@@ -63,7 +63,7 @@
 <body>
 <header>
   <h1>📄 한글(HWPX) 편집기</h1>
-  <input type="file" id="file" accept=".hwpx" hidden>
+  <input type="file" id="file" accept=".hwpx,.hwp" hidden>
   <button class="primary" onclick="file.click()">📂 파일 열기</button>
   <span id="fname" style="color:var(--muted)"></span>
   <span style="flex:1"></span>
@@ -218,6 +218,20 @@ async function doVerify(){
 }
 function doDownload(){ window.location='/api/download?session='+S; log('다운로드'); }
 
+function showHwp(j){
+  S=null; cur=null; window._tables=[];
+  $('fname').textContent=j.name+`  ·  문단 ${j.paragraphs.length}개 · 읽기전용`;
+  ['btnRe','btnV','btnD'].forEach(id=>$(id).disabled=true);
+  $('tlist').innerHTML='<div class="empty">.hwp는 표 편집 미지원<br>(읽기 전용)</div>';
+  $('tbar').style.display='none';
+  const para=j.paragraphs.map(t=>`<div style="padding:3px 0;border-bottom:1px solid var(--line)">${esc(t)}</div>`).join('');
+  $('grid').innerHTML=
+    `<div style="background:var(--chip);border:1px solid var(--accent);border-radius:8px;
+       padding:10px 12px;margin-bottom:12px">⚠ ${esc(j.note||'구형 .hwp는 읽기 전용입니다.')}</div>`+
+    `<div style="max-height:65vh;overflow:auto;font-size:13px">${para}</div>`;
+  $('vd').className='dot'; $('vtext').textContent='.hwp 읽기 전용 (분석·요약용)';
+}
+
 $('file').onchange=async e=>{
   const f=e.target.files[0]; if(!f) return;
   const buf=await f.arrayBuffer();
@@ -228,6 +242,7 @@ $('file').onchange=async e=>{
     const j=await api('/api/upload',{method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({name:f.name,b64})});
+    if(j.kind==='hwp'){ showHwp(j); log('업로드(.hwp 읽기전용): '+f.name); return; }
     S=j.session; cur=null; window._tables=j.tables;
     $('fname').textContent=j.name+`  ·  표 ${j.tables.length}개 · 문단 ${j.paras}개`;
     renderTables(j.tables); setVerify(j.verify);
