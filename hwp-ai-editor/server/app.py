@@ -7,93 +7,25 @@
 정규식 치환·합계 재계산), 다운로드한다. 저수준 편집은 검증된 HwpxDoc 엔진이
 그대로 처리하며, 매 편집 후 verify 결과를 함께 돌려준다.
 """
-import io
 import json
 import os
-import re
 import base64
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
 
-from hwpxlib import HwpxDoc, autofit_table, apply_template
+from hwpxlib import HwpxDoc
 from hwpxlib.hwp_reader import read_hwp_text, is_hwp
+from server import ops
+from server.ai_agent import run_agent
 
 WEB_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                        "web")
 
 # 세션별 문서 (로컬 단일 프로세스용 인메모리 저장소)
 SESSIONS = {}
-
-
-# ---------------------------------------------------------------- 유틸
-def _tables_summary(doc):
-    return [{"index": t["index"], "rows": t["rows"], "cols": t["cols"],
-             "nested": t["nested"]} for t in doc.tables()]
-
-
-def _table_detail(doc, i):
-    tbs = doc.tables()
-    if not (0 <= i < len(tbs)):
-        return None
-    t = tbs[i]
-    cells = [{"row": c["row"], "col": c["col"], "text": c["text"]}
-             for c in t["cells"]]
-    return {"index": i, "rows": t["rows"], "cols": t["cols"], "cells": cells}
-
-
-def _verify(doc):
-    issues, _ = doc.verify()
-    return issues
-
-
-def _first_int(s):
-    m = re.search(r"-?\d+", s or "")
-    return int(m.group(0)) if m else 0
-
-
-def _sum_row(doc, ti, row, sum_col, cols=None):
-    """행의 데이터 칸 숫자를 더해 합계 칸에 넣는다(요청 실작업의 일반화).
-    cols 미지정 시 0열(라벨)과 sum_col을 제외한 그 행의 모든 칸을 더한다."""
-    t = doc.tables()[ti]
-    rowcells = {c["col"]: c["text"] for c in t["cells"] if c["row"] == row}
-    if cols is None:
-        cols = [c for c in rowcells if c != 0 and c != sum_col]
-    total = sum(_first_int(rowcells.get(c, "0")) for c in cols)
-    doc.set_cell(ti, row, sum_col, str(total))
-    return total
-
-
-# ---------------------------------------------------------------- op 처리
-def _do_op(doc, op, args):
-    """편집 op 실행. 반환: 부가정보 dict(없으면 {})."""
-    if op == "set_cell":
-        doc.set_cell(int(args["ti"]), int(args["row"]), int(args["col"]),
-                     str(args.get("text", "")))
-    elif op == "autofit":
-        return {"autofit": autofit_table(doc, int(args["ti"]))}
-    elif op == "del_col":
-        doc.del_col(int(args["ti"]), int(args["col"]))
-    elif op == "del_row":
-        doc.del_row(int(args["ti"]), int(args["row"]))
-    elif op == "del_table":
-        doc.del_table(int(args["ti"]))
-    elif op == "copy_row":
-        doc.copy_row(int(args["ti"]), int(args["row"]),
-                     int(args.get("count", 1)))
-    elif op == "replace_regex":
-        n = doc.replace_regex(args["pattern"], args["repl"])
-        return {"count": n}
-    elif op == "apply_template":
-        rep = apply_template(doc, int(args["ti"]), args["records"])
-        return {"report": {k: rep[k] for k in ("added_rows", "filled")}}
-    elif op == "sum_row":
-        total = _sum_row(doc, int(args["ti"]), int(args["row"]),
-                         int(args["sum_col"]), args.get("cols"))
-        return {"total": total}
-    else:
-        raise ValueError("알 수 없는 op: %s" % op)
-    return {}
+# 세션별 실행취소 스냅샷(직전 문서 바이트). AI 편집 전에 저장.
+UNDO = {}
 
 
 # ---------------------------------------------------------------- HTTP
@@ -135,7 +67,7 @@ class Handler(BaseHTTPRequestHandler):
             doc, _ = self._doc(qs)
             if not doc:
                 return self._err(404, "세션 없음")
-            d = _table_detail(doc, int(qs.get("i", ["0"])[0]))
+            d = ops.table_detail(doc, int(qs.get("i", ["0"])[0]))
             return self._send(200, d or {"error": "표 없음"})
         if u.path == "/api/paragraphs":
             doc, _ = self._doc(qs)
@@ -181,30 +113,75 @@ class Handler(BaseHTTPRequestHandler):
                 doc = HwpxDoc.from_bytes(data)
                 sid = uuid.uuid4().hex
                 SESSIONS[sid] = doc
+                UNDO.pop(sid, None)
                 return self._send(200, {
                     "ok": True, "kind": "hwpx", "session": sid,
                     "name": body.get("name", "문서.hwpx"),
-                    "tables": _tables_summary(doc),
+                    "tables": ops.tables_summary(doc),
                     "paras": len(doc.paragraphs()),
-                    "verify": _verify(doc)})
+                    "verify": ops.verify_issues(doc)})
             if u.path == "/api/op":
                 body = self._body_json()
-                doc = SESSIONS.get(body.get("session"))
+                sid = body.get("session")
+                doc = SESSIONS.get(sid)
                 if not doc:
                     return self._err(404, "세션 없음")
-                extra = _do_op(doc, body["op"], body.get("args", {}))
-                out = {"ok": True, "verify": _verify(doc),
-                       "tables": _tables_summary(doc)}
+                UNDO[sid] = doc.save_bytes()  # 실행취소용 스냅샷
+                extra = ops.do_op(doc, body["op"], body.get("args", {}))
+                out = {"ok": True, "verify": ops.verify_issues(doc),
+                       "tables": ops.tables_summary(doc)}
                 out.update(extra)
                 ti = body.get("args", {}).get("ti")
                 if ti is not None:
-                    d = _table_detail(doc, int(ti))
+                    d = ops.table_detail(doc, int(ti))
                     if d:
                         out["table"] = d
                 return self._send(200, out)
+            if u.path == "/api/chat":
+                return self._chat()
+            if u.path == "/api/undo":
+                return self._undo()
         except Exception as e:  # 편집 실패는 사용자에게 그대로 전달
             return self._err(400, "%s: %s" % (type(e).__name__, e))
         return self._err(404, "not found")
+
+    # ---------- AI 채팅 / 실행취소 ----------
+    def _chat(self):
+        body = self._body_json()
+        sid = body.get("session")
+        doc = SESSIONS.get(sid)
+        if not doc:
+            return self._err(404, "세션 없음")
+        api_key = body.get("api_key") or ""
+        if not api_key:
+            return self._err(400, "Claude API 키가 필요합니다.")
+        msg = body.get("message", "")
+        model = body.get("model") or "claude-opus-4-8"
+        UNDO[sid] = doc.save_bytes()  # AI 편집 전 스냅샷(실행취소용)
+        try:
+            res = run_agent(doc, msg, api_key, model=model)
+        except Exception as e:
+            # 실패 시 스냅샷 복원(부분편집 방지)
+            try:
+                SESSIONS[sid] = HwpxDoc.from_bytes(UNDO[sid])
+            except Exception:
+                pass
+            return self._err(400, "%s: %s" % (type(e).__name__, e))
+        out = {"ok": True, "reply": res["reply"], "actions": res["actions"],
+               "verify": res["verify"], "tables": ops.tables_summary(doc)}
+        return self._send(200, out)
+
+    def _undo(self):
+        body = self._body_json()
+        sid = body.get("session")
+        snap = UNDO.get(sid)
+        if snap is None:
+            return self._err(400, "되돌릴 편집이 없습니다.")
+        doc = HwpxDoc.from_bytes(snap)
+        SESSIONS[sid] = doc
+        del UNDO[sid]
+        return self._send(200, {"ok": True, "verify": ops.verify_issues(doc),
+                                "tables": ops.tables_summary(doc)})
 
     # ---------- 정적 ----------
     def _ctype(self, path):

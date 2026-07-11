@@ -17,13 +17,18 @@ hwpxlib/
   cli.py        하위호환 CLI (기존 명령 + autofit + template + replace-re)
 server/
   app.py        무외부의존 웹앱 백엔드 (stdlib http.server)
+  ops.py        편집 op 실행기·조회 헬퍼 (수동 UI와 AI가 공유)
+  tools.py      Claude tool-use 도구 스키마
+  ai_agent.py   자연어 편집 에이전트 (urllib Messages API, 키 미저장)
 web/
-  index.html    브라우저 SPA (업로드·표 편집·다운로드)
+  index.html    브라우저 SPA (업로드·표 편집·AI 채팅·다운로드)
 tests/
   fixtures.py       테스트용 최소 HWPX 생성기
   test_engine.py    회귀 + AutoTable 검증
   test_template.py  양식 준수 편집 검증
   test_replace_regex.py  안전 치환 검증
+  test_hwp_reader.py     .hwp 레코드 파서 검증
+  test_ai_agent.py       AI tool-use 루프 검증(목 기반)
 ```
 
 ## 웹앱 실행 (설치 불필요)
@@ -40,7 +45,22 @@ python3 -m server.app          # → http://localhost:8000
 **구형 `.hwp`도 업로드 가능** — 문단 텍스트를 추출해 읽기 전용으로 보여준다(분석·요약용).
 편집하려면 한/글에서 `.hwpx`로 저장 후 업로드. (`.hwp` 읽기는 `pip install olefile` 필요)
 
-(AI 자연어 편집은 다음 단계 — Claude API 연동 예정)
+## 🤖 AI 자연어 편집 (Claude tool-use)
+
+화면 아래 **AI 편집** 패널에 자연어로 지시하면 Claude가 도구(엔진 op)를 골라
+실행하고 `verify`로 자기검증한 뒤 결과를 보고한다. 사람이 행·열·치수를 지정하지
+않고 "무엇을 넣을지"만 말한다.
+
+- 예: `"3번 표 모든 과목 20으로 채워줘"`, `"6학년을 5학년으로 바꿔줘"`,
+  `"현황표 담임 열 삭제"`, `"표가 몇 개야?"`
+- **본인 Claude API 키**를 ⚙ 설정에 입력(브라우저 localStorage에만 저장, 요청마다
+  Anthropic으로만 전송 — **서버에 저장·기록하지 않음**). AI 편집은 본인 API 사용량으로 과금.
+- 모델 선택(기본 `claude-opus-4-8`, 저비용 `claude-sonnet-5`/`claude-haiku-4-5`).
+- **↶ 실행취소** 버튼으로 직전 AI/수동 편집을 되돌린다.
+
+노출 도구: 조회(`list_tables`/`get_table`/`list_paragraphs`) + 편집(`set_cell`/
+`autofit`/`del_col`/`del_row`/`del_table`/`copy_row`/`replace_regex`/`sum_row`).
+SDK 없이 표준 라이브러리 `urllib`로 Messages API를 직접 호출한다(무외부의존 유지).
 
 ## 의존성
 
