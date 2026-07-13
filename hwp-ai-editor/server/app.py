@@ -17,7 +17,7 @@ from urllib.parse import urlparse, parse_qs
 from hwpxlib import HwpxDoc
 from hwpxlib.hwp_reader import read_hwp_text, is_hwp
 from server import ops
-from server.ai_agent import run_agent
+from server.ai_agent import run_agent, answer_about_text
 
 WEB_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                        "web")
@@ -26,6 +26,22 @@ WEB_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 SESSIONS = {}
 # 세션별 실행취소 스냅샷(직전 문서 바이트). AI 편집 전에 저장.
 UNDO = {}
+# 구형 .hwp 읽기전용 세션: sid → 추출 텍스트(질의응답용, 편집 불가)
+HWP_TEXT = {}
+
+
+def _context_text(sid):
+    """질의응답용 컨텍스트 텍스트를 세션 종류에 맞게 만든다."""
+    doc = SESSIONS.get(sid)
+    if doc is not None:
+        dt = ops.document_text(doc)
+        lines = [p["text"] for p in dt["paragraphs"]]
+        for tb in dt["tables"]:
+            lines.append("[표 %d]" % tb["index"])
+            for row in tb["grid"]:
+                lines.append(" | ".join(row))
+        return "\n".join(lines)
+    return HWP_TEXT.get(sid)
 
 
 # ---------------------------------------------------------------- HTTP
@@ -69,6 +85,12 @@ class Handler(BaseHTTPRequestHandler):
                 return self._err(404, "세션 없음")
             d = ops.table_detail(doc, int(qs.get("i", ["0"])[0]))
             return self._send(200, d or {"error": "표 없음"})
+        if u.path == "/api/review":
+            doc, _ = self._doc(qs)
+            if not doc:
+                return self._err(404, "세션 없음")
+            return self._send(200, {"ok": True,
+                                    "issues": ops.review_compliance(doc)})
         if u.path == "/api/paragraphs":
             doc, _ = self._doc(qs)
             if not doc:
@@ -102,8 +124,11 @@ class Handler(BaseHTTPRequestHandler):
                         r = read_hwp_text(data)
                     except RuntimeError as e:
                         return self._err(400, str(e))
+                    # 읽기전용 세션 발급 → 요약·질의응답(/api/ask) 지원
+                    sid = uuid.uuid4().hex
+                    HWP_TEXT[sid] = "\n".join(r["paragraphs"])
                     return self._send(200, {
-                        "ok": True, "kind": "hwp",
+                        "ok": True, "kind": "hwp", "session": sid,
                         "name": body.get("name", "문서.hwp"),
                         "paragraphs": r["paragraphs"],
                         "sections": r["sections"],
@@ -141,6 +166,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self._chat()
             if u.path == "/api/undo":
                 return self._undo()
+            if u.path == "/api/ask":
+                return self._ask()
         except Exception as e:  # 편집 실패는 사용자에게 그대로 전달
             return self._err(400, "%s: %s" % (type(e).__name__, e))
         return self._err(404, "not found")
@@ -182,6 +209,20 @@ class Handler(BaseHTTPRequestHandler):
         del UNDO[sid]
         return self._send(200, {"ok": True, "verify": ops.verify_issues(doc),
                                 "tables": ops.tables_summary(doc)})
+
+    def _ask(self):
+        """요약·분석·질의응답 (읽기 전용). .hwpx·.hwp 모두 지원."""
+        body = self._body_json()
+        sid = body.get("session")
+        text = _context_text(sid)
+        if text is None:
+            return self._err(404, "세션 없음")
+        api_key = body.get("api_key") or ""
+        if not api_key:
+            return self._err(400, "Claude API 키가 필요합니다.")
+        model = body.get("model") or "claude-opus-4-8"
+        res = answer_about_text(text, body.get("message", ""), api_key, model=model)
+        return self._send(200, {"ok": True, "reply": res["reply"]})
 
     # ---------- 정적 ----------
     def _ctype(self, path):

@@ -31,6 +31,21 @@ _READ_TOOLS = [
                        "텍스트를 확인하거나 어디를 고칠지 찾을 때 쓴다.",
         "input_schema": {"type": "object", "properties": {}},
     },
+    {
+        "name": "get_document_text",
+        "description": "문서 전체 텍스트(본문 문단 + 표별 셀 격자)를 한 번에 "
+                       "돌려준다. 문서를 요약하거나 내용에 대해 질문에 답할 때 "
+                       "먼저 호출해 전체 맥락을 확보한다.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "review_compliance",
+        "description": "공문서 작성 규정(날짜·시각·금액 표기, 글꼴·정렬 일관성, "
+                       "표 구조, '끝' 표시)을 자동 검토해 위반·권고 목록을 돌려준다. "
+                       "사용자가 '규정 검토'·'공문서 규정 맞나' 등을 물으면 호출한다. "
+                       "결과는 보고용이며 자동 교정하지 않는다.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
 ]
 
 # 편집 도구 (server/ops.py::do_op의 op과 동일) ------------------------------

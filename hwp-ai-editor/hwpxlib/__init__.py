@@ -7,10 +7,11 @@ autotable: 표 자동 레이아웃 (autofit_table)
 from .core import HwpxDoc, GOV_DOC_RULES
 from .autotable import autofit_table
 from .template import extract_schema, apply_template, validate_template
+from .gov_rules import review_document
 
 __all__ = ["HwpxDoc", "GOV_DOC_RULES", "autofit_table",
            "extract_schema", "apply_template", "validate_template",
-           "GRADE_REPLACE_PAT"]
+           "review_document", "GRADE_REPLACE_PAT"]
 
 # 학년 치환 안전 패턴: '2026학년도'·'5~6학년'·'3~4학년'을 보호하고
 # 앞이 숫자/범위기호가 아닐 때만 'N학년'을 매칭 (repl에서 학년 숫자 지정).

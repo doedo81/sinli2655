@@ -90,6 +90,7 @@
   <input type="text" id="reRepl" placeholder="바꿀 말" style="width:120px">
   <button onclick="doReplace()" id="btnRe" disabled>바꾸기</button>
   <button onclick="doVerify()" id="btnV" disabled>구조검진</button>
+  <button onclick="doReview()" id="btnReview" disabled>📋 규정 검토</button>
   <button onclick="doDownload()" id="btnD" disabled>⬇ 다운로드</button>
 </header>
 
@@ -154,7 +155,8 @@
 </div>
 
 <script>
-let S=null, cur=null;   // session, 현재 표 index
+let S=null, cur=null;   // session(hwpx 편집), 현재 표 index
+let hwpS=null;          // .hwp 읽기전용 세션(질의응답용)
 const $=id=>document.getElementById(id);
 
 function log(msg){ const l=$('log'); l.textContent=('› '+msg+'\n')+l.textContent; }
@@ -268,17 +270,58 @@ async function doVerify(){
 }
 function doDownload(){ window.location='/api/download?session='+S; log('다운로드'); }
 
+async function doReview(){
+  if(!S){ log('문서를 먼저 여세요'); return; }
+  try{
+    const j=await api('/api/review?session='+S);
+    const n=j.issues.length;
+    if(!n){ log('📋 규정 검토: 위반·권고 없음 ✅'); return; }
+    log(`📋 규정 검토: ${n}건`);
+    j.issues.forEach(i=>log(`  · [${i.severity}] ${i.kind} — ${i.where}: ${i.detail}`));
+  }catch(e){ log('규정 검토 오류: '+e.message); }
+}
+
+async function doAsk(){
+  const msg=$('askMsg').value.trim(); if(!msg||!hwpS) return;
+  const key=$('apiKey').value.trim();
+  if(!key){ addAsk('sys','⚙ 위쪽 AI 설정에서 Claude API 키를 입력하세요.'); return; }
+  localStorage.setItem(KEY_LS,key);
+  $('askMsg').value=''; addAsk('me',msg);
+  $('btnAsk').disabled=true; $('askMsg').disabled=true;
+  const wait=addAsk('sys','분석 중…');
+  try{
+    const j=await api('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({session:hwpS,message:msg,api_key:key,model:$('model').value})});
+    wait.remove(); addAsk('ai',j.reply||'(응답 없음)');
+  }catch(e){ wait.remove(); addAsk('sys','오류: '+e.message); }
+  $('btnAsk').disabled=false; $('askMsg').disabled=false; $('askMsg').focus();
+}
+function addAsk(cls,text){
+  const d=document.createElement('div'); d.className='msg '+cls; d.textContent=text;
+  $('asklog').appendChild(d); $('asklog').scrollTop=$('asklog').scrollHeight; return d;
+}
+
 function showHwp(j){
-  S=null; cur=null; window._tables=[];
+  S=null; cur=null; window._tables=[]; hwpS=j.session||null;
   $('fname').textContent=j.name+`  ·  문단 ${j.paragraphs.length}개 · 읽기전용`;
-  ['btnRe','btnV','btnD','chatMsg','btnChat','btnUndo'].forEach(id=>$(id).disabled=true);
+  ['btnRe','btnV','btnD','btnReview','chatMsg','btnChat','btnUndo'].forEach(id=>$(id).disabled=true);
   $('tlist').innerHTML='<div class="empty">.hwp는 표 편집 미지원<br>(읽기 전용)</div>';
   $('tbar').style.display='none';
   const para=j.paragraphs.map(t=>`<div style="padding:3px 0;border-bottom:1px solid var(--line)">${esc(t)}</div>`).join('');
   $('grid').innerHTML=
     `<div style="background:var(--chip);border:1px solid var(--accent);border-radius:8px;
        padding:10px 12px;margin-bottom:12px">⚠ ${esc(j.note||'구형 .hwp는 읽기 전용입니다.')}</div>`+
-    `<div style="max-height:65vh;overflow:auto;font-size:13px">${para}</div>`;
+    `<div class="card" style="margin-bottom:12px">
+       <h3 style="margin:0 0 6px;font-size:14px">🔎 요약·질의응답 (읽기 전용)</h3>
+       <div class="note">예) "이 문서 3줄로 요약해줘" · "몇 학년 교육과정이야?" · "목차 항목 알려줘"
+         <br>⚙ 위 AI 설정의 Claude API 키를 사용합니다.</div>
+       <div id="asklog" style="display:flex;flex-direction:column;gap:8px;max-height:260px;overflow:auto;margin:8px 0"></div>
+       <div class="chatin">
+         <input type="text" id="askMsg" placeholder="문서에 대해 질문…" onkeydown="if(event.key==='Enter')doAsk()">
+         <button class="primary" id="btnAsk" onclick="doAsk()">보내기</button>
+       </div>
+     </div>`+
+    `<div style="max-height:50vh;overflow:auto;font-size:13px">${para}</div>`;
   $('vd').className='dot'; $('vtext').textContent='.hwp 읽기 전용 (분석·요약용)';
 }
 
@@ -353,7 +396,7 @@ $('file').onchange=async e=>{
     S=j.session; cur=null; window._tables=j.tables;
     $('fname').textContent=j.name+`  ·  표 ${j.tables.length}개 · 문단 ${j.paras}개`;
     renderTables(j.tables); setVerify(j.verify);
-    ['btnRe','btnV','btnD','chatMsg','btnChat'].forEach(id=>$(id).disabled=false);
+    ['btnRe','btnV','btnD','btnReview','chatMsg','btnChat'].forEach(id=>$(id).disabled=false);
     $('btnUndo').disabled=true;
     $('grid').innerHTML='<div class="empty">왼쪽에서 표를 선택하세요</div>';
     $('tbar').style.display='none';

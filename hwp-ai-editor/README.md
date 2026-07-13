@@ -13,22 +13,24 @@ hwpxlib/
                 + 웹용 from_bytes() / save_bytes() / replace_regex()
   autotable.py  표 자동 레이아웃 autofit_table()          ★ 핵심
   template.py   표준 양식 준수 편집 apply_template()       ★ 핵심
+  gov_rules.py  공문서 규정 자동 검토 review_document()
   hwp_reader.py 구형 .hwp 읽기 (olefile+zlib, 읽기 전용)
   cli.py        하위호환 CLI (기존 명령 + autofit + template + replace-re)
 server/
   app.py        무외부의존 웹앱 백엔드 (stdlib http.server)
   ops.py        편집 op 실행기·조회 헬퍼 (수동 UI와 AI가 공유)
   tools.py      Claude tool-use 도구 스키마
-  ai_agent.py   자연어 편집 에이전트 (urllib Messages API, 키 미저장)
+  ai_agent.py   자연어 편집 에이전트 + 요약·질의응답 (urllib, 키 미저장)
 web/
-  index.html    브라우저 SPA (업로드·표 편집·AI 채팅·다운로드)
+  index.html    브라우저 SPA (업로드·표 편집·AI 채팅·규정검토·요약·다운로드)
 tests/
   fixtures.py       테스트용 최소 HWPX 생성기
   test_engine.py    회귀 + AutoTable 검증
   test_template.py  양식 준수 편집 검증
   test_replace_regex.py  안전 치환 검증
   test_hwp_reader.py     .hwp 레코드 파서 검증
-  test_ai_agent.py       AI tool-use 루프 검증(목 기반)
+  test_gov_rules.py      공문서 규정 검사 검증
+  test_ai_agent.py       AI tool-use 루프 + 요약·질의응답 검증(목 기반)
 ```
 
 ## 웹앱 실행 (설치 불필요)
@@ -42,8 +44,23 @@ python3 -m server.app          # → http://localhost:8000
 셀 클릭 편집 · 자동맞춤 · 행/열 삭제 · 합계 재계산 · 정규식 바꾸기 · 구조검진 →
 ⬇ 다운로드. 편집할 때마다 구조검진(verify)이 자동으로 갱신된다.
 
-**구형 `.hwp`도 업로드 가능** — 문단 텍스트를 추출해 읽기 전용으로 보여준다(분석·요약용).
-편집하려면 한/글에서 `.hwpx`로 저장 후 업로드. (`.hwp` 읽기는 `pip install olefile` 필요)
+**구형 `.hwp`도 업로드 가능** — 문단 텍스트를 추출해 읽기 전용으로 보여주고,
+**요약·질의응답**(읽기 전용)을 지원한다. 편집하려면 한/글에서 `.hwpx`로 저장 후 업로드.
+(`.hwp` 읽기는 `pip install olefile` 필요)
+
+## 📋 공문서 규정 자동 검토
+
+상단 **규정 검토** 버튼(또는 AI에게 "규정 검토해줘") → 문서를 훑어 위반·권고를 보고한다
+(보고만, 자동 교정 안 함). 검사 항목: 날짜(`2026. 3. 1.`)·시각(24시각제)·금액(한글 병기)
+표기, 표 안 글꼴·정렬 일관성, 표 구조 무결성, 표로 끝나는 문서의 "끝"/"이하 빈칸" 표시.
+결정적(정규식) 검사라 API 키 없이 동작한다. 근거: `GOV_DOC_RULES`(공문서 작성 8원칙).
+
+## 🔎 요약·분석·질의응답
+
+- **`.hwpx`**: AI 채팅에 "이 문서 3줄로 요약해줘", "몇 학년 교육과정이야?"라고 물으면
+  Claude가 `get_document_text`로 전체 내용을 확보해 답한다(편집 채팅과 동일 패널).
+- **`.hwp`(읽기 전용)**: 문단 뷰 위 **요약·질의응답** 창에서 질문 → 추출 텍스트 기반으로 답변.
+- 편집 없는 순수 조회 경로이며, 본인 Claude API 키를 사용한다.
 
 ## 🤖 AI 자연어 편집 (Claude tool-use)
 
@@ -61,9 +78,9 @@ python3 -m server.app          # → http://localhost:8000
 - 모델 선택(기본 `claude-opus-4-8`, 저비용 `claude-sonnet-5`/`claude-haiku-4-5`).
 - **↶ 실행취소** 버튼으로 직전 AI/수동 편집을 되돌린다.
 
-노출 도구: 조회(`list_tables`/`get_table`/`list_paragraphs`) + 편집(`set_cell`/
-`autofit`/`del_col`/`del_row`/`del_table`/`copy_row`/`replace_regex`/`sum_row`) +
-생성(`add_table`/`add_paragraph`/`apply_template`).
+노출 도구: 조회(`list_tables`/`get_table`/`list_paragraphs`/`get_document_text`/
+`review_compliance`) + 편집(`set_cell`/`autofit`/`del_col`/`del_row`/`del_table`/
+`copy_row`/`replace_regex`/`sum_row`) + 생성(`add_table`/`add_paragraph`/`apply_template`).
 SDK 없이 표준 라이브러리 `urllib`로 Messages API를 직접 호출한다(무외부의존 유지).
 
 ## 의존성

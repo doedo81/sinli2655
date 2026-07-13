@@ -33,9 +33,12 @@ _SYSTEM = (
     "data로 한 번에 넣어도 됩니다. ② 이미 표준 양식 표가 있으면 apply_template로 "
     "채움 칸만 채우세요. ③ 본문 문장·제목은 add_paragraph로 추가하세요. "
     "④ 내용은 공문서 규정(항목기호 순서·날짜 표기·'끝'/'이하 빈칸')을 지켜 구성하세요.\n"
-    "4. 편집을 마치면 결과를 한국어로 간결히 요약해 보고하세요. 무엇을 바꿨는지 "
+    "4. 문서를 요약하거나 내용에 대한 질문에 답할 때는 먼저 get_document_text로 "
+    "전체 내용을 확보한 뒤 답하세요. '규정 검토' 요청에는 review_compliance를 "
+    "호출하고 결과를 항목별(위치·권고)로 정리해 설명하세요.\n"
+    "5. 편집을 마치면 결과를 한국어로 간결히 요약해 보고하세요. 무엇을 바꿨는지 "
     "표 번호·위치와 함께 알려주세요.\n"
-    "5. 지시가 모호하거나 위험한 삭제(del_table 등)면 실행 전에 사용자에게 "
+    "6. 지시가 모호하거나 위험한 삭제(del_table 등)면 실행 전에 사용자에게 "
     "무엇을 할지 설명하고 확인을 구하세요.\n\n"
     + GOV_DOC_RULES
 )
@@ -54,6 +57,10 @@ def _run_tool(doc, name, tool_input):
     if name == "list_paragraphs":
         return {"paragraphs": [{"i": i, "text": t}
                                for _, _, i, t in doc.paragraphs()]}, None
+    if name == "get_document_text":
+        return ops.document_text(doc), None
+    if name == "review_compliance":
+        return {"issues": ops.review_compliance(doc)}, None
     if name in EDIT_TOOL_NAMES:
         extra = ops.do_op(doc, name, tool_input)
         issues = ops.verify_issues(doc)
@@ -147,3 +154,32 @@ def run_agent(doc, user_message, api_key, model="claude-opus-4-8",
     return {"reply": "편집 단계 상한(%d)에 도달해 중단했습니다. 지금까지의 "
                      "편집은 적용되었습니다." % _MAX_TURNS,
             "actions": actions, "verify": ops.verify_issues(doc)}
+
+
+_ASK_SYSTEM = (
+    "당신은 한글 문서 분석 도우미입니다. 주어진 문서 내용을 바탕으로 사용자의 "
+    "질문에 한국어로 정확하고 간결하게 답하세요. 요약을 요청하면 핵심을 항목별로 "
+    "정리하세요. 문서에 없는 내용은 지어내지 말고 '문서에서 확인되지 않음'이라고 "
+    "밝히세요. 이 대화는 읽기 전용 분석이며 문서를 편집하지 않습니다."
+)
+
+
+def answer_about_text(text, question, api_key, model="claude-opus-4-8",
+                      call=_call_messages):
+    """문서 텍스트를 컨텍스트로 질문에 답한다(도구 없는 단일 호출, 편집 없음).
+
+    요약·분석·질의응답 공용 경로. .hwpx(전체 텍스트)와 .hwp(추출 텍스트) 모두 지원.
+    반환: {"reply": 답변 텍스트}.
+    """
+    user = ("[문서 내용]\n%s\n\n[질문]\n%s" % (text, question))
+    payload = {
+        "model": model,
+        "max_tokens": 4096,
+        "system": _ASK_SYSTEM,
+        "messages": [{"role": "user", "content": user}],
+    }
+    resp = call(api_key, model, payload)
+    content = resp.get("content", [])
+    reply = "".join(b.get("text", "") for b in content
+                    if b.get("type") == "text").strip()
+    return {"reply": reply}

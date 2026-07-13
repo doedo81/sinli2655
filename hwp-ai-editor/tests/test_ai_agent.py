@@ -5,13 +5,14 @@ tool-use 루프가 엔진 op을 실행하고 상태를 바꾸는지 검증한다
 python3 tests/test_ai_agent.py
 """
 import copy
+import json
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from hwpxlib import HwpxDoc                       # noqa: E402
-from server.ai_agent import run_agent              # noqa: E402
+from server.ai_agent import run_agent, answer_about_text   # noqa: E402
 from tests.fixtures import make_sample_hwpx        # noqa: E402
 
 
@@ -164,6 +165,56 @@ def test_no_tool_immediate_reply():
     _assert(res["actions"] == [], "편집 없음")
     _assert("표" in res["reply"], "답변 텍스트 반환")
     _assert(len(mock.calls) == 1, "한 번만 호출")
+
+
+def test_review_compliance_tool():
+    print("[test] review_compliance 도구 → 위반 목록 tool_result")
+    doc = HwpxDoc.from_bytes(make_sample_hwpx([
+        ["일시", "2026년 3월 1일 오후 2시"],
+    ]))
+    mock = MockClaude([
+        ("tool_use", [_tool_use("r1", "review_compliance", {})]),
+        ("end_turn", [_text("날짜·시각 표기 2건을 권고합니다.")]),
+    ])
+    res = run_agent(doc, "규정 검토해줘", "sk-fake", call=mock)
+    # 도구 결과(issues)가 모델에게 tool_result로 전달됐는지
+    tr = mock.calls[1]["messages"][-1]["content"][0]
+    payload = json.loads(tr["content"])
+    kinds = [i["kind"] for i in payload["issues"]]
+    _assert("날짜표기" in kinds and "시각표기" in kinds,
+            "규정 위반이 tool_result로 전달")
+    _assert(res["actions"] == [], "조회 도구라 편집 actions 없음")
+
+
+def test_get_document_text_tool():
+    print("[test] get_document_text 도구 → 전체 텍스트 tool_result")
+    doc = HwpxDoc.from_bytes(make_sample_hwpx([["성명", "부서"], ["홍길동", "기획과"]]))
+    mock = MockClaude([
+        ("tool_use", [_tool_use("d1", "get_document_text", {})]),
+        ("end_turn", [_text("성명·부서 2열 표가 있는 문서입니다.")]),
+    ])
+    run_agent(doc, "이 문서 요약해줘", "sk-fake", call=mock)
+    tr = mock.calls[1]["messages"][-1]["content"][0]
+    payload = json.loads(tr["content"])
+    _assert("tables" in payload and payload["tables"][0]["grid"][1] == ["홍길동", "기획과"],
+            "전체 문서 텍스트(표 격자 포함)가 도구 결과로 전달")
+
+
+def test_answer_about_text():
+    print("[test] answer_about_text 단일 호출(도구 없음, 편집 없음)")
+    calls = []
+
+    def fake(api_key, model, payload, base_url=None):
+        calls.append(payload)
+        return {"stop_reason": "end_turn", "model": model,
+                "content": [{"type": "text", "text": "이 문서는 5학년 교육과정입니다."}]}
+    res = answer_about_text("5학년 교육과정 운영 계획 ...", "몇 학년이야?",
+                            "sk-fake", call=fake)
+    _assert("5학년" in res["reply"], "문서 컨텍스트 기반 답변 반환")
+    _assert(len(calls) == 1 and "tools" not in calls[0],
+            "도구 없는 단일 호출")
+    _assert("몇 학년" in calls[0]["messages"][0]["content"],
+            "질문이 프롬프트에 포함")
 
 
 def run_all():
