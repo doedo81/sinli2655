@@ -84,6 +84,7 @@
   <h1>📄 한글(HWPX) 편집기</h1>
   <input type="file" id="file" accept=".hwpx,.hwp" hidden>
   <button class="primary" onclick="file.click()">📂 파일 열기</button>
+  <button onclick="doNew()">📄 새 문서</button>
   <span id="fname" style="color:var(--muted)"></span>
   <span style="flex:1"></span>
   <input type="text" id="reFind" placeholder="찾기(정규식)" style="width:150px">
@@ -270,6 +271,23 @@ async function doVerify(){
 }
 function doDownload(){ window.location='/api/download?session='+S; log('다운로드'); }
 
+function loadHwpx(j){   // 업로드·새문서 공통: hwpx 응답을 편집 화면에 반영
+  S=j.session; cur=null; hwpS=null; window._tables=j.tables;
+  $('fname').textContent=j.name+`  ·  표 ${j.tables.length}개 · 문단 ${j.paras}개`;
+  renderTables(j.tables); setVerify(j.verify);
+  ['btnRe','btnV','btnD','btnReview','chatMsg','btnChat'].forEach(id=>$(id).disabled=false);
+  $('btnUndo').disabled=true;
+  $('grid').innerHTML='<div class="empty">왼쪽에서 표를 선택하세요</div>';
+  $('tbar').style.display='none';
+}
+
+async function doNew(){
+  try{
+    const j=await api('/api/new',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    loadHwpx(j); log('새 빈 문서 생성 — "표 만들어줘" 등으로 채우거나 직접 편집하세요');
+  }catch(e){ log('새 문서 생성 실패: '+e.message); }
+}
+
 async function doReview(){
   if(!S){ log('문서를 먼저 여세요'); return; }
   try{
@@ -393,14 +411,7 @@ $('file').onchange=async e=>{
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({name:f.name,b64})});
     if(j.kind==='hwp'){ showHwp(j); log('업로드(.hwp 읽기전용): '+f.name); return; }
-    S=j.session; cur=null; window._tables=j.tables;
-    $('fname').textContent=j.name+`  ·  표 ${j.tables.length}개 · 문단 ${j.paras}개`;
-    renderTables(j.tables); setVerify(j.verify);
-    ['btnRe','btnV','btnD','btnReview','chatMsg','btnChat'].forEach(id=>$(id).disabled=false);
-    $('btnUndo').disabled=true;
-    $('grid').innerHTML='<div class="empty">왼쪽에서 표를 선택하세요</div>';
-    $('tbar').style.display='none';
-    log('업로드: '+f.name);
+    loadHwpx(j); log('업로드: '+f.name);
   }catch(err){ log('업로드 실패: '+err.message); }
 };
 </script>

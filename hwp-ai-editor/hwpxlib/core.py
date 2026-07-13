@@ -87,6 +87,7 @@ hwpx_edit.py v2 — HWPX(.hwpx) 텍스트 + 표(셀) 편집기 (외부 라이브
   python3 hwpx_edit.py 파일.hwpx add-para "추가할 문단" -o 결과.hwpx
 """
 import io
+import os
 import re
 import sys
 import zipfile
@@ -221,6 +222,18 @@ class HwpxDoc:
         if not self.sections:
             raise ValueError("Contents/section*.xml이 없습니다. HWPX 파일이 맞나요?")
         return self
+
+    @classmethod
+    def new(cls):
+        """빈 HWPX 문서를 새로 만든다(문서 없이 생성 시작).
+        hwpxlib/assets/blank.hwpx(사용자 제공 씨앗)가 있으면 우선 사용하고,
+        없으면 합성 뼈대(blank.blank_hwpx_bytes)를 쓴다. 이후 add_table 등으로 채운다."""
+        from .blank import blank_hwpx_bytes, seed_path
+        sp = seed_path()
+        if os.path.isfile(sp):
+            with open(sp, "rb") as f:
+                return cls.from_bytes(f.read(), name="<new>")
+        return cls.from_bytes(blank_hwpx_bytes(), name="<new>")
 
     def save_bytes(self):
         """편집 결과를 HWPX 바이트열로 반환 — 웹 다운로드용.

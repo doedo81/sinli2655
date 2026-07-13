@@ -162,6 +162,17 @@ class Handler(BaseHTTPRequestHandler):
                     if d:
                         out["table"] = d
                 return self._send(200, out)
+            if u.path == "/api/new":
+                doc = HwpxDoc.new()
+                sid = uuid.uuid4().hex
+                SESSIONS[sid] = doc
+                UNDO.pop(sid, None)
+                return self._send(200, {
+                    "ok": True, "kind": "hwpx", "session": sid,
+                    "name": "새 문서.hwpx",
+                    "tables": ops.tables_summary(doc),
+                    "paras": len(doc.paragraphs()),
+                    "verify": ops.verify_issues(doc)})
             if u.path == "/api/chat":
                 return self._chat()
             if u.path == "/api/undo":

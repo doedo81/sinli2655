@@ -107,6 +107,12 @@ from .template import apply_template, extract_schema
 
 
 def main(argv):
+    # 새 문서 생성: 입력 파일 없이 빈 HWPX를 만든다.
+    #   python3 -m hwpxlib.cli new 결과.hwpx
+    if len(argv) >= 3 and argv[1] == "new":
+        HwpxDoc.new().save(argv[2])
+        print("빈 문서 생성 → %s" % argv[2])
+        return 0
     if len(argv) < 3:
         print(__doc__)
         return 1

@@ -14,6 +14,7 @@ hwpxlib/
   autotable.py  표 자동 레이아웃 autofit_table()          ★ 핵심
   template.py   표준 양식 준수 편집 apply_template()       ★ 핵심
   gov_rules.py  공문서 규정 자동 검토 review_document()
+  blank.py      빈 HWPX 새 문서 생성 blank_hwpx_bytes()
   hwp_reader.py 구형 .hwp 읽기 (olefile+zlib, 읽기 전용)
   cli.py        하위호환 CLI (기존 명령 + autofit + template + replace-re)
 server/
@@ -30,6 +31,7 @@ tests/
   test_replace_regex.py  안전 치환 검증
   test_hwp_reader.py     .hwp 레코드 파서 검증
   test_gov_rules.py      공문서 규정 검사 검증
+  test_blank.py          빈 문서 생성·라운드트립 검증
   test_ai_agent.py       AI tool-use 루프 + 요약·질의응답 검증(목 기반)
 ```
 
@@ -40,9 +42,14 @@ cd hwp-ai-editor
 python3 -m server.app          # → http://localhost:8000
 ```
 
-브라우저에서 열고 → `.hwpx` 업로드 → 왼쪽 표 목록에서 표 선택 →
+브라우저에서 열고 → `.hwpx` 업로드(또는 **📄 새 문서**) → 왼쪽 표 목록에서 표 선택 →
 셀 클릭 편집 · 자동맞춤 · 행/열 삭제 · 합계 재계산 · 정규식 바꾸기 · 구조검진 →
 ⬇ 다운로드. 편집할 때마다 구조검진(verify)이 자동으로 갱신된다.
+
+**📄 새 문서**: 문서 없이 빈 HWPX를 새로 만들어 편집·AI 생성을 시작한다
+(`HwpxDoc.new()` / CLI `new` / `POST /api/new`). 개인정보 없는 합성 뼈대로 만들며,
+한/글 호환은 생성 파일을 한/글에서 한 번 열어 확인한다. 특정 환경에서 문제가 있으면
+한/글이 저장한 빈 문서를 `hwpxlib/assets/blank.hwpx`에 넣으면 그 파일이 우선 사용된다.
 
 **구형 `.hwp`도 업로드 가능** — 문단 텍스트를 추출해 읽기 전용으로 보여주고,
 **요약·질의응답**(읽기 전용)을 지원한다. 편집하려면 한/글에서 `.hwpx`로 저장 후 업로드.
