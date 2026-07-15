@@ -1355,22 +1355,35 @@
         };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database(); const auth = firebase.auth();
-        const pointSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'); 
-        const timerSound = new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'); 
-        // 🔔 뽑기 효과음: 외부 파일 대신 WebAudio로 '반짝(청량)' 종소리 합성
-        let _pickAC = null;
-        function _pickCtx() { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; if (!_pickAC) _pickAC = new AC(); if (_pickAC.state === 'suspended') _pickAC.resume(); return _pickAC; }
-        function _pickTone(c, freq, t0, dur, type, vol) {
+        // 🔔 효과음: 외부 파일 대신 WebAudio로 합성 (네트워크 불필요·항상 재생)
+        let _audioAC = null;
+        function _audioCtx() { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; if (!_audioAC) _audioAC = new AC(); if (_audioAC.state === 'suspended') _audioAC.resume(); return _audioAC; }
+        function _tone(freq, t0, dur, type, vol) {
+            const c = _audioCtx(); if (!c) return;
             const o = c.createOscillator(), g = c.createGain();
-            o.type = type; o.frequency.value = freq; o.connect(g); g.connect(c.destination);
+            o.type = type || 'sine'; o.frequency.value = freq; o.connect(g); g.connect(c.destination);
             const t = c.currentTime + t0;
             g.gain.setValueAtTime(0.0001, t);
-            g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+            g.gain.exponentialRampToValueAtTime(vol || 0.22, t + 0.012);
             g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
             o.start(t); o.stop(t + dur + 0.02);
         }
-        // 도·미·솔·도 상승 + 반짝
-        const pickSound = { currentTime: 0, play() { const c = _pickCtx(); if (!c) return Promise.resolve(); [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => _pickTone(c, f, i * 0.08, 0.35, 'triangle', 0.28)); _pickTone(c, 1567.98, 0.34, 0.5, 'sine', 0.18); return Promise.resolve(); } }; 
+        const SFX = {
+            unlock() { _audioCtx(); },
+            pick() { [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => _tone(f, i * 0.08, 0.35, 'triangle', 0.28)); _tone(1567.98, 0.34, 0.5, 'sine', 0.18); },
+            point() { _tone(659.25, 0, 0.12, 'triangle', 0.26); _tone(987.77, 0.08, 0.22, 'triangle', 0.22); },
+            ding() { _tone(880, 0, 0.14, 'sine', 0.24); _tone(1318.5, 0.09, 0.26, 'sine', 0.2); },
+            levelup() { [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => _tone(f, i * 0.1, 0.42, 'triangle', 0.26)); },
+            timer() { for (let k = 0; k < 4; k++) { _tone(1046.5, k * 0.3, 0.16, 'square', 0.22); _tone(1318.5, k * 0.3 + 0.08, 0.16, 'square', 0.2); } },
+            mission() { _tone(783.99, 0, 0.14, 'sine', 0.24); _tone(1046.5, 0.1, 0.18, 'sine', 0.24); _tone(1318.5, 0.24, 0.34, 'sine', 0.22); },
+            warn() { _tone(311.13, 0, 0.28, 'sawtooth', 0.16); }
+        };
+        // 첫 사용자 상호작용에 오디오 잠금 해제(브라우저 정책)
+        document.addEventListener('pointerdown', function () { SFX.unlock(); }, { passive: true });
+        // 기존 호출부 호환(.currentTime / .play())
+        const pointSound = { currentTime: 0, play() { SFX.point(); return Promise.resolve(); } };
+        const timerSound = { currentTime: 0, play() { SFX.timer(); return Promise.resolve(); } };
+        const pickSound = { currentTime: 0, play() { SFX.pick(); return Promise.resolve(); } };
 
         let currentRoom = "";
         let groupSettingsRef, scoresRef, miniScoresRef, timerRef, boardRef, settingsRef, historyRef, tasksRef, hwRef, seatingRef, groupMembersRef, seatingHistoryRef, bookmarksRef, rpgRef, seatingCurrentRef, seatingSavesRef;
@@ -4851,7 +4864,8 @@
             rpgRef.update(updates).then(function(){
                 const lbl = a ? (a.label+' +'+a.xp) : (rpgBulkAction==='__warn'?'벌점 +20':'선행 −10');
                 rpgToast(n + '명에게 ' + lbl + ' 지급 완료');
-                if(levelups>0) setTimeout(function(){ rpgToast('🎉 레벨업 '+levelups+'명!', true); }, 400);
+                if(levelups>0){ SFX.levelup(); setTimeout(function(){ rpgToast('🎉 레벨업 '+levelups+'명!', true); }, 400); }
+                else if(rpgBulkAction==='__warn') SFX.warn(); else SFX.point();
                 rpgBulkSelected.clear(); renderRpgGrid(); rpgUpdateBulkBtn();
             }).catch(function(e){ alert('지급 오류: '+e.message); });
         }
@@ -4928,7 +4942,7 @@
             if(!confirm(recipients + '명에게 모둠 순위대로 성장 포인트를 지급할까요?')) return;
             rpgRef.update(updates).then(function(){
                 rpgToast('🌱 ' + recipients + '명에게 성장 포인트 지급 완료');
-                if(levelups > 0) setTimeout(function(){ rpgToast('🎉 레벨업 ' + levelups + '명!', true); }, 400);
+                if(levelups > 0){ SFX.levelup(); setTimeout(function(){ rpgToast('🎉 레벨업 ' + levelups + '명!', true); }, 400); } else SFX.point();
                 if(document.getElementById('groupxp-reset').checked && scoresRef) scoresRef.set({});
                 document.getElementById('groupxp-modal').style.display = 'none';
                 renderRpgGrid();
@@ -4944,7 +4958,8 @@
             const afterLv = rpgLevel(s.xp).lv;
             rpgRef.child('students/' + id).set(s).then(() => {
                 rpgToast('+' + a.xp + ' XP · ' + rpgStatName(a.stat) + ' +1');
-                if(afterLv > beforeLv) setTimeout(() => rpgToast('🎉 레벨 업! Lv.' + afterLv, true), 400);
+                if(afterLv > beforeLv){ SFX.levelup(); setTimeout(() => rpgToast('🎉 레벨 업! Lv.' + afterLv, true), 400); }
+                else if(a.xp < 0) SFX.warn(); else SFX.point();
             });
         }
 
@@ -5054,7 +5069,8 @@
             return rpgRef.update(updates).then(function(){
                 const lbl = a ? (a.label + ' +' + a.xp) : (actionId === '__warn' ? '벌점 +20' : '선행 −10');
                 rpgToast(ids.length + '명에게 ' + lbl + ' 지급 완료');
-                if(levelups > 0) setTimeout(function(){ rpgToast('🎉 레벨업 ' + levelups + '명!', true); }, 400);
+                if(levelups > 0){ SFX.levelup(); setTimeout(function(){ rpgToast('🎉 레벨업 ' + levelups + '명!', true); }, 400); }
+                else if(actionId === '__warn') SFX.warn(); else SFX.point();
             });
         }
         function rpgAwardHomework(hwId){
@@ -5325,7 +5341,7 @@
             const s = rpgStudentObj(num); const before = rpgLevel(s.xp).lv;
             s.xp += (m.xp || 0); if(m.stat) s.stats[m.stat] = (s.stats[m.stat] || 0) + 1;
             const up = {}; up['students/' + num] = s; up['missions/' + mid + '/done/' + num] = true;
-            rpgRef.update(up).then(function(){ rpgToast(num + '번 미션 완료! +' + (m.xp || 0) + ' XP'); if(rpgLevel(s.xp).lv > before) setTimeout(function(){ rpgToast('🎉 레벨 업!', true); }, 400); });
+            rpgRef.update(up).then(function(){ rpgToast(num + '번 미션 완료! +' + (m.xp || 0) + ' XP'); SFX.mission(); if(rpgLevel(s.xp).lv > before) setTimeout(function(){ SFX.levelup(); rpgToast('🎉 레벨 업!', true); }, 400); });
         }
         function rpgMissionAll(mid){
             if(!rpgRef) return;
@@ -5336,7 +5352,7 @@
             if(!confirm(targets.length + '명에게 미션 보상을 줄까요?')) return;
             const up = {}; let lv = 0;
             targets.forEach(function(st){ const s = rpgStudentObj(st.id); const b = rpgLevel(s.xp).lv; s.xp += (m.xp || 0); if(m.stat) s.stats[m.stat] = (s.stats[m.stat] || 0) + 1; if(rpgLevel(s.xp).lv > b) lv++; up['students/' + st.id] = s; up['missions/' + mid + '/done/' + st.id] = true; });
-            rpgRef.update(up).then(function(){ rpgToast(targets.length + '명 미션 완료 보상!'); if(lv > 0) setTimeout(function(){ rpgToast('🎉 레벨 업 ' + lv + '명!', true); }, 400); });
+            rpgRef.update(up).then(function(){ rpgToast(targets.length + '명 미션 완료 보상!'); SFX.mission(); if(lv > 0) setTimeout(function(){ SFX.levelup(); rpgToast('🎉 레벨 업 ' + lv + '명!', true); }, 400); });
         }
 
         // ---- 학생 로그인(핸드폰) ----
