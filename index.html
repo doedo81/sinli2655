@@ -310,6 +310,9 @@
         .class-card .cc-icon { position: absolute; top: 8px; border: none; background: transparent; color: #b0bcc9; cursor: pointer; font-size: 14px; padding: 2px 4px; }
         .class-card .cc-icon:hover { color: #5b97d1; }
         @keyframes scSpin { to { transform: rotate(360deg); } }
+        @keyframes rpgAuraSpin { from { transform: translate(-50%,-53%) rotate(0deg); } to { transform: translate(-50%,-53%) rotate(360deg); } }
+        @keyframes rpgAuraPulse { 0%,100% { opacity: .72; transform: translate(-50%,-53%) scale(.98); } 50% { opacity: 1; transform: translate(-50%,-53%) scale(1.04); } }
+        @keyframes rpgAuraTwinkle { 0%,100% { opacity: .35; transform: scale(.72); } 50% { opacity: 1; transform: scale(1.18); } }
         .act-bg-opt { display: block; width: 100%; text-align: left; border: none; background: transparent; border-radius: 8px; padding: 9px 10px; font-size: 13px; font-weight: 700; color: #455a64; cursor: pointer; font-family: 'Pretendard', sans-serif; }
         .act-bg-opt:hover { background: #f0f4fa; }
         /* ⌨️ 판서 글쓰기(키보드) 텍스트 상자 */
@@ -3947,10 +3950,7 @@
         }
         function actRpgAvatarFrom(item, px) {
             const L = (typeof rpgLevel === 'function') ? rpgLevel(item.xp) : { lv: 1 };
-            const g = item.gender === 'F' ? 'f' : 'm';
-            const key = (typeof rpgAvatarKey === 'function') ? rpgAvatarKey(item.job, L.lv, item.gender) : ('novice_' + g);
-            const fb = 'assets/avatars/' + ((item.job && typeof RPG_JOBS !== 'undefined' && RPG_JOBS[item.job]) ? item.job : 'novice') + '_' + g + '.png?v=6';
-            return '<img src="assets/avatars/' + key + '.png?v=6" onerror="this.onerror=null;this.src=\'' + fb + '\'" style="height:' + px + 'px;width:auto;display:block;margin:0 auto;">';
+            return rpgAvatarImg(item.job, L.lv, item.gender, px, 'display:block;margin:0 auto;', '');
         }
         function actRenderRpgDraw(id) {
             const s = actState[id];
@@ -4201,15 +4201,52 @@
 
         function rpgStatName(k){ const s = RPG_STATS.find(x => x.key === k); return s ? s.name : k; }
 
-        // 레벨 구간별 캐릭터 이미지 키. Lv1~9 견습생, 10~19 기본, 20~29 _2, 30+ _3.
+        // 레벨 구간별 캐릭터 이미지 키. Lv1 기본, 20/40/60/80/100에서 _2~_6 단계.
+        const RPG_AVATAR_TIER_LEVELS = [
+            { level:100, tier:6 },
+            { level:80, tier:5 },
+            { level:60, tier:4 },
+            { level:40, tier:3 },
+            { level:20, tier:2 }
+        ];
+        function rpgAvatarTier(level){
+            level = level || 1;
+            for(let i = 0; i < RPG_AVATAR_TIER_LEVELS.length; i++){
+                if(level >= RPG_AVATAR_TIER_LEVELS[i].level) return RPG_AVATAR_TIER_LEVELS[i].tier;
+            }
+            return 1;
+        }
+        function rpgAvatarKeyFromTier(job, genderKey, tier){
+            return job + '_' + genderKey + (tier > 1 ? '_' + tier : '');
+        }
         function rpgAvatarKey(job, level, gender){
             const g = gender === 'F' ? 'f' : 'm';
             if(!job || !RPG_JOBS[job]) return 'novice_' + g;
-            const tier = level >= 30 ? 3 : (level >= 20 ? 2 : 1);
-            return job + '_' + g + (tier > 1 ? '_' + tier : '');
+            return rpgAvatarKeyFromTier(job, g, rpgAvatarTier(level));
+        }
+        function rpgAvatarFallbackKeys(job, level, gender){
+            const g = gender === 'F' ? 'f' : 'm';
+            const keys = [];
+            if(job && RPG_JOBS[job]){
+                for(let tier = rpgAvatarTier(level); tier >= 1; tier--) keys.push(rpgAvatarKeyFromTier(job, g, tier));
+            }
+            keys.push('novice_' + g);
+            return keys.filter(function(key, idx){ return keys.indexOf(key) === idx; });
+        }
+        function rpgAvatarFallback(img){
+            const srcs = (img.dataset.rpgFallbackSrcs || '').split('|').filter(Boolean);
+            const next = (parseInt(img.dataset.rpgFallbackIndex || '0', 10) || 0) + 1;
+            img.dataset.rpgFallbackIndex = String(next);
+            if(next < srcs.length){ img.src = srcs[next]; return; }
+            img.onerror = null;
+        }
+        function rpgAvatarImg(job, level, gender, heightPx, extraStyle, attrs){
+            const keys = rpgAvatarFallbackKeys(job, level, gender);
+            const srcs = keys.map(function(key){ return 'assets/avatars/' + key + '.png?v=6'; });
+            return '<img src="' + srcs[0] + '" alt="" ' + (attrs || '') + ' data-rpg-fallback-index="0" data-rpg-fallback-srcs="' + srcs.join('|') + '" onerror="rpgAvatarFallback(this)" style="height:' + heightPx + 'px;width:auto;' + (extraStyle || '') + '">';
         }
 
-        // 고레벨 강화 효과 (그림 없이). 직업별 색·기호 + 레벨별 세기. Lv15+/25+/40+
+        // 고레벨 강화 효과 (그림 없이). 직업별 색·기호 + 레벨별 세기. Lv15/30/45/60/75/90.
         const RPG_AURA = {
             knight:  { rgb:'120,170,255', spark:'✦', sc:'#bcd6ff' },
             mage:    { rgb:'175,120,240', spark:'✦', sc:'#d7b3ff' },
@@ -4218,18 +4255,44 @@
             bard:    { rgb:'255,150,110', spark:'♪', sc:'#ffd6ad' },
             novice:  { rgb:'150,190,255', spark:'✦', sc:'#cfe0ff' }
         };
-        function rpgAuraTier(level){ return level >= 40 ? 3 : (level >= 25 ? 2 : (level >= 15 ? 1 : 0)); }
+        const RPG_AURA_TIER_LEVELS = [
+            { level:90, tier:6, label:'신화' },
+            { level:75, tier:5, label:'전설' },
+            { level:60, tier:4, label:'영웅' },
+            { level:45, tier:3, label:'숙련' },
+            { level:30, tier:2, label:'강화' },
+            { level:15, tier:1, label:'반짝임' }
+        ];
+        function rpgAuraTier(level){
+            level = level || 0;
+            for(let i = 0; i < RPG_AURA_TIER_LEVELS.length; i++){
+                if(level >= RPG_AURA_TIER_LEVELS[i].level) return RPG_AURA_TIER_LEVELS[i].tier;
+            }
+            return 0;
+        }
         function rpgAuraOverlay(level, sizePx, job){
             const t = rpgAuraTier(level); if(!t) return '';
             const a = RPG_AURA[(job && RPG_JOBS[job]) ? job : 'novice'];
-            const op = t === 3 ? 0.85 : (t === 2 ? 0.62 : 0.42);
-            const d = Math.round(sizePx * 1.55);
-            let html = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-53%);width:' + d + 'px;height:' + d + 'px;z-index:0;pointer-events:none;border-radius:50%;background:radial-gradient(circle,rgba(' + a.rgb + ',' + op + ') 0%,transparent 62%);"></div>';
-            if(t === 3){ html += '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-53%);width:' + Math.round(d * 0.72) + 'px;height:' + Math.round(d * 0.72) + 'px;z-index:0;pointer-events:none;border-radius:50%;background:radial-gradient(circle,rgba(255,225,130,0.55) 0%,transparent 60%);"></div>'; }
+            const op = [0, .36, .48, .62, .72, .82, .92][t];
+            const d = Math.round(sizePx * (1.42 + t * .08));
+            const gold = t >= 4 ? 'radial-gradient(circle,rgba(255,231,150,.58) 0%,transparent 56%),' : '';
+            let html = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-53%);width:' + d + 'px;height:' + d + 'px;z-index:0;pointer-events:none;border-radius:50%;background:' + gold + 'radial-gradient(circle,rgba(' + a.rgb + ',' + op + ') 0%,transparent 64%);filter:blur(' + (t >= 5 ? 1.8 : .8) + 'px);animation:rpgAuraPulse ' + (3.2 - Math.min(t, 5) * .22) + 's ease-in-out infinite;"></div>';
+            if(t >= 3){
+                const ring = Math.round(d * (t >= 5 ? .86 : .78));
+                html += '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-53%);width:' + ring + 'px;height:' + ring + 'px;z-index:0;pointer-events:none;border-radius:50%;border:' + (t >= 5 ? 3 : 2) + 'px dashed rgba(255,225,130,' + (t >= 5 ? .78 : .54) + ');box-shadow:0 0 ' + Math.round(sizePx * .18) + 'px rgba(' + a.rgb + ',.45);animation:rpgAuraSpin ' + (t >= 5 ? 6 : 9) + 's linear infinite;"></div>';
+            }
+            if(t >= 4){
+                const ring2 = Math.round(d * .55);
+                html += '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-53%);width:' + ring2 + 'px;height:' + ring2 + 'px;z-index:0;pointer-events:none;border-radius:50%;border:2px solid rgba(255,255,255,.48);box-shadow:0 0 ' + Math.round(sizePx * .24) + 'px rgba(255,230,155,.62);"></div>';
+            }
             if(t >= 2){
-                const pts = [[10,12],[86,20],[82,82],[13,80],[50,3],[92,56],[6,52]];
-                const cnt = t === 3 ? 7 : 5, fs = t === 3 ? 11 : 9;
-                for(let i = 0; i < cnt; i++){ html += '<div style="position:absolute;top:' + pts[i][1] + '%;left:' + pts[i][0] + '%;z-index:0;pointer-events:none;font-size:' + fs + 'px;color:' + a.sc + ';line-height:1;">' + a.spark + '</div>'; }
+                const pts = [[10,12],[86,20],[82,82],[13,80],[50,3],[92,56],[6,52],[28,2],[70,6],[95,36],[4,35],[35,88],[65,90],[50,98]];
+                const cnt = [0,0,5,7,9,11,14][t], fs = Math.round(sizePx * ([0,0,.11,.125,.14,.155,.17][t]));
+                const special = t >= 6 ? '✹' : (t >= 5 ? '✦' : a.spark);
+                for(let i = 0; i < cnt; i++){
+                    const delay = (i % 5) * .18;
+                    html += '<div style="position:absolute;top:' + pts[i][1] + '%;left:' + pts[i][0] + '%;z-index:0;pointer-events:none;font-size:' + fs + 'px;color:' + (t >= 4 ? '#fff0a8' : a.sc) + ';line-height:1;text-shadow:0 0 5px rgba(' + a.rgb + ',.8);animation:rpgAuraTwinkle ' + (1.7 + (i % 3) * .2) + 's ease-in-out ' + delay + 's infinite;">' + special + '</div>';
+                }
             }
             return html;
         }
@@ -4240,7 +4303,16 @@
             { id:'star', name:'⭐ 별 장식', level:4, svg:'<svg viewBox="0 0 64 42" width="100%"><path d="M32,4 l5,12 13,1 -10,8 3,13 -11,-7 -11,7 3,-13 -10,-8 13,-1 z" fill="#ffd83a" stroke="#e0a91e" stroke-width="2" stroke-linejoin="round"/></svg>' },
             { id:'horns', name:'😈 도깨비 뿔', level:6, svg:'<svg viewBox="0 0 64 42" width="100%"><path d="M20,42 Q6,22 18,8 Q20,24 28,40 Z" fill="#c96b4a" stroke="#8a4530" stroke-width="2" stroke-linejoin="round"/><path d="M44,42 Q58,22 46,8 Q44,24 36,40 Z" fill="#c96b4a" stroke="#8a4530" stroke-width="2" stroke-linejoin="round"/></svg>' },
             { id:'halo', name:'😇 천사 후광', level:9, svg:'<svg viewBox="0 0 64 42" width="100%"><ellipse cx="32" cy="24" rx="21" ry="7" fill="none" stroke="#ffd76b" stroke-width="5"/><ellipse cx="32" cy="24" rx="21" ry="7" fill="none" stroke="#fff2c0" stroke-width="1.5"/></svg>' },
-            { id:'crown', name:'👑 왕관', level:12, svg:'<svg viewBox="0 0 64 42" width="100%"><path d="M10,40 L10,15 L22,26 L32,7 L42,26 L54,15 L54,40 Z" fill="#ffd23f" stroke="#c9901a" stroke-width="2.5" stroke-linejoin="round"/><rect x="9" y="34" width="46" height="6.5" rx="2" fill="#e6ad1e" stroke="#c9901a" stroke-width="1.5"/><circle cx="32" cy="7" r="3.5" fill="#ff5d5d" stroke="#c9901a" stroke-width="1.2"/><circle cx="12" cy="15" r="2.5" fill="#7ec8ff"/><circle cx="52" cy="15" r="2.5" fill="#7ec8ff"/></svg>' }
+            { id:'crown', name:'👑 왕관', level:12, svg:'<svg viewBox="0 0 64 42" width="100%"><path d="M10,40 L10,15 L22,26 L32,7 L42,26 L54,15 L54,40 Z" fill="#ffd23f" stroke="#c9901a" stroke-width="2.5" stroke-linejoin="round"/><rect x="9" y="34" width="46" height="6.5" rx="2" fill="#e6ad1e" stroke="#c9901a" stroke-width="1.5"/><circle cx="32" cy="7" r="3.5" fill="#ff5d5d" stroke="#c9901a" stroke-width="1.2"/><circle cx="12" cy="15" r="2.5" fill="#7ec8ff"/><circle cx="52" cy="15" r="2.5" fill="#7ec8ff"/></svg>' },
+            { id:'magic_hat', name:'🧙 마법사 모자', level:15, svg:'<svg viewBox="0 0 64 42" width="100%"><path d="M22,34 L33,3 L45,34 Z" fill="#7aa7ff" stroke="#3e65b5" stroke-width="2.2" stroke-linejoin="round"/><path d="M16,34 C26,28 41,28 50,34 C42,40 24,40 16,34 Z" fill="#6f5bd8" stroke="#3e458f" stroke-width="2.2"/><path d="M31,15 l3,3 4,-1 -2,4 2,4 -4,-1 -3,3 -1,-4 -4,-2 4,-2 z" fill="#fff3a8"/></svg>' },
+            { id:'leaf_circlet', name:'🍃 잎사귀 화관', level:20, svg:'<svg viewBox="0 0 64 42" width="100%"><path d="M9,29 C20,20 44,20 55,29" fill="none" stroke="#7bbd66" stroke-width="4" stroke-linecap="round"/><ellipse cx="18" cy="25" rx="7" ry="4" fill="#8fd47a" stroke="#4c9b51" stroke-width="1.5" transform="rotate(-24 18 25)"/><ellipse cx="30" cy="21" rx="7" ry="4" fill="#a5dd73" stroke="#4c9b51" stroke-width="1.5"/><ellipse cx="43" cy="25" rx="7" ry="4" fill="#8fd47a" stroke="#4c9b51" stroke-width="1.5" transform="rotate(24 43 25)"/></svg>' },
+            { id:'prism_star', name:'💎 수정 별핀', level:26, svg:'<svg viewBox="0 0 64 42" width="100%"><path d="M32,5 l5,11 12,2 -9,8 3,12 -11,-6 -11,6 3,-12 -9,-8 12,-2 z" fill="#9ee7ff" stroke="#4aa3c7" stroke-width="2" stroke-linejoin="round"/><path d="M32,5 L37,16 L32,32 L27,16 Z" fill="#d6fbff" opacity=".85"/></svg>' },
+            { id:'winged_band', name:'🪽 날개 머리띠', level:33, svg:'<svg viewBox="0 0 64 42" width="100%"><path d="M16,31 C21,22 27,20 32,26 C25,27 22,31 18,37 Z" fill="#e9f5ff" stroke="#9ec2e3" stroke-width="2" stroke-linejoin="round"/><path d="M48,31 C43,22 37,20 32,26 C39,27 42,31 46,37 Z" fill="#e9f5ff" stroke="#9ec2e3" stroke-width="2" stroke-linejoin="round"/><path d="M18,37 C28,32 36,32 46,37" fill="none" stroke="#ffd36b" stroke-width="4" stroke-linecap="round"/></svg>' },
+            { id:'laurel_crown', name:'🏛️ 월계관', level:42, svg:'<svg viewBox="0 0 64 42" width="100%"><path d="M13,33 C19,22 25,18 32,18 C39,18 45,22 51,33" fill="none" stroke="#d6b95d" stroke-width="4" stroke-linecap="round"/><g fill="#8fcf74" stroke="#4d9a55" stroke-width="1.4"><ellipse cx="18" cy="29" rx="5" ry="3" transform="rotate(-35 18 29)"/><ellipse cx="24" cy="23" rx="5" ry="3" transform="rotate(-22 24 23)"/><ellipse cx="40" cy="23" rx="5" ry="3" transform="rotate(22 40 23)"/><ellipse cx="46" cy="29" rx="5" ry="3" transform="rotate(35 46 29)"/></g></svg>' },
+            { id:'flame_crown', name:'🔥 불꽃 왕관', level:55, svg:'<svg viewBox="0 0 64 42" width="100%"><path d="M11,39 L11,22 L23,29 L31,8 L39,29 L53,20 L53,39 Z" fill="#ffb545" stroke="#c96a2a" stroke-width="2.5" stroke-linejoin="round"/><path d="M24,37 C24,27 32,25 31,14 C39,24 43,29 40,37 Z" fill="#ffef75" opacity=".9"/></svg>' },
+            { id:'galaxy_halo', name:'🌌 은하 후광', level:68, svg:'<svg viewBox="0 0 64 42" width="100%"><ellipse cx="32" cy="25" rx="23" ry="8" fill="none" stroke="#836bff" stroke-width="5"/><ellipse cx="32" cy="25" rx="23" ry="8" fill="none" stroke="#ffe88a" stroke-width="1.5"/><circle cx="20" cy="16" r="2" fill="#fff4a8"/><circle cx="45" cy="13" r="1.7" fill="#c9f3ff"/><circle cx="52" cy="27" r="2" fill="#ffd2f1"/></svg>' },
+            { id:'phoenix_feather', name:'🪶 불사조 깃털', level:82, svg:'<svg viewBox="0 0 64 42" width="100%"><path d="M18,36 C35,6 49,3 52,8 C55,16 40,25 25,38 Z" fill="#ff8b54" stroke="#b94e36" stroke-width="2.2" stroke-linejoin="round"/><path d="M25,36 C34,20 42,12 51,7" fill="none" stroke="#fff078" stroke-width="2.3" stroke-linecap="round"/><path d="M28,28 L42,27 M32,22 L45,20" stroke="#ffd86b" stroke-width="1.8" stroke-linecap="round"/></svg>' },
+            { id:'legend_crown', name:'🌟 전설 왕관', level:100, svg:'<svg viewBox="0 0 64 42" width="100%"><path d="M8,39 L10,13 L23,27 L32,4 L41,27 L54,13 L56,39 Z" fill="#ffe36b" stroke="#b9851e" stroke-width="2.5" stroke-linejoin="round"/><rect x="9" y="34" width="46" height="6" rx="2" fill="#d9a526"/><path d="M32,4 l3,7 8,1 -6,5 2,8 -7,-4 -7,4 2,-8 -6,-5 8,-1 z" fill="#fff7b2" stroke="#c99522" stroke-width="1.2"/></svg>' }
         ];
         // 캐릭터별 머리 가로중심(이미지 폭 대비). 무기 때문에 좌우로 치우쳐서 계산값 사용.
         const RPG_HEAD_X = {"archer_f":0.422,"archer_m":0.43,"bard_f":0.481,"bard_m":0.493,"knight_f":0.508,"knight_f_2":0.442,"knight_m":0.527,"knight_m_2":0.426,"mage_f":0.554,"mage_m":0.543,"novice_f":0.48,"novice_m":0.496,"priest_f":0.494,"priest_m":0.496};
@@ -4264,7 +4336,14 @@
             { id:'dog', name:'🐶 강아지', emoji:'🐶', level:11 },
             { id:'fox', name:'🦊 여우', emoji:'🦊', level:16 },
             { id:'unicorn', name:'🦄 유니콘', emoji:'🦄', level:22 },
-            { id:'dragon', name:'🐉 용', emoji:'🐉', level:30 }
+            { id:'dragon', name:'🐉 용', emoji:'🐉', level:30 },
+            { id:'rabbit', name:'🐰 달토끼', emoji:'🐰', level:26, hatch:3 },
+            { id:'penguin', name:'🐧 얼음 펭귄', emoji:'🐧', level:34, hatch:3 },
+            { id:'phoenix', name:'🔥 불사조', emoji:'🔥', level:42, hatch:5 },
+            { id:'griffin', name:'🦅 그리핀', emoji:'🦅', level:55, hatch:5 },
+            { id:'pegasus', name:'🐴 페가수스', emoji:'🐴', level:68, hatch:5 },
+            { id:'kraken', name:'🐙 꼬마 크라켄', emoji:'🐙', level:82, hatch:6 },
+            { id:'divine_dragon', name:'🐲 신룡', emoji:'🐲', level:100, hatch:6 }
         ];
         function rpgPetVisual(petId, px, level){
             if(!petId) return '';
@@ -4281,7 +4360,12 @@
             { id:'wood', name:'🟫 나무', level:5, style:'border:3px solid #b07a45 !important;' },
             { id:'silver', name:'⬜ 은', level:10, style:'border:3px solid #9aa7b4 !important;box-shadow:0 0 0 2px #e3e9ee,0 3px 10px rgba(120,144,180,0.12) !important;' },
             { id:'gold', name:'🟨 황금', level:18, style:'border:3px solid #e6b422 !important;box-shadow:0 0 10px rgba(230,180,34,0.55) !important;' },
-            { id:'rainbow', name:'🌈 무지개', level:28, style:'border:3px solid #ff8fb0 !important;box-shadow:0 0 0 2px #ffd93b,0 0 0 4px #6bcb77,0 0 0 6px #4d96ff !important;' }
+            { id:'rainbow', name:'🌈 무지개', level:28, style:'border:3px solid #ff8fb0 !important;box-shadow:0 0 0 2px #ffd93b,0 0 0 4px #6bcb77,0 0 0 6px #4d96ff !important;' },
+            { id:'crystal', name:'💎 수정', level:40, style:'border:3px solid #8fdcff !important;box-shadow:0 0 0 2px #d9f7ff,0 0 14px rgba(104,204,255,.55) !important;' },
+            { id:'flame', name:'🔥 불꽃', level:55, style:'border:3px solid #ff9b45 !important;box-shadow:0 0 0 2px #ffe0a3,0 0 16px rgba(255,122,54,.62) !important;' },
+            { id:'galaxy', name:'🌌 은하', level:70, style:'border:3px solid #8671ff !important;box-shadow:0 0 0 2px #ffd6ff,0 0 18px rgba(104,87,255,.58), inset 0 0 16px rgba(255,255,255,.25) !important;' },
+            { id:'legend', name:'🌟 전설', level:85, style:'border:3px solid #ffd95a !important;box-shadow:0 0 0 2px #fff3b0,0 0 22px rgba(255,212,70,.72),0 6px 18px rgba(120,90,20,.18) !important;' },
+            { id:'mythic', name:'👑 신화', level:100, style:'border:3px solid #fff0a8 !important;box-shadow:0 0 0 2px #9ee7ff,0 0 0 4px #bda8ff,0 0 26px rgba(255,235,150,.85), inset 0 0 18px rgba(255,255,255,.35) !important;' }
         ];
         function rpgFrameStyle(frameId){
             if(!frameId) return '';
@@ -4327,13 +4411,27 @@
             return rpgRef.child('config/actions').set(seed).then(function(){ return rpgRef.child('config/customActions').remove(); });
         }
 
-        // 레벨 곡선(조정 가능): L→L+1 필요 XP = 50 + (L-1)*30 (초반 빠르게, 뒤로 갈수록 천천히)
+        // 레벨 곡선: 기본은 기존 50/30을 유지. 1년 운영에서 더 빠른 성장을 원하면 RPG_LEVEL_CURVE_PRESET을 'gentle'로 바꾸면 됨.
+        const RPG_MAX_LEVEL = 100;
+        const RPG_LEVEL_CURVE_PRESET = 'classic'; // 'classic' = 기존값, 'gentle' = 완만한 대안
         const RPG_XP_BASE = 50, RPG_XP_STEP = 30;
+        const RPG_XP_GENTLE_BASE = 40, RPG_XP_GENTLE_STEP = 18;
+        function rpgLevelNeed(lv){
+            const gentle = RPG_LEVEL_CURVE_PRESET === 'gentle';
+            const base = gentle ? RPG_XP_GENTLE_BASE : RPG_XP_BASE;
+            const step = gentle ? RPG_XP_GENTLE_STEP : RPG_XP_STEP;
+            return base + (lv - 1) * step;
+        }
         function rpgLevel(xp){
             xp = xp || 0;
-            let lv = 1, need = RPG_XP_BASE, acc = 0;
-            while(xp >= acc + need){ acc += need; lv++; need = RPG_XP_BASE + (lv - 1) * RPG_XP_STEP; }
-            return { lv:lv, into:xp - acc, need:need };
+            let lv = 1, need = rpgLevelNeed(1), acc = 0;
+            while(lv < RPG_MAX_LEVEL && xp >= acc + need){ acc += need; lv++; need = rpgLevelNeed(lv); }
+            return { lv:lv, into:xp - acc, need:need, max:lv >= RPG_MAX_LEVEL };
+        }
+        function rpgLevelPct(L){
+            if(!L) return 0;
+            if(L.max) return 100;
+            return Math.max(0, Math.min(100, Math.round((L.into || 0) / Math.max(1, L.need || 1) * 100)));
         }
 
         // 명단(번호 이름 성별) 파싱 → [{id,name,gender}]
@@ -4565,7 +4663,7 @@
             const L = rpgLevel(d.xp);
             const job = d.job && RPG_JOBS[d.job];
             const warn = d.warning || 0;
-            const pct = Math.round(L.into / L.need * 100);
+            const pct = rpgLevelPct(L);
             let rankBadge = '';
             if(rank){
                 const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';
@@ -4584,7 +4682,7 @@
                 + (d.pet ? '<div style="position:absolute;top:44px;right:2px;z-index:4;">' + rpgPetVisual(d.pet, 40, L.lv) + '</div>' : '')
                 + '<div style="position:relative;width:max-content;margin:14px auto 2px;">'
                 + rpgAuraOverlay(L.lv, 80, d.job)
-                + '<img src="assets/avatars/' + rpgAvatarKey(d.job, L.lv, stu.gender) + '.png?v=6" alt="" loading="lazy" onerror="this.onerror=function(){this.onerror=null;this.src=\'assets/avatars/novice_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=6\'};this.src=\'assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=6\'" style="height:80px;width:auto;display:block;position:relative;z-index:1;">'
+                + rpgAvatarImg(d.job, L.lv, stu.gender, 80, 'display:block;position:relative;z-index:1;', 'loading="lazy"')
                 + '</div>'
                 + '<div style="display:flex;justify-content:space-between;align-items:center;gap:4px;">'
                 + '<span style="font-weight:800;color:#51618a;">' + stu.name + '</span>'
@@ -4689,7 +4787,7 @@
             const job = d.job && RPG_JOBS[d.job];
             const warn = d.warning || 0;
             const stats = d.stats || {};
-            const pct = Math.round(L.into / L.need * 100);
+            const pct = rpgLevelPct(L);
 
             const statHtml = RPG_STATS.map(st =>
                 '<div style="background:#f6f8fb;border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;font-size:13px;"><span style="color:#666;">' + st.emoji + ' ' + st.name + '</span><span style="font-weight:800;color:#51618a;">' + (stats[st.key] || 0) + '</span></div>'
@@ -4715,7 +4813,7 @@
                 + '<div style="display:flex;gap:10px;align-items:center;">'
                 + '<div style="position:relative;">'
                 + rpgAuraOverlay(L.lv, 110, d.job)
-                + '<img src="assets/avatars/' + rpgAvatarKey(d.job, L.lv, stu.gender) + '.png?v=6" alt="" onerror="this.onerror=function(){this.onerror=null;this.src=\'assets/avatars/novice_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=6\'};this.src=\'assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '_' + (stu.gender === 'F' ? 'f' : 'm') + '.png?v=6\'" style="height:110px;width:auto;position:relative;z-index:1;">'
+                + rpgAvatarImg(d.job, L.lv, stu.gender, 110, 'position:relative;z-index:1;', '')
                 + '</div>'
                 + '<div><div style="font-size:18px;font-weight:800;color:#51618a;">' + stu.name + ' <span style="font-size:13px;color:#7b6cd9;">' + (job ? job.emoji + job.name : '견습생') + '</span> ' + rpgHeadVisual(d.head, 22) + rpgPetVisual(d.pet, 22, L.lv) + '</div>'
                 + '<div style="font-size:13px;color:#888;">Lv.' + L.lv + ' · ' + stu.id + '번</div></div>'
@@ -5413,14 +5511,13 @@
         function rpgRenderStudentPage(num){
             var stu = rpgParseRoster().find(function(x){ return x.id === num; }); if(!stu) return;
             var d = (rpgData.students && rpgData.students[num]) || {};
-            var L = rpgLevel(d.xp), job = d.job && RPG_JOBS[d.job], pct = Math.round(L.into / L.need * 100);
-            var akey = rpgAvatarKey(d.job, L.lv, stu.gender), g = stu.gender === 'F' ? 'f' : 'm';
+            var L = rpgLevel(d.xp), job = d.job && RPG_JOBS[d.job], pct = rpgLevelPct(L);
             var statHtml = RPG_STATS.map(function(st){ return '<div style="background:#f6f8fb;border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;font-size:13px;"><span style="color:#666;">' + st.emoji + ' ' + st.name + '</span><span style="font-weight:800;color:#51618a;">' + ((d.stats && d.stats[st.key]) || 0) + '</span></div>'; }).join('');
             var jobSection = '';
             if(L.lv >= 10 && !d.job){ jobSection = '<div style="background:#f6f4ff;border:1px solid #d9d2f5;border-radius:12px;padding:12px;margin-top:14px;"><div style="font-weight:700;color:#5b4bb5;margin-bottom:8px;">✨ 레벨 10 달성! 전직할 직업을 고르세요</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">' + Object.keys(RPG_JOBS).map(function(k){ return '<button onclick="rpgSetJob(' + num + ',\'' + k + '\')" style="border:1px solid #d9d2f5;background:#fff;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">' + RPG_JOBS[k].emoji + ' ' + RPG_JOBS[k].name + '</button>'; }).join('') + '</div></div>'; }
             document.getElementById('student-page-body').innerHTML =
                 '<div style="text-align:center;"><div style="position:relative;display:inline-block;">' + rpgAuraOverlay(L.lv, 150, d.job)
-                + '<img src="assets/avatars/' + akey + '.png?v=6" onerror="this.onerror=function(){this.onerror=null;this.src=\'assets/avatars/novice_' + g + '.png?v=6\'};this.src=\'assets/avatars/' + ((d.job && RPG_JOBS[d.job]) ? d.job : 'novice') + '_' + g + '.png?v=6\'" style="height:150px;width:auto;position:relative;z-index:1;">'
+                + rpgAvatarImg(d.job, L.lv, stu.gender, 150, 'position:relative;z-index:1;', '')
                 + '</div>'
                 + '<div style="font-size:20px;font-weight:800;color:#51618a;margin-top:8px;">' + stu.name + ' <span style="font-size:13px;color:#7b6cd9;">' + (job ? job.emoji + job.name : '견습생') + '</span> ' + rpgHeadVisual(d.head, 24) + rpgPetVisual(d.pet, 24, L.lv) + '</div>'
                 + '<div style="font-size:13px;color:#888;">Lv.' + L.lv + ' · ' + stu.id + '번</div></div>'
