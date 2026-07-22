@@ -274,6 +274,9 @@
         .actdraw-front { background: #d6dee6; color: #9aa8b5; }
         .actdraw-back { background: var(--accent-blue); color: #fff; transform: rotateY(180deg); }
         .actdraw-back.g { background: #2ecc71; }
+        .actdraw-card.justpicked { z-index: 2; }
+        .actdraw-card.justpicked .actdraw-back { box-shadow: 0 0 0 3px #ffd23f, 0 0 12px 3px rgba(255,180,40,.85); animation: actPickPulse 1s ease-in-out infinite; }
+        @keyframes actPickPulse { 0%,100% { box-shadow: 0 0 0 3px #ffd23f, 0 0 10px 2px rgba(255,180,40,.7); } 50% { box-shadow: 0 0 0 4px #ffb020, 0 0 18px 6px rgba(255,180,40,.95); } }
         .act-score-grid { display: grid; gap: 8px; }
         .act-score-item { border-radius: 10px; padding: 8px 6px; text-align: center; border: 2px solid #e6ebf3; }
         .act-score-item .v { font-size: 26px; font-weight: 900; color: var(--dark-blue); margin: 2px 0; }
@@ -3796,7 +3799,7 @@
         }
 
         // ----- 뽑기 위젯 (카드 뒤집기) -----
-        function actInitDraw(id) { actState[id] = { mode: 'indiv', total: globalTotalStudents || 24, groups: numberOfGroups || 4, absent: '', cards: [], showSettings: false, scale: 1, baseW: 300 }; actDrawReset(id); }
+        function actInitDraw(id) { actState[id] = { mode: 'indiv', total: globalTotalStudents || 24, groups: numberOfGroups || 4, absent: '', cards: [], showSettings: false, scale: 1, baseW: 300, last: null }; actDrawReset(id); }
         function actDrawSetMode(id, m) { actState[id].mode = m; actDrawReset(id); }
         function actDrawToggleSettings(id) { actState[id].showSettings = !actState[id].showSettings; actRenderDraw(id); }
         function actDrawReadSettings(id) {
@@ -3812,6 +3815,7 @@
             if (s.mode === 'group') nums = Array.from({ length: s.groups }, (_, i) => i + 1);
             else { for (let i = 1; i <= s.total; i++) if (!abs.includes(i)) nums.push(i); }
             s.cards = nums.map(n => ({ n, flipped: false }));
+            s.last = null;
             actRenderDraw(id);
         }
         function actDrawPick(id) {
@@ -3819,9 +3823,10 @@
             const hidden = s.cards.map((c, i) => c.flipped ? -1 : i).filter(i => i >= 0);
             if (!hidden.length) return;
             const i = hidden[Math.floor(Math.random() * hidden.length)];
-            s.cards[i].flipped = true;
+            s.cards[i].flipped = true; s.last = i;
             const el = document.getElementById(`${id}-card${i}`);
             if (el) el.classList.add('flipped');
+            actDrawMarkLast(id);
             try { pickSound.currentTime = 0; pickSound.play(); } catch (e) {}
             actDrawFoot(id);
         }
@@ -3830,8 +3835,21 @@
             c.flipped = !c.flipped;
             const el = document.getElementById(`${id}-card${i}`);
             if (el) el.classList.toggle('flipped', c.flipped);
-            if (c.flipped) { try { pickSound.currentTime = 0; pickSound.play(); } catch (e) {} }
+            if (c.flipped) { s.last = i; actDrawMarkLast(id); try { pickSound.currentTime = 0; pickSound.play(); } catch (e) {} }
+            else if (s.last === i) { s.last = null; actDrawMarkLast(id); }
             actDrawFoot(id);
+        }
+        // 방금 뽑힌 카드 강조 + 상단에 크게 표시
+        function actDrawShortLabel(s, c) { return s.mode === 'group' ? (c.n + '모둠') : (c.n + '번'); }
+        function actDrawMarkLast(id) {
+            const s = actState[id];
+            const body = document.getElementById(`${id}-body`); if (!body) return;
+            body.querySelectorAll('.actdraw-card.justpicked').forEach(function (e) { e.classList.remove('justpicked'); });
+            const banner = document.getElementById(`${id}-last`);
+            if (s.last != null && s.cards[s.last]) {
+                const el = document.getElementById(`${id}-card${s.last}`); if (el) el.classList.add('justpicked');
+                if (banner) { banner.style.display = 'block'; banner.innerHTML = '🎯 방금 뽑힘 &nbsp;<b style="font-size:22px; color:#8e44ad;">' + actDrawShortLabel(s, s.cards[s.last]) + '</b>'; }
+            } else if (banner) { banner.style.display = 'none'; banner.innerHTML = ''; }
         }
         function actDrawFoot(id) {
             const s = actState[id], f = document.getElementById(`${id}-remain`);
@@ -3868,10 +3886,12 @@
                 <div class="act-seg"><button class="${group ? 'on' : ''}" onclick="actDrawSetMode('${id}','group')">모둠</button><button class="${!group ? 'on' : ''}" onclick="actDrawSetMode('${id}','indiv')">개인</button></div>
                 <div style="text-align:right; margin-bottom:6px;"><span style="cursor:pointer; color:#78909c; font-size:12px; font-weight:700;" onclick="actDrawToggleSettings('${id}')"><i class="fa-solid fa-gear"></i> 설정</span></div>
                 <div style="font-size:13px; color:#90a4ae;">${settings}</div>
+                <div id="${id}-last" style="display:none; text-align:center; background:#f6f0ff; border:1px solid #e2d6f5; border-radius:10px; padding:8px 10px; margin-bottom:8px; font-size:13px; font-weight:700; color:#7b5bd0;"></div>
                 <div class="actdraw-grid" style="grid-template-columns:repeat(${cols},1fr);">${cards}</div>
                 <div style="display:flex; gap:6px; margin-top:10px;"><button class="act-btn" style="background:${group ? '#2ecc71' : '#8e44ad'}; flex:2;" onclick="actDrawPick('${id}')">🎲 뽑기!</button><button class="act-btn" style="background:#90a4ae; flex:1;" onclick="actDrawReset('${id}')">리셋</button></div>
                 <div id="${id}-remain" style="text-align:center; font-size:12px; color:#b0bcc9; margin-top:8px;"></div>`;
             actDrawFoot(id);
+            actDrawMarkLast(id);
             actApplyScale(id);
         }
 
