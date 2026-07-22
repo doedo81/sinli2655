@@ -4035,15 +4035,21 @@
         ];
         function actInitCoop(id) { actState[id] = { groups: (numberOfGroups || 6), done: [], current: null, roleIdx: null, scale: 1, baseW: 320 }; actRenderCoop(id); }
         function actCoopSetGroups(id, d) { const s = actState[id]; s.groups = Math.max(1, Math.min(12, s.groups + d)); s.done = []; s.current = null; s.roleIdx = null; actRenderCoop(id); }
-        function actCoopPick(id) {
+        function actCoopPick(id) {   // 1단계: 모둠만 뽑기
             const s = actState[id];
             if (s.done.length >= s.groups) { s.done = []; }        // 다 뽑혔으면 새 바퀴
             const remain = [];
             for (let g = 1; g <= s.groups; g++) if (s.done.indexOf(g) === -1) remain.push(g);
             if (!remain.length) return;
             s.current = remain[Math.floor(Math.random() * remain.length)];
-            s.roleIdx = Math.floor(Math.random() * COOP_ROLES.length);
+            s.roleIdx = null;
             s.done.push(s.current);
+            try { pickSound.currentTime = 0; pickSound.play(); } catch (e) {}
+            actRenderCoop(id);
+        }
+        function actCoopPickRole(id) {   // 2단계: 역할 뽑기
+            const s = actState[id]; if (s.current == null) return;
+            s.roleIdx = Math.floor(Math.random() * COOP_ROLES.length);
             try { pickSound.currentTime = 0; pickSound.play(); } catch (e) {}
             actRenderCoop(id);
         }
@@ -4055,26 +4061,31 @@
             const allDone = s.done.length >= s.groups && s.current == null;
             let html = '<div class="act-count-ctl" style="margin-bottom:8px;"><span>모둠 수</span><button onclick="actCoopSetGroups(\'' + id + '\',-1)">−</button><b>' + s.groups + '</b><button onclick="actCoopSetGroups(\'' + id + '\',1)">＋</button></div>';
             if (s.current != null) {
-                // 모둠 + 역할 결과
+                // 뽑힌 모둠 + 역할(2×2)
                 html += '<div style="text-align:center; background:#eafaf1; border:1px solid #b7e3c9; border-radius:14px; padding:14px 10px; margin-bottom:10px;">'
                     + '<div style="font-size:34px; font-weight:900; color:#2ecc71; line-height:1;">' + s.current + '모둠</div>'
-                    + '<div style="display:flex; gap:6px; justify-content:center; margin:12px 0 6px; flex-wrap:wrap;">'
+                    + '<div style="display:grid; grid-template-columns:repeat(2,1fr); gap:6px; margin:12px 0 4px;">'
                     + COOP_ROLES.map(function (r, i) {
                         const on = i === s.roleIdx;
-                        return '<span style="padding:7px 10px; border-radius:10px; font-size:13px; font-weight:800; ' + (on ? 'background:#8e44ad; color:#fff; box-shadow:0 0 0 3px #e4d4f5;' : 'background:#fff; color:#b7bec8; border:1px solid #e6e6ee;') + '">' + r.emoji + ' ' + r.name + '</span>';
+                        const dim = s.roleIdx != null && !on;
+                        return '<div style="padding:9px 6px; border-radius:10px; font-size:14px; font-weight:800; ' + (on ? 'background:#8e44ad; color:#fff; box-shadow:0 0 0 3px #e4d4f5;' : (dim ? 'background:#f4f4f8; color:#c7ccd6; border:1px solid #eee;' : 'background:#fff; color:#607d8b; border:1px solid #e0e6ee;')) + '">' + r.emoji + ' ' + r.name + '</div>';
                     }).join('')
-                    + '</div>'
-                    + '<div style="font-size:13px; color:#7b5bd0; font-weight:700;">👉 이번 발표: <b style="font-size:16px;">' + COOP_ROLES[s.roleIdx].emoji + ' ' + COOP_ROLES[s.roleIdx].name + '</b></div>'
                     + '</div>';
-                if (s.done.length >= s.groups) {
-                    html += '<div style="text-align:center; font-size:13px; color:#2ecc71; font-weight:800; margin-bottom:8px;">🎉 모든 모둠 발표 완료!</div>'
+                if (s.roleIdx != null) {
+                    html += '<div style="font-size:13px; color:#7b5bd0; font-weight:700; margin-top:8px;">👉 이번 발표: <b style="font-size:16px;">' + COOP_ROLES[s.roleIdx].emoji + ' ' + COOP_ROLES[s.roleIdx].name + '</b></div>';
+                }
+                html += '</div>';
+                if (s.roleIdx == null) {
+                    // 2단계: 역할 뽑기 버튼
+                    html += '<button class="act-btn" style="background:#8e44ad; width:100%;" onclick="actCoopPickRole(\'' + id + '\')">🎭 역할 뽑기</button>';
+                } else if (s.done.length >= s.groups) {
+                    html += '<div style="text-align:center; font-size:13px; color:#2ecc71; font-weight:800; margin:6px 0 8px;">🎉 모든 모둠 발표 완료!</div>'
                         + '<button class="act-btn" style="background:#2ecc71; width:100%;" onclick="actCoopReset(\'' + id + '\')">🔄 새 바퀴 시작</button>';
                 } else {
                     html += '<button class="act-btn" style="background:#2ecc71; width:100%;" onclick="actCoopNext(\'' + id + '\')">발표 끝 · 다음 모둠 ▶</button>';
                 }
             } else {
-                // 모둠 뽑기 대기
-                html += '<div style="text-align:center; color:#b0bcc9; padding:22px 8px; margin-bottom:10px; border:2px dashed #d7e6dd; border-radius:12px;"><i class="fa-solid fa-people-group" style="font-size:34px; opacity:.4;"></i><div style="margin-top:8px; font-weight:700;">' + (allDone ? '한 바퀴 완료! 다시 시작하세요' : '[🎲 모둠 뽑기]를 눌러 주세요') + '</div></div>';
+                html += '<div style="text-align:center; color:#b0bcc9; padding:22px 8px; margin-bottom:10px; border:2px dashed #d7e6dd; border-radius:12px;"><i class="fa-solid fa-people-group" style="font-size:34px; opacity:.4;"></i><div style="margin-top:8px; font-weight:700;">' + (allDone ? '한 바퀴 완료! 다시 시작하세요' : '① [🎲 모둠 뽑기] → ② [🎭 역할 뽑기]') + '</div></div>';
                 html += '<button class="act-btn" style="background:#2ecc71; width:100%;" onclick="actCoopPick(\'' + id + '\')">🎲 모둠 뽑기</button>';
             }
             html += '<div style="text-align:center; font-size:12px; color:#b0bcc9; margin-top:8px;">뽑은 모둠: ' + Math.min(s.done.length, s.groups) + ' / ' + s.groups + '</div>';
