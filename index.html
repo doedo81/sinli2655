@@ -4224,6 +4224,7 @@
                 }
             } else if (currentStatsMode === 'student') {
                 let students = {}; let maxTotal = 24;
+                const nameMap = rosterNameMap();
                 filt.forEach(hw => { if(hw.total > maxTotal) maxTotal = hw.total; });
                 for(let i=1; i<=maxTotal; i++) students[i] = { done: 0, act: 0 };
                 filt.forEach(hw => { for(let i=1; i<=hw.total; i++) { if(hw.checklist[i] === true) { students[i].done++; students[i].act++; } else if(hw.checklist[i] === false || hw.checklist[i] === undefined) { students[i].act++; } } });
@@ -4234,7 +4235,7 @@
                     if(act === 0) continue; 
                     let p = Math.round(done/act*100);
                     let color = p >= 80 ? '#2e7d32' : (p >= 50 ? '#f57c00' : '#c62828');
-                    studentHtml += `<div style="background:white; border:1px solid #eee; padding:20px; border-radius:15px; text-align:center; box-shadow:0 4px 6px rgba(0,0,0,0.02);"><div style="font-size:18px; font-weight:bold; color:var(--dark-blue); margin-bottom:8px;">${i}번 학생</div><div style="font-size:32px; font-weight:900; color:${color}; margin-bottom:8px;">${p}%</div><div style="font-size:14px; color:#666; font-weight:bold;">${done} / ${act} 완료</div></div>`;
+                    studentHtml += `<div style="background:white; border:1px solid #eee; padding:20px; border-radius:15px; text-align:center; box-shadow:0 4px 6px rgba(0,0,0,0.02);"><div style="font-size:18px; font-weight:bold; color:var(--dark-blue); margin-bottom:8px;">${i}번 ${escapeHtml(nameMap[i] || '학생')}</div><div style="font-size:32px; font-weight:900; color:${color}; margin-bottom:8px;">${p}%</div><div style="font-size:14px; color:#666; font-weight:bold;">${done} / ${act} 완료</div></div>`;
                 }
                 studentHtml += `</div>`; res.innerHTML = studentHtml;
             }
