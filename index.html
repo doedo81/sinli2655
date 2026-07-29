@@ -1742,7 +1742,9 @@
                 if(!classId) { alert('그런 코드의 학급을 찾을 수 없어요. 코드를 다시 확인해 주세요.'); return; }
                 const teacherName = user.displayName || (user.email || '').split('@')[0] || '선생님';
                 const updates = {};
-                updates['rooms/' + classId + '/_members/' + user.uid] = { role: 'subject', name: teacherName };
+                // code를 함께 기록한다. 보안 규칙이 '이 코드를 아는 사람만 스스로 멤버가 될 수 있다'를
+                // 이 값으로 검사한다(_meta.code와 대조). 빼면 참여가 PERMISSION_DENIED로 막힌다.
+                updates['rooms/' + classId + '/_members/' + user.uid] = { role: 'subject', name: teacherName, code: code };
                 updates['users/' + user.uid + '/classes/' + classId] = 'subject';
                 db.ref().update(updates).then(() => { alert('✅ 학급에 참여했어요! (전담)'); enterClassById(classId, 'subject'); }).catch(e => alert('참여 오류: ' + e.message));
             }).catch(e => alert('조회 오류: ' + e.message));
@@ -1907,15 +1909,25 @@
             var memberRef = db.ref('rooms/' + cid + '/_members/' + user.uid);
             return memberRef.once('value').then(function(ms) {
                 if(ms.exists()) return null;
-                // ① 이 쓰기만은 규칙이 항상 허용한다 → 이게 성공하면 방 전체 쓰기 권한이 열린다
+                // ① 주인이 없는 방이면 규칙이 이 쓰기를 허용한다 → 성공하면 방 전체 쓰기 권한이 열린다
                 return memberRef.set({ role: currentRole || 'owner', name: (user.displayName || (user.email || '선생님').split('@')[0]) });
             }).then(function() {
                 // ② 담임일 때만 소유자 표시를 채운다 (전담은 멤버 자격으로 충분)
                 if((currentRole || 'owner') !== 'owner') return null;
-                var ownerRef = db.ref('rooms/' + cid + '/_meta/ownerUid');
-                return ownerRef.once('value').then(function(s) {
-                    if(s.val()) return null;
-                    return ownerRef.set(user.uid);
+                var metaRef = db.ref('rooms/' + cid + '/_meta');
+                return metaRef.once('value').then(function(s) {
+                    var meta = s.val() || {};
+                    if(meta.ownerUid && meta.code) return null;
+                    var updates = {};
+                    if(!meta.ownerUid) updates['rooms/' + cid + '/_meta/ownerUid'] = user.uid;
+                    // 참여 코드도 함께 만들어 둔다. 코드가 없으면 다른 선생님이 이 반에 합류할
+                    // 방법이 사라진다 — 보안 규칙이 '코드를 아는 사람'만 자가 등록을 허용하기 때문.
+                    if(!meta.code) {
+                        var code = genClassCode();
+                        updates['rooms/' + cid + '/_meta/code'] = code;
+                        updates['classCodes/' + code] = cid;
+                    }
+                    return db.ref().update(updates);
                 });
             }).catch(function(e) {
                 console.warn('방 쓰기 권한 확보 실패:', (e && e.message) || e);

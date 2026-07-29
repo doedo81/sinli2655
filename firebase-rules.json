@@ -28,7 +28,7 @@
 
         "_members": {
           "$uid": {
-            ".write": "auth != null && auth.uid === $uid"
+            ".write": "auth != null && auth.uid === $uid && ( !newData.exists() || !root.child('rooms').child($cid).child('_meta').child('ownerUid').exists() || root.child('rooms').child($cid).child('_meta').child('ownerUid').val() === auth.uid || ( root.child('rooms').child($cid).child('_meta').child('code').exists() && newData.child('code').val() === root.child('rooms').child($cid).child('_meta').child('code').val() ) )"
           }
         },
 
