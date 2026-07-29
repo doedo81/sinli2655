@@ -1904,6 +1904,7 @@
         //
         //    ⚠️ 반드시 _members를 '단독으로' 먼저 써야 한다. _meta.ownerUid와 한 번에 묶어 update()하면
         //       다중 경로 update는 원자적이라 거부되는 경로 하나 때문에 전체가 실패한다.
+        var roomAccessWarned = false; // 접근 권한 안내는 한 번만 띄운다
         function ensureRoomWritable(user, cid) {
             if(!user || !cid) return Promise.resolve();
             var memberRef = db.ref('rooms/' + cid + '/_members/' + user.uid);
@@ -1930,7 +1931,14 @@
                     return db.ref().update(updates);
                 });
             }).catch(function(e) {
-                console.warn('방 쓰기 권한 확보 실패:', (e && e.message) || e);
+                var msg = (e && e.message) || String(e);
+                console.warn('방 쓰기 권한 확보 실패:', msg);
+                // 권한 거부라면 왜 안 되는지 알려준다. 안내가 없으면 '화면은 뜨는데 저장만 안 되는'
+                // 상태로 보여서 원인을 찾기가 매우 어렵다(2026-07-29에 실제로 겪은 문제).
+                if(!roomAccessWarned && /permission|denied/i.test(msg)) {
+                    roomAccessWarned = true;
+                    alert('이 반에 접근할 권한이 없어요.\n\n다른 선생님이 먼저 만든 반이라면,\n그 선생님께 참여 코드를 받아서\n[내 학급] → [코드로 참여]로 들어와 주세요.');
+                }
             });
         }
 
