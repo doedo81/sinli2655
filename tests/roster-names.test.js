@@ -18,9 +18,11 @@ function extractFn(name) {
 }
 
 eval([
+  extractFn('escapeHtml'),
   extractFn('rpgParseRosterStr'),
   extractFn('rosterStripNames'),
   extractFn('rosterNameMapFrom'),
+  extractFn('hwStudentBtnHtml'),
 ].join('\n'));
 
 let pass = 0, fail = 0;
@@ -45,6 +47,18 @@ eq('이름 있는 학생만', rosterNameMapFrom('1 김민수 남\n2 여'), { 1: 
 eq('전원 이름 있음', rosterNameMapFrom('1 김민수 남\n2 이서연 여'), { 1: '김민수', 2: '이서연' });
 eq('전원 이름 없음', rosterNameMapFrom('1 남\n2 여'), {});
 eq('빈 입력', rosterNameMapFrom(''), {});
+
+console.log('hwStudentBtnHtml — 과제 제출 체크 버튼');
+eq('이름 있으면 번호 위·이름 아래',
+   hwStudentBtnHtml('h1', 3, 'done', '박준호'),
+   '<button class="student-btn done" onclick="cycleH(\'h1\',3)"><span class="sb-num">3</span><span class="sb-name">박준호</span></button>');
+eq('이름 없으면 번호만 (지금과 동일)',
+   hwStudentBtnHtml('h1', 3, '', undefined),
+   '<button class="student-btn " onclick="cycleH(\'h1\',3)">3</button>');
+eq('면제 상태 클래스 유지',
+   hwStudentBtnHtml('h1', 5, 'excused', '김민수').indexOf('student-btn excused') > -1, true);
+eq('이름 XSS 차단',
+   hwStudentBtnHtml('h1', 3, '', '<img src=x onerror=alert(1)>').indexOf('<img') > -1, false);
 
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

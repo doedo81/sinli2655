@@ -185,6 +185,8 @@
         .student-btn { font-size: 18px; font-weight: 800; padding: 12px 0; border: none; border-radius: 8px; cursor: pointer; background-color: #eceff1; color: #546e7a; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
         .student-btn.done { background-color: var(--accent-blue); color: white; } 
         .student-btn.excused { background-color: white; border: 1px dashed #ccc; color: #b0bec5; text-decoration: line-through; box-shadow: none;}
+        .student-btn .sb-num { display:block; line-height:1.1; }
+        .student-btn .sb-name { display:block; font-size:12px; font-weight:700; line-height:1.2; margin-top:2px; opacity:0.85; }
         .setting-input { font-size: 16px; width: 65px; text-align: center; border-radius: 8px; border: 1px solid #b0bec5; padding: 8px; margin: 0 5px; font-family: 'Pretendard', sans-serif;}
         .stat-mode-btn { padding: 10px 20px; border: 2px solid var(--accent-blue); border-radius: 30px; background: white; color: var(--accent-blue); font-weight: bold; cursor: pointer; font-size: 15px; transition: 0.3s; opacity: 0.5;}
         .stat-mode-btn.active { background: var(--accent-blue); color: white; opacity: 1;}
@@ -4149,8 +4151,18 @@
             document.getElementById('hw-title').value = ""; if(absentEl) absentEl.value = "";
         }
 
+        // 과제 제출 체크 버튼 하나. 이름이 없으면 번호만 (기존과 같은 모양).
+        // 템플릿 리터럴 대신 문자열 연결을 쓰는 이유: 테스트 하네스가 중괄호 짝으로 함수를 잘라낸다.
+        function hwStudentBtnHtml(hwId, num, btnClass, name){
+            var label = name
+                ? '<span class="sb-num">' + num + '</span><span class="sb-name">' + escapeHtml(name) + '</span>'
+                : String(num);
+            return '<button class="student-btn ' + btnClass + '" onclick="cycleH(\'' + escapeHtml(hwId) + '\',' + num + ')">' + label + '</button>';
+        }
+
         function renderHomeworkList() {
             const div = document.getElementById('homework-list'); div.innerHTML = ''; const showA = document.getElementById('show-archived').checked;
+            const nameMap = rosterNameMap();
             allHomeworks.forEach(hw => {
                 if(hw.isArchived && !showA) return;
                 let btns = '', done = 0, act = hw.total;
@@ -4158,7 +4170,7 @@
                     const s = hw.checklist ? hw.checklist[i] : false;
                     if(s===true) done++; else if(s==='excused') act--;
                     let btnClass = s===true ? 'done' : (s==='excused' ? 'excused' : '');
-                    btns += `<button class="student-btn ${btnClass}" onclick="cycleH('${hw.id}',${i})">${i}</button>`;
+                    btns += hwStudentBtnHtml(hw.id, i, btnClass, nameMap[i]);
                 }
                 const catStr = hw.category && hw.category !== '미분류' ? `[${escapeHtml(hw.category)}] ` : "";
                 div.innerHTML += `<div class="hw-card"><div style="display:flex; justify-content:space-between; align-items:center;"><div><b style="font-size:18px; color:var(--dark-blue);">${catStr}${escapeHtml(hw.title || '')}</b> <span style="font-size:14px; color:#666; margin-left:5px;">(${escapeHtml(hw.date || '')}) | 제출 ${done}/${act}</span></div><div><button class="reset-btn" style="padding:6px 12px;font-size:13px;background:#00897b;" onclick="rpgAwardHomework('${hw.id}')">🎁 상점 주기</button> <button class="reset-btn" style="padding:6px 12px;font-size:13px;" onclick="archiveH('${hw.id}',${hw.isArchived})">${hw.isArchived?'보관해제':'보관함 넣기'}</button> <button class="reset-btn" style="padding:6px 12px;font-size:13px;background:#e53935;" onclick="deleteH('${hw.id}')">삭제</button></div></div><div class="student-grid">${btns}</div></div>`;
