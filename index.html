@@ -1436,29 +1436,48 @@
 
             // 태블릿 모드면 화면 상단 UI 요소들 숨김 및 편집 막기
             if(isTabletMode) {
-                document.body.classList.add('read-only-mode');
-                document.querySelector('.sidebar').style.display = 'none';
-                document.querySelector('.floating-tools').style.display = 'none';
-                
-                const actionBtns = document.querySelectorAll('.action-btn, .reset-btn');
-                actionBtns.forEach(btn => btn.style.display = 'none');
-
-                document.querySelectorAll('[contenteditable="true"]').forEach(el => {
-                    el.setAttribute('contenteditable', 'false');
-                    el.style.pointerEvents = 'none';
-                });
-                
-                document.querySelector('.main-content-wrapper').style.padding = '10px';
-                
                 const savedRoom = localStorage.getItem('classRoomName');
-                if(savedRoom) {
-                    document.getElementById('auth-overlay').style.display = 'none';
-                    currentRole = localStorage.getItem('classRole') || 'owner';
-                    enterRoom(savedRoom);
-                } else {
+                if(!savedRoom) {
                     alert("PC에서 먼저 방에 접속한 후 태블릿 모드를 사용해주세요.");
+                    return;
                 }
-                return; 
+
+                // 읽기 전용 잠금은 '로그인이 끝난 뒤'에 건다.
+                // 먼저 걸면 로그인 화면의 버튼(.action-btn/.reset-btn)까지 같이 숨어서 로그인을 못 한다.
+                const applyTabletReadOnly = () => {
+                    document.body.classList.add('read-only-mode');
+                    const sb = document.querySelector('.sidebar'); if(sb) sb.style.display = 'none';
+                    const ft = document.querySelector('.floating-tools'); if(ft) ft.style.display = 'none';
+
+                    document.querySelectorAll('.action-btn, .reset-btn').forEach(btn => btn.style.display = 'none');
+
+                    document.querySelectorAll('[contenteditable="true"]').forEach(el => {
+                        el.setAttribute('contenteditable', 'false');
+                        el.style.pointerEvents = 'none';
+                    });
+
+                    const mc = document.querySelector('.main-content-wrapper'); if(mc) mc.style.padding = '10px';
+                };
+
+                // 🔐 보안 규칙이 auth를 요구하므로, 저장된 로그인 세션이 복원될 때까지 기다렸다가 입장한다.
+                //    태블릿에서 구글 로그인을 한 번만 해두면 이후로는 자동으로 유지된다.
+                auth.onAuthStateChanged(user => {
+                    if(user) {
+                        document.getElementById('auth-overlay').style.display = 'none';
+                        currentRole = localStorage.getItem('classRole') || 'owner';
+                        applyTabletReadOnly();
+                        enterRoom(savedRoom);
+                    } else {
+                        // 아직 로그인 전 → 로그인 화면을 보여준다 (최초 1회만)
+                        document.getElementById('auth-overlay').style.display = 'flex';
+                        document.getElementById('role-choice').style.display = 'block';
+                        document.getElementById('login-box').style.display = 'none';
+                        document.getElementById('room-box').style.display = 'none';
+                        document.getElementById('class-box').style.display = 'none';
+                        document.getElementById('main-app').style.display = 'none';
+                    }
+                });
+                return;
             }
 
             try {
