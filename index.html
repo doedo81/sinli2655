@@ -1166,6 +1166,17 @@
                         <div style="font-weight:bold; color:var(--dark-blue);">학급명: <input type="text" id="set-class-name" placeholder="예: 5학년 1반" class="setting-input" style="width:120px;"></div>
                         <div style="font-weight:bold; color:var(--dark-blue);">총 학생 수: <input type="number" id="set-total-students" value="24" class="setting-input" style="width:80px;">명</div>
                     </div>
+
+                    <div style="margin-bottom:15px;">
+                        <div style="font-weight:bold; color:var(--dark-blue); font-size:14px;">📍 학교 지역 (아침칠판 날씨용)</div>
+                        <p style="font-size:12px; color:#555; margin:5px 0;">시·군까지 붙여서 검색하세요 (예: 아산시). 후보에서 <b>시·도를 확인하고</b> 골라야 정확합니다.</p>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <input type="text" id="set-weather-query" placeholder="예: 아산시" style="flex:1; max-width:220px; padding:8px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard';" onkeypress="if(event.key==='Enter'){event.preventDefault();weatherSearchPlace();}">
+                            <button class="reset-btn" style="padding:8px 14px; font-size:13px;" onclick="weatherSearchPlace()">찾기</button>
+                        </div>
+                        <div id="weather-search-results" style="margin-top:8px;"></div>
+                        <div id="weather-current-label" style="margin-top:6px; font-size:13px; color:#00695c; font-weight:700;"></div>
+                    </div>
                     
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
                         <div>
@@ -1410,6 +1421,7 @@
         
         let globalTotalStudents = 24;
         let globalStudentRosterStr = "";
+        let globalWeatherLat = null, globalWeatherLon = null, globalWeatherPlace = "";
         let globalSeparatedStr = "";
         let globalBirthdaysStr = "";
         let birthdayMap = {};
@@ -1815,6 +1827,9 @@
                     const savedNames = nameSnap && nameSnap.val();
                     globalTotalStudents = s.totalStudents || 24;
                     globalStudentRosterStr = savedNames || s.roster || "";
+                    globalWeatherLat = (typeof s.weatherLat === 'number') ? s.weatherLat : null;
+                    globalWeatherLon = (typeof s.weatherLon === 'number') ? s.weatherLon : null;
+                    globalWeatherPlace = s.weatherPlace || "";
                     globalSeparatedStr = s.separatedPairs || "";
                     globalBirthdaysStr = s.birthdays || "";
                     pastGroupsRecord = s.pastGroups || {};
@@ -2605,6 +2620,40 @@
                     return (typeof temp === 'number') ? (label + ' ' + Math.round(temp) + '℃') : label;
                 })
                 .catch(function() { clearTimeout(timer); return ''; });
+        }
+
+        // 설정에서 고르는 중인 지역 (저장 버튼을 눌러야 실제로 저장된다)
+        var pendingWeather = null;
+
+        // 지오코딩은 정확도가 낮다(예: '천안' → 강원도). 그래서 자동 채택하지 않고
+        // 시·도를 함께 보여준 뒤 선생님이 직접 고르게 한다.
+        function weatherSearchPlace() {
+            var box = document.getElementById('weather-search-results');
+            var q = (document.getElementById('set-weather-query').value || '').trim();
+            if (!q) { box.innerHTML = '<span style="font-size:12px; color:#c62828;">지역명을 입력해 주세요.</span>'; return; }
+            box.innerHTML = '<span style="font-size:12px; color:#888;">찾는 중…</span>';
+            var url = 'https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(q) + '&count=5&language=ko&format=json';
+            fetch(url).then(function(r){ return r.ok ? r.json() : null; }).then(function(j) {
+                var list = (j && j.results) || [];
+                if (!list.length) {
+                    box.innerHTML = '<span style="font-size:12px; color:#c62828;">결과가 없어요. 시·군까지 붙여보세요 (예: 아산시)</span>';
+                    return;
+                }
+                box.innerHTML = list.map(function(r) {
+                    var place = r.name + (r.admin1 ? ' · ' + r.admin1 : '');
+                    return '<button class="reset-btn" style="display:block; width:100%; text-align:left; margin-bottom:4px; padding:8px 10px; font-size:13px; background:#f4f7fb; color:#37474f; box-shadow:none;"'
+                         + ' onclick="weatherPickPlace(' + r.latitude + ',' + r.longitude + ',\'' + escapeHtml(place).replace(/'/g, '') + '\')">'
+                         + escapeHtml(place) + '</button>';
+                }).join('');
+            }).catch(function() {
+                box.innerHTML = '<span style="font-size:12px; color:#c62828;">검색에 실패했어요. 잠시 후 다시 시도해 주세요.</span>';
+            });
+        }
+
+        function weatherPickPlace(lat, lon, place) {
+            pendingWeather = { lat: lat, lon: lon, place: place };
+            document.getElementById('weather-search-results').innerHTML = '';
+            document.getElementById('weather-current-label').innerText = '현재 설정: ' + place + ' (저장 버튼을 눌러야 반영돼요)';
         }
 
         function getSafetyMsg(d) {
@@ -4592,6 +4641,12 @@
                 const savedNames = nameSnap && nameSnap.val();
                 document.getElementById('set-student-roster').value = savedNames || d.roster || "";
                 document.getElementById('set-separated-pairs').value = d.separatedPairs || "";
+                pendingWeather = null;
+                document.getElementById('set-weather-query').value = '';
+                document.getElementById('weather-search-results').innerHTML = '';
+                document.getElementById('weather-current-label').innerText = d.weatherPlace
+                    ? ('현재 설정: ' + d.weatherPlace)
+                    : ('현재 설정: ' + WEATHER_DEFAULT.place + ' — 기본값');
                 document.getElementById('set-birthdays').value = d.birthdays || "";
                 document.getElementById('set-gemini-key').value = localStorage.getItem('geminiApiKey') || "";
                 document.getElementById('set-duty-tasks').value = d.duty || "";
@@ -4623,6 +4678,9 @@
                 totalStudents: parseInt(document.getElementById('set-total-students').value) || 24,
                 className: document.getElementById('set-class-name').value || "",
                 roster: rosterStripNames(rosterRaw),
+                weatherLat: pendingWeather ? pendingWeather.lat : (typeof globalWeatherLat === 'number' ? globalWeatherLat : null),
+                weatherLon: pendingWeather ? pendingWeather.lon : (typeof globalWeatherLon === 'number' ? globalWeatherLon : null),
+                weatherPlace: pendingWeather ? pendingWeather.place : (globalWeatherPlace || null),
                 separatedPairs: document.getElementById('set-separated-pairs').value || "",
                 birthdays: document.getElementById('set-birthdays').value || "",
                 pastGroups: pastGroupsRecord, 
