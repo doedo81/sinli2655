@@ -2930,13 +2930,11 @@
             parsedRoster = [];
             if (!globalStudentRosterStr) return;
             try {
-                const lines = globalStudentRosterStr.split('\n');
-                lines.forEach(line => {
-                    let text = line.trim(); if (!text) return;
-                    let idMatch = text.match(/\d+/);
-                    let id = idMatch ? parseInt(idMatch[0]) : null;
-                    let gender = text.includes('남') ? 'M' : (text.includes('여') ? 'F' : 'U');
-                    if (id !== null) parsedRoster.push({ id: id, gender: gender });
+                // 명단 파싱은 rpgParseRosterStr 하나로 통일한다.
+                // 예전에는 text.includes('남')으로 성별을 판정해서 '남궁여진' 같은 이름을
+                // 남학생으로 오인했고, 그 결과 남녀 자리배치가 어긋났다.
+                parsedRoster = rpgParseRosterStr(globalStudentRosterStr).map(function(s) {
+                    return { id: s.id, gender: s.gender };
                 });
             } catch (e) { console.error("명단 파싱 오류", e); }
         }
@@ -4332,9 +4330,14 @@
         }
         function actLoadClassData(cid) {
             return Promise.all([
+                // 이름은 로그인해야 읽히는 rosterNames에 있다. 못 읽으면 공개 roster(번호+성별)로 폴백.
+                db.ref('rooms/' + cid + '/settings/rosterNames').once('value').catch(function(){ return null; }),
                 db.ref('rooms/' + cid + '/settings/dashboardDefaults/roster').once('value'),
                 db.ref('rooms/' + cid + '/rpg/students').once('value')
-            ]).then(res => ({ rosterStr: res[0].val() || '', students: res[1].val() || {} }));
+            ]).then(res => ({
+                rosterStr: (res[0] && res[0].val()) || res[1].val() || '',
+                students: res[2].val() || {}
+            }));
         }
         function actRpgClassData(cid, s) {
             if (cid === currentRoom) return Promise.resolve({ rosterStr: globalStudentRosterStr, students: (typeof rpgData !== 'undefined' && rpgData.students) ? rpgData.students : {} });
