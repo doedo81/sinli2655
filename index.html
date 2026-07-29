@@ -1800,11 +1800,16 @@
                 window.addEventListener('beforeunload', () => { window.flushDashboardSave(); });
             }
 
-            settingsRef.once('value').then(snap => {
+            Promise.all([
+                settingsRef.once('value'),
+                // 이름은 로그인해야 읽힌다. 못 읽으면(권한 없음·아직 없음) 공개 명단으로 폴백.
+                rosterNamesRef().once('value').catch(function(){ return null; })
+            ]).then(([snap, nameSnap]) => {
                 if(snap.exists()){
                     const s = snap.val();
+                    const savedNames = nameSnap && nameSnap.val();
                     globalTotalStudents = s.totalStudents || 24;
-                    globalStudentRosterStr = s.roster || "";
+                    globalStudentRosterStr = savedNames || s.roster || "";
                     globalSeparatedStr = s.separatedPairs || "";
                     globalBirthdaysStr = s.birthdays || "";
                     pastGroupsRecord = s.pastGroups || {};
@@ -4225,7 +4230,10 @@
 
         // ⚙️ 세팅 모달 로직
         function openSettingsModal() { 
-            settingsRef.once('value').then(snap => {
+            Promise.all([
+                settingsRef.once('value'),
+                rosterNamesRef().once('value').catch(function(){ return null; })
+            ]).then(([snap, nameSnap]) => {
                 const d = snap.val() || {
                     roster: "", duty: "1. 창문 열고 닫기 (10분)\n2. 교실 앞뒤 쓸기\n3. 공기청정기 켜기\n4. 연필깎이 통 비우기\n5. 선생님 도우미",
                     monM: "독서", monT: "국어 : \n수학 : \n영어 : \n과학 : \n과학 : \n체육 : ",
@@ -4234,7 +4242,8 @@
                     thuM: "독서", thuT: "수학 : \n사회 : \n국어 : \n체육 : \n영어 : \n실과 : ",
                     friM: "독서", friT: "국어 : \n수학 : \n사회 : \n실과 : \n실과 : \n창체 : "
                 };
-                document.getElementById('set-student-roster').value = d.roster || "";
+                const savedNames = nameSnap && nameSnap.val();
+                document.getElementById('set-student-roster').value = savedNames || d.roster || "";
                 document.getElementById('set-separated-pairs').value = d.separatedPairs || "";
                 document.getElementById('set-birthdays').value = d.birthdays || "";
                 document.getElementById('set-gemini-key').value = localStorage.getItem('geminiApiKey') || "";
@@ -4262,10 +4271,11 @@
         }
         
         function saveSettingsData() {
+            const rosterRaw = document.getElementById('set-student-roster').value || "";
             const data = {
                 totalStudents: parseInt(document.getElementById('set-total-students').value) || 24,
                 className: document.getElementById('set-class-name').value || "",
-                roster: document.getElementById('set-student-roster').value || "",
+                roster: rosterStripNames(rosterRaw),
                 separatedPairs: document.getElementById('set-separated-pairs').value || "",
                 birthdays: document.getElementById('set-birthdays').value || "",
                 pastGroups: pastGroupsRecord, 
@@ -4275,7 +4285,7 @@
             };
             
             globalTotalStudents = data.totalStudents;
-            globalStudentRosterStr = data.roster;
+            globalStudentRosterStr = rosterRaw;
             globalSeparatedStr = data.separatedPairs;
             globalBirthdaysStr = data.birthdays;
             parseStudentRoster(); parseSeparatedPairs(); parseBirthdays(); nsUpdateRosterStatus();
@@ -4289,8 +4299,11 @@
             
             if (data.className) document.querySelector('.logo-text').innerText = data.className;
 
-            settingsRef.set(data).then(() => {
-                alert("설정이 성공적으로 저장되었습니다!"); 
+            Promise.all([
+                settingsRef.set(data),
+                rosterNamesRef().set(rosterRaw)
+            ]).then(() => {
+                alert("설정이 성공적으로 저장되었습니다!");
                 closeSettingsModal();
             }).catch(e => {
                 alert("저장 중 오류가 발생했습니다: " + e.message);
@@ -4611,6 +4624,10 @@
         }
         function rosterNameMap(){ return rosterNameMapFrom(globalStudentRosterStr); }
 
+        // 이름 포함 명단은 dashboardDefaults 바깥에 둔다.
+        // → 상위 rooms/$cid 규칙(로그인 필요)을 상속받아 학생 폰·외부에서는 읽히지 않는다.
+        function rosterNamesRef(){ return db.ref('rooms/' + currentRoom + '/settings/rosterNames'); }
+
         function rpgToggleRoster(){
             const box = document.getElementById('rpg-roster-box');
             if(box.style.display === 'none' || !box.style.display){
@@ -4625,7 +4642,11 @@
         // 명단 문자열을 공유 노드(settings)에 저장 → 성장·기초세팅·자리배치 모두 연동
         function rpgWriteRoster(txt, doneMsg){
             globalStudentRosterStr = txt; // 로컬 상태 즉시 반영 (연속 조작 안전)
-            return settingsRef.update({ roster: txt }).then(() => {
+            // 이름 포함 원본은 비공개 노드에, 공개 노드에는 이름을 뺀 판만 저장
+            return Promise.all([
+                settingsRef.update({ roster: rosterStripNames(txt) }),
+                rosterNamesRef().set(txt)
+            ]).then(() => {
                 var parsed = rpgParseRoster();
                 var cnt = parsed.length;
                 var maxNum = parsed.reduce(function(m,s){ return s.id > m ? s.id : m; }, 0);
