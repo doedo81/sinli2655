@@ -119,7 +119,7 @@ process.exit(fail ? 1 : 0);
 - [ ] **Step 4: 테스트 통과 확인**
 
 실행: `node tests/weather-safety.test.js`
-기대: `41 passed, 0 failed`
+기대: `53 passed, 0 failed` (12개월 × 4항목 + 주기 확인 5개)
 
 - [ ] **Step 5: 문법 검사**
 
