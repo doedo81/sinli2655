@@ -4589,6 +4589,28 @@
         }
         function rpgParseRoster(){ return rpgParseRosterStr(globalStudentRosterStr); }
 
+        // 📛 명단에서 이름을 걷어내 "번호 성별"만 남긴다 (무인증 공개 노드 roster 전용).
+        //    성별 판정은 반드시 공백 토큰 단위 — '김남수' 같은 이름을 성별로 오인하면 안 된다.
+        function rosterStripNames(txt){
+            return (txt || '').split('\n').map(function(line){
+                var t = line.trim(); if(!t) return '';
+                var idm = t.match(/\d+/); if(!idm) return '';
+                var gender = '';
+                t.split(/\s+/).forEach(function(tok){ if(tok === '남' || tok === '여') gender = tok; });
+                return gender ? (idm[0] + ' ' + gender) : idm[0];
+            }).filter(Boolean).join('\n');
+        }
+
+        // 번호 → 이름 맵. 이름이 없는 학생은 키를 만들지 않는다(호출부에서 번호만 쓰도록).
+        function rosterNameMapFrom(str){
+            var map = {};
+            rpgParseRosterStr(str).forEach(function(s){
+                if(s.name && s.name !== (s.id + '번')) map[s.id] = s.name;
+            });
+            return map;
+        }
+        function rosterNameMap(){ return rosterNameMapFrom(globalStudentRosterStr); }
+
         function rpgToggleRoster(){
             const box = document.getElementById('rpg-roster-box');
             if(box.style.display === 'none' || !box.style.display){
