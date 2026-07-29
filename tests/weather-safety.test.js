@@ -45,5 +45,33 @@ for (const m of [1,3,7,9,12]) {
   ok(m + '월 1~31일 문구가 모두 다르다', dup.length === 0, dup.join(' / '));
 }
 
+console.log('weatherCodeText — WMO 코드를 초등학생이 읽을 표현으로');
+const wsrc = SRC.slice(SRC.indexOf('function weatherCodeText'));
+let d2 = 0, b2 = false, wfn = '';
+for (let j = wsrc.indexOf('{'); j < wsrc.length; j++) {
+  if (wsrc[j] === '{') { d2++; b2 = true; }
+  else if (wsrc[j] === '}') { d2--; if (b2 && d2 === 0) { wfn = wsrc.slice(0, j + 1); break; } }
+}
+eval(wfn);
+ok('0 → 맑음', weatherCodeText(0) === '☀️ 맑음', weatherCodeText(0));
+ok('1 → 대체로 맑음', weatherCodeText(1) === '🌤️ 대체로 맑음', weatherCodeText(1));
+ok('2 → 구름 조금', weatherCodeText(2) === '⛅ 구름 조금', weatherCodeText(2));
+ok('3 → 흐림', weatherCodeText(3) === '☁️ 흐림', weatherCodeText(3));
+ok('45 → 안개', weatherCodeText(45) === '🌫️ 안개', weatherCodeText(45));
+ok('48 → 안개', weatherCodeText(48) === '🌫️ 안개', weatherCodeText(48));
+ok('53 → 이슬비', weatherCodeText(53) === '🌦️ 이슬비', weatherCodeText(53));
+ok('57 → 언 이슬비', weatherCodeText(57) === '🌧️ 언 이슬비', weatherCodeText(57));
+ok('63 → 비', weatherCodeText(63) === '🌧️ 비', weatherCodeText(63));
+ok('67 → 언 비', weatherCodeText(67) === '🌧️ 언 비', weatherCodeText(67));
+ok('73 → 눈', weatherCodeText(73) === '❄️ 눈', weatherCodeText(73));
+ok('77 → 싸락눈', weatherCodeText(77) === '🌨️ 싸락눈', weatherCodeText(77));
+ok('81 → 소나기', weatherCodeText(81) === '🌦️ 소나기', weatherCodeText(81));
+ok('86 → 소나기눈', weatherCodeText(86) === '🌨️ 소나기눈', weatherCodeText(86));
+ok('95 → 천둥번개', weatherCodeText(95) === '⛈️ 천둥번개', weatherCodeText(95));
+ok('99 → 우박·천둥번개', weatherCodeText(99) === '⛈️ 우박·천둥번개', weatherCodeText(99));
+ok('알 수 없는 코드 4 → 빈 문자열', weatherCodeText(4) === '', weatherCodeText(4));
+ok('알 수 없는 코드 100 → 빈 문자열', weatherCodeText(100) === '', weatherCodeText(100));
+ok('undefined → 빈 문자열', weatherCodeText(undefined) === '', String(weatherCodeText(undefined)));
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

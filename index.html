@@ -2568,6 +2568,45 @@
         };
 
         // 해당 날짜의 안전 수칙 1개 반환 (그 달 안에서 날짜별로 순환)
+        // 🌤️ 날씨 — 지역이 설정되지 않았을 때 쓰는 기본 좌표 (실측 검증: 충남 아산시)
+        const WEATHER_DEFAULT = { lat: 36.78361, lon: 127.00417, place: '아산시 (충청남도)' };
+
+        // WMO 날씨 코드를 초등학생이 읽을 표현으로. 모르는 코드는 빈 문자열(= 날씨 생략).
+        function weatherCodeText(code) {
+            var t = {
+                0: '☀️ 맑음', 1: '🌤️ 대체로 맑음', 2: '⛅ 구름 조금', 3: '☁️ 흐림',
+                45: '🌫️ 안개', 48: '🌫️ 안개',
+                51: '🌦️ 이슬비', 53: '🌦️ 이슬비', 55: '🌦️ 이슬비',
+                56: '🌧️ 언 이슬비', 57: '🌧️ 언 이슬비',
+                61: '🌧️ 비', 63: '🌧️ 비', 65: '🌧️ 비',
+                66: '🌧️ 언 비', 67: '🌧️ 언 비',
+                71: '❄️ 눈', 73: '❄️ 눈', 75: '❄️ 눈', 77: '🌨️ 싸락눈',
+                80: '🌦️ 소나기', 81: '🌦️ 소나기', 82: '🌦️ 소나기',
+                85: '🌨️ 소나기눈', 86: '🌨️ 소나기눈',
+                95: '⛈️ 천둥번개', 96: '⛈️ 우박·천둥번개', 99: '⛈️ 우박·천둥번개'
+            };
+            return t[code] || '';
+        }
+
+        // 현재 날씨 한 줄을 만든다. 실패하면 빈 문자열 — 칠판 채우기를 절대 막지 않는다.
+        function fetchWeatherText(lat, lon) {
+            if (typeof lat !== 'number' || typeof lon !== 'number') return Promise.resolve('');
+            var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon
+                    + '&current=temperature_2m,weather_code&timezone=Asia%2FSeoul';
+            var timer;
+            var timeout = new Promise(function(resolve) { timer = setTimeout(function(){ resolve(null); }, 5000); });
+            return Promise.race([fetch(url).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }), timeout])
+                .then(function(j) {
+                    clearTimeout(timer);
+                    if (!j || !j.current) return '';
+                    var label = weatherCodeText(j.current.weather_code);
+                    if (!label) return '';
+                    var temp = j.current.temperature_2m;
+                    return (typeof temp === 'number') ? (label + ' ' + Math.round(temp) + '℃') : label;
+                })
+                .catch(function() { clearTimeout(timer); return ''; });
+        }
+
         function getSafetyMsg(d) {
             const pool = SAFETY_BY_MONTH[d.getMonth() + 1] || [];
             if (!pool.length) return "";
