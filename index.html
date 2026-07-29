@@ -1763,6 +1763,9 @@
             seatingHistoryRef = db.ref('rooms/' + currentRoom + '/seatingHistory');
             seatingCurrentRef = db.ref('rooms/' + currentRoom + '/seatingV2/current'); seatingSavesRef = db.ref('rooms/' + currentRoom + '/seatingV2/saves');
             rpgRef = db.ref('rooms/' + currentRoom + '/rpg');
+            // 🔐 옛 방식(방 이름 직접 입력)으로 만든 방은 _meta가 없어 보안 규칙상 쓰기가 통째로 막힌다.
+            //    읽기는 되는데 저장만 PERMISSION_DENIED가 나는 상태. 들어올 때마다 스스로 복구한다.
+            ensureRoomWritable(auth.currentUser, currentRoom);
             rpgRef.on('value', snap => {
                 rpgData = snap.val() || {};
                 if(document.getElementById('rpg-grid')) renderRpgGrid();
@@ -1876,6 +1879,34 @@
                 ensureClassOwnership(user, list);
             }).catch(() => { renderClassSwitchBar(); });
         }
+        // 🔐 '내 반에서 잠기는' 사고 복구: 지금 들어와 있는 방 하나를 쓰기 가능 상태로 만든다.
+        //
+        //    보안 규칙상 rooms/$cid 쓰기는 _meta.ownerUid가 나이거나 _members에 내가 있어야 허용된다.
+        //    옛 방식으로 만든 방은 둘 다 없어서 쓰기가 전부 거부된다(읽기는 _meta가 없으면 허용되므로
+        //    화면은 멀쩡히 보인다). 규칙이 열어둔 유일한 통로는 _members/<내 uid> 쓰기뿐이다.
+        //
+        //    ⚠️ 반드시 _members를 '단독으로' 먼저 써야 한다. _meta.ownerUid와 한 번에 묶어 update()하면
+        //       다중 경로 update는 원자적이라 거부되는 경로 하나 때문에 전체가 실패한다.
+        function ensureRoomWritable(user, cid) {
+            if(!user || !cid) return Promise.resolve();
+            var memberRef = db.ref('rooms/' + cid + '/_members/' + user.uid);
+            return memberRef.once('value').then(function(ms) {
+                if(ms.exists()) return null;
+                // ① 이 쓰기만은 규칙이 항상 허용한다 → 이게 성공하면 방 전체 쓰기 권한이 열린다
+                return memberRef.set({ role: currentRole || 'owner', name: (user.displayName || (user.email || '선생님').split('@')[0]) });
+            }).then(function() {
+                // ② 담임일 때만 소유자 표시를 채운다 (전담은 멤버 자격으로 충분)
+                if((currentRole || 'owner') !== 'owner') return null;
+                var ownerRef = db.ref('rooms/' + cid + '/_meta/ownerUid');
+                return ownerRef.once('value').then(function(s) {
+                    if(s.val()) return null;
+                    return ownerRef.set(user.uid);
+                });
+            }).catch(function(e) {
+                console.warn('방 쓰기 권한 확보 실패:', (e && e.message) || e);
+            });
+        }
+
         // 🔐 보안 규칙 적용 시 '내 반에서 잠기는' 사고 방지: 담임 학급에 소유자·멤버 정보 자동 채움
         function ensureClassOwnership(user, list) {
             (list || []).forEach(function(c) {
