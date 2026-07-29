@@ -1177,7 +1177,17 @@
                         <div id="weather-search-results" style="margin-top:8px;"></div>
                         <div id="weather-current-label" style="margin-top:6px; font-size:13px; color:#00695c; font-weight:700;"></div>
                     </div>
-                    
+
+                    <div style="margin-bottom:15px; background:#fff8e1; border:1px solid #ffe082; border-radius:10px; padding:12px;">
+                        <div style="font-weight:bold; color:#e65100; font-size:14px;">🎟️ 전담 선생님 참여 코드</div>
+                        <p style="font-size:12px; color:#666; margin:5px 0;">우리 반을 함께 쓰실 선생님께 이 코드를 알려주세요. 그분은 [내 학급] → [코드로 참여]에서 입력하시면 됩니다.</p>
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                            <span id="set-class-code" style="font-family:monospace; font-size:22px; font-weight:900; letter-spacing:3px; color:#e65100; background:#fff; padding:6px 14px; border-radius:8px; border:1px dashed #ffb300;">…</span>
+                            <button class="reset-btn" style="padding:8px 14px; font-size:13px;" onclick="copyClassCode()">복사</button>
+                        </div>
+                        <div id="set-class-code-note" style="font-size:12px; color:#8d6e63; margin-top:6px;"></div>
+                    </div>
+
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
                         <div>
                             <div style="font-weight:bold; color:var(--dark-blue); font-size:14px;">👥 학생 명단 (번호 이름 성별)</div>
@@ -2668,6 +2678,47 @@
             }).catch(function() {
                 box.innerHTML = '<span style="font-size:12px; color:#c62828;">검색에 실패했어요. 잠시 후 다시 시도해 주세요.</span>';
             });
+        }
+
+        // 🎟️ 참여 코드 표시 — 예전엔 학급 만들 때 알림창으로 한 번 보여주고 끝이라
+        //    나중에 다시 볼 방법이 없었다. 설정에서 언제든 확인할 수 있게 한다.
+        function loadClassCode() {
+            var el = document.getElementById('set-class-code');
+            var note = document.getElementById('set-class-code-note');
+            if(!el) return;
+            el.innerText = '…'; note.innerText = '';
+            db.ref('rooms/' + currentRoom + '/_meta/code').once('value').then(function(s) {
+                var code = s.val();
+                if(code) { el.innerText = code; note.innerText = ''; return; }
+                // 코드가 없는 옛 방식 방이면 지금 만들어 준다 (담임만).
+                if((currentRole || 'owner') !== 'owner') {
+                    el.innerText = '—';
+                    note.innerText = '담임 선생님만 코드를 만들 수 있어요.';
+                    return;
+                }
+                var neu = genClassCode();
+                var updates = {};
+                updates['rooms/' + currentRoom + '/_meta/code'] = neu;
+                updates['classCodes/' + neu] = currentRoom;
+                return db.ref().update(updates).then(function() {
+                    el.innerText = neu;
+                    note.innerText = '이 반의 참여 코드를 새로 만들었어요.';
+                });
+            }).catch(function(e) {
+                el.innerText = '—';
+                note.innerText = '코드를 불러오지 못했어요: ' + ((e && e.message) || e);
+            });
+        }
+
+        function copyClassCode() {
+            var code = (document.getElementById('set-class-code').innerText || '').trim();
+            if(!code || code === '…' || code === '—') { alert('아직 코드가 없어요.'); return; }
+            var done = function(){ document.getElementById('set-class-code-note').innerText = '복사했어요! 함께 쓰실 선생님께 알려주세요.'; };
+            if(navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(done).catch(function(){ alert('참여 코드: ' + code); });
+            } else {
+                alert('참여 코드: ' + code);
+            }
         }
 
         function weatherPickPlace(lat, lon, place) {
@@ -4676,6 +4727,7 @@
                 const savedNames = nameSnap && nameSnap.val();
                 document.getElementById('set-student-roster').value = savedNames || d.roster || "";
                 document.getElementById('set-separated-pairs').value = d.separatedPairs || "";
+                loadClassCode();
                 pendingWeather = null;
                 document.getElementById('set-weather-query').value = '';
                 document.getElementById('weather-search-results').innerHTML = '';
