@@ -2666,7 +2666,19 @@
             if(!isInitial && !confirm("오늘 요일에 맞는 기본값으로 덮어씌웁니까?")) return;
             settingsRef.once('value').then(snap => {
                 const def = snap.val() || {}; const days = ['일','월','화','수','목','금','토']; const dayStr = days[viewDate.getDay()];
-                document.getElementById('view-date').innerText = `${viewDate.getMonth()+1}월 ${viewDate.getDate()}일 ${dayStr}요일`;
+                const baseDateText = `${viewDate.getMonth()+1}월 ${viewDate.getDate()}일 ${dayStr}요일`;
+                document.getElementById('view-date').innerText = baseDateText;
+                // 날씨는 부가 기능 — 늦거나 실패해도 나머지 채우기를 막지 않는다.
+                const wLat = (typeof globalWeatherLat === 'number') ? globalWeatherLat : WEATHER_DEFAULT.lat;
+                const wLon = (typeof globalWeatherLon === 'number') ? globalWeatherLon : WEATHER_DEFAULT.lon;
+                fetchWeatherText(wLat, wLon).then(function(w) {
+                    if (!w) return;
+                    const el = document.getElementById('view-date');
+                    // 그 사이 선생님이 직접 고쳤다면 덮어쓰지 않는다.
+                    if (el.innerText !== baseDateText) return;
+                    el.innerText = baseDateText + '  ' + w;
+                    saveDashboard(true);
+                });
                 document.getElementById('view-duty-tasks').innerText = def.duty || "";
                 
                 document.getElementById('view-notices').innerText = "";
