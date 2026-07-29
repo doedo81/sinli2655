@@ -2569,6 +2569,11 @@
         // 📅 일정(캘린더) 관리
         // ==========================================
         function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+        // 🔒 href에 넣어도 안전한 주소만 통과 (javascript:, data: 등 차단). 수상하면 빈 링크로.
+        function safeUrl(u) {
+            const s = String(u || '').trim();
+            return /^https?:\/\//i.test(s) ? escapeHtml(s) : '#';
+        }
 
         function getCalendarEventsFor(dateKey) {
             const obj = allCalendarEvents[dateKey] || {};
@@ -3367,21 +3372,20 @@
             if(!listDiv) return;
             listDiv.innerHTML = '';
             
-            let count = 0;
-            for(let key in allBookmarks) {
-                count++;
-                const bm = allBookmarks[key];
-                listDiv.innerHTML += `
+            const keys = Object.keys(allBookmarks);
+            if(keys.length === 0) { listDiv.innerHTML = "<div style='width:100%; text-align:center; color:#999; padding:20px;'>등록된 바로가기가 없습니다. 위에서 추가해 보세요!</div>"; return; }
+            listDiv.innerHTML = keys.map(key => {
+                const bm = allBookmarks[key] || {};
+                return `
                     <div style="position:relative; display:inline-block;">
-                        <a href="${bm.url}" target="_blank" class="link-card">
+                        <a href="${safeUrl(bm.url)}" target="_blank" rel="noopener noreferrer" class="link-card">
                             <i class="fa-solid fa-link"></i>
-                            <span style="font-size:14px; line-height: 1.3;">${bm.title}</span>
+                            <span style="font-size:14px; line-height: 1.3;">${escapeHtml(bm.title || '')}</span>
                         </a>
-                        <button class="link-delete-btn" onclick="deleteBookmark('${key}')" title="삭제"><i class="fa-solid fa-xmark"></i></button>
+                        <button class="link-delete-btn" onclick="deleteBookmark('${escapeHtml(key)}')" title="삭제"><i class="fa-solid fa-xmark"></i></button>
                     </div>
                 `;
-            }
-            if(count === 0) { listDiv.innerHTML = "<div style='width:100%; text-align:center; color:#999; padding:20px;'>등록된 바로가기가 없습니다. 위에서 추가해 보세요!</div>"; }
+            }).join('');
         }
         function deleteBookmark(key) { if(confirm("이 바로가기를 삭제할까요?")) bookmarksRef.child(key).remove(); }
 
@@ -4132,8 +4136,8 @@
                     let btnClass = s===true ? 'done' : (s==='excused' ? 'excused' : '');
                     btns += `<button class="student-btn ${btnClass}" onclick="cycleH('${hw.id}',${i})">${i}</button>`;
                 }
-                const catStr = hw.category && hw.category !== '미분류' ? `[${hw.category}] ` : "";
-                div.innerHTML += `<div class="hw-card"><div style="display:flex; justify-content:space-between; align-items:center;"><div><b style="font-size:18px; color:var(--dark-blue);">${catStr}${hw.title}</b> <span style="font-size:14px; color:#666; margin-left:5px;">(${hw.date}) | 제출 ${done}/${act}</span></div><div><button class="reset-btn" style="padding:6px 12px;font-size:13px;background:#00897b;" onclick="rpgAwardHomework('${hw.id}')">🎁 상점 주기</button> <button class="reset-btn" style="padding:6px 12px;font-size:13px;" onclick="archiveH('${hw.id}',${hw.isArchived})">${hw.isArchived?'보관해제':'보관함 넣기'}</button> <button class="reset-btn" style="padding:6px 12px;font-size:13px;background:#e53935;" onclick="deleteH('${hw.id}')">삭제</button></div></div><div class="student-grid">${btns}</div></div>`;
+                const catStr = hw.category && hw.category !== '미분류' ? `[${escapeHtml(hw.category)}] ` : "";
+                div.innerHTML += `<div class="hw-card"><div style="display:flex; justify-content:space-between; align-items:center;"><div><b style="font-size:18px; color:var(--dark-blue);">${catStr}${escapeHtml(hw.title || '')}</b> <span style="font-size:14px; color:#666; margin-left:5px;">(${escapeHtml(hw.date || '')}) | 제출 ${done}/${act}</span></div><div><button class="reset-btn" style="padding:6px 12px;font-size:13px;background:#00897b;" onclick="rpgAwardHomework('${hw.id}')">🎁 상점 주기</button> <button class="reset-btn" style="padding:6px 12px;font-size:13px;" onclick="archiveH('${hw.id}',${hw.isArchived})">${hw.isArchived?'보관해제':'보관함 넣기'}</button> <button class="reset-btn" style="padding:6px 12px;font-size:13px;background:#e53935;" onclick="deleteH('${hw.id}')">삭제</button></div></div><div class="student-grid">${btns}</div></div>`;
             });
         }
         function cycleH(id, n) { const hw = allHomeworks.find(x => x.id === id); const s = hw.checklist ? hw.checklist[n] : false; const next = (s===false||s===undefined) ? true : (s===true?'excused':false); hwRef.child(id).child('checklist').child(String(n)).set(next); }
@@ -5360,7 +5364,7 @@
         function rpgExamRenderPreview(){
             const p = rpgExamPreview;
             const roster = rpgParseRoster();
-            function nameOf(n){ const s = roster.find(function(x){ return x.id === n; }); return s ? s.name : (n + '번'); }
+            function nameOf(n){ const s = roster.find(function(x){ return x.id === n; }); return escapeHtml(s ? s.name : (n + '번')); }
             const upXp = p.upA ? p.upA.xp : 0, fullXp = p.fullA ? p.fullA.xp : 0;
             const improvedCount = p.awards.filter(function(a){ return a.improved; }).length;
             const perfectCount = p.awards.filter(function(a){ return a.perfect; }).length;
