@@ -1,0 +1,22 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null",
+
+    "studentCodes": {
+      ".read": true
+    },
+
+    "rooms": {
+      "$cid": {
+        "settings": {
+          "dashboardDefaults": { ".read": true }
+        },
+        "rpg": {
+          ".read": true,
+          ".write": true
+        }
+      }
+    }
+  }
+}
