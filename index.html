@@ -1956,12 +1956,15 @@
         function ensureClassOwnership(user, list) {
             (list || []).forEach(function(c) {
                 if(c.role !== 'owner') return;
-                db.ref('rooms/' + c.id + '/_meta/ownerUid').once('value').then(function(s) {
-                    var updates = {};
-                    if(!s.val()) updates['rooms/' + c.id + '/_meta/ownerUid'] = user.uid;
-                    updates['rooms/' + c.id + '/_members/' + user.uid] = { role: 'owner', name: (user.displayName || (user.email || '선생님').split('@')[0]) };
-                    db.ref('rooms/' + c.id + '/_members/' + user.uid).once('value').then(function(ms) {
-                        if(!s.val() || !ms.exists()) db.ref().update(updates).catch(function(){});
+                var mref = db.ref('rooms/' + c.id + '/_members/' + user.uid);
+                var member = { role: 'owner', name: (user.displayName || (user.email || '선생님').split('@')[0]) };
+                // 원자 업데이트는 강화규칙에서 막히므로, 멤버를 먼저 등록한 뒤 소유자(ownerUid)를 따로 설정
+                mref.once('value').then(function(ms) {
+                    var step = ms.exists() ? Promise.resolve() : mref.set(member).catch(function(){});
+                    step.then(function() {
+                        db.ref('rooms/' + c.id + '/_meta/ownerUid').once('value').then(function(s) {
+                            if(!s.val()) db.ref('rooms/' + c.id + '/_meta/ownerUid').set(user.uid).catch(function(){});
+                        }).catch(function(){});
                     });
                 }).catch(function(){});
             });
@@ -4770,7 +4773,7 @@
             const data = {
                 totalStudents: parseInt(document.getElementById('set-total-students').value) || 24,
                 className: document.getElementById('set-class-name').value || "",
-                roster: rosterStripNames(rosterRaw),
+                roster: rosterRaw,
                 weatherLat: pendingWeather ? pendingWeather.lat : (typeof globalWeatherLat === 'number' ? globalWeatherLat : null),
                 weatherLon: pendingWeather ? pendingWeather.lon : (typeof globalWeatherLon === 'number' ? globalWeatherLon : null),
                 weatherPlace: pendingWeather ? pendingWeather.place : (globalWeatherPlace || null),
@@ -5144,9 +5147,9 @@
                 if(!confirm('⚠️ 명단이 비어 있어요. 저장하면 기존 학생 명단이 지워져요.\n정말 비우시겠어요?')) return Promise.resolve();
             }
             globalStudentRosterStr = txt; // 로컬 상태 즉시 반영 (연속 조작 안전)
-            // 이름 포함 원본은 비공개 노드에, 공개 노드에는 이름을 뺀 판만 저장
+            // 이름 포함 원본을 표준 명단(roster)에 저장 → 권한 문제와 무관하게 이름이 안 사라짐(비공개 노드는 백업)
             return Promise.all([
-                settingsRef.update({ roster: rosterStripNames(txt) }),
+                settingsRef.update({ roster: txt }),
                 rosterNamesRef().set(txt)
             ]).then(() => {
                 var parsed = rpgParseRoster();
