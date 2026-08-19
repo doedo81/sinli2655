@@ -4760,7 +4760,13 @@
         }
         
         function saveSettingsData() {
-            const rosterRaw = document.getElementById('set-student-roster').value || "";
+            let rosterRaw = document.getElementById('set-student-roster').value || "";
+            // 🛡️ 빈 명단으로 기존 명단을 덮어써 지우는 사고 방지
+            if(!rosterRaw.trim() && globalStudentRosterStr && globalStudentRosterStr.trim()){
+                if(!confirm('⚠️ 학생 명단 칸이 비어 있어요.\n이대로 저장하면 기존 학생 명단이 지워져요.\n\n[확인] 기존 명단을 그대로 지키고 저장\n[취소] 저장 취소')) return;
+                rosterRaw = globalStudentRosterStr;   // 기존 명단(이름 포함) 보존
+                document.getElementById('set-student-roster').value = rosterRaw;
+            }
             const data = {
                 totalStudents: parseInt(document.getElementById('set-total-students').value) || 24,
                 className: document.getElementById('set-class-name').value || "",
@@ -5133,6 +5139,10 @@
 
         // 명단 문자열을 공유 노드(settings)에 저장 → 성장·기초세팅·자리배치 모두 연동
         function rpgWriteRoster(txt, doneMsg){
+            // 🛡️ 빈 명단으로 기존 명단을 지우는 사고 방지
+            if((!txt || !txt.trim()) && globalStudentRosterStr && globalStudentRosterStr.trim()){
+                if(!confirm('⚠️ 명단이 비어 있어요. 저장하면 기존 학생 명단이 지워져요.\n정말 비우시겠어요?')) return Promise.resolve();
+            }
             globalStudentRosterStr = txt; // 로컬 상태 즉시 반영 (연속 조작 안전)
             // 이름 포함 원본은 비공개 노드에, 공개 노드에는 이름을 뺀 판만 저장
             return Promise.all([
