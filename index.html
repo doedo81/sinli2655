@@ -4820,6 +4820,11 @@
                 rosterRaw = globalStudentRosterStr;   // 기존 명단(이름 포함) 보존
                 document.getElementById('set-student-roster').value = rosterRaw;
             }
+            // 🛡️ 생일·기피명단도 빈 값으로 덮어써 지우는 사고 방지(불러오기 실패 등) — 있던 값이면 조용히 보존
+            let separatedRaw = document.getElementById('set-separated-pairs').value || "";
+            if(!separatedRaw.trim() && globalSeparatedStr && globalSeparatedStr.trim()){ separatedRaw = globalSeparatedStr; document.getElementById('set-separated-pairs').value = separatedRaw; }
+            let birthdaysRaw = document.getElementById('set-birthdays').value || "";
+            if(!birthdaysRaw.trim() && globalBirthdaysStr && globalBirthdaysStr.trim()){ birthdaysRaw = globalBirthdaysStr; document.getElementById('set-birthdays').value = birthdaysRaw; }
             const data = {
                 totalStudents: parseInt(document.getElementById('set-total-students').value) || 24,
                 className: document.getElementById('set-class-name').value || "",
@@ -4827,9 +4832,9 @@
                 weatherLat: pendingWeather ? pendingWeather.lat : (typeof globalWeatherLat === 'number' ? globalWeatherLat : null),
                 weatherLon: pendingWeather ? pendingWeather.lon : (typeof globalWeatherLon === 'number' ? globalWeatherLon : null),
                 weatherPlace: pendingWeather ? pendingWeather.place : (globalWeatherPlace || null),
-                separatedPairs: document.getElementById('set-separated-pairs').value || "",
-                birthdays: document.getElementById('set-birthdays').value || "",
-                pastGroups: pastGroupsRecord, 
+                separatedPairs: separatedRaw,
+                birthdays: birthdaysRaw,
+                pastGroups: pastGroupsRecord,
                 duty: document.getElementById('set-duty-tasks').value, monM: document.getElementById('set-mon-m').value, monT: ttGetDay('mon'),
                 tueM: document.getElementById('set-tue-m').value, tueT: ttGetDay('tue'), wedM: document.getElementById('set-wed-m').value, wedT: ttGetDay('wed'),
                 thuM: document.getElementById('set-thu-m').value, thuT: ttGetDay('thu'), friM: document.getElementById('set-fri-m').value, friT: ttGetDay('fri')
@@ -4851,7 +4856,7 @@
             if (data.className) document.querySelector('.logo-text').innerText = data.className;
 
             Promise.all([
-                settingsRef.set(data),
+                settingsRef.update(data),
                 rosterNamesRef().set(rosterRaw)
             ]).then(() => {
                 alert("설정이 성공적으로 저장되었습니다!");
