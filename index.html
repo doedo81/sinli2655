@@ -1288,6 +1288,15 @@
                 </div>
                 <p style="font-size:12px; color:#8a94a6; margin:8px 2px 0; line-height:1.5;">⭐ <b>아침자습</b> 칸은 아침칠판 <b>[⭐ 아침 자습]</b> 공지란에 표시돼요. 각 칸은 <b>과목</b>만(예: 수학) 쓰거나 <b>과목: 내용</b>(예: 수학: 12쪽)까지 써도 됩니다.</p>
                 <button class="action-btn" style="width:100%; margin-top:10px; padding:15px; font-size:18px;" onclick="saveSettingsData()">💾 설정 저장 및 반영</button>
+                <div style="margin-top:16px; padding-top:14px; border-top:1px dashed #e0e6ef;">
+                    <div style="font-weight:800; color:#455a64; font-size:14px; margin-bottom:4px;">🛟 데이터 백업 (안전장치)</div>
+                    <p style="font-size:12px; color:#8a94a6; margin:0 0 10px; line-height:1.6;">우리 반 전체(명단·성장·칠판·자리·과제 등)를 <b>파일 한 개</b>로 내려받아 두세요. 문제가 생겨도 이 파일로 되살릴 수 있어요. (가끔, 예: 매주 금요일에 눌러두면 안심)</p>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="action-btn" style="flex:1; background:#00897b; padding:12px;" onclick="exportClassBackup()"><i class="fa-solid fa-download"></i> 전체 백업 내보내기</button>
+                        <button class="reset-btn" style="flex:1; background:#fff; color:#e57373; border:1px solid #ef9a9a; box-shadow:none; padding:12px;" onclick="document.getElementById('backup-restore-file').click()"><i class="fa-solid fa-rotate-left"></i> 백업 파일로 복원</button>
+                        <input type="file" id="backup-restore-file" accept="application/json,.json" style="display:none;" onchange="importClassBackup(this)">
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -4762,6 +4771,47 @@
             for(let i=1;i<=6;i++){ const el = document.getElementById('set-' + day + '-p' + i); if(el) el.value = lines[i-1] || ''; }
         }
         
+        // 🛟 전체 백업 내보내기: 현재 반 데이터를 파일 한 개로 다운로드
+        function exportClassBackup() {
+            if(!currentRoom){ alert('학급에 입장한 뒤 이용해주세요.'); return; }
+            db.ref('rooms/' + currentRoom).once('value').then(function(snap){
+                var data = snap.val() || {};
+                var cn = (data.settings && data.settings.dashboardDefaults && data.settings.dashboardDefaults.className) || currentRoom;
+                var payload = { room: currentRoom, className: cn, backedUpAt: new Date().toISOString(), data: data };
+                var d = new Date();
+                var stamp = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + '_' + String(d.getHours()).padStart(2,'0') + String(d.getMinutes()).padStart(2,'0');
+                var blob = new Blob([JSON.stringify(payload, null, 1)], { type: 'application/json' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url; a.download = '백업_' + cn + '_' + stamp + '.json';
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+                alert('✅ 백업 파일을 내려받았어요.\n(다운로드 폴더 → "백업_' + cn + '_' + stamp + '.json")\n안전한 곳에 보관해 두세요.');
+            }).catch(function(e){ alert('백업 오류: ' + e.message); });
+        }
+        // 🛟 백업 파일로 복원 (현재 반 데이터를 백업으로 덮어씀 — 강한 확인)
+        function importClassBackup(input) {
+            var file = input.files && input.files[0]; input.value = '';
+            if(!file) return;
+            if(!currentRoom){ alert('학급에 입장한 뒤 이용해주세요.'); return; }
+            var reader = new FileReader();
+            reader.onload = function(e){
+                var payload;
+                try { payload = JSON.parse(e.target.result); } catch(err){ alert('백업 파일을 읽을 수 없어요. (형식 오류)'); return; }
+                var data = payload && payload.data ? payload.data : payload;
+                if(!data || typeof data !== 'object'){ alert('올바른 백업 파일이 아니에요.'); return; }
+                var cn = (payload && payload.className) || '(이름 없음)';
+                var rosterCnt = (data.settings && data.settings.dashboardDefaults && typeof data.settings.dashboardDefaults.roster === 'string') ? data.settings.dashboardDefaults.roster.split('\n').filter(function(l){return l.trim();}).length : 0;
+                if(!confirm('⚠️ 지금 보고 있는 반(' + currentRoom + ')을 이 백업으로 되돌릴까요?\n\n백업: "' + cn + '" · 명단 ' + rosterCnt + '명 · ' + ((payload && payload.backedUpAt) ? payload.backedUpAt.slice(0,10) : '') + '\n\n지금 반의 현재 내용은 백업 내용으로 덮어써져요.')) return;
+                if(!confirm('정말 복원할까요? 이게 마지막 확인이에요.\n(만약을 위해 [전체 백업 내보내기]로 지금 상태도 먼저 저장하면 더 안전해요)')) return;
+                db.ref('rooms/' + currentRoom).update(data).then(function(){
+                    alert('✅ 복원 완료! 페이지를 새로고침할게요.');
+                    location.reload();
+                }).catch(function(err){ alert('복원 오류: ' + err.message); });
+            };
+            reader.readAsText(file, 'utf-8');
+        }
+
         function saveSettingsData() {
             let rosterRaw = document.getElementById('set-student-roster').value || "";
             // 🛡️ 빈 명단으로 기존 명단을 덮어써 지우는 사고 방지
