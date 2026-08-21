@@ -509,6 +509,7 @@
                 <button class="tab-btn" onclick="openSettingsModal()" style="margin-bottom: 20px;" title="기초 세팅"><i class="fa-solid fa-gear"></i> <span class="tab-text">기초 세팅</span></button>
                 <div id="user-profile" class="user-profile-text" style="font-size:13px; font-weight:bold; color:#666; margin-bottom:5px;"></div>
                 <button class="room-tag" onclick="switchClass()" title="다른 학급으로 가기 · 새 학급 만들기"><i class="fa-solid fa-school"></i> <span>학급 전환·추가</span></button>
+                <div class="user-profile-text" style="font-size:11px; color:#aab4c2; margin-top:8px; cursor:pointer;" onclick="showVersionInfo()" title="변경 기록 보기">버전 <span id="app-version">-</span></div>
             </div>
         </nav>
 
@@ -1544,6 +1545,24 @@
                 }
             }
         };
+
+        // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
+        const APP_VERSION = '1.0';
+        const APP_VERSION_DATE = '2026-08-21';
+        const APP_CHANGELOG = [
+            'v1.0 (2026-08-21) — 안정화 릴리스',
+            '  · 전체 데이터 백업/복원 버튼(기초 세팅)',
+            '  · 설정 저장이 명단·생일을 지우던 위험 제거',
+            '  · 명단 이름 보존(사라짐 방지)',
+            '  · 성장 RPG 100레벨 확장(아이템·오라·아바타)',
+            '  · 활동 뽑기: 방금 뽑힌 사람 표시 · 협동학습 뽑기(2단계/긴급)',
+            '  · 아침칠판 날씨 자동입력 · 안전수칙 31개',
+            '  · 로그인 재설계(교사/학생) · 다중 학급 · 자리배치 연동 · 효과음 개선'
+        ];
+        function showVersionInfo() {
+            alert('🌤️ 스카이 클래스   버전 ' + APP_VERSION + '  (' + APP_VERSION_DATE + ')\n\n────  변경 기록  ────\n' + APP_CHANGELOG.join('\n') + '\n\n※ 모든 변경은 자동 기록되어, 문제가 생기면 이전 버전으로 되돌릴 수 있어요.\n※ 큰 변경 전에는 [기초 세팅 → 전체 백업 내보내기]를 눌러두세요.');
+        }
+        document.addEventListener('DOMContentLoaded', function () { var el = document.getElementById('app-version'); if(el) el.textContent = 'v' + APP_VERSION; });
 
         function loginWithGoogle() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err => alert("로그인 실패: "+err.message)); }
         function logout() { auth.signOut().then(() => { localStorage.removeItem('classRoomName'); localStorage.removeItem('classRole'); location.reload(); }); }
