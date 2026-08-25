@@ -48,6 +48,17 @@
               "job":   { ".write": true }
             }
           }
+        },
+
+        "reading": {
+          ".read": true,
+          "students": {
+            "$num": {
+              "books":  { ".write": true },
+              "logs":   { ".write": true },
+              "streak": { ".write": true }
+            }
+          }
         }
       }
     }
