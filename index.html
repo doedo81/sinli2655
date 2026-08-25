@@ -963,7 +963,11 @@
                         아직 학생 명단이 없어요.<br>먼저 <b>[성장]</b> 탭에서 명단을 등록해 주세요.
                     </div>
                     <div id="reading-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:14px;"></div>
-                    <p style="text-align:center; font-size:11px; color:#cbd3dc; margin-top:16px;">카드를 누르면 그 학생의 책 목록·인증 화면이 열려요</p>
+                    <p style="text-align:center; font-size:11px; color:#cbd3dc; margin-top:16px;">카드를 누르면 그 학생의 책 목록·기록장이 열려요</p>
+                </div>
+                <div class="picker-box" style="margin-top:16px; text-align:left;">
+                    <h3 style="color:var(--dark-blue); margin:0 0 10px;"><i class="fa-solid fa-bell"></i> 우리 반 소식</h3>
+                    <div id="reading-feed"></div>
                 </div>
             </div>
 
@@ -1629,9 +1633,13 @@
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.2';
-        const APP_VERSION_DATE = '2026-08-25';
+        const APP_VERSION = '1.3';
+        const APP_VERSION_DATE = '2026-08-26';
         const APP_CHANGELOG = [
+            'v1.3 (2026-08-26) — 📚 독서: 글이 쌓이는 기록장 + 반 대시보드',
+            '  · 하루 한 번 덮어쓰기 → 책마다 글이 계속 쌓임(내 기록장에서 다시 읽기)',
+            '  · 교사 대시보드: 카드에 최근 쓴 문장·아바타·레벨 + 꾸준히/독서량 TOP',
+            '  · 우리 반 소식: 누가 무슨 책에 뭐라고 썼는지 실시간 피드',
             'v1.2 (2026-08-25) — 📚 독서: 학교 도서관 연동',
             '  · 교사가 학교 도서관(독서로) 검색 주소 설정({제목} 자동 채움)',
             '  · 학생이 도서관에서 책 찾아 링크 붙여넣기 → 📗도서관 있음 표시',
@@ -6311,48 +6319,108 @@
             '내가 ___라면 ___할 것 같다',
             '이 부분을 읽고 ___을 더 알게 됐다고 생각했다'
         ];
-        function readingBooksOf(num){ return (readingData.students && readingData.students[num] && readingData.students[num].books) || {}; }
-        function readingStreakOf(num){ return (readingData.students && readingData.students[num] && readingData.students[num].streak) || { current:0, longest:0, lastDate:'' }; }
-        function readingLogsOf(num){ return (readingData.students && readingData.students[num] && readingData.students[num].logs) || {}; }
+        function readingStudent(num){ return (readingData.students && readingData.students[num]) || {}; }
+        function readingBooksOf(num){ return readingStudent(num).books || {}; }
+        function readingStreakOf(num){ return readingStudent(num).streak || { current:0, longest:0, lastDate:'' }; }
+        // 글마다 하나씩 쌓이는 기록(entries). 예전 logs(하루 1개 덮어쓰기)도 있으면 함께 읽어 섞어줌(이전 데이터 호환).
+        function readingEntriesOf(num){
+            const s = readingStudent(num);
+            const out = [];
+            const ent = s.entries || {};
+            Object.keys(ent).forEach(function(k){ out.push(Object.assign({ _id:k }, ent[k])); });
+            const legacy = s.logs || {};
+            Object.keys(legacy).forEach(function(d){ const l = legacy[d]; if(l) out.push(Object.assign({ _id:'log_' + d, date:d }, l)); });
+            out.sort(function(a, b){ return (b.createdAt || 0) - (a.createdAt || 0); });
+            return out;
+        }
         function readingTodayKey(){ return getFormattedDate(new Date()); }
         function readingYesterdayKey(){ return getFormattedDate(new Date(Date.now() - 86400000)); }
+        function readingHasEntryToday(num){ const t = readingTodayKey(); return readingEntriesOf(num).some(function(e){ return e.date === t; }); }
+        function readingTodayEntryCount(num){ const t = readingTodayKey(); return readingEntriesOf(num).filter(function(e){ return e.date === t; }).length; }
+        function readingRewardedToday(num){ const s = readingStudent(num); return !!(s.rewardedDates && s.rewardedDates[readingTodayKey()]); }
+        function readingLatestEntry(num){ const list = readingEntriesOf(num); return list.length ? list[0] : null; }
         function readingDoneCountOf(num){ const b = readingBooksOf(num); return Object.keys(b).filter(function(k){ return b[k].status === 'done'; }).length; }
+        function readingClip(s, n){ s = (s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n) + '…' : s; }
+        function readingAgo(ts){ if(!ts) return ''; const m = Math.floor((Date.now() - ts) / 60000); if(m < 1) return '방금'; if(m < 60) return m + '분 전'; const h = Math.floor(m / 60); if(h < 24) return h + '시간 전'; const d = Math.floor(h / 24); return d + '일 전'; }
 
         function readingOnShow(){
             const grid = document.getElementById('reading-grid');
             const empty = document.getElementById('reading-empty');
             if(!grid || !readingRef) return;
             const roster = rpgParseRoster();
-            if(roster.length === 0){ grid.innerHTML = ''; empty.style.display = 'block'; document.getElementById('reading-summary').innerHTML = ''; return; }
+            if(roster.length === 0){ grid.innerHTML = ''; empty.style.display = 'block'; document.getElementById('reading-summary').innerHTML = ''; var f0 = document.getElementById('reading-feed'); if(f0) f0.innerHTML = ''; return; }
             empty.style.display = 'none';
-            const today = readingTodayKey();
-            const doneToday = roster.filter(function(st){ return !!readingLogsOf(st.id)[today]; });
-            const notYet = roster.filter(function(st){ return !readingLogsOf(st.id)[today]; });
+            const doneToday = roster.filter(function(st){ return readingHasEntryToday(st.id); });
+            const notYet = roster.filter(function(st){ return !readingHasEntryToday(st.id); });
             const pct = Math.round(doneToday.length / roster.length * 100);
+            // 요약: 오늘 인증률 + 미인증 명단 + 꾸준히 읽는 TOP + 독서량 TOP
+            const byStreak = roster.slice().filter(function(s){ return (readingStreakOf(s.id).current || 0) > 0; })
+                .sort(function(a, b){ return (readingStreakOf(b.id).current || 0) - (readingStreakOf(a.id).current || 0); }).slice(0, 3);
+            const byBooks = roster.slice().filter(function(s){ return readingDoneCountOf(s.id) > 0; })
+                .sort(function(a, b){ return readingDoneCountOf(b.id) - readingDoneCountOf(a.id); }).slice(0, 3);
+            function rankLine(list, fmt){ return list.length ? list.map(function(s, i){ return '<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span>' + (i + 1) + '. ' + escapeHtml(s.name) + '</span><b style="color:#e65100;">' + fmt(s) + '</b></div>'; }).join('') : '<div style="font-size:12px;color:#aaa;">아직 기록이 없어요</div>'; }
             document.getElementById('reading-summary').innerHTML =
-                '오늘 인증 ' + doneToday.length + '/' + roster.length + '명 (' + pct + '%)'
-                + (notYet.length ? '<div style="font-weight:400;font-size:12px;color:#5a8a5f;margin-top:4px;">미인증: ' + notYet.map(function(s){ return s.name; }).join(', ') + '</div>' : '');
+                '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">'
+                + '<div style="background:#fff;border:1px solid #cfe9d6;border-radius:10px;padding:10px 12px;">'
+                +   '<div style="font-size:12px;color:#5a8a5f;">오늘 인증</div>'
+                +   '<div style="font-size:20px;font-weight:800;color:#2e7d32;">' + doneToday.length + '/' + roster.length + '명 <span style="font-size:13px;color:#7bb082;">(' + pct + '%)</span></div>'
+                +   (notYet.length ? '<div style="font-size:11px;color:#b0824a;margin-top:4px;line-height:1.5;">미인증: ' + notYet.map(function(s){ return escapeHtml(s.name); }).join(', ') + '</div>' : '<div style="font-size:11px;color:#43a047;margin-top:4px;">전원 인증! 🎉</div>')
+                + '</div>'
+                + '<div style="background:#fff;border:1px solid #f2e0c4;border-radius:10px;padding:10px 12px;">'
+                +   '<div style="font-size:12px;color:#b0824a;margin-bottom:4px;">🔥 가장 꾸준히 읽는 학생</div>' + rankLine(byStreak, function(s){ return (readingStreakOf(s.id).current || 0) + '일'; })
+                + '</div>'
+                + '<div style="background:#fff;border:1px solid #d5dcea;border-radius:10px;padding:10px 12px;">'
+                +   '<div style="font-size:12px;color:#51618a;margin-bottom:4px;">📚 독서량 TOP</div>' + rankLine(byBooks, function(s){ return readingDoneCountOf(s.id) + '권'; })
+                + '</div>'
+                + '</div>';
             grid.innerHTML = roster.map(readingCardHtml).join('');
-            const pendingCnt = doneToday.filter(function(st){ return !readingLogsOf(st.id)[today].rewarded; }).length;
+            renderReadingFeed(roster);
+            const pendingCnt = roster.filter(function(st){ return readingHasEntryToday(st.id) && !readingRewardedToday(st.id); }).length;
             const btn = document.getElementById('reading-reward-btn');
             if(btn) btn.innerHTML = '<i class="fa-solid fa-gift"></i> ' + (pendingCnt > 0 ? ('오늘 인증 ' + pendingCnt + '명 상점 주기') : '오늘 인증 학생 상점 주기');
         }
 
+        // 우리 반 소식: 모든 학생의 최근 글을 시간순으로
+        function renderReadingFeed(roster){
+            const el = document.getElementById('reading-feed'); if(!el) return;
+            const nameById = {}; roster.forEach(function(s){ nameById[s.id] = s.name; });
+            let all = [];
+            roster.forEach(function(s){ readingEntriesOf(s.id).forEach(function(e){ all.push({ num:s.id, name:s.name, e:e }); }); });
+            all.sort(function(a, b){ return (b.e.createdAt || 0) - (a.e.createdAt || 0); });
+            all = all.slice(0, 20);
+            if(all.length === 0){ el.innerHTML = '<div style="font-size:12px;color:#aaa;padding:10px;">아직 소식이 없어요. 아이들이 글을 쓰면 여기에 바로 떠요.</div>'; return; }
+            el.innerHTML = all.map(function(it){
+                const e = it.e;
+                const snippet = readingClip(e.thought || e.quote || '', 40);
+                return '<div onclick="readingOpenModal(' + it.num + ')" style="cursor:pointer;border-bottom:1px solid #f0f2f5;padding:8px 4px;">'
+                    + '<div style="font-size:12px;color:#51618a;"><b>' + escapeHtml(it.name) + '</b> · 『' + escapeHtml(e.bookTitle || '') + '』 <span style="color:#bbb;">' + readingAgo(e.createdAt) + '</span></div>'
+                    + (snippet ? '<div style="font-size:12px;color:#777;margin-top:2px;">“' + escapeHtml(snippet) + '”</div>' : '')
+                    + '</div>';
+            }).join('');
+        }
+
         function readingCardHtml(stu){
-            const today = readingTodayKey();
-            const doneToday = !!readingLogsOf(stu.id)[today];
+            const doneToday = readingHasEntryToday(stu.id);
             const streak = readingStreakOf(stu.id);
             const doneCnt = readingDoneCountOf(stu.id);
+            const latest = readingLatestEntry(stu.id);
+            const rd = (rpgData.students && rpgData.students[stu.id]) || {};
+            const L = (typeof rpgLevel === 'function') ? rpgLevel(rd.xp) : { lv:1 };
+            const avatar = (typeof rpgAvatarImg === 'function') ? rpgAvatarImg(rd.job, L.lv, stu.gender, 42, 'border-radius:50%;', 'loading="lazy"') : '';
+            const snippet = latest ? readingClip(latest.quote || latest.thought || '', 34) : '';
             return '<div onclick="readingOpenModal(' + stu.id + ')" style="cursor:pointer;background:' + (doneToday ? '#f3fbf4' : '#fff') + ';border:1px solid ' + (doneToday ? '#bfe3c4' : '#e6ebf3') + ';border-top:4px solid ' + (doneToday ? '#43a047' : '#b0bec5') + ';border-radius:14px;padding:12px;box-shadow:0 3px 10px rgba(120,144,180,0.10);transition:transform .12s;" onmouseover="this.style.transform=\'translateY(-3px)\'" onmouseout="this.style.transform=\'\'">'
-                + '<div style="display:flex;justify-content:space-between;align-items:center;gap:4px;">'
-                + '<span style="font-weight:800;color:#51618a;">' + stu.name + '</span>'
-                + '<span style="font-size:16px;">' + (doneToday ? '✅' : '⏳') + '</span>'
-                + '</div>'
-                + '<div style="font-size:13px;color:#888;margin:4px 0 8px;">' + stu.id + '번</div>'
-                + '<div style="display:flex;gap:6px;font-size:12px;">'
+                + '<div style="display:flex;align-items:center;gap:8px;">'
+                + '<div style="width:42px;height:42px;flex:none;">' + avatar + '</div>'
+                + '<div style="flex:1;min-width:0;">'
+                +   '<div style="display:flex;justify-content:space-between;align-items:center;gap:4px;"><span style="font-weight:800;color:#51618a;">' + escapeHtml(stu.name) + '</span><span style="font-size:16px;">' + (doneToday ? '✅' : '⏳') + '</span></div>'
+                +   '<div style="font-size:11px;color:#aaa;">Lv.' + L.lv + ' · ' + stu.id + '번</div>'
+                + '</div></div>'
+                + '<div style="display:flex;gap:6px;font-size:12px;margin-top:8px;">'
                 + '<span style="background:#fff3e0;color:#e65100;border-radius:8px;padding:3px 8px;font-weight:700;">🔥' + (streak.current || 0) + '일</span>'
                 + '<span style="background:#eef1f6;color:#51618a;border-radius:8px;padding:3px 8px;font-weight:700;">📕' + doneCnt + '권</span>'
-                + '</div></div>';
+                + '</div>'
+                + (snippet ? '<div style="font-size:12px;color:#777;margin-top:8px;background:#fafbfc;border-radius:8px;padding:6px 8px;line-height:1.5;">“' + escapeHtml(snippet) + '”</div>' : '<div style="font-size:12px;color:#c8cdd4;margin-top:8px;">아직 쓴 글이 없어요</div>')
+                + '</div>';
         }
 
         function readingModalBody(num){
@@ -6360,38 +6428,50 @@
             const name = stu ? stu.name : (num + '번');
             const books = readingBooksOf(num);
             const streak = readingStreakOf(num);
-            const today = readingTodayKey();
-            const logs = readingLogsOf(num);
+            const entries = readingEntriesOf(num);
             const readingList = Object.keys(books).filter(function(k){ return books[k].status !== 'done'; });
             const doneList = Object.keys(books).filter(function(k){ return books[k].status === 'done'; });
+            const bookTitleById = {}; Object.keys(books).forEach(function(k){ bookTitleById[k] = books[k].title; });
             function bookRow(k){
                 const b = books[k];
-                const checkedToday = logs[today] && logs[today].bookId === k;
                 const libBadge = b.libraryUrl
                     ? '<a href="' + encodeURI(b.libraryUrl) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-block;background:#e8f5e9;color:#2e7d32;border-radius:8px;padding:2px 8px;font-size:11px;font-weight:700;text-decoration:none;margin-bottom:6px;">📗 도서관 있음 ↗</a>'
                     : '';
+                const cnt = entries.filter(function(e){ return e.bookId === k; }).length;
+                const cntBadge = cnt ? '<span style="font-size:11px;color:#7bb082;font-weight:700;margin-left:6px;">✍️ ' + cnt + '개</span>' : '';
                 return '<div style="border:1px solid #eee;border-radius:12px;padding:10px 12px;margin-bottom:8px;">'
-                    + '<div style="font-weight:700;color:#51618a;">' + escapeHtml(b.title) + '</div>'
+                    + '<div style="font-weight:700;color:#51618a;">' + escapeHtml(b.title) + cntBadge + '</div>'
                     + (b.author ? '<div style="font-size:12px;color:#999;margin-bottom:6px;">' + escapeHtml(b.author) + '</div>' : '<div style="margin-bottom:6px;"></div>')
                     + libBadge
                     + '<div style="display:flex;gap:6px;">'
                     + (b.status === 'done'
-                        ? '<span style="flex:1;text-align:center;padding:8px;color:#43a047;font-weight:700;font-size:13px;">✅ 다 읽었어요</span>'
-                        : (checkedToday
-                            ? '<span style="flex:1;text-align:center;padding:8px;background:#f3fbf4;border-radius:8px;color:#43a047;font-weight:700;font-size:13px;">오늘 인증 완료 🔥</span>'
-                            : '<button onclick="readingOpenCheckinModal(' + num + ',\'' + k + '\')" style="flex:1;padding:8px;background:#43a047;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;font-size:13px;">읽기 인증</button>'
-                              + '<button onclick="readingMarkDone(' + num + ',\'' + k + '\')" style="padding:8px 10px;background:#eef1f6;color:#51618a;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;font-size:13px;">다 읽음</button>'))
+                        ? '<button onclick="readingOpenCheckinModal(' + num + ',\'' + k + '\')" style="flex:1;padding:8px;background:#eef8f0;color:#2e7d32;border:1px solid #cfe9d6;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;font-size:13px;">✅ 다 읽음 · 한 줄 더 쓰기</button>'
+                        : '<button onclick="readingOpenCheckinModal(' + num + ',\'' + k + '\')" style="flex:1;padding:8px;background:#43a047;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;font-size:13px;">✍️ 읽고 쓰기</button>'
+                          + '<button onclick="readingMarkDone(' + num + ',\'' + k + '\')" style="padding:8px 10px;background:#eef1f6;color:#51618a;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;font-size:13px;">다 읽음</button>')
                     + '<button onclick="readingDeleteBook(' + num + ',\'' + k + '\')" style="padding:8px 10px;background:transparent;color:#e57373;border:none;cursor:pointer;font-size:13px;">삭제</button>'
                     + '</div></div>';
             }
+            // 내 기록장: 쓴 글이 시간순으로 쌓임 (다시 읽기)
+            const journalHtml = entries.length
+                ? entries.map(function(e){
+                    const title = e.bookTitle || bookTitleById[e.bookId] || '';
+                    return '<div style="border:1px solid #eef0f3;border-radius:10px;padding:10px 12px;margin-bottom:8px;background:#fafbfc;">'
+                        + '<div style="font-size:11px;color:#aaa;margin-bottom:4px;">' + escapeHtml(e.date || '') + (title ? ' · 『' + escapeHtml(title) + '』' : '') + '</div>'
+                        + (e.quote ? '<div style="font-size:13px;color:#51618a;line-height:1.5;">“' + escapeHtml(e.quote) + '”</div>' : '')
+                        + (e.thought ? '<div style="font-size:13px;color:#666;line-height:1.5;margin-top:4px;">→ ' + escapeHtml(e.thought) + '</div>' : '')
+                        + '</div>';
+                }).join('')
+                : '<div style="font-size:12px;color:#bbb;padding:8px 2px;">아직 쓴 글이 없어요. 책에서 <b>[✍️ 읽고 쓰기]</b>를 눌러 첫 문장을 남겨보세요.</div>';
             return '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:6px;">'
                 + '<div style="font-size:17px;font-weight:800;color:#51618a;">📚 ' + escapeHtml(name) + '의 독서</div>'
                 + '<span style="background:#fff3e0;color:#e65100;border-radius:10px;padding:4px 10px;font-weight:700;font-size:13px;white-space:nowrap;">🔥 ' + (streak.current || 0) + '일 연속 · 최장 ' + (streak.longest || 0) + '일</span>'
                 + '</div>'
-                + '<div style="font-size:12px;color:#999;margin-bottom:12px;">읽고 있는 책 ' + readingList.length + '권 · 다 읽은 책 ' + doneList.length + '권</div>'
+                + '<div style="font-size:12px;color:#999;margin-bottom:12px;">읽고 있는 책 ' + readingList.length + '권 · 다 읽은 책 ' + doneList.length + '권 · 쓴 글 ' + entries.length + '개</div>'
                 + readingList.map(bookRow).join('')
                 + doneList.map(bookRow).join('')
-                + '<button onclick="readingOpenBookModal(' + num + ')" style="width:100%;padding:10px;background:#eef1f6;color:#51618a;border:1px dashed #c7d0e0;border-radius:10px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:6px;">+ 읽을 책 추가하기</button>';
+                + '<button onclick="readingOpenBookModal(' + num + ')" style="width:100%;padding:10px;background:#eef1f6;color:#51618a;border:1px dashed #c7d0e0;border-radius:10px;font-weight:700;cursor:pointer;font-family:inherit;margin:6px 0 16px;">+ 읽을 책 추가하기</button>'
+                + '<div style="font-size:14px;font-weight:800;color:#51618a;border-top:1px solid #eee;padding-top:12px;margin-bottom:8px;">📖 내 기록장 <span style="font-size:12px;color:#aaa;font-weight:400;">(내가 쓴 문장들)</span></div>'
+                + journalHtml;
         }
 
         let readingModalNum = null;
@@ -6487,19 +6567,23 @@
             const num = readingCheckinNum, bookId = readingCheckinBookId;
             const today = readingTodayKey();
             const b = readingBooksOf(num)[bookId];
+            // 오늘 첫 글이면 스트릭을 올리고, 오늘 이미 썼으면 그대로 둠(여러 번 써도 연속일수는 하루 1회)
+            const firstToday = !readingHasEntryToday(num);
             const streak = readingStreakOf(num);
             const yesterday = readingYesterdayKey();
-            let newStreak;
-            if(streak.lastDate === today) newStreak = streak.current || 1;
-            else if(streak.lastDate === yesterday) newStreak = (streak.current || 0) + 1;
-            else newStreak = 1;
+            let newStreak = streak.current || 0;
+            if(firstToday){
+                if(streak.lastDate === yesterday) newStreak = (streak.current || 0) + 1;
+                else newStreak = 1;
+            }
             const longest = Math.max(streak.longest || 0, newStreak);
+            const key = readingRef.child('students/' + num + '/entries').push().key;
             const up = {};
-            up['students/' + num + '/logs/' + today] = { bookId:bookId, bookTitle:b ? b.title : '', quote:quote, thought:thought, createdAt:Date.now(), rewarded:false };
-            up['students/' + num + '/streak'] = { current:newStreak, longest:longest, lastDate:today };
+            up['students/' + num + '/entries/' + key] = { bookId:bookId, bookTitle:b ? b.title : '', quote:quote, thought:thought, date:today, createdAt:Date.now() };
+            if(firstToday) up['students/' + num + '/streak'] = { current:newStreak, longest:longest, lastDate:today };
             readingRef.update(up).then(function(){
                 readingCloseCheckinModal();
-                rpgToast('📚 독서 인증 완료! 🔥 ' + newStreak + '일 연속');
+                rpgToast(firstToday ? ('📚 독서 인증 완료! 🔥 ' + newStreak + '일 연속') : '✍️ 한 줄 더 기록했어요!');
                 SFX.point();
                 readingRefreshOpenViews();
             });
@@ -6511,7 +6595,7 @@
             const roster = rpgParseRoster();
             const today = readingTodayKey();
             const a = rpgAllActions().find(function(x){ return x.id === 'reading'; }) || { id:'reading', label:'독서 인증', xp:10, stat:'wis' };
-            const targets = roster.filter(function(st){ const log = readingLogsOf(st.id)[today]; return log && !log.rewarded; });
+            const targets = roster.filter(function(st){ return readingHasEntryToday(st.id) && !readingRewardedToday(st.id); });
             if(targets.length === 0){ alert('오늘 새로 상점을 줄 학생이 없어요.'); return; }
             if(!confirm(targets.length + '명에게 독서 인증 상점(+' + a.xp + ' XP)을 줄까요?')) return;
             const up = {}; let lv = 0;
@@ -6520,7 +6604,7 @@
                 s.xp += a.xp; s.stats[a.stat] = (s.stats[a.stat] || 0) + 1;
                 if(rpgLevel(s.xp).lv > before) lv++;
                 up['rpg/students/' + st.id] = s;
-                up['reading/students/' + st.id + '/logs/' + today + '/rewarded'] = true;
+                up['reading/students/' + st.id + '/rewardedDates/' + today] = true;
             });
             db.ref('rooms/' + currentRoom).update(up).then(function(){
                 rpgToast(targets.length + '명에게 독서 상점 지급!');

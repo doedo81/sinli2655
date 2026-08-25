@@ -54,9 +54,9 @@
           ".read": true,
           "students": {
             "$num": {
-              "books":  { ".write": true },
-              "logs":   { ".write": true },
-              "streak": { ".write": true }
+              "books":   { ".write": true },
+              "entries": { ".write": true },
+              "streak":  { ".write": true }
             }
           }
         }
