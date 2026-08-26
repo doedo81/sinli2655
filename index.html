@@ -3499,7 +3499,7 @@ var qrcode = function() {
             </div>
 
             <!-- 성장: 학생 로그인 안내(교사용) -->
-            <div id="rpg-slogin-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:2000; align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) document.getElementById('rpg-slogin-modal').style.display='none'">
+            <div id="rpg-slogin-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:4000; align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) document.getElementById('rpg-slogin-modal').style.display='none'">
                 <div style="background:#fff; border-radius:18px; max-width:420px; width:100%; max-height:90vh; overflow:auto; padding:22px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                         <div style="font-size:17px; font-weight:800; color:#51618a;">📱 학생 로그인 안내</div>
@@ -3948,9 +3948,12 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.5';
-        const APP_VERSION_DATE = '2026-08-26';
+        const APP_VERSION = '1.6';
+        const APP_VERSION_DATE = '2026-08-27';
         const APP_CHANGELOG = [
+            'v1.6 (2026-08-27) — 🖨️ 학생별 접속 카드 인쇄 + 창 겹침 수정',
+            '  · 빈 페이지로 인쇄되던 문제 수정 — 학생 한 명당 카드(QR·번호·방번호·비번)를 A4에 배치해 인쇄',
+            '  · 학생 접속 창이 기초 세팅 뒤에 깔리던 문제 수정(위로 올림)',
             'v1.5 (2026-08-26) — 🎮 QR 자체 생성 · 학생 접속을 기초 세팅으로 · 상점 항목 편집 노출',
             '  · QR을 앱 안에서 직접 생성(외부 접속 불필요 — 학교망에서도 뜸) + 인쇄 버튼',
             '  · [학생 접속 QR·코드]를 기초 세팅으로 이동(성장 메뉴엔 안내만)',
@@ -9071,8 +9074,8 @@ var qrcode = function() {
                     + qrHtml
                     + '<div style="background:#f6f8fb;border-radius:10px;padding:10px 12px;font-size:12px;word-break:break-all;margin-bottom:8px;">🔗 ' + url + '</div>'
                     + '<div style="font-size:14px;">접속 코드(방 번호): <b style="font-size:20px;color:#5b97d1;">' + code + '</b></div>'
-                    + '<div style="text-align:right;margin-top:8px;"><button onclick="window.print()" style="border:1px solid #cfe0f3;background:#fff;color:#5b97d1;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;"><i class="fa-solid fa-print"></i> 인쇄</button></div>'
-                    + '<p style="font-size:12px;color:#888;margin-top:10px;line-height:1.7;">• 학생: <b>자기 번호</b> + 기본 비밀번호 <b>123456</b><br>• QR을 TV·칠판에 띄우거나 인쇄해서 나눠주세요<br>• ⚠️ 지금은 간편 로그인이에요 (다른 번호로도 들어갈 수 있어요).</p>';
+                    + '<div style="margin-top:10px;"><button onclick="rpgPrintStudentCards()" style="width:100%;border:none;background:#43a047;color:#fff;border-radius:9px;padding:11px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;"><i class="fa-solid fa-print"></i> 학생별 카드 인쇄 (한 명씩 잘라서 나눠주기)</button></div>'
+                    + '<p style="font-size:12px;color:#888;margin-top:10px;line-height:1.7;">• 학생: <b>자기 번호</b> + 기본 비밀번호 <b>123456</b><br>• QR·방번호는 <b>반 전체가 같아요</b>. 카드마다 다른 건 자기 번호뿐이에요<br>• 위 QR을 TV·칠판에 띄워도 되고, 카드로 잘라 나눠줘도 돼요<br>• ⚠️ 지금은 간편 로그인이에요 (다른 번호로도 들어갈 수 있어요).</p>';
             };
             var code = rpgData.config && rpgData.config.studentCode;
             if(code){ show(code); }
@@ -9082,6 +9085,53 @@ var qrcode = function() {
                 db.ref('studentCodes/' + nc).set(currentRoom).then(function(){ show(nc); }).catch(function(e){ alert(e.message); });
             }
             document.getElementById('rpg-slogin-modal').style.display = 'flex';
+        }
+
+        // 학생별 접속 카드 인쇄 — 한 명당 카드 하나(QR + 이름·번호 + 방번호 + 비번). A4에 여러 개 배치 → 잘라서 나눠주기
+        function rpgPrintStudentCards(){
+            var code = rpgData.config && rpgData.config.studentCode;
+            if(!code){ alert('먼저 방 번호가 만들어져야 해요. 잠시 후 다시 눌러주세요.'); return; }
+            var roster = rpgParseRoster();
+            if(roster.length === 0){ alert('학생 명단이 없어요. [성장] 탭에서 명단을 먼저 입력해 주세요.'); return; }
+            var url = location.origin + location.pathname + '?s=' + code;
+            var qrImg = '';
+            try { var q = qrcode(0, 'M'); q.addData(url); q.make(); qrImg = q.createDataURL(4, 8); } catch(e){}
+            var roomName = '';
+            try { roomName = (document.querySelector('#class-switch-bar .active, .class-switch-active') || {}).textContent || ''; } catch(e){}
+            var cards = roster.map(function(s){
+                return '<div class="card">'
+                    + (qrImg ? '<img src="' + qrImg + '" alt="QR">' : '<div class="noqr">QR</div>')
+                    + '<div class="info">'
+                    + '<div class="name">' + s.id + '번 ' + escapeHtml(s.name) + '</div>'
+                    + '<div class="row">방 번호 <b>' + code + '</b></div>'
+                    + '<div class="row">내 번호 <b>' + s.id + '</b> · 비번 <b>123456</b></div>'
+                    + '<div class="url">' + escapeHtml(url) + '</div>'
+                    + '</div></div>';
+            }).join('');
+            var html = '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+                + '<title>학생 접속 카드</title><style>'
+                + '*{box-sizing:border-box;} body{font-family:"Pretendard","맑은 고딕",sans-serif;margin:10mm;color:#222;} '
+                + 'h1{font-size:16px;margin:0 0 4px;} .sub{font-size:12px;color:#666;margin:0 0 12px;} '
+                + '.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;} '
+                + '.card{border:1px dashed #888;border-radius:10px;padding:10px;display:flex;gap:10px;align-items:center;break-inside:avoid;page-break-inside:avoid;} '
+                + '.card img{width:96px;height:96px;image-rendering:pixelated;flex:none;} '
+                + '.card .noqr{width:96px;height:96px;display:flex;align-items:center;justify-content:center;border:1px solid #ccc;color:#aaa;flex:none;} '
+                + '.info{min-width:0;} .name{font-size:17px;font-weight:800;margin-bottom:6px;} '
+                + '.row{font-size:13px;margin:2px 0;} .row b{font-size:15px;} '
+                + '.url{font-size:10px;color:#999;margin-top:5px;word-break:break-all;} '
+                + '.toolbar{margin-bottom:12px;} .toolbar button{font-size:14px;padding:8px 16px;border:none;border-radius:8px;background:#43a047;color:#fff;font-weight:700;cursor:pointer;} '
+                + '@media print{ .toolbar{display:none;} body{margin:8mm;} } '
+                + '</style></head><body>'
+                + '<div class="toolbar"><button onclick="window.print()">🖨️ 인쇄하기</button>'
+                + ' &nbsp;<span style="font-size:12px;color:#666;">한 명당 카드 하나예요. 잘라서 나눠주세요. (QR·방번호는 반 전체 동일)</span></div>'
+                + '<h1>📱 우리 반 독서·성장 접속 카드' + (roomName ? ' — ' + escapeHtml(roomName.trim()) : '') + '</h1>'
+                + '<p class="sub">QR을 찍거나 주소로 접속 → <b>방 번호 + 내 번호 + 비밀번호 123456</b> 입력 · 학생 ' + roster.length + '명</p>'
+                + '<div class="grid">' + cards + '</div>'
+                + '</body></html>';
+            var w = window.open('', '_blank');
+            if(!w){ alert('새 창(팝업)이 차단됐어요. 브라우저 주소창 오른쪽의 팝업 차단을 허용한 뒤 다시 눌러주세요.'); return; }
+            w.document.open(); w.document.write(html); w.document.close();
+            setTimeout(function(){ try{ w.focus(); w.print(); }catch(e){} }, 400);
         }
 
         function rpgToast(msg, big){
