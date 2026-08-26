@@ -473,12 +473,15 @@
     <!-- 🎮 학생 개인 화면 -->
     <div id="student-page" style="display:none; position:fixed; inset:0; background:#eef4fb; z-index:5000; overflow-y:auto;">
         <div style="max-width:420px; margin:0 auto; padding:16px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <div style="font-weight:800; color:#51618a; font-size:17px;">🎮 내 캐릭터</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:8px;">
+                <div style="display:flex; gap:6px; flex:1;">
+                    <button id="stu-tab-rpg" onclick="readingStudentTab('rpg')" style="flex:1; padding:10px; border:none; border-radius:12px; font-weight:800; font-size:15px; cursor:pointer; font-family:'Pretendard'; background:#e8edf3; color:#8595a8;">🎮 성장</button>
+                    <button id="stu-tab-reading" onclick="readingStudentTab('reading')" style="flex:1; padding:10px; border:none; border-radius:12px; font-weight:800; font-size:15px; cursor:pointer; font-family:'Pretendard'; background:#43a047; color:#fff;">📚 독서</button>
+                </div>
                 <button onclick="rpgStudentLogout()" style="border:1px solid #ccc; background:#fff; color:#888; border-radius:10px; padding:6px 12px; font-size:13px; cursor:pointer; font-family:'Pretendard';">로그아웃</button>
             </div>
-            <div id="student-page-body" style="background:#fff; border-radius:18px; padding:20px;"></div>
-            <div id="reading-student-section" style="background:#fff; border-radius:18px; padding:20px; margin-top:14px;"></div>
+            <div id="student-page-body" style="background:#fff; border-radius:18px; padding:20px; display:none;"></div>
+            <div id="reading-student-section" style="background:#fff; border-radius:18px; padding:20px;"></div>
             <p style="text-align:center; font-size:11px; color:#b0bec5; margin-top:14px;">상벌점·평가는 선생님만 줄 수 있어요</p>
         </div>
     </div>
@@ -981,14 +984,16 @@
             <!-- 독서: 책 추가 -->
             <div id="reading-book-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:6000; align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) readingCloseBookModal()">
                 <div style="background:#fff; border-radius:18px; max-width:420px; width:100%; max-height:90vh; overflow-y:auto; padding:22px;">
-                    <div style="font-size:16px; font-weight:800; color:#51618a; margin-bottom:12px;">📖 읽을 책 추가</div>
-                    <input id="reading-bk-title" placeholder="책 제목" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; margin-bottom:8px; box-sizing:border-box; font-family:'Pretendard';">
+                    <div style="font-size:16px; font-weight:800; color:#51618a; margin-bottom:4px;">📖 읽을 책 추가</div>
+                    <div style="font-size:12px; color:#999; margin-bottom:12px;">책 제목만 있으면 바로 추가돼요. 도서관 연결은 선택이에요.</div>
+                    <label style="font-size:13px; font-weight:700; color:#51618a;">책 제목</label>
+                    <input id="reading-bk-title" placeholder="예) 강아지똥" style="width:100%; padding:11px; border:2px solid #cfe0f3; border-radius:8px; margin:6px 0 10px; box-sizing:border-box; font-family:'Pretendard'; font-size:15px;">
                     <input id="reading-bk-author" placeholder="글쓴이 (생략 가능)" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; margin-bottom:12px; box-sizing:border-box; font-family:'Pretendard';">
-                    <div id="reading-bk-library-box" style="background:#f3f8f4; border:1px solid #d3e8d8; border-radius:12px; padding:12px; margin-bottom:14px;">
-                        <div style="font-size:13px; font-weight:700; color:#2e7d32; margin-bottom:6px;">📚 우리 학교 도서관 책인가요? (선택)</div>
-                        <div style="font-size:12px; color:#5a8a5f; line-height:1.6; margin-bottom:8px;">① 아래 버튼으로 도서관에서 책을 찾고 → ② 그 책 <b>주소를 복사</b>해서 붙여넣으면, 목록에 <b>📗도서관 있음</b>으로 표시돼요.</div>
+                    <button type="button" id="reading-bk-library-toggle" onclick="readingToggleLibraryBox()" style="display:none; width:100%; padding:9px; background:#eef8f0; color:#2e7d32; border:1px dashed #bfe0c6; border-radius:8px; font-weight:700; cursor:pointer; font-family:inherit; margin-bottom:10px; font-size:13px;">📚 우리 학교 도서관 책이면 연결하기 (선택) ▾</button>
+                    <div id="reading-bk-library-box" style="display:none; background:#f3f8f4; border:1px solid #d3e8d8; border-radius:12px; padding:12px; margin-bottom:14px;">
+                        <div style="font-size:12px; color:#5a8a5f; line-height:1.6; margin-bottom:8px;">① 아래 버튼으로 도서관에서 책을 찾고 → ② 그 책 <b>주소를 복사</b>해서 붙여넣으면 <b>📗도서관 있음</b>으로 표시돼요. <b>못 찾으면 그냥 비워두고 추가</b>하면 돼요.</div>
                         <button type="button" onclick="readingOpenLibrarySearch()" style="width:100%; padding:9px; background:#43a047; color:#fff; border:none; border-radius:8px; font-weight:700; cursor:pointer; font-family:inherit; margin-bottom:8px;">🔎 우리 학교 도서관에서 찾기</button>
-                        <input id="reading-bk-libraryurl" placeholder="찾은 책 주소를 붙여넣기 (https://...)" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box; font-family:'Pretendard'; font-size:13px;">
+                        <input id="reading-bk-libraryurl" placeholder="찾은 책 주소를 붙여넣기 (없으면 비워두세요)" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box; font-family:'Pretendard'; font-size:13px;">
                     </div>
                     <div style="display:flex; gap:8px;">
                         <button class="reset-btn" style="flex:1;" onclick="readingCloseBookModal()">취소</button>
@@ -1633,9 +1638,12 @@
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.3';
+        const APP_VERSION = '1.4';
         const APP_VERSION_DATE = '2026-08-26';
         const APP_CHANGELOG = [
+            'v1.4 (2026-08-26) — 📚 독서: 학생 화면 성장/독서 토글 + 책추가 간소화',
+            '  · 학생 화면 상단 [🎮 성장 / 📚 독서] 토글로 전환(기본 독서)',
+            '  · 책 추가는 제목이 먼저 · 도서관 연결은 접힌 선택(못 찾으면 건너뛰기)',
             'v1.3 (2026-08-26) — 📚 독서: 글이 쌓이는 기록장 + 반 대시보드',
             '  · 하루 한 번 덮어쓰기 → 책마다 글이 계속 쌓임(내 기록장에서 다시 읽기)',
             '  · 교사 대시보드: 카드에 최근 쓴 문장·아바타·레벨 + 꾸준히/독서량 TOP',
@@ -6507,10 +6515,23 @@
             document.getElementById('reading-bk-title').value = '';
             document.getElementById('reading-bk-author').value = '';
             var lu = document.getElementById('reading-bk-libraryurl'); if(lu) lu.value = '';
-            // 도서관 주소가 설정돼 있을 때만 도서관 찾기 박스를 보여줌
+            // 제목이 먼저. 도서관 연결은 접어둠(선택) — 도서관 주소가 설정된 반에서만 토글 노출
+            var hasLib = !!readingLibraryUrlRaw().trim();
+            var toggle = document.getElementById('reading-bk-library-toggle');
             var box = document.getElementById('reading-bk-library-box');
-            if(box) box.style.display = readingLibraryUrlRaw().trim() ? 'block' : 'none';
+            if(toggle) toggle.style.display = hasLib ? 'block' : 'none';
+            if(toggle) toggle.innerHTML = '📚 우리 학교 도서관 책이면 연결하기 (선택) ▾';
+            if(box) box.style.display = 'none';
             document.getElementById('reading-book-modal').style.display = 'flex';
+            setTimeout(function(){ var t = document.getElementById('reading-bk-title'); if(t) t.focus(); }, 50);
+        }
+        function readingToggleLibraryBox(){
+            var box = document.getElementById('reading-bk-library-box');
+            var toggle = document.getElementById('reading-bk-library-toggle');
+            if(!box) return;
+            var open = box.style.display !== 'none';
+            box.style.display = open ? 'none' : 'block';
+            if(toggle) toggle.innerHTML = '📚 우리 학교 도서관 책이면 연결하기 (선택) ' + (open ? '▾' : '▴');
         }
         function readingCloseBookModal(){ document.getElementById('reading-book-modal').style.display = 'none'; }
         function readingAddBook(){
@@ -6620,6 +6641,24 @@
             el.innerHTML = readingModalBody(num);
         }
 
+        // 학생 화면 상단 토글: 🎮 성장 / 📚 독서 (기본은 독서)
+        let readingStudentActiveTab = (function(){ try{ return localStorage.getItem('studentTab') || 'reading'; }catch(e){ return 'reading'; } })();
+        function readingStudentTab(t){
+            readingStudentActiveTab = t;
+            try{ localStorage.setItem('studentTab', t); }catch(e){}
+            readingApplyStudentTab();
+        }
+        function readingApplyStudentTab(){
+            const t = readingStudentActiveTab;
+            const body = document.getElementById('student-page-body');
+            const read = document.getElementById('reading-student-section');
+            if(body) body.style.display = (t === 'rpg') ? 'block' : 'none';
+            if(read) read.style.display = (t === 'reading') ? 'block' : 'none';
+            function sty(id, on, color){ const b = document.getElementById(id); if(!b) return; b.style.background = on ? color : '#e8edf3'; b.style.color = on ? '#fff' : '#8595a8'; }
+            sty('stu-tab-rpg', t === 'rpg', '#7b6cd9');
+            sty('stu-tab-reading', t === 'reading', '#43a047');
+        }
+
         // ---- 학생 로그인(핸드폰) ----
         let studentNum = null, studentCodeCur = null, _studentRosterReady = false, _studentRpgReady = false, _studentPendingLogin = false;
         function rpgStudentInit(code){
@@ -6697,6 +6736,7 @@
                 + rpgPickerRow(num, '🐾 펫', 'pet', RPG_ITEMS_PET, d.pet, L.lv)
                 + rpgPickerRow(num, '🖼️ 프레임', 'frame', RPG_ITEMS_FRAME, d.frame, L.lv);
             readingRenderStudentSection(num);
+            readingApplyStudentTab();
         }
         // 교사용: 학생 로그인 안내(코드·링크·QR)
         function rpgOpenStudentGuide(){
