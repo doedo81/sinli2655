@@ -3948,9 +3948,12 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.7';
+        const APP_VERSION = '1.8';
         const APP_VERSION_DATE = '2026-08-27';
         const APP_CHANGELOG = [
+            'v1.8 (2026-08-27) — 🎲 뽑기 위젯 크기 잘림 수정',
+            '  · 뽑기·발표자 추가로 내용이 늘면 위젯 높이를 다시 맞춰 안 잘리게',
+            '  · 발표자 칩은 스크롤 박스로 제한(전체 발표해도 안 커짐) + [전체 선택]',
             'v1.7 (2026-08-27) — 🎲 활동뽑기 ↔ 점수판·성장 연동',
             '  · 활동뽑기 모둠 점수판: [순위대로 점수판에 반영] — 1등 +2, 2등 +1 자동 지급',
             '  · 개인 뽑기: 발표한 친구 중 잘한 친구 체크 → 성장 발표 포인트 지급',
@@ -6896,22 +6899,34 @@ var qrcode = function() {
         function actDrawRenderAward(id) {
             const s = actState[id]; if(!s) return;
             const el = document.getElementById(`${id}-award`); if(!el) return;
-            if(s.mode !== 'indiv'){ el.innerHTML = ''; return; }
-            const drawn = s.cards.filter(function(c){ return c.flipped; }).map(function(c){ return c.n; });
-            if(drawn.length === 0){ el.innerHTML = ''; return; }
+            const drawn = (s.mode === 'indiv') ? s.cards.filter(function(c){ return c.flipped; }).map(function(c){ return c.n; }) : [];
+            if(drawn.length === 0){ el.innerHTML = ''; actApplyScale(id); return; }
             const roster = (typeof rpgParseRoster === 'function') ? rpgParseRoster() : [];
             const nameOf = {}; roster.forEach(function(r){ nameOf[r.id] = r.name; });
             const chips = drawn.map(function(n){
                 const on = !!s.presCheck[n];
                 const label = n + '번' + (nameOf[n] ? ' ' + nameOf[n] : '');
-                return '<button onclick="actDrawTogglePres(\'' + id + '\',' + n + ')" style="border:1px solid ' + (on?'#43a047':'#d7deea') + ';background:' + (on?'#e8f5e9':'#fff') + ';color:' + (on?'#2e7d32':'#607d8b') + ';border-radius:20px;padding:5px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">' + (on?'✓ ':'') + escapeHtml(label) + '</button>';
+                return '<button onclick="actDrawTogglePres(\'' + id + '\',' + n + ')" style="border:1px solid ' + (on?'#43a047':'#d7deea') + ';background:' + (on?'#e8f5e9':'#fff') + ';color:' + (on?'#2e7d32':'#607d8b') + ';border-radius:20px;padding:5px 10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">' + (on?'✓ ':'') + escapeHtml(label) + '</button>';
             }).join('');
             const cnt = drawn.filter(function(n){ return s.presCheck[n]; }).length;
+            const allChecked = cnt === drawn.length && drawn.length > 0;
+            // 발표자가 많아도 위젯이 안 늘어나게: 칩 목록은 높이 제한 + 스크롤. 전체선택/해제 버튼 제공.
             el.innerHTML = '<div style="margin-top:12px;border-top:1px dashed #e0e6ef;padding-top:10px;">'
-                + '<div style="font-size:12px;color:#78909c;font-weight:700;margin-bottom:6px;">🐉 잘 발표한 친구 체크 → 성장 포인트</div>'
-                + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">' + chips + '</div>'
+                + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
+                +   '<span style="font-size:12px;color:#78909c;font-weight:700;">🐉 잘 발표한 친구 (' + drawn.length + '명) → 성장 포인트</span>'
+                +   '<button onclick="actDrawCheckAll(\'' + id + '\',' + (allChecked?'false':'true') + ')" style="border:none;background:transparent;color:#7b6cd9;font-size:12px;font-weight:700;cursor:pointer;">' + (allChecked?'전체 해제':'전체 선택') + '</button>'
+                + '</div>'
+                + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;max-height:104px;overflow-y:auto;padding:2px;">' + chips + '</div>'
                 + '<button class="act-btn" style="background:' + (cnt?'#7b6cd9':'#c5cbd6') + ';width:100%;" onclick="actDrawAwardPresenters(\'' + id + '\')">🎁 체크한 ' + cnt + '명에게 발표 포인트 주기</button>'
                 + '</div>';
+            actApplyScale(id);
+        }
+        function actDrawCheckAll(id, on){
+            const s = actState[id]; if(!s) return;
+            const drawn = s.cards.filter(function(c){ return c.flipped; }).map(function(c){ return c.n; });
+            if(on) drawn.forEach(function(n){ s.presCheck[n] = true; });
+            else s.presCheck = {};
+            actDrawRenderAward(id);
         }
         function actDrawTogglePres(id, n) {
             const s = actState[id]; if(!s) return;
