@@ -3948,9 +3948,12 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.6';
+        const APP_VERSION = '1.7';
         const APP_VERSION_DATE = '2026-08-27';
         const APP_CHANGELOG = [
+            'v1.7 (2026-08-27) — 🎲 활동뽑기 ↔ 점수판·성장 연동',
+            '  · 활동뽑기 모둠 점수판: [순위대로 점수판에 반영] — 1등 +2, 2등 +1 자동 지급',
+            '  · 개인 뽑기: 발표한 친구 중 잘한 친구 체크 → 성장 발표 포인트 지급',
             'v1.6 (2026-08-27) — 🖨️ 학생별 접속 카드 인쇄 + 창 겹침 수정',
             '  · 빈 페이지로 인쇄되던 문제 수정 — 학생 한 명당 카드(QR·번호·방번호·비번)를 A4에 배치해 인쇄',
             '  · 학생 접속 창이 기초 세팅 뒤에 깔리던 문제 수정(위로 올림)',
@@ -6721,11 +6724,42 @@ var qrcode = function() {
                 const bg = group ? `var(--main-sky)` : '#f3eefb';
                 cards += `<div class="act-score-item" style="background:${bg};"><div style="font-size:12px; font-weight:800; color:#607d8b;">${group ? (i + 1) + '모둠' : (i + 1) + '번'}</div><div class="v" id="${id}-v${i}">${s.vals[i] || 0}</div><div class="r"><button style="background:#e57373;color:#fff;" onclick="actScoreChange('${id}',${i},-1)">−</button><button style="background:#66bb6a;color:#fff;" onclick="actScoreChange('${id}',${i},1)">＋</button></div></div>`;
             }
+            const applyBtn = group
+                ? `<button class="act-btn" style="background:#f6a609; width:100%; margin-top:8px;" onclick="actScoreApplyRank('${id}')">🏆 순위대로 점수판에 반영 <span style="font-weight:600; opacity:.9;">(1등 +2 · 2등 +1)</span></button>`
+                : '';
             document.getElementById(`${id}-body`).innerHTML = `
                 <div class="act-seg"><button class="${group ? 'on' : ''}" onclick="actScoreSetMode('${id}','group')">모둠</button><button class="${!group ? 'on' : ''}" onclick="actScoreSetMode('${id}','indiv')">개인</button></div>
                 <div class="act-count-ctl"><span>칸 수</span><button onclick="actScoreCount('${id}',-1)">−</button><b>${s.n}</b><button onclick="actScoreCount('${id}',1)">＋</button></div>
-                <div class="act-score-grid" style="grid-template-columns:repeat(${cols},1fr);">${cards}</div>`;
+                <div class="act-score-grid" style="grid-template-columns:repeat(${cols},1fr);">${cards}</div>
+                ${applyBtn}`;
             actApplyScale(id);
+        }
+
+        // 활동뽑기 점수판(모둠) 순위대로 → 점수판 탭(groupScores)에 1등 +2, 2등 +1 반영
+        function actScoreApplyRank(id){
+            const s = actState[id];
+            if(!s || s.mode !== 'group'){ alert('모둠 모드일 때만 반영할 수 있어요.'); return; }
+            if(!scoresRef){ alert('먼저 학급에 입장해 주세요.'); return; }
+            const arr = [];
+            for(let i = 0; i < s.n; i++) arr.push({ i:i, g:i+1, v:(s.vals[i] || 0) });
+            const positive = arr.filter(function(x){ return x.v > 0; });
+            if(positive.length === 0){ alert('점수판에 점수가 없어요. 활동을 먼저 진행해 주세요.'); return; }
+            const distinct = Array.from(new Set(positive.map(function(x){ return x.v; }))).sort(function(a,b){ return b - a; });
+            const first = distinct[0];
+            const second = distinct.length > 1 ? distinct[1] : null;
+            const firsts = arr.filter(function(x){ return x.v === first; });
+            const seconds = second != null ? arr.filter(function(x){ return x.v === second; }) : [];
+            let msg = '점수판 탭에 반영할까요?\n\n🥇 1등 (' + first + '점): ' + firsts.map(function(x){ return x.g + '모둠'; }).join(', ') + ' → +2점';
+            if(seconds.length) msg += '\n🥈 2등 (' + second + '점): ' + seconds.map(function(x){ return x.g + '모둠'; }).join(', ') + ' → +1점';
+            if(firsts.length > 1) msg += '\n\n※ 1등이 여러 모둠이면 모두 +2점이에요.';
+            if(!confirm(msg)) return;
+            const updates = {};
+            firsts.forEach(function(x){ updates[String(x.i)] = (currentScores[x.i] || 0) + 2; });
+            seconds.forEach(function(x){ updates[String(x.i)] = (currentScores[x.i] || 0) + 1; });
+            scoresRef.update(updates).then(function(){
+                try { if(typeof SFX !== 'undefined' && SFX.point) SFX.point(); } catch(e){}
+                rpgToast('🏆 점수판에 반영 완료! (1등 +2 · 2등 +1)');
+            }).catch(function(e){ alert('반영 오류: ' + e.message); });
         }
 
         // ----- 타이머 위젯 -----
@@ -6756,7 +6790,7 @@ var qrcode = function() {
         }
 
         // ----- 뽑기 위젯 (카드 뒤집기) -----
-        function actInitDraw(id) { actState[id] = { mode: 'indiv', total: globalTotalStudents || 24, groups: numberOfGroups || 4, absent: '', cards: [], showSettings: false, scale: 1, baseW: 300, last: null }; actDrawReset(id); }
+        function actInitDraw(id) { actState[id] = { mode: 'indiv', total: globalTotalStudents || 24, groups: numberOfGroups || 4, absent: '', cards: [], showSettings: false, scale: 1, baseW: 300, last: null, presCheck: {} }; actDrawReset(id); }
         function actDrawSetMode(id, m) { actState[id].mode = m; actDrawReset(id); }
         function actDrawToggleSettings(id) { actState[id].showSettings = !actState[id].showSettings; actRenderDraw(id); }
         function actDrawReadSettings(id) {
@@ -6773,6 +6807,7 @@ var qrcode = function() {
             else { for (let i = 1; i <= s.total; i++) if (!abs.includes(i)) nums.push(i); }
             s.cards = nums.map(n => ({ n, flipped: false }));
             s.last = null;
+            s.presCheck = {};
             actRenderDraw(id);
         }
         function actDrawPick(id) {
@@ -6786,6 +6821,7 @@ var qrcode = function() {
             actDrawMarkLast(id);
             try { pickSound.currentTime = 0; pickSound.play(); } catch (e) {}
             actDrawFoot(id);
+            actDrawRenderAward(id);
         }
         function actDrawToggle(id, i) {
             const s = actState[id], c = s.cards[i]; if (!c) return;
@@ -6794,7 +6830,9 @@ var qrcode = function() {
             if (el) el.classList.toggle('flipped', c.flipped);
             if (c.flipped) { s.last = i; actDrawMarkLast(id); try { pickSound.currentTime = 0; pickSound.play(); } catch (e) {} }
             else if (s.last === i) { s.last = null; actDrawMarkLast(id); }
+            if (!c.flipped && s.presCheck) delete s.presCheck[c.n];
             actDrawFoot(id);
+            actDrawRenderAward(id);
         }
         // 방금 뽑힌 카드 강조 + 상단에 크게 표시
         function actDrawShortLabel(s, c) { return s.mode === 'group' ? (c.n + '모둠') : (c.n + '번'); }
@@ -6846,10 +6884,66 @@ var qrcode = function() {
                 <div id="${id}-last" style="display:none; text-align:center; background:#f6f0ff; border:1px solid #e2d6f5; border-radius:10px; padding:8px 10px; margin-bottom:8px; font-size:13px; font-weight:700; color:#7b5bd0;"></div>
                 <div class="actdraw-grid" style="grid-template-columns:repeat(${cols},1fr);">${cards}</div>
                 <div style="display:flex; gap:6px; margin-top:10px;"><button class="act-btn" style="background:${group ? '#2ecc71' : '#8e44ad'}; flex:2;" onclick="actDrawPick('${id}')">🎲 뽑기!</button><button class="act-btn" style="background:#90a4ae; flex:1;" onclick="actDrawReset('${id}')">리셋</button></div>
-                <div id="${id}-remain" style="text-align:center; font-size:12px; color:#b0bcc9; margin-top:8px;"></div>`;
+                <div id="${id}-remain" style="text-align:center; font-size:12px; color:#b0bcc9; margin-top:8px;"></div>
+                <div id="${id}-award"></div>`;
             actDrawFoot(id);
             actDrawMarkLast(id);
+            actDrawRenderAward(id);
             actApplyScale(id);
+        }
+
+        // 개인 뽑기: 뽑혀서 발표한 학생 중 잘한 친구 체크 → 성장 포인트(발표 +XP) 지급
+        function actDrawRenderAward(id) {
+            const s = actState[id]; if(!s) return;
+            const el = document.getElementById(`${id}-award`); if(!el) return;
+            if(s.mode !== 'indiv'){ el.innerHTML = ''; return; }
+            const drawn = s.cards.filter(function(c){ return c.flipped; }).map(function(c){ return c.n; });
+            if(drawn.length === 0){ el.innerHTML = ''; return; }
+            const roster = (typeof rpgParseRoster === 'function') ? rpgParseRoster() : [];
+            const nameOf = {}; roster.forEach(function(r){ nameOf[r.id] = r.name; });
+            const chips = drawn.map(function(n){
+                const on = !!s.presCheck[n];
+                const label = n + '번' + (nameOf[n] ? ' ' + nameOf[n] : '');
+                return '<button onclick="actDrawTogglePres(\'' + id + '\',' + n + ')" style="border:1px solid ' + (on?'#43a047':'#d7deea') + ';background:' + (on?'#e8f5e9':'#fff') + ';color:' + (on?'#2e7d32':'#607d8b') + ';border-radius:20px;padding:5px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">' + (on?'✓ ':'') + escapeHtml(label) + '</button>';
+            }).join('');
+            const cnt = drawn.filter(function(n){ return s.presCheck[n]; }).length;
+            el.innerHTML = '<div style="margin-top:12px;border-top:1px dashed #e0e6ef;padding-top:10px;">'
+                + '<div style="font-size:12px;color:#78909c;font-weight:700;margin-bottom:6px;">🐉 잘 발표한 친구 체크 → 성장 포인트</div>'
+                + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">' + chips + '</div>'
+                + '<button class="act-btn" style="background:' + (cnt?'#7b6cd9':'#c5cbd6') + ';width:100%;" onclick="actDrawAwardPresenters(\'' + id + '\')">🎁 체크한 ' + cnt + '명에게 발표 포인트 주기</button>'
+                + '</div>';
+        }
+        function actDrawTogglePres(id, n) {
+            const s = actState[id]; if(!s) return;
+            if(s.presCheck[n]) delete s.presCheck[n]; else s.presCheck[n] = true;
+            actDrawRenderAward(id);
+        }
+        function actDrawAwardPresenters(id) {
+            const s = actState[id]; if(!s) return;
+            if(!rpgRef){ alert('먼저 학급에 입장해 주세요.'); return; }
+            const drawn = s.cards.filter(function(c){ return c.flipped; }).map(function(c){ return c.n; });
+            const targets = drawn.filter(function(n){ return s.presCheck[n]; });
+            if(targets.length === 0){ alert('먼저 잘 발표한 친구를 체크해 주세요.'); return; }
+            const roster = (typeof rpgParseRoster === 'function') ? rpgParseRoster() : [];
+            const inRoster = {}; roster.forEach(function(r){ inRoster[r.id] = r.name; });
+            const valid = targets.filter(function(n){ return inRoster[n] != null; });
+            if(valid.length === 0){ alert('체크한 번호가 학생 명단에 없어요. (성장 탭 명단을 확인해 주세요)'); return; }
+            const a = (typeof rpgAllActions === 'function' ? rpgAllActions().find(function(x){ return x.id === 'present'; }) : null) || { xp:10, stat:'cha' };
+            if(!confirm(valid.map(function(n){ return n + '번 ' + inRoster[n]; }).join(', ') + '\n\n위 ' + valid.length + '명에게 발표 포인트(+' + a.xp + ' XP)를 줄까요?')) return;
+            const updates = {}; let lv = 0;
+            valid.forEach(function(n){
+                const st = rpgStudentObj(n); const before = rpgLevel(st.xp).lv;
+                st.xp += a.xp; st.stats[a.stat] = (st.stats[a.stat] || 0) + 1;
+                if(rpgLevel(st.xp).lv > before) lv++;
+                updates['students/' + n] = st;
+            });
+            rpgRef.update(updates).then(function(){
+                try { if(typeof SFX !== 'undefined' && SFX.point) SFX.point(); } catch(e){}
+                rpgToast('🎁 발표 포인트 지급! ' + valid.length + '명 +' + a.xp + ' XP');
+                if(lv > 0) setTimeout(function(){ try{ SFX.levelup && SFX.levelup(); }catch(e){} rpgToast('🎉 레벨 업 ' + lv + '명!', true); }, 400);
+                valid.forEach(function(n){ delete s.presCheck[n]; });
+                actDrawRenderAward(id);
+            }).catch(function(e){ alert('지급 오류: ' + e.message); });
         }
 
         // ----- 🐉 캐릭터 뽑기 위젯 (성장 연동 · 여러 반) -----
