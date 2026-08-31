@@ -3948,9 +3948,11 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.8';
+        const APP_VERSION = '1.9';
         const APP_VERSION_DATE = '2026-08-27';
         const APP_CHANGELOG = [
+            'v1.9 (2026-08-27) — 🐞 학생 독서: 책 등록·글쓰기 안 되던 문제 수정',
+            '  · 책 추가·읽고쓰기 모달이 숨겨진 main-app 안에 있어 학생 화면에서 안 보이던 버그',
             'v1.8 (2026-08-27) — 🎲 뽑기 위젯 크기 잘림 수정',
             '  · 뽑기·발표자 추가로 내용이 늘면 위젯 높이를 다시 맞춰 안 잘리게',
             '  · 발표자 칩은 스크롤 박스로 제한(전체 발표해도 안 커짐) + [전체 선택]',
@@ -8948,7 +8950,9 @@ var qrcode = function() {
             if(toggle) toggle.style.display = hasLib ? 'block' : 'none';
             if(toggle) toggle.innerHTML = '📚 우리 학교 도서관 책이면 연결하기 (선택) ▾';
             if(box) box.style.display = 'none';
-            document.getElementById('reading-book-modal').style.display = 'flex';
+            var bm = document.getElementById('reading-book-modal');
+            if(bm.parentElement !== document.body) document.body.appendChild(bm); // 학생 화면(main-app 숨김)에서도 보이도록 body로 이동
+            bm.style.display = 'flex';
             setTimeout(function(){ var t = document.getElementById('reading-bk-title'); if(t) t.focus(); }, 50);
         }
         function readingToggleLibraryBox(){
@@ -9003,7 +9007,9 @@ var qrcode = function() {
             document.getElementById('reading-ci-booktitle').textContent = b ? b.title : '';
             document.getElementById('reading-ci-quote').value = '';
             document.getElementById('reading-ci-thought').value = '';
-            document.getElementById('reading-checkin-modal').style.display = 'flex';
+            var cm = document.getElementById('reading-checkin-modal');
+            if(cm.parentElement !== document.body) document.body.appendChild(cm); // 학생 화면(main-app 숨김)에서도 보이도록
+            cm.style.display = 'flex';
         }
         function readingCloseCheckinModal(){ document.getElementById('reading-checkin-modal').style.display = 'none'; readingCheckinNum = null; readingCheckinBookId = null; }
         function readingSubmitCheckin(){
