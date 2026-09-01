@@ -3262,6 +3262,7 @@ var qrcode = function() {
                         <h2 style="color:var(--dark-blue); margin:0;"><i class="fa-solid fa-book-open"></i> 매일 독서</h2>
                         <div style="display:flex; gap:8px; flex-wrap:wrap;">
                             <button class="action-btn" id="reading-libset-btn" style="background:#78909c; padding:10px 14px;" onclick="readingOpenLibSetup()"><i class="fa-solid fa-link"></i> 도서관 주소</button>
+                            <button class="action-btn" id="reading-export-btn" style="background:#5b6fb5; padding:10px 14px;" onclick="readingExport()"><i class="fa-solid fa-file-lines"></i> 생기부 내보내기</button>
                             <button class="action-btn" id="reading-reward-btn" style="background:#43a047; padding:10px 18px;" onclick="readingRewardToday()"><i class="fa-solid fa-gift"></i> 오늘 인증 학생 상점 주기</button>
                         </div>
                     </div>
@@ -3948,9 +3949,11 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.10';
+        const APP_VERSION = '1.11';
         const APP_VERSION_DATE = '2026-08-27';
         const APP_CHANGELOG = [
+            'v1.11 (2026-08-27) — 📄 독서 기록 생기부용 내보내기',
+            '  · 독서 탭 [생기부 내보내기] — 학생별 책·구절·생각을 모아 복사·인쇄',
             'v1.10 (2026-08-27) — 🤝 협동뽑기: 모둠별 역할 중복 안 되게',
             '  · 모둠마다 이미 한 역할을 기록 → 4턴(4역할) 동안 안 겹치게 뽑고, 다 돌면 그 모둠만 리셋',
             'v1.9 (2026-08-27) — 🐞 학생 독서: 책 등록·글쓰기 안 되던 문제 수정',
@@ -9082,6 +9085,74 @@ var qrcode = function() {
                 SFX.mission();
                 if(lv > 0) setTimeout(function(){ SFX.levelup(); rpgToast('🎉 레벨 업 ' + lv + '명!', true); }, 400);
             }).catch(function(e){ alert('지급 오류: ' + e.message); });
+        }
+
+        // 📄 생기부용 내보내기 — 학생별 독서 기록(책·구절·생각)을 모아 새 창에 표시(복사·인쇄)
+        function readingExport(){
+            const roster = (typeof rpgParseRoster === 'function') ? rpgParseRoster() : [];
+            if(roster.length === 0){ alert('학생 명단이 없어요. [성장] 탭에서 명단을 먼저 입력해 주세요.'); return; }
+            function plainFor(st){
+                const books = readingBooksOf(st.id);
+                const done = Object.keys(books).filter(function(k){ return books[k].status === 'done'; }).map(function(k){ return books[k]; });
+                const reading = Object.keys(books).filter(function(k){ return books[k].status !== 'done'; }).map(function(k){ return books[k]; });
+                const entries = readingEntriesOf(st.id).slice().reverse(); // 오래된 → 최근 (성장 흐름)
+                const streak = readingStreakOf(st.id);
+                let t = st.id + '번 ' + st.name + '  |  완독 ' + done.length + '권 · 최장 연속 ' + (streak.longest || 0) + '일 · 쓴 글 ' + entries.length + '개\n';
+                if(done.length) t += '완독한 책: ' + done.map(function(b){ return '『' + b.title + '』' + (b.author ? '(' + b.author + ')' : ''); }).join(', ') + '\n';
+                if(reading.length) t += '읽는 중: ' + reading.map(function(b){ return '『' + b.title + '』'; }).join(', ') + '\n';
+                if(entries.length){
+                    t += '기록:\n';
+                    entries.forEach(function(e){
+                        const title = e.bookTitle || '';
+                        t += '- (' + (e.date || '') + ') ' + (title ? '『' + title + '』 ' : '') + (e.quote ? '"' + e.quote + '"' : '');
+                        if(e.thought) t += ' → ' + e.thought;
+                        t += '\n';
+                    });
+                } else {
+                    t += '(아직 쓴 글이 없어요)\n';
+                }
+                return t;
+            }
+            const cards = roster.map(function(st){
+                const txt = plainFor(st);
+                const books = readingBooksOf(st.id);
+                const done = Object.keys(books).filter(function(k){ return books[k].status === 'done'; }).length;
+                const entries = readingEntriesOf(st.id);
+                const has = entries.length > 0 || done > 0;
+                return '<div class="card' + (has ? '' : ' empty') + '">'
+                    + '<div class="chead"><b>' + st.id + '번 ' + escapeHtml(st.name) + '</b>'
+                    + '<button class="cbtn" onclick="copyOne(' + st.id + ')">📋 복사</button></div>'
+                    + '<textarea id="t' + st.id + '" readonly>' + escapeHtml(txt) + '</textarea>'
+                    + '</div>';
+            }).join('');
+            const allText = roster.map(plainFor).join('\n----------------------------------------\n');
+            const today = getFormattedDate(new Date());
+            const html = '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+                + '<title>독서 기록 · 생기부용</title><style>'
+                + '*{box-sizing:border-box;} body{font-family:"Pretendard","맑은 고딕",sans-serif;margin:14px;color:#222;background:#fff;} '
+                + 'h1{font-size:17px;margin:0 0 2px;} .sub{font-size:12px;color:#666;margin:0 0 12px;} '
+                + '.toolbar{margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;} .toolbar button{font-size:13px;padding:8px 14px;border:none;border-radius:8px;background:#5b6fb5;color:#fff;font-weight:700;cursor:pointer;} '
+                + '.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;} '
+                + '.card{border:1px solid #dfe3ea;border-radius:10px;padding:10px;break-inside:avoid;page-break-inside:avoid;} .card.empty{opacity:.6;} '
+                + '.chead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:14px;color:#3a4a6b;} '
+                + '.cbtn{border:1px solid #cfd6e6;background:#f4f7fc;color:#5b6fb5;border-radius:7px;padding:4px 9px;font-size:12px;font-weight:700;cursor:pointer;} '
+                + 'textarea{width:100%;min-height:150px;border:1px solid #eef0f3;border-radius:8px;padding:8px;font-family:inherit;font-size:12.5px;line-height:1.55;color:#333;background:#fafbfc;resize:vertical;} '
+                + '@media print{ .toolbar{display:none;} .cbtn{display:none;} textarea{border:none;background:#fff;min-height:0;height:auto;overflow:visible;} .grid{grid-template-columns:1fr 1fr;} } '
+                + '</style></head><body>'
+                + '<div class="toolbar"><button onclick="copyAll()">📋 전체 복사</button><button onclick="window.print()" style="background:#607d8b;">🖨️ 인쇄</button></div>'
+                + '<h1>📚 우리 반 독서 기록 (생기부용)</h1>'
+                + '<p class="sub">' + today + ' · 학생 ' + roster.length + '명 · 각 칸을 복사해 생기부에 활용하세요. 문장은 사실 기록이니, 생기부 문구는 선생님이 다듬어 주세요.</p>'
+                + '<div class="grid">' + cards + '</div>'
+                + '<textarea id="__all" style="position:fixed;left:-9999px;top:0;">' + escapeHtml(allText) + '</textarea>'
+                + '<scr' + 'ipt>'
+                + 'function _copy(el){ el.focus(); el.select(); try{ document.execCommand("copy"); }catch(e){} if(navigator.clipboard){ try{ navigator.clipboard.writeText(el.value); }catch(e){} } }'
+                + 'function copyOne(n){ _copy(document.getElementById("t"+n)); var b=event.target; var o=b.textContent; b.textContent="✓ 복사됨"; setTimeout(function(){ b.textContent=o; }, 1200); }'
+                + 'function copyAll(){ _copy(document.getElementById("__all")); var b=event.target; var o=b.textContent; b.textContent="✓ 전체 복사됨"; setTimeout(function(){ b.textContent=o; }, 1200); }'
+                + '</scr' + 'ipt>'
+                + '</body></html>';
+            const w = window.open('', '_blank');
+            if(!w){ alert('새 창(팝업)이 차단됐어요. 팝업을 허용한 뒤 다시 눌러주세요.'); return; }
+            w.document.open(); w.document.write(html); w.document.close();
         }
 
         // 학생 로그인 화면(휴대폰)에 독서 섹션 붙이기
