@@ -4032,9 +4032,11 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.19';
+        const APP_VERSION = '1.20';
         const APP_VERSION_DATE = '2026-09-02';
         const APP_CHANGELOG = [
+            'v1.20 (2026-09-02) — 📆 미니 캘린더 전달·다음달 날짜 표시',
+            '  · 앞뒤 빈칸에 전달/다음달 날짜를 흐리게 채움(클릭도 됨) — 달력이 꽉 참',
             'v1.19 (2026-09-02) — 🧩 화면 수정: 이동(드래그) + 버튼 위치 + 아이콘 정리',
             '  · [화면 수정]을 사이드바(기초 세팅 아래)로 이동 · 칸을 드래그로 옮기기(열 이동 포함)',
             '  · 오른쪽 아래 3개 아이콘(개인·모둠 뽑기·타이머) 숨김',
@@ -5614,13 +5616,24 @@ var qrcode = function() {
             const first = new Date(y, m, 1).getDay(), last = new Date(y, m + 1, 0).getDate();
             const con = document.getElementById('cal-dates'); con.innerHTML = '';
             ['일','월','화','수','목','금','토'].forEach(d => con.innerHTML += `<div class="cal-day">${d}</div>`);
-            for(let i=0; i<first; i++) con.innerHTML += `<div></div>`;
-            for(let i=1; i<=last; i++) {
-                const k = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-                const isSelected = getFormattedDate(viewDate) === k; const hasRecord = historyCheck[k] ? 'has-record' : '';
+            const pad = n => String(n).padStart(2, '0');
+            function cell(cy, cm, cd, other){
+                const k = `${cy}-${pad(cm + 1)}-${pad(cd)}`;
+                const isSelected = getFormattedDate(viewDate) === k;
+                const hasRecord = historyCheck[k] ? 'has-record' : '';
                 const hasEvent = (allCalendarEvents[k] && Object.keys(allCalendarEvents[k]).length) ? 'has-event' : '';
-                con.innerHTML += `<div class="cal-date ${isSelected?'selected':''} ${hasRecord} ${hasEvent}" onclick="selectDate('${k}')">${i}</div>`;
+                return `<div class="cal-date ${isSelected?'selected':''} ${hasRecord} ${hasEvent}"${other ? ' style="opacity:0.35;"' : ''} onclick="selectDate('${k}')">${cd}</div>`;
             }
+            // 전달(앞 빈칸)
+            const prevLast = new Date(y, m, 0).getDate();
+            const pmY = m === 0 ? y - 1 : y, pmM = m === 0 ? 11 : m - 1;
+            for(let i=0; i<first; i++) con.innerHTML += cell(pmY, pmM, prevLast - first + 1 + i, true);
+            // 이번 달
+            for(let i=1; i<=last; i++) con.innerHTML += cell(y, m, i, false);
+            // 다음달(그 주 채우기)
+            const nmY = m === 11 ? y + 1 : y, nmM = m === 11 ? 0 : m + 1;
+            const rem = (7 - ((first + last) % 7)) % 7;
+            for(let i=1; i<=rem; i++) con.innerHTML += cell(nmY, nmM, i, true);
         }
         function changeMonth(v) { calDate.setMonth(calDate.getMonth() + v); renderCalendar(); }
 
