@@ -3949,9 +3949,11 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.11';
+        const APP_VERSION = '1.12';
         const APP_VERSION_DATE = '2026-08-27';
         const APP_CHANGELOG = [
+            'v1.12 (2026-08-27) — 🤖 AI 생기부 문장 만들기',
+            '  · 독서 학생 카드 클릭 → [AI 생기부 문장 만들기](Gemini)로 문구 초안 생성·복사',
             'v1.11 (2026-08-27) — 📄 독서 기록 생기부용 내보내기',
             '  · 독서 탭 [생기부 내보내기] — 학생별 책·구절·생각을 모아 복사·인쇄',
             'v1.10 (2026-08-27) — 🤝 협동뽑기: 모둠별 역할 중복 안 되게',
@@ -8880,7 +8882,7 @@ var qrcode = function() {
                 + '</div>';
         }
 
-        function readingModalBody(num){
+        function readingModalBody(num, teacher){
             const stu = rpgParseRoster().find(function(x){ return x.id === num; });
             const name = stu ? stu.name : (num + '번');
             const books = readingBooksOf(num);
@@ -8928,18 +8930,24 @@ var qrcode = function() {
                 + doneList.map(bookRow).join('')
                 + '<button onclick="readingOpenBookModal(' + num + ')" style="width:100%;padding:10px;background:#eef1f6;color:#51618a;border:1px dashed #c7d0e0;border-radius:10px;font-weight:700;cursor:pointer;font-family:inherit;margin:6px 0 16px;">+ 읽을 책 추가하기</button>'
                 + '<div style="font-size:14px;font-weight:800;color:#51618a;border-top:1px solid #eee;padding-top:12px;margin-bottom:8px;">📖 내 기록장 <span style="font-size:12px;color:#aaa;font-weight:400;">(내가 쓴 문장들)</span></div>'
-                + journalHtml;
+                + journalHtml
+                + (teacher
+                    ? '<div style="border-top:1px solid #eee;padding-top:12px;margin-top:12px;">'
+                      + '<button id="reading-ai-btn" onclick="readingAIGensaeng(' + num + ')" style="width:100%;padding:10px;background:#5b6fb5;color:#fff;border:none;border-radius:9px;font-weight:800;cursor:pointer;font-family:inherit;">🤖 AI 생기부 문장 만들기</button>'
+                      + '<div id="reading-ai-result" style="display:none;margin-top:10px;"></div>'
+                      + '</div>'
+                    : '');
         }
 
         let readingModalNum = null;
         function readingOpenModal(num){
             readingModalNum = num;
-            document.getElementById('reading-modal-body').innerHTML = readingModalBody(num);
+            document.getElementById('reading-modal-body').innerHTML = readingModalBody(num, true);
             document.getElementById('reading-modal').style.display = 'flex';
         }
         function readingCloseModal(){ document.getElementById('reading-modal').style.display = 'none'; readingModalNum = null; }
         function readingRefreshOpenViews(){
-            if(readingModalNum != null && document.getElementById('reading-modal').style.display === 'flex') document.getElementById('reading-modal-body').innerHTML = readingModalBody(readingModalNum);
+            if(readingModalNum != null && document.getElementById('reading-modal').style.display === 'flex') document.getElementById('reading-modal-body').innerHTML = readingModalBody(readingModalNum, true);
             if(typeof studentNum !== 'undefined' && studentNum != null) readingRenderStudentSection(studentNum);
         }
 
@@ -9087,32 +9095,36 @@ var qrcode = function() {
             }).catch(function(e){ alert('지급 오류: ' + e.message); });
         }
 
+        // 학생 한 명의 독서 기록을 사람이 읽는 텍스트로 (내보내기·AI 공용)
+        function readingCompileRecord(num, name){
+            if(!name){ const st = ((typeof rpgParseRoster === 'function') ? rpgParseRoster() : []).find(function(x){ return x.id === num; }); name = st ? st.name : (num + '번'); }
+            const books = readingBooksOf(num);
+            const done = Object.keys(books).filter(function(k){ return books[k].status === 'done'; }).map(function(k){ return books[k]; });
+            const reading = Object.keys(books).filter(function(k){ return books[k].status !== 'done'; }).map(function(k){ return books[k]; });
+            const entries = readingEntriesOf(num).slice().reverse(); // 오래된 → 최근 (성장 흐름)
+            const streak = readingStreakOf(num);
+            let t = num + '번 ' + name + '  |  완독 ' + done.length + '권 · 최장 연속 ' + (streak.longest || 0) + '일 · 쓴 글 ' + entries.length + '개\n';
+            if(done.length) t += '완독한 책: ' + done.map(function(b){ return '『' + b.title + '』' + (b.author ? '(' + b.author + ')' : ''); }).join(', ') + '\n';
+            if(reading.length) t += '읽는 중: ' + reading.map(function(b){ return '『' + b.title + '』'; }).join(', ') + '\n';
+            if(entries.length){
+                t += '기록:\n';
+                entries.forEach(function(e){
+                    const title = e.bookTitle || '';
+                    t += '- (' + (e.date || '') + ') ' + (title ? '『' + title + '』 ' : '') + (e.quote ? '"' + e.quote + '"' : '');
+                    if(e.thought) t += ' → ' + e.thought;
+                    t += '\n';
+                });
+            } else {
+                t += '(아직 쓴 글이 없어요)\n';
+            }
+            return t;
+        }
+
         // 📄 생기부용 내보내기 — 학생별 독서 기록(책·구절·생각)을 모아 새 창에 표시(복사·인쇄)
         function readingExport(){
             const roster = (typeof rpgParseRoster === 'function') ? rpgParseRoster() : [];
             if(roster.length === 0){ alert('학생 명단이 없어요. [성장] 탭에서 명단을 먼저 입력해 주세요.'); return; }
-            function plainFor(st){
-                const books = readingBooksOf(st.id);
-                const done = Object.keys(books).filter(function(k){ return books[k].status === 'done'; }).map(function(k){ return books[k]; });
-                const reading = Object.keys(books).filter(function(k){ return books[k].status !== 'done'; }).map(function(k){ return books[k]; });
-                const entries = readingEntriesOf(st.id).slice().reverse(); // 오래된 → 최근 (성장 흐름)
-                const streak = readingStreakOf(st.id);
-                let t = st.id + '번 ' + st.name + '  |  완독 ' + done.length + '권 · 최장 연속 ' + (streak.longest || 0) + '일 · 쓴 글 ' + entries.length + '개\n';
-                if(done.length) t += '완독한 책: ' + done.map(function(b){ return '『' + b.title + '』' + (b.author ? '(' + b.author + ')' : ''); }).join(', ') + '\n';
-                if(reading.length) t += '읽는 중: ' + reading.map(function(b){ return '『' + b.title + '』'; }).join(', ') + '\n';
-                if(entries.length){
-                    t += '기록:\n';
-                    entries.forEach(function(e){
-                        const title = e.bookTitle || '';
-                        t += '- (' + (e.date || '') + ') ' + (title ? '『' + title + '』 ' : '') + (e.quote ? '"' + e.quote + '"' : '');
-                        if(e.thought) t += ' → ' + e.thought;
-                        t += '\n';
-                    });
-                } else {
-                    t += '(아직 쓴 글이 없어요)\n';
-                }
-                return t;
-            }
+            function plainFor(st){ return readingCompileRecord(st.id, st.name); }
             const cards = roster.map(function(st){
                 const txt = plainFor(st);
                 const books = readingBooksOf(st.id);
@@ -9153,6 +9165,45 @@ var qrcode = function() {
             const w = window.open('', '_blank');
             if(!w){ alert('새 창(팝업)이 차단됐어요. 팝업을 허용한 뒤 다시 눌러주세요.'); return; }
             w.document.open(); w.document.write(html); w.document.close();
+        }
+
+        // 🤖 AI 생기부 문구 초안 — 학생의 독서 기록을 Gemini로 생기부 문장으로 (교사 모달에서만)
+        async function readingAIGensaeng(num){
+            const apiKey = localStorage.getItem('geminiApiKey');
+            if(!apiKey){ alert('먼저 [기초 세팅]에서 구글(Gemini) API 키를 입력해 주세요.'); return; }
+            if(readingEntriesOf(num).length === 0 && readingDoneCountOf(num) === 0){ alert('이 학생은 아직 독서 기록이 없어요.'); return; }
+            const record = readingCompileRecord(num);
+            const btn = document.getElementById('reading-ai-btn');
+            const resEl = document.getElementById('reading-ai-result');
+            let orig = '';
+            if(btn){ orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '🤖 AI가 쓰는 중...'; }
+            const prompt = '아래는 초등학생 한 명의 독서 기록(읽은 책과 학생이 직접 쓴 구절·생각)이다. 이를 바탕으로 학교생활기록부에 넣을 독서활동 문구를 작성하라.\n'
+                + '규칙:\n- 2~3문장, 관찰 서술형 문어체(예: ~을 읽고 ~을 느꼈다고 기록함, ~하는 모습이 나타남). 학생 이름·번호는 넣지 말 것.\n'
+                + '- 학생이 실제로 쓴 내용에만 근거하고 지어내지 말 것. 과장·평가어(우수함 등)는 자제하고 사실 위주로.\n- 책 제목은 『』로 표기.\n- 설명 없이 완성된 문구만 출력.\n\n[독서 기록]\n' + record;
+            const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(apiKey);
+            const reqBody = JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.4 } });
+            try {
+                let data = null;
+                for(let attempt = 0; attempt < 3; attempt++){
+                    const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: reqBody });
+                    data = await res.json();
+                    if(res.ok && !data.error) break;
+                    const msg = (data.error && data.error.message) || '';
+                    const transient = res.status === 503 || res.status === 429 || /high demand|overloaded|unavailable|try again/i.test(msg);
+                    if(transient && attempt < 2){ if(btn) btn.innerHTML = '🤖 혼잡… 재시도 ' + (attempt + 2) + '/3'; await new Promise(function(r){ setTimeout(r, 1500 * (attempt + 1)); }); continue; }
+                    alert('AI 호출 오류: ' + (msg || res.status) + (transient ? '\n\n지금 AI 서버가 혼잡해요. 30초쯤 뒤 다시 눌러주세요.' : '')); return;
+                }
+                const cand = (data.candidates || [])[0];
+                let out = cand ? (((cand.content && cand.content.parts) || []).map(function(p){ return p.text || ''; }).join('')).trim() : '';
+                if(!out){ alert('AI가 문구를 만들지 못했어요. 잠시 후 다시 시도해 주세요.'); return; }
+                if(resEl){
+                    resEl.style.display = 'block';
+                    resEl.innerHTML = '<div style="font-size:12px;color:#5b6fb5;font-weight:700;margin-bottom:6px;">🤖 AI 생기부 문구 초안 <span style="color:#aaa;font-weight:400;">(사실 근거·교사 검토·수정 필요)</span></div>'
+                        + '<textarea readonly style="width:100%;min-height:96px;border:1px solid #dfe3ea;border-radius:8px;padding:8px;font-family:inherit;font-size:13px;line-height:1.6;box-sizing:border-box;">' + escapeHtml(out) + '</textarea>'
+                        + '<div style="text-align:right;margin-top:6px;"><button onclick="var t=this.parentElement.previousElementSibling; t.focus(); t.select(); try{document.execCommand(\'copy\');}catch(e){} if(navigator.clipboard){try{navigator.clipboard.writeText(t.value);}catch(e){}} this.textContent=\'✓ 복사됨\';" style="border:1px solid #cfd6e6;background:#f4f7fc;color:#5b6fb5;border-radius:7px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">📋 복사</button></div>';
+                }
+            } catch(e){ alert('오류: ' + e.message); }
+            finally { if(btn){ btn.disabled = false; btn.innerHTML = orig; } }
         }
 
         // 학생 로그인 화면(휴대폰)에 독서 섹션 붙이기
