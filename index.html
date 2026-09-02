@@ -3564,6 +3564,17 @@ var qrcode = function() {
             </div>
         </div>
 
+        <!-- 🔔 수업 시작 1분 전 알림 팝업 -->
+        <div id="bell-popup" style="display:none; position:fixed; inset:0; background:rgba(30,40,70,0.55); z-index:7000; align-items:center; justify-content:center; padding:20px;" onclick="if(event.target===this) bellClose()">
+            <div style="background:#fff; border-radius:22px; max-width:520px; width:100%; padding:34px 28px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                <div style="font-size:64px; line-height:1; margin-bottom:8px;">🔔</div>
+                <div id="bell-popup-period" style="font-size:15px; font-weight:800; color:#7b6cd9; margin-bottom:6px;">수업 준비</div>
+                <div id="bell-popup-msg" style="font-size:24px; font-weight:800; color:#3a4a6b; line-height:1.5;">수업 1분 전! 교과서와 알짜정리 노트를 준비해 주세요</div>
+                <button onclick="bellClose()" style="margin-top:22px; padding:11px 26px; background:#7b6cd9; color:#fff; border:none; border-radius:12px; font-weight:800; font-size:15px; cursor:pointer; font-family:'Pretendard';">닫기</button>
+                <div style="font-size:12px; color:#b0bcc9; margin-top:10px;">1분 뒤 자동으로 닫혀요</div>
+            </div>
+        </div>
+
         <!-- ⚙️ 기초 세팅 모달 -->
         <div class="modal-overlay" id="settings-modal">
             <div class="modal-box">
@@ -3632,6 +3643,25 @@ var qrcode = function() {
                         <input type="checkbox" id="set-show-classbar" onchange="setClassBarVisible(this.checked)">
                         위쪽 <b>학급 전환 바</b> 보이기 <span style="color:#90a4ae; font-size:12px;">(여러 반 쓰는 전담 선생님용 · 담임은 꺼도 돼요)</span>
                     </label>
+                </div>
+
+                <div class="setting-group">
+                    <label>🔔 수업 시작 1분 전 알림</label>
+                    <label style="display:flex; align-items:center; gap:8px; font-weight:400; font-size:14px; color:#455a64; cursor:pointer; margin:6px 0 8px;">
+                        <input type="checkbox" id="set-bell-on" onchange="bellSaveFromSettings()">
+                        <b>사용</b> — 교시 시작 1분 전에 <b>종소리 3번 + 준비 팝업</b> (팝업은 1분 뒤 자동으로 닫힘)
+                    </label>
+                    <p style="font-size:12px; color:#666; margin:0 0 8px; line-height:1.6;">교시별 <b>시작 시각</b>을 넣으면 그 1분 전에 알려줘요. 빈 칸은 건너뛰어요. (이 PC 화면에서만 울려요 — 교실 컴퓨터에 설정하세요)</p>
+                    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px;">
+                        <label style="font-size:12px; color:#607d8b;">1교시 <input type="time" id="set-bell-t1" onchange="bellSaveFromSettings()" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:7px; font-family:'Pretendard';"></label>
+                        <label style="font-size:12px; color:#607d8b;">2교시 <input type="time" id="set-bell-t2" onchange="bellSaveFromSettings()" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:7px; font-family:'Pretendard';"></label>
+                        <label style="font-size:12px; color:#607d8b;">3교시 <input type="time" id="set-bell-t3" onchange="bellSaveFromSettings()" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:7px; font-family:'Pretendard';"></label>
+                        <label style="font-size:12px; color:#607d8b;">4교시 <input type="time" id="set-bell-t4" onchange="bellSaveFromSettings()" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:7px; font-family:'Pretendard';"></label>
+                        <label style="font-size:12px; color:#607d8b;">5교시 <input type="time" id="set-bell-t5" onchange="bellSaveFromSettings()" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:7px; font-family:'Pretendard';"></label>
+                        <label style="font-size:12px; color:#607d8b;">6교시 <input type="time" id="set-bell-t6" onchange="bellSaveFromSettings()" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:7px; font-family:'Pretendard';"></label>
+                    </div>
+                    <input type="text" id="set-bell-msg" onchange="bellSaveFromSettings()" placeholder="팝업 문구" style="width:100%; padding:9px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box; font-family:'Pretendard'; margin-top:8px; font-size:13px;">
+                    <div style="text-align:right; margin-top:8px;"><button type="button" class="reset-btn" style="background:#eceff4; color:#607d8b; box-shadow:none; font-size:13px;" onclick="bellTestFire()">🔔 미리 들어보기</button></div>
                 </div>
 
                 <div class="setting-group" style="background:#eef4fb; padding:14px; border-radius:10px; border:1px solid #cfe0f3;">
@@ -3973,9 +4003,11 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.14';
+        const APP_VERSION = '1.15';
         const APP_VERSION_DATE = '2026-09-02';
         const APP_CHANGELOG = [
+            'v1.15 (2026-09-02) — 🔔 수업 시작 1분 전 알림',
+            '  · 교시 시작 1분 전 종소리 3번 + 준비 팝업(1분 뒤 자동 닫힘) · 기초 세팅에서 시각 설정',
             'v1.14 (2026-09-02) — 🤖 AI 수업 자동입력',
             '  · 아침칠판 [AI 수업 입력] — 계획 붙여넣으면 교시별 과목·내용·쪽수·준비물 자동 채움',
             'v1.13 (2026-09-02) — 🖥️ 학급 전환 바 숨기기',
@@ -4304,6 +4336,7 @@ var qrcode = function() {
 
             if(window.clockInterval) clearInterval(window.clockInterval);
             updateClock(); window.clockInterval = setInterval(updateClock, 1000);
+            bellStart(); // 🔔 수업 시작 1분 전 알림 감시 시작(교사 화면)
             // 마지막으로 보던 탭 복원 (반 전환해도 같은 화면 유지)
             try { var _lt = localStorage.getItem('lastTab'); if(_lt && _lt !== 'board' && document.getElementById(_lt + '-tab')) setTimeout(function(){ switchTab(_lt); }, 0); } catch(e) {}
             
@@ -4743,6 +4776,50 @@ var qrcode = function() {
             } catch(e){ alert('오류: ' + e.message); }
             finally { if(btn){ btn.disabled = false; btn.innerHTML = orig; } }
         }
+
+        // 🔔 수업 시작 1분 전 알림 (종소리 3번 + 팝업, 1분 뒤 자동 닫힘)
+        const BELL_DEFAULT_MSG = '수업 1분 전! 교과서와 알짜정리 노트를 준비해 주세요';
+        function bellCfgGet(){ try{ return JSON.parse(localStorage.getItem('bellCfg') || 'null') || {}; }catch(e){ return {}; } }
+        function bellCfgSave(c){ try{ localStorage.setItem('bellCfg', JSON.stringify(c)); }catch(e){} }
+        function bellLoadSettings(){
+            const c = bellCfgGet();
+            const times = (c && c.t) ? c.t : ['09:00','09:50','10:40','11:30','13:10','14:00'];
+            for(let i=1;i<=6;i++){ const el=document.getElementById('set-bell-t'+i); if(el) el.value = times[i-1] || ''; }
+            const on=document.getElementById('set-bell-on'); if(on) on.checked = !!(c && c.on);
+            const m=document.getElementById('set-bell-msg'); if(m) m.value = (c && c.msg) || BELL_DEFAULT_MSG;
+        }
+        function bellSaveFromSettings(){
+            const t=[]; for(let i=1;i<=6;i++){ const el=document.getElementById('set-bell-t'+i); t.push(el ? el.value : ''); }
+            const on=document.getElementById('set-bell-on'); const m=document.getElementById('set-bell-msg');
+            bellCfgSave({ on: on ? on.checked : false, t:t, msg:(m && m.value.trim()) || BELL_DEFAULT_MSG });
+            bellStart();
+        }
+        let _bellLastFire='';
+        function bellTick(){
+            const c=bellCfgGet(); if(!c.on) return;
+            if(typeof studentNum!=='undefined' && studentNum!=null) return; // 학생 화면에선 안 울림
+            const now=new Date();
+            const hhmm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+            const times=c.t||[];
+            for(let i=0;i<times.length;i++){
+                const t=(times[i]||'').trim(); if(!/^\d{1,2}:\d{2}$/.test(t)) continue;
+                const parts=t.split(':'); const d=new Date(now); d.setHours(parseInt(parts[0]), parseInt(parts[1])-1, 0, 0);
+                const at=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+                if(at===hhmm){ const key=hhmm+'#'+i; if(_bellLastFire===key) return; _bellLastFire=key; bellFire(c.msg, i+1, 60000); return; }
+            }
+        }
+        function bellFire(msg, period, autoMs){
+            for(let k=0;k<3;k++) setTimeout(function(){ try{ SFX.ding(); }catch(e){} }, k*650);
+            const el=document.getElementById('bell-popup'); if(!el) return;
+            document.getElementById('bell-popup-msg').innerText = msg || BELL_DEFAULT_MSG;
+            document.getElementById('bell-popup-period').innerText = period ? (period + '교시 시작 1분 전') : '미리 듣기';
+            el.style.display='flex';
+            if(window._bellTimeout) clearTimeout(window._bellTimeout);
+            window._bellTimeout=setTimeout(function(){ el.style.display='none'; }, autoMs || 60000);
+        }
+        function bellClose(){ const el=document.getElementById('bell-popup'); if(el) el.style.display='none'; if(window._bellTimeout) clearTimeout(window._bellTimeout); }
+        function bellTestFire(){ const m=document.getElementById('set-bell-msg'); bellFire((m && m.value) || BELL_DEFAULT_MSG, null, 5000); }
+        function bellStart(){ if(!window._bellInterval) window._bellInterval=setInterval(bellTick, 15000); }
 
         function saveDashboard(isSilent = false) {
             if(isTabletMode) return;
@@ -7428,6 +7505,7 @@ var qrcode = function() {
                 document.getElementById('set-birthdays').value = d.birthdays || "";
                 document.getElementById('set-gemini-key').value = localStorage.getItem('geminiApiKey') || "";
                 var _cb = document.getElementById('set-show-classbar'); if(_cb){ try{ _cb.checked = localStorage.getItem('hideClassBar') !== '1'; }catch(e){ _cb.checked = true; } }
+                if(typeof bellLoadSettings === 'function') bellLoadSettings();
                 document.getElementById('set-duty-tasks').value = d.duty || "";
                 document.getElementById('set-mon-m').value = d.monM || ""; ttSetDay('mon', d.monT);
                 document.getElementById('set-tue-m').value = d.tueM || ""; ttSetDay('tue', d.tueT);
