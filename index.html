@@ -2864,8 +2864,24 @@ var qrcode = function() {
                                 <button class="reset-btn" style="background:transparent; color:#546e7a; padding:4px 8px; box-shadow:none;" onclick="changeFontSize(2)" title="글자 확대"><i class="fa-solid fa-plus"></i></button>
                             </div>
                             
+                            <button class="action-btn" style="background:#7b6cd9; padding: 8px 15px; border-radius: 8px;" onclick="aiFillLessonsOpen()"><i class="fa-solid fa-robot"></i> AI 수업 입력</button>
                             <button class="action-btn" style="background:#5c6bc0; padding: 8px 15px; border-radius: 8px;" onclick="autoFillDashboard()"><i class="fa-solid fa-wand-magic-sparkles"></i> 불러오기</button>
                             <button class="action-btn" style="background:#0288d1; padding: 8px 15px; border-radius: 8px;" onclick="saveDashboard()"><i class="fa-solid fa-floppy-disk"></i> 저장</button>
+                        </div>
+
+                        <!-- 🤖 AI 수업 자동입력 모달 -->
+                        <div id="ai-lesson-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2100; align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) aiFillLessonsClose()">
+                            <div style="background:#fff; border-radius:18px; max-width:520px; width:100%; max-height:90vh; overflow-y:auto; padding:22px; text-align:left;">
+                                <div style="font-size:16px; font-weight:800; color:#51618a; margin-bottom:4px;">🤖 AI 수업 자동입력</div>
+                                <p style="font-size:12px; color:#666; line-height:1.6; margin:4px 0 10px;">오늘 수업 계획을 <b>편하게 붙여넣으면</b> AI가 교시별 <b>과목·학습내용·쪽수·준비물</b> 칸에 나눠 채워줘요. (채운 뒤 자동저장) 쪽수·준비물은 <b>쓴 것만</b> 넣어요.</p>
+                                <div style="font-size:11px; color:#9aa4b2; background:#f6f8fb; border-radius:8px; padding:8px 10px; margin-bottom:8px; line-height:1.6;">예) 1교시 국어 서평 쓰기 국57-61 서평쓸책 · 2교시 사회 청동기 생활 사18~23 학습지 · 3교시 영어 전담 …</div>
+                                <textarea id="ai-lesson-input" rows="7" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box; font-family:'Pretendard'; font-size:13px; line-height:1.5;" placeholder="여기에 오늘 수업 계획을 붙여넣으세요"></textarea>
+                                <div style="display:flex; gap:8px; margin-top:12px;">
+                                    <button class="reset-btn" style="flex:1;" onclick="aiFillLessonsClose()">취소</button>
+                                    <button class="action-btn" id="ai-lesson-run" style="flex:2; background:#7b6cd9;" onclick="aiFillLessonsRun()"><i class="fa-solid fa-robot"></i> AI로 칸 채우기</button>
+                                </div>
+                                <p style="font-size:11px; color:#b0bcc9; margin:10px 0 0; line-height:1.6;">※ 기초 세팅의 Gemini API 키를 사용해요. 채운 뒤 틀린 칸은 직접 고치면 돼요.</p>
+                            </div>
                         </div>
 
                         <!-- ✨ 미니멀해진 시간표 레이아웃 (아이콘 및 placeholder 제거) -->
@@ -3957,9 +3973,11 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.13';
+        const APP_VERSION = '1.14';
         const APP_VERSION_DATE = '2026-09-02';
         const APP_CHANGELOG = [
+            'v1.14 (2026-09-02) — 🤖 AI 수업 자동입력',
+            '  · 아침칠판 [AI 수업 입력] — 계획 붙여넣으면 교시별 과목·내용·쪽수·준비물 자동 채움',
             'v1.13 (2026-09-02) — 🖥️ 학급 전환 바 숨기기',
             '  · 위쪽 학급 전환 바에 [숨기기] · [기초 세팅]에서 다시 켜기(담임은 꺼도 됨)',
             'v1.12 (2026-08-27) — 🤖 AI 생기부 문장 만들기',
@@ -4667,6 +4685,63 @@ var qrcode = function() {
                     }
                 } else { if(!isTabletMode) autoFillDashboard(true); }
             });
+        }
+
+        // 🤖 AI 수업 자동입력 — 붙여넣은 계획을 Gemini로 교시별 칸에 채우고 저장
+        function aiFillLessonsOpen(){
+            document.getElementById('ai-lesson-input').value = '';
+            document.getElementById('ai-lesson-modal').style.display = 'flex';
+            setTimeout(function(){ var t = document.getElementById('ai-lesson-input'); if(t) t.focus(); }, 50);
+        }
+        function aiFillLessonsClose(){ document.getElementById('ai-lesson-modal').style.display = 'none'; }
+        function aiSetCell(id, val){ var el = document.getElementById(id); if(el && val != null && String(val).trim() !== '') el.innerText = String(val).trim(); }
+        async function aiFillLessonsRun(){
+            const apiKey = localStorage.getItem('geminiApiKey');
+            if(!apiKey){ alert('먼저 [기초 세팅]에서 구글(Gemini) API 키를 입력해 주세요.'); return; }
+            const text = (document.getElementById('ai-lesson-input').value || '').trim();
+            if(!text){ alert('오늘 수업 계획을 붙여넣어 주세요.'); return; }
+            const btn = document.getElementById('ai-lesson-run');
+            const orig = btn ? btn.innerHTML : '';
+            if(btn){ btn.disabled = true; btn.innerHTML = '🤖 AI가 정리하는 중...'; }
+            const prompt = '아래는 초등학교 교사가 대충 적은 하루 수업 계획이다. 1~6교시로 나눠 JSON으로만 반환하라.\n'
+                + '형식: {"periods":[{"n":1,"sub":"과목","obj":"학습내용","page":"쪽수","prep":"준비물"}]}\n'
+                + '규칙:\n- n은 1~6 교시 번호. 있는 교시만.\n- sub=과목(국어/수학/사회/과학/영어/체육/음악/미술/실과/도덕/창체 등), 전담이면 sub에 과목, obj는 "전담".\n'
+                + '- page=쪽수는 본문에 적힌 숫자만(예 "57~61", "26~27", "80~81"). 여러 개면 그대로. 없으면 "".\n'
+                + '- prep=준비물은 적힌 것만(예 "학습지","가위","서평 쓸 책"). 없으면 "".\n'
+                + '- obj=학습내용은 원문 그대로 간결히. 없으면 "".\n- 쪽수·준비물을 지어내지 말 것. 설명 없이 JSON만.\n\n[수업 계획]\n' + text;
+            const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(apiKey);
+            const reqBody = JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: 'application/json', temperature: 0 } });
+            try {
+                let data = null;
+                for(let attempt = 0; attempt < 3; attempt++){
+                    const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: reqBody });
+                    data = await res.json();
+                    if(res.ok && !data.error) break;
+                    const msg = (data.error && data.error.message) || '';
+                    const transient = res.status === 503 || res.status === 429 || /high demand|overloaded|unavailable|try again/i.test(msg);
+                    if(transient && attempt < 2){ if(btn) btn.innerHTML = '🤖 혼잡… 재시도 ' + (attempt + 2) + '/3'; await new Promise(function(r){ setTimeout(r, 1500 * (attempt + 1)); }); continue; }
+                    alert('AI 호출 오류: ' + (msg || res.status) + (transient ? '\n\n지금 AI 서버가 혼잡해요. 30초쯤 뒤 다시 눌러주세요.' : '')); return;
+                }
+                const cand = (data.candidates || [])[0];
+                let out = cand ? (((cand.content && cand.content.parts) || []).map(function(p){ return p.text || ''; }).join('')).trim() : '';
+                out = out.replace(/^```(?:json)?/, '').replace(/```$/, '').trim();
+                let parsed; try { parsed = JSON.parse(out || '{}'); } catch(e){ alert('AI 응답을 이해하지 못했어요. 다시 시도해 주세요.'); return; }
+                const periods = (parsed && parsed.periods) || [];
+                if(!periods.length){ alert('교시를 못 찾았어요. 예: "1교시 국어 …" 처럼 교시를 적어 주세요.'); return; }
+                let filled = 0;
+                periods.forEach(function(p){
+                    const i = parseInt(p.n); if(!(i >= 1 && i <= 6)) return;
+                    aiSetCell('view-tt-sub-' + i, p.sub);
+                    aiSetCell('view-tt-obj-' + i, p.obj);
+                    aiSetCell('view-tt-page-' + i, p.page);
+                    aiSetCell('view-tt-prep-' + i, p.prep);
+                    filled++;
+                });
+                if(typeof saveDashboard === 'function') saveDashboard();
+                aiFillLessonsClose();
+                if(typeof rpgToast === 'function') rpgToast('🤖 ' + filled + '교시 입력·저장 완료! 틀린 칸은 직접 고치세요');
+            } catch(e){ alert('오류: ' + e.message); }
+            finally { if(btn){ btn.disabled = false; btn.innerHTML = orig; } }
         }
 
         function saveDashboard(isSilent = false) {
