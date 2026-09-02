@@ -2824,6 +2824,7 @@ var qrcode = function() {
                 <button class="tab-btn" onclick="switchTab('seating')" title="자리 배치"><i class="fa-solid fa-chair"></i> <span class="tab-text">자리 배치</span></button>
                 <button class="tab-btn" onclick="switchTab('rpg')" title="성장(상벌점)"><i class="fa-solid fa-dragon"></i> <span class="tab-text">성장</span></button>
                 <button class="tab-btn" onclick="switchTab('reading')" title="독서"><i class="fa-solid fa-book-open"></i> <span class="tab-text">독서</span></button>
+                <button class="tab-btn" onclick="switchTab('postit')" title="할일 포스트잇"><i class="fa-solid fa-note-sticky"></i> <span class="tab-text">할일</span></button>
                 <button class="tab-btn" onclick="switchTab('bookmark')" title="바로가기"><i class="fa-solid fa-link"></i> <span class="tab-text">바로가기</span></button>
             </div>
             <div class="sidebar-bottom">
@@ -3186,6 +3187,40 @@ var qrcode = function() {
                             <div id="ns-board" style="display:none; background:linear-gradient(135deg,#3f5166,#2d3c4e); color:#eceff4; text-align:center; padding:12px; border-radius:10px; font-weight:800; font-size:20px; letter-spacing:6px; margin:0 auto 16px auto; max-width:520px; box-shadow:0 10px 24px rgba(45,60,78,0.32);">칠 판</div>
                             <div id="ns-result"></div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 📌 할일 포스트잇 탭 (로컬 저장 · 이 PC에만) -->
+            <div id="postit-tab" class="content-section">
+                <div class="picker-box" style="text-align:left;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+                        <h2 style="color:var(--dark-blue); margin:0;"><i class="fa-solid fa-note-sticky"></i> 할일 포스트잇 <span style="font-size:12px; color:#b0bcc9; font-weight:400;">(이 컴퓨터에만 저장 · 서버 안 씀)</span></h2>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button class="action-btn" style="background:#5b97d1; padding:9px 14px;" onclick="postitPopout()"><i class="fa-solid fa-window-restore"></i> 위젯 창으로 (2번 모니터)</button>
+                            <button class="action-btn" style="background:#8e6ec8; padding:9px 14px;" onclick="postitImportOpen()"><i class="fa-solid fa-file-import"></i> 노션에서 가져오기</button>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; background:#f8f9fb; border:1px solid #eef1f6; border-radius:12px; padding:12px; margin-bottom:16px;">
+                        <input id="postit-input" placeholder="할일을 적고 Enter (예: 학습지 인쇄)" style="flex:1; min-width:180px; padding:10px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box; font-family:'Pretendard';" onkeypress="if(event.key==='Enter')postitAdd()">
+                        <div id="postit-color-pick" style="display:flex; gap:5px;"></div>
+                        <button class="action-btn" style="background:#26a69a; padding:10px 16px;" onclick="postitAdd()"><i class="fa-solid fa-plus"></i> 붙이기</button>
+                    </div>
+                    <div id="postit-empty" style="display:none; text-align:center; color:#aab2bd; padding:40px 20px; line-height:1.7;">아직 포스트잇이 없어요.<br>위에 할일을 적어 <b>붙이기</b> 하거나, <b>노션에서 가져오기</b> 하세요.</div>
+                    <div id="postit-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:14px;"></div>
+                    <p style="font-size:11px; color:#c8cdd4; margin-top:16px;">포스트잇을 <b>체크(✓)</b>하면 완료로 떼어져요. 이 목록은 이 브라우저에만 저장돼요(다른 기기와 안 섞임).</p>
+                </div>
+            </div>
+
+            <!-- 📌 할일: 노션 가져오기(붙여넣기) 모달 -->
+            <div id="postit-import-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2100; align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) postitImportClose()">
+                <div style="background:#fff; border-radius:18px; max-width:480px; width:100%; max-height:90vh; overflow-y:auto; padding:22px; text-align:left;">
+                    <div style="font-size:16px; font-weight:800; color:#51618a; margin-bottom:4px;">📥 노션에서 가져오기</div>
+                    <p style="font-size:12px; color:#666; line-height:1.6; margin:4px 0 10px;">노션 할일을 <b>복사해서 붙여넣으면</b> 한 줄에 하나씩 포스트잇이 돼요. (체크박스 <code>[ ]</code>·<code>-</code>·<code>•</code> 같은 기호는 자동으로 떼어내요.)<br>제(클로드)게 "노션 할일 가져와줘" 하시면 목록을 만들어 드릴게요 — 그걸 붙여넣어도 돼요.</p>
+                    <textarea id="postit-import-text" rows="8" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box; font-family:'Pretendard'; font-size:13px; line-height:1.5;" placeholder="- [ ] 학습지 인쇄&#10;- [ ] 독서록 검사&#10;- 회의 자료 준비"></textarea>
+                    <div style="display:flex; gap:8px; margin-top:12px;">
+                        <button class="reset-btn" style="flex:1;" onclick="postitImportClose()">취소</button>
+                        <button class="action-btn" style="flex:2; background:#8e6ec8;" onclick="postitImportRun()">포스트잇으로 붙이기</button>
                     </div>
                 </div>
             </div>
@@ -4018,9 +4053,12 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.16';
+        const APP_VERSION = '1.17';
         const APP_VERSION_DATE = '2026-09-02';
         const APP_CHANGELOG = [
+            'v1.17 (2026-09-02) — 📌 할일 포스트잇 (로컬)',
+            '  · 새 [할일] 탭 · 스티커 메모 · 색 변경 · 완료 체크 · 노션 붙여넣기 가져오기',
+            '  · [위젯 창]으로 빼서 2번 모니터에 띄우기(같은 목록 실시간 공유) · 이 PC에만 저장',
             'v1.16 (2026-09-02) — 📱 앱으로 설치(PWA)',
             '  · 크롬/엣지 주소창 [설치]로 독립 창·바탕화면 아이콘 · 데스크톱 앱처럼 사용',
             'v1.15 (2026-09-02) — 🔔 수업 시작 1분 전 알림',
@@ -4838,6 +4876,121 @@ var qrcode = function() {
         function bellTestFire(){ const m=document.getElementById('set-bell-msg'); bellFire((m && m.value) || BELL_DEFAULT_MSG, null, 5000); }
         function bellStart(){ if(!window._bellInterval) window._bellInterval=setInterval(bellTick, 15000); }
 
+        // 📌 할일 포스트잇 — 이 브라우저(localStorage)에만 저장. 서버·로그인·Firebase 안 씀.
+        const POSTIT_COLORS = [
+            { bg:'#fff6b0', border:'#f0dd76' }, { bg:'#ffd9e6', border:'#f4b3cc' },
+            { bg:'#d3ecff', border:'#a9d4f5' }, { bg:'#d9f5dd', border:'#aee0b6' },
+            { bg:'#e9dcff', border:'#cbb8f0' }
+        ];
+        let postitPickColor = 0;
+        function postitGet(){ try{ return JSON.parse(localStorage.getItem('postits') || '[]') || []; }catch(e){ return []; } }
+        function postitSave(arr){ try{ localStorage.setItem('postits', JSON.stringify(arr)); }catch(e){} }
+        function postitRenderColorPicker(){
+            const el = document.getElementById('postit-color-pick'); if(!el) return;
+            el.innerHTML = POSTIT_COLORS.map(function(c,i){
+                const on = i === postitPickColor;
+                return '<span onclick="postitPickColor=' + i + ';postitRenderColorPicker();" title="색" style="width:20px;height:20px;border-radius:50%;background:' + c.bg + ';border:2px solid ' + (on ? '#5b6bb5' : c.border) + ';cursor:pointer;display:inline-block;' + (on ? 'box-shadow:0 0 0 2px #dfe4f5;' : '') + '"></span>';
+            }).join('');
+        }
+        function postitRender(){
+            postitRenderColorPicker();
+            const grid = document.getElementById('postit-grid'); const empty = document.getElementById('postit-empty');
+            if(!grid) return;
+            const list = postitGet();
+            if(list.length === 0){ grid.innerHTML = ''; if(empty) empty.style.display = 'block'; return; }
+            if(empty) empty.style.display = 'none';
+            grid.innerHTML = list.map(function(p){
+                const c = POSTIT_COLORS[p.color || 0] || POSTIT_COLORS[0];
+                const tag = p.source === 'notion' ? '<span style="position:absolute;top:8px;right:8px;font-size:10px;background:rgba(255,255,255,0.75);border-radius:6px;padding:1px 6px;color:#7b5bd0;font-weight:800;">📘노션</span>' : '';
+                return '<div style="background:' + c.bg + ';border:1px solid ' + c.border + ';border-radius:12px;padding:12px 12px 10px;min-height:96px;display:flex;flex-direction:column;box-shadow:0 3px 10px rgba(120,144,180,0.12);position:relative;">'
+                    + tag
+                    + '<div style="flex:1;font-size:14px;color:#3a4a5a;line-height:1.5;font-weight:600;white-space:pre-wrap;word-break:break-word;padding-right:' + (p.source === 'notion' ? '44px' : '0') + ';">' + escapeHtml(p.text) + '</div>'
+                    + '<div style="display:flex;gap:6px;margin-top:8px;align-items:center;">'
+                    + '<button onclick="postitCycleColor(\'' + p.id + '\')" title="색 바꾸기" style="width:22px;height:22px;flex:none;border-radius:50%;border:2px solid rgba(0,0,0,0.15);background:' + c.border + ';cursor:pointer;"></button>'
+                    + '<button onclick="postitDone(\'' + p.id + '\')" style="flex:1;background:rgba(255,255,255,0.85);border:1px solid rgba(0,0,0,0.06);border-radius:8px;padding:6px;font-weight:800;color:#2e7d32;cursor:pointer;font-family:inherit;font-size:13px;">✓ 완료</button>'
+                    + '<button onclick="postitDelete(\'' + p.id + '\')" title="지우기" style="background:transparent;border:none;color:#b0705a;cursor:pointer;font-size:14px;padding:6px 8px;">✕</button>'
+                    + '</div></div>';
+            }).join('');
+        }
+        function postitAdd(){
+            const inp = document.getElementById('postit-input'); if(!inp) return;
+            const text = (inp.value || '').trim(); if(!text) return;
+            const list = postitGet();
+            list.unshift({ id: 'p' + Date.now() + Math.floor(Math.random()*1000), text: text, color: postitPickColor, source: 'manual' });
+            postitSave(list); inp.value = ''; postitRender(); inp.focus();
+        }
+        function postitDone(id){ postitSave(postitGet().filter(function(p){ return p.id !== id; })); postitRender(); try{ if(typeof SFX!=='undefined' && SFX.point) SFX.point(); }catch(e){} }
+        function postitDelete(id){ postitSave(postitGet().filter(function(p){ return p.id !== id; })); postitRender(); }
+        function postitImportOpen(){ document.getElementById('postit-import-text').value = ''; document.getElementById('postit-import-modal').style.display = 'flex'; }
+        function postitImportClose(){ document.getElementById('postit-import-modal').style.display = 'none'; }
+        function postitImportRun(){
+            const raw = (document.getElementById('postit-import-text').value || '');
+            const lines = raw.split('\n');
+            const list = postitGet();
+            let added = 0;
+            lines.forEach(function(l){
+                let t = l.trim(); if(!t) return;
+                if(/^\s*[-*•]?\s*\[x\]/i.test(t)) return; // 이미 완료된 항목은 건너뜀
+                t = t.replace(/^\s*(?:[-*•▪◦☐□▢]\s*)?(?:\[\s?\]\s*)?(?:\d+[.)]\s*)?/, '').trim();
+                if(!t) return;
+                list.unshift({ id: 'p' + Date.now() + '_' + added + Math.floor(Math.random()*1000), text: t, color: 2, source: 'notion' });
+                added++;
+            });
+            if(added === 0){ alert('가져올 할일을 못 찾았어요. 한 줄에 하나씩 넣어주세요.'); return; }
+            postitSave(list); postitImportClose(); postitRender();
+            if(typeof rpgToast === 'function') rpgToast('📥 ' + added + '개 포스트잇으로 붙였어요');
+        }
+        function postitCycleColor(id){
+            const list = postitGet();
+            const p = list.find(function(x){ return x.id === id; }); if(!p) return;
+            p.color = ((p.color || 0) + 1) % POSTIT_COLORS.length;
+            postitSave(list); postitRender();
+        }
+        // 위젯 창(별도 창)과 본 화면이 같은 localStorage를 공유 → 한쪽이 바꾸면 다른 쪽도 갱신
+        window.addEventListener('storage', function(e){ if(e.key === 'postits' && document.getElementById('postit-grid')) postitRender(); });
+        // 🪟 위젯 창으로 열기 — 2번 모니터로 옮기거나 옆에 띄워두는 스티커 메모 창(같은 localStorage 공유)
+        function postitPopout(){
+            const w = window.open('', 'postitWidget', 'width=340,height=580');
+            if(!w){ alert('새 창(팝업)이 차단됐어요. 팝업을 허용한 뒤 다시 눌러주세요.'); return; }
+            const colors = JSON.stringify(POSTIT_COLORS);
+            const html = '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>📌 할일 위젯</title>'
+                + '<style>*{box-sizing:border-box}body{margin:0;font-family:"맑은 고딕",sans-serif;background:#f3f5f9;padding:10px;}'
+                + 'h1{font-size:14px;margin:0 0 8px;color:#51618a;display:flex;justify-content:space-between;align-items:center;}'
+                + '.add{display:flex;gap:5px;margin-bottom:8px;}.add input{flex:1;padding:8px;border:1px solid #ccc;border-radius:7px;font-family:inherit;}'
+                + '.add button{border:none;background:#26a69a;color:#fff;border-radius:7px;padding:8px 10px;font-weight:700;cursor:pointer;}'
+                + '.card{border-radius:10px;padding:9px 10px 8px;margin-bottom:8px;box-shadow:0 2px 6px rgba(0,0,0,0.08);position:relative;}'
+                + '.card .txt{font-size:13px;color:#3a4a5a;font-weight:600;line-height:1.45;white-space:pre-wrap;word-break:break-word;}'
+                + '.card .row{display:flex;gap:5px;margin-top:6px;align-items:center;}'
+                + '.card .dot{width:20px;height:20px;flex:none;border-radius:50%;border:2px solid rgba(0,0,0,0.15);cursor:pointer;}'
+                + '.card .done{flex:1;background:rgba(255,255,255,0.85);border:1px solid rgba(0,0,0,0.06);border-radius:7px;padding:5px;font-weight:800;color:#2e7d32;cursor:pointer;font-size:12px;}'
+                + '.card .del{background:transparent;border:none;color:#b0705a;cursor:pointer;font-size:13px;}'
+                + '.tag{position:absolute;top:6px;right:6px;font-size:9px;background:rgba(255,255,255,0.75);border-radius:5px;padding:1px 5px;color:#7b5bd0;font-weight:800;}'
+                + '.empty{color:#aab2bd;font-size:12px;text-align:center;padding:20px;}</style></head><body>'
+                + '<h1>📌 할일 <span style="font-size:10px;color:#b0bcc9;font-weight:400;">이 창을 2번 모니터로 옮겨두세요</span></h1>'
+                + '<div class="add"><input id="i" placeholder="할일 적고 Enter"><button id="b">+</button></div>'
+                + '<div id="g"></div>'
+                + '<scr' + 'ipt>'
+                + 'var COL=' + colors + ';'
+                + 'function get(){try{return JSON.parse(localStorage.getItem("postits")||"[]")||[]}catch(e){return[]}}'
+                + 'function save(a){try{localStorage.setItem("postits",JSON.stringify(a))}catch(e){}}'
+                + 'function esc(s){return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}'
+                + 'function render(){var l=get(),g=document.getElementById("g");if(!l.length){g.innerHTML=\'<div class=empty>포스트잇이 없어요.<br>위에 적어 추가하세요.</div>\';return;}'
+                + 'g.innerHTML=l.map(function(p){var c=COL[p.color||0]||COL[0];'
+                + 'return \'<div class=card style="background:\'+c.bg+\';border:1px solid \'+c.border+\'">\'+(p.source==="notion"?\'<span class=tag>📘노션</span>\':"")'
+                + '+\'<div class=txt style="padding-right:\'+(p.source==="notion"?"40px":"0")+\'">\'+esc(p.text)+\'</div>\''
+                + '+\'<div class=row><button class=dot style="background:\'+c.border+\'" onclick="cyc(\\\'\'+p.id+\'\\\')"></button>\''
+                + '+\'<button class=done onclick="don(\\\'\'+p.id+\'\\\')">✓ 완료</button>\''
+                + '+\'<button class=del onclick="del(\\\'\'+p.id+\'\\\')">✕</button></div></div>\';}).join("");}'
+                + 'function add(){var i=document.getElementById("i"),t=(i.value||"").trim();if(!t)return;var l=get();l.unshift({id:"p"+Date.now()+Math.floor(Math.random()*1000),text:t,color:0,source:"manual"});save(l);i.value="";render();}'
+                + 'function don(id){save(get().filter(function(p){return p.id!==id}));render();}'
+                + 'function del(id){save(get().filter(function(p){return p.id!==id}));render();}'
+                + 'function cyc(id){var l=get(),p=l.find(function(x){return x.id===id});if(!p)return;p.color=((p.color||0)+1)%COL.length;save(l);render();}'
+                + 'document.getElementById("b").onclick=add;document.getElementById("i").addEventListener("keypress",function(e){if(e.key==="Enter")add();});'
+                + 'window.addEventListener("storage",function(e){if(e.key==="postits")render();});render();'
+                + '</scr' + 'ipt></body></html>';
+            w.document.open(); w.document.write(html); w.document.close();
+        }
+
         function saveDashboard(isSilent = false) {
             if(isTabletMode) return;
             const d = {
@@ -5645,6 +5798,7 @@ var qrcode = function() {
             if(t === 'picker') actOnShow();
             if(t === 'rpg') rpgOnShow();
             if(t === 'reading') readingOnShow();
+            if(t === 'postit') postitRender();
 
             document.querySelectorAll('.tool-box-popup, .tool-box-inline').forEach(box => box.style.display = 'none');
         }
