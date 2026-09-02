@@ -3610,6 +3610,14 @@ var qrcode = function() {
                     <button type="button" class="action-btn" style="background:#43a047;" onclick="rpgOpenStudentGuide()"><i class="fa-solid fa-qrcode"></i> 학생 접속 QR·코드 보기</button>
                 </div>
 
+                <div class="setting-group">
+                    <label>🖥️ 화면 설정</label>
+                    <label style="display:flex; align-items:center; gap:8px; font-weight:400; font-size:14px; color:#455a64; cursor:pointer; margin-top:6px;">
+                        <input type="checkbox" id="set-show-classbar" onchange="setClassBarVisible(this.checked)">
+                        위쪽 <b>학급 전환 바</b> 보이기 <span style="color:#90a4ae; font-size:12px;">(여러 반 쓰는 전담 선생님용 · 담임은 꺼도 돼요)</span>
+                    </label>
+                </div>
+
                 <div class="setting-group" style="background:#eef4fb; padding:14px; border-radius:10px; border:1px solid #cfe0f3;">
                     <label style="color:#4285f4;">🤖 AI 일정 자동입력용 구글(Gemini) API 키</label>
                     <p style="font-size:12px; color:#666; margin:4px 0 8px 0; line-height:1.5;">메신저 글을 AI가 읽고 일정으로 바꿔주는 기능에 필요해요. <b>Google AI Studio(aistudio.google.com)에서 무료로 발급</b>받을 수 있어요. 이 키는 <b>이 브라우저에만 저장</b>되고 공유되지 않습니다. (없어도 다른 기능은 정상 작동)</p>
@@ -3949,9 +3957,11 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.12';
-        const APP_VERSION_DATE = '2026-08-27';
+        const APP_VERSION = '1.13';
+        const APP_VERSION_DATE = '2026-09-02';
         const APP_CHANGELOG = [
+            'v1.13 (2026-09-02) — 🖥️ 학급 전환 바 숨기기',
+            '  · 위쪽 학급 전환 바에 [숨기기] · [기초 세팅]에서 다시 켜기(담임은 꺼도 됨)',
             'v1.12 (2026-08-27) — 🤖 AI 생기부 문장 만들기',
             '  · 독서 학생 카드 클릭 → [AI 생기부 문장 만들기](Gemini)로 문구 초안 생성·복사',
             'v1.11 (2026-08-27) — 📄 독서 기록 생기부용 내보내기',
@@ -4449,6 +4459,9 @@ var qrcode = function() {
             }
             // 학급이 하나뿐이면 바 숨김 (담임 단일 학급은 스위처가 필요 없음)
             if(list.length < 2) { bar.style.display = 'none'; return; }
+            // 사용자가 [기초 세팅]에서 숨기기로 해뒀으면 안 보임 (담임이라 전환 바 안 쓰는 경우)
+            var hideBar = false; try { hideBar = localStorage.getItem('hideClassBar') === '1'; } catch(e){}
+            if(hideBar) { bar.style.display = 'none'; return; }
             let html = '<span style="font-size:12px; color:#90a4ae; font-weight:800; margin:0 4px;"><i class="fa-solid fa-chalkboard-user"></i> 학급</span>';
             list.forEach(c => {
                 const on = c.id === currentRoom;
@@ -4457,8 +4470,18 @@ var qrcode = function() {
             });
             html += '<button class="class-chip add" onclick="switchAddClass()" title="학급 추가"><i class="fa-solid fa-plus"></i> 학급 추가</button>';
             html += '<button class="class-chip" style="background:#eceff4; color:#78909c;" onclick="classManageOpen()" title="학급 관리·삭제"><i class="fa-solid fa-gear"></i></button>';
+            html += '<button class="class-chip" style="background:transparent; color:#b6c0cf; margin-left:auto;" onclick="hideClassBar()" title="이 바 숨기기 — [기초 세팅]에서 다시 켤 수 있어요"><i class="fa-solid fa-xmark"></i> 숨기기</button>';
             bar.innerHTML = html;
             bar.style.display = 'flex';
+        }
+        function hideClassBar(){
+            try { localStorage.setItem('hideClassBar', '1'); } catch(e){}
+            var b = document.getElementById('class-switch-bar'); if(b) b.style.display = 'none';
+            if(typeof rpgToast === 'function') rpgToast('학급 전환 바를 숨겼어요 (기초 세팅에서 다시 켜기)');
+        }
+        function setClassBarVisible(show){
+            try { if(show) localStorage.removeItem('hideClassBar'); else localStorage.setItem('hideClassBar', '1'); } catch(e){}
+            renderClassSwitchBar();
         }
 
         // 🗑 학급 관리(삭제)
@@ -7329,6 +7352,7 @@ var qrcode = function() {
                     : ('현재 설정: ' + WEATHER_DEFAULT.place + ' — 기본값');
                 document.getElementById('set-birthdays').value = d.birthdays || "";
                 document.getElementById('set-gemini-key').value = localStorage.getItem('geminiApiKey') || "";
+                var _cb = document.getElementById('set-show-classbar'); if(_cb){ try{ _cb.checked = localStorage.getItem('hideClassBar') !== '1'; }catch(e){ _cb.checked = true; } }
                 document.getElementById('set-duty-tasks').value = d.duty || "";
                 document.getElementById('set-mon-m').value = d.monM || ""; ttSetDay('mon', d.monT);
                 document.getElementById('set-tue-m').value = d.tueM || ""; ttSetDay('tue', d.tueT);
