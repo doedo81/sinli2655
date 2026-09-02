@@ -2991,10 +2991,19 @@ var qrcode = function() {
                         <h2 style="color:var(--dark-blue); margin:0;"><i class="fa-solid fa-calendar-days"></i> 우리 반 일정 캘린더</h2>
                         <button class="action-btn" style="background:#7e57c2; padding:10px 16px;" onclick="openEventModal()">🤖 메신저로 일정 추가</button>
                     </div>
-                    <p style="color:#78909c; font-size:14px; margin:0 0 16px 0; line-height:1.5;">날짜를 누르면 그 날 일정을 추가·관리할 수 있어요. 🎂생일은 생일칸에, 🎈행사·📌업무는 전달사항에 그날 자동으로 표시됩니다.</p>
+                    <p style="color:#78909c; font-size:14px; margin:0 0 12px 0; line-height:1.5;">날짜를 누르면 그 날 일정을 추가·관리할 수 있어요. 🎂생일은 생일칸에, 🎈행사·📌업무는 전달사항에 그날 자동으로 표시됩니다.</p>
+                    <div style="display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; align-items:center;">
+                        <button id="cal-view-app" class="reset-btn" style="box-shadow:none;" onclick="gcalSetView('app')">🗓️ 아침칠판 캘린더</button>
+                        <button id="cal-view-google" class="reset-btn" style="box-shadow:none;" onclick="gcalSetView('google')">📅 구글 캘린더</button>
+                        <button class="reset-btn" style="background:transparent; color:#90a4ae; box-shadow:none; font-size:12px;" onclick="gcalSetup()"><i class="fa-solid fa-gear"></i> 구글 캘린더 주소</button>
+                    </div>
                     <div class="calendar-card cal-big" id="calendar-tab-widget">
                         <div class="cal-header" style="font-size:20px;"><span id="cal-tab-title"></span><div><i class="fa-solid fa-chevron-left" style="cursor:pointer; margin-right:18px;" onclick="changeCalTabMonth(-1)"></i><i class="fa-solid fa-chevron-right" style="cursor:pointer;" onclick="changeCalTabMonth(1)"></i></div></div>
                         <div class="cal-grid" id="cal-tab-dates"></div>
+                    </div>
+                    <div id="gcal-container" style="display:none;">
+                        <iframe id="gcal-frame" src="" style="width:100%; height:72vh; min-height:520px; border:1px solid #e6ebf3; border-radius:14px;" frameborder="0" scrolling="no"></iframe>
+                        <p id="gcal-hint" style="font-size:12px; color:#90a4ae; margin:8px 2px 0; line-height:1.6;">※ 이 PC 브라우저가 <b>선생님 구글에 로그인</b>돼 있어야 내 일정이 보여요. (아침칠판을 구글로 로그인하면 보통 자동으로 돼 있어요.) · 노션 캘린더를 구글 캘린더에 연결해두면 그 일정도 여기 같이 떠요.</p>
                     </div>
                 </div>
             </div>
@@ -4018,9 +4027,11 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.16';
+        const APP_VERSION = '1.17';
         const APP_VERSION_DATE = '2026-09-02';
         const APP_CHANGELOG = [
+            'v1.17 (2026-09-02) — 📅 구글 캘린더 연결',
+            '  · 캘린더 탭에서 [아침칠판 캘린더 / 구글 캘린더] 전환 · 내 구글 일정을 그대로 표시(임베드)',
             'v1.16 (2026-09-02) — 📱 앱으로 설치(PWA)',
             '  · 크롬/엣지 주소창 [설치]로 독립 창·바탕화면 아이콘 · 데스크톱 앱처럼 사용',
             'v1.15 (2026-09-02) — 🔔 수업 시작 1분 전 알림',
@@ -5481,8 +5492,44 @@ var qrcode = function() {
         }
         function changeMonth(v) { calDate.setMonth(calDate.getMonth() + v); renderCalendar(); }
 
+        // 📅 구글 캘린더 임베드 (캘린더 탭에서 아침칠판/구글 전환)
+        function gcalCfg(){ try{ return JSON.parse(localStorage.getItem('gcalCfg') || 'null') || {}; }catch(e){ return {}; } }
+        function gcalCfgSave(c){ try{ localStorage.setItem('gcalCfg', JSON.stringify(c)); }catch(e){} }
+        function gcalDefaultUrl(){
+            const email = (typeof auth !== 'undefined' && auth.currentUser && auth.currentUser.email) || 'doedo81@gmail.com';
+            return 'https://calendar.google.com/calendar/embed?src=' + encodeURIComponent(email) + '&ctz=Asia%2FSeoul&mode=MONTH';
+        }
+        function gcalSetView(v){ const c = gcalCfg(); c.view = v; gcalCfgSave(c); applyGcalView(); }
+        function applyGcalView(){
+            const c = gcalCfg();
+            const isG = c.view === 'google';
+            const appW = document.getElementById('calendar-tab-widget');
+            const gW = document.getElementById('gcal-container');
+            if(appW) appW.style.display = isG ? 'none' : '';
+            if(gW) gW.style.display = isG ? 'block' : 'none';
+            ['app','google'].forEach(function(k){
+                const b = document.getElementById('cal-view-' + k); if(!b) return;
+                const on = (k === (isG ? 'google' : 'app'));
+                b.style.background = on ? '#5b97d1' : '#eceff4'; b.style.color = on ? '#fff' : '#607d8b';
+            });
+            if(isG){
+                const f = document.getElementById('gcal-frame');
+                const url = (c.url || '').trim() || gcalDefaultUrl();
+                if(f && f.getAttribute('src') !== url) f.setAttribute('src', url);
+            }
+        }
+        function gcalSetup(){
+            const c = gcalCfg();
+            const cur = c.url || gcalDefaultUrl();
+            const v = prompt('구글 캘린더 "삽입 주소"를 넣으세요.\n(구글 캘린더 → 설정 → 원하는 캘린더 → 캘린더 통합 → "삽입 코드"의 src= 주소)\n\n다른 캘린더(예: 학급 전용)를 쓸 때만 바꾸면 되고,\n비운 채 확인하면 기본(내 계정 캘린더)으로 돌아가요.', cur);
+            if(v === null) return;
+            c.url = (v || '').trim(); if(c.view !== 'google') c.view = 'google';
+            gcalCfgSave(c); applyGcalView();
+        }
+
         // 🗓️ 캘린더 탭(큰 달력) 렌더링 + 날짜 클릭 시 일정창 열기
         function renderCalendarTab() {
+            applyGcalView();
             const titleEl = document.getElementById('cal-tab-title');
             if (!titleEl) return;
             const y = calDate.getFullYear(), m = calDate.getMonth();
