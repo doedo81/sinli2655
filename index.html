@@ -2456,7 +2456,7 @@ var qrcode = function() {
         .login-box { background:white; padding:40px; border-radius:25px; text-align:center; width:90%; max-width:400px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none;}
         .google-btn { background: white; border: 2px solid #ddd; padding: 12px 20px; border-radius: 30px; font-size: 16px; font-weight: bold; color: #555; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; transition: 0.3s;}
         
-        .floating-tools { position: fixed; bottom: 20px; right: 25px; z-index: 2000; display: flex; flex-direction: row; gap: 10px; align-items: flex-end; }
+        .floating-tools { position: fixed; bottom: 20px; right: 25px; z-index: 2000; display: none; flex-direction: row; gap: 10px; align-items: flex-end; }
         .tool-btn-circle { width: 55px; height: 55px; border-radius: 50%; border: none; font-size: 22px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; transition: 0.3s; color: white;}
         .tool-btn-circle:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 6px 15px rgba(0,0,0,0.2); }
         .tool-box-popup { position: absolute; right: 0; bottom: 65px; background: var(--white); padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); width: 280px; display: none; border: 2px solid var(--accent-blue); transform-origin: bottom right; z-index: 3000; }
@@ -2827,7 +2827,8 @@ var qrcode = function() {
                 <button class="tab-btn" onclick="switchTab('bookmark')" title="바로가기"><i class="fa-solid fa-link"></i> <span class="tab-text">바로가기</span></button>
             </div>
             <div class="sidebar-bottom">
-                <button class="tab-btn" onclick="openSettingsModal()" style="margin-bottom: 20px;" title="기초 세팅"><i class="fa-solid fa-gear"></i> <span class="tab-text">기초 세팅</span></button>
+                <button class="tab-btn" onclick="openSettingsModal()" title="기초 세팅"><i class="fa-solid fa-gear"></i> <span class="tab-text">기초 세팅</span></button>
+                <button class="tab-btn" id="board-edit-btn" onclick="boardToggleEdit()" style="margin-bottom: 20px;" title="화면 수정(칸 숨기기·이동)"><i class="fa-solid fa-pen-to-square"></i> <span class="tab-text">화면 수정</span></button>
                 <div id="user-profile" class="user-profile-text" style="font-size:13px; font-weight:bold; color:#666; margin-bottom:5px;"></div>
                 <button class="room-tag" onclick="switchClass()" title="다른 학급으로 가기 · 새 학급 만들기"><i class="fa-solid fa-school"></i> <span>학급 전환·추가</span></button>
                 <div class="user-profile-text" style="font-size:11px; color:#aab4c2; margin-top:8px; cursor:pointer;" onclick="showVersionInfo()" title="변경 기록 보기">버전 <span id="app-version">-</span></div>
@@ -2854,9 +2855,9 @@ var qrcode = function() {
 
             <!-- 📋 0. 대시보드 탭 -->
             <div id="board-tab" class="content-section active">
-                <div id="board-edit-bar" style="display:flex; align-items:center; gap:10px; margin-bottom:8px; flex-wrap:wrap;">
-                    <div id="board-restore-bar" style="display:none; gap:6px; flex-wrap:wrap; align-items:center; margin-right:auto;"></div>
-                    <button id="board-edit-btn" class="reset-btn" style="box-shadow:none; background:#eceff4; color:#607d8b; margin-left:auto;" onclick="boardToggleEdit()"><i class="fa-solid fa-pen-to-square"></i> 화면 수정</button>
+                <div id="board-edit-bar" style="display:none; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; background:#fff6e5; border:1px solid #f2e2b8; border-radius:10px; padding:9px 13px;">
+                    <span style="font-size:13px; color:#b0824a; font-weight:800;"><i class="fa-solid fa-pen-to-square"></i> 화면 수정 중 — 칸의 <b>✕</b>로 숨기고, <b>드래그</b>로 옮긴 뒤 사이드바 <b>[완료]</b></span>
+                    <div id="board-restore-bar" style="display:none; gap:6px; flex-wrap:wrap; align-items:center;"></div>
                 </div>
                 <div class="dashboard-grid">
                     
@@ -4031,9 +4032,12 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.18';
+        const APP_VERSION = '1.19';
         const APP_VERSION_DATE = '2026-09-02';
         const APP_CHANGELOG = [
+            'v1.19 (2026-09-02) — 🧩 화면 수정: 이동(드래그) + 버튼 위치 + 아이콘 정리',
+            '  · [화면 수정]을 사이드바(기초 세팅 아래)로 이동 · 칸을 드래그로 옮기기(열 이동 포함)',
+            '  · 오른쪽 아래 3개 아이콘(개인·모둠 뽑기·타이머) 숨김',
             'v1.18 (2026-09-02) — 🧩 화면 수정(칸 숨기기)',
             '  · [화면 수정] → 안 쓰는 칸(안전수칙·생일 등)에 ✕ 떠서 숨김 · 복원도 가능',
             'v1.17 (2026-09-02) — 📅 구글 캘린더 연결',
@@ -4371,7 +4375,7 @@ var qrcode = function() {
             if(window.clockInterval) clearInterval(window.clockInterval);
             updateClock(); window.clockInterval = setInterval(updateClock, 1000);
             bellStart(); // 🔔 수업 시작 1분 전 알림 감시 시작(교사 화면)
-            setTimeout(applyHiddenBlocks, 0); // 🧩 숨긴 칸 적용
+            setTimeout(function(){ applyBoardLayout(); applyHiddenBlocks(); }, 0); // 🧩 레이아웃·숨긴 칸 적용
 
             // 마지막으로 보던 탭 복원 (반 전환해도 같은 화면 유지)
             try { var _lt = localStorage.getItem('lastTab'); if(_lt && _lt !== 'board' && document.getElementById(_lt + '-tab')) setTimeout(function(){ switchTab(_lt); }, 0); } catch(e) {}
@@ -4877,20 +4881,28 @@ var qrcode = function() {
         let boardEditMode = false;
         function boardToggleEdit(){
             boardEditMode = !boardEditMode;
+            if(boardEditMode && typeof switchTab === 'function'){ try{ switchTab('board'); }catch(e){} }
             const btn = document.getElementById('board-edit-btn');
-            if(btn){ btn.innerHTML = boardEditMode ? '<i class="fa-solid fa-check"></i> 완료' : '<i class="fa-solid fa-pen-to-square"></i> 화면 수정'; btn.style.background = boardEditMode ? '#43a047' : '#eceff4'; btn.style.color = boardEditMode ? '#fff' : '#607d8b'; }
+            if(btn){
+                btn.innerHTML = boardEditMode ? '<i class="fa-solid fa-check"></i> <span class="tab-text">완료</span>' : '<i class="fa-solid fa-pen-to-square"></i> <span class="tab-text">화면 수정</span>';
+                btn.style.background = boardEditMode ? '#43a047' : '';
+                btn.style.color = boardEditMode ? '#fff' : '';
+            }
             boardRenderEdit();
         }
         function boardRenderEdit(){
             document.querySelectorAll('.board-x-btn').forEach(function(e){ e.remove(); });
+            const bar = document.getElementById('board-edit-bar');
             const restore = document.getElementById('board-restore-bar');
             const hidden = boardHiddenGet();
             if(!boardEditMode){
-                BOARD_BLOCKS.forEach(function(b){ const el = boardBlockEl(b.inner); if(el) el.style.opacity = ''; });
+                if(bar) bar.style.display = 'none';
+                BOARD_BLOCKS.forEach(function(b){ const el = boardBlockEl(b.inner); if(el){ el.style.opacity = ''; boardSetDraggable(el, false); } });
                 if(restore){ restore.style.display = 'none'; restore.innerHTML = ''; }
                 applyHiddenBlocks();
                 return;
             }
+            if(bar) bar.style.display = 'flex';
             // 편집 모드: 모든 칸을 보이게 하고(숨긴 건 흐리게) X/복원 버튼을 얹음
             BOARD_BLOCKS.forEach(function(b){
                 const el = boardBlockEl(b.inner); if(!el) return;
@@ -4902,6 +4914,7 @@ var qrcode = function() {
                 x.style.cssText = 'position:absolute;top:6px;right:6px;z-index:5;width:24px;height:24px;border-radius:50%;border:none;background:' + (isHidden ? '#43a047' : '#e57373') + ';color:#fff;font-weight:800;cursor:pointer;font-size:13px;line-height:1;box-shadow:0 2px 5px rgba(0,0,0,0.2);';
                 x.onclick = function(ev){ ev.stopPropagation(); if(isHidden) boardShowBlock(b.key); else boardHideBlock(b.key); };
                 el.appendChild(x);
+                boardSetDraggable(el, !isHidden); // 숨긴 칸은 드래그 불가(복원 먼저)
             });
             if(restore){
                 const hb = BOARD_BLOCKS.filter(function(b){ return hidden.indexOf(b.key) >= 0; });
@@ -4911,6 +4924,62 @@ var qrcode = function() {
         }
         function boardHideBlock(key){ const h = boardHiddenGet(); if(h.indexOf(key) < 0) h.push(key); boardHiddenSave(h); boardRenderEdit(); }
         function boardShowBlock(key){ boardHiddenSave(boardHiddenGet().filter(function(k){ return k !== key; })); boardRenderEdit(); }
+
+        // 🧩 칸 드래그로 이동(위치 바꾸기·열 이동) — 이 PC에만 저장(boardLayout)
+        let _boardDragKey = null;
+        function boardBlockKeyOfEl(el){ if(!el) return null; for(var i=0;i<BOARD_BLOCKS.length;i++){ if(el.querySelector('#' + BOARD_BLOCKS[i].inner)) return BOARD_BLOCKS[i].key; } return null; }
+        function boardSetDraggable(el, on){
+            if(!el) return;
+            el.draggable = !!on;
+            el.style.cursor = on ? 'grab' : '';
+            el.removeEventListener('dragstart', boardDragStart);
+            el.removeEventListener('dragover', boardDragOver);
+            el.removeEventListener('dragleave', boardDragLeave);
+            el.removeEventListener('drop', boardDrop);
+            el.removeEventListener('dragend', boardDragEnd);
+            if(on){
+                el.addEventListener('dragstart', boardDragStart);
+                el.addEventListener('dragover', boardDragOver);
+                el.addEventListener('dragleave', boardDragLeave);
+                el.addEventListener('drop', boardDrop);
+                el.addEventListener('dragend', boardDragEnd);
+            }
+        }
+        function boardDragStart(e){ const el = e.currentTarget; _boardDragKey = boardBlockKeyOfEl(el); el.style.opacity = '0.35'; try{ e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', _boardDragKey || ''); }catch(_){} }
+        function boardDragEnd(e){ e.currentTarget.style.opacity = '1'; document.querySelectorAll('.info-box').forEach(function(b){ b.style.outline = ''; }); }
+        function boardDragOver(e){ e.preventDefault(); try{ e.dataTransfer.dropEffect = 'move'; }catch(_){} e.currentTarget.style.outline = '2px dashed #7b6cd9'; }
+        function boardDragLeave(e){ e.currentTarget.style.outline = ''; }
+        function boardDrop(e){
+            e.preventDefault(); e.stopPropagation();
+            const target = e.currentTarget; target.style.outline = '';
+            if(!_boardDragKey) return;
+            const b = BOARD_BLOCKS.find(function(x){ return x.key === _boardDragKey; });
+            const src = b ? boardBlockEl(b.inner) : null;
+            if(!src || src === target) return;
+            const r = target.getBoundingClientRect();
+            const after = (e.clientY - r.top) > r.height / 2;
+            target.parentElement.insertBefore(src, after ? target.nextSibling : target);
+            boardSaveLayout();
+        }
+        function boardCols(){
+            const clock = document.getElementById('real-clock');
+            const cal = document.getElementById('calendar-widget');
+            return { lc: clock ? clock.closest('.column-card') : null, rc: cal ? cal.parentElement : null, calAnchor: cal };
+        }
+        function boardSaveLayout(){
+            const c = boardCols(); if(!c.lc || !c.rc) return;
+            const layout = { left:[], right:[] };
+            c.lc.querySelectorAll('.info-box').forEach(function(el){ const k = boardBlockKeyOfEl(el); if(k) layout.left.push(k); });
+            c.rc.querySelectorAll('.info-box').forEach(function(el){ const k = boardBlockKeyOfEl(el); if(k) layout.right.push(k); });
+            try{ localStorage.setItem('boardLayout', JSON.stringify(layout)); }catch(e){}
+        }
+        function applyBoardLayout(){
+            let layout = null; try{ layout = JSON.parse(localStorage.getItem('boardLayout') || 'null'); }catch(e){}
+            if(!layout) return;
+            const c = boardCols(); if(!c.lc || !c.rc) return;
+            (layout.left || []).forEach(function(k){ const b = BOARD_BLOCKS.find(function(x){ return x.key === k; }); const el = b && boardBlockEl(b.inner); if(el) c.lc.appendChild(el); });
+            (layout.right || []).forEach(function(k){ const b = BOARD_BLOCKS.find(function(x){ return x.key === k; }); const el = b && boardBlockEl(b.inner); if(!el) return; if(c.calAnchor && c.calAnchor.parentElement === c.rc) c.rc.insertBefore(el, c.calAnchor); else c.rc.appendChild(el); });
+        }
 
         function saveDashboard(isSilent = false) {
             if(isTabletMode) return;
@@ -5754,7 +5823,7 @@ var qrcode = function() {
             if(t === 'seating') nsUpdateStepUI();
             if(t === 'picker') actOnShow();
             if(t === 'rpg') rpgOnShow();
-            if(t === 'board') applyHiddenBlocks();
+            if(t === 'board'){ applyBoardLayout(); applyHiddenBlocks(); }
             if(t === 'reading') readingOnShow();
 
             document.querySelectorAll('.tool-box-popup, .tool-box-inline').forEach(box => box.style.display = 'none');
