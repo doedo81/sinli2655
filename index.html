@@ -2368,7 +2368,7 @@ var qrcode = function() {
         .tab-btn.active { background: linear-gradient(135deg, #5c6c95 0%, #434f70 100%); color: var(--white); box-shadow: 0 8px 20px rgba(56, 78, 126, 0.30); transform: translateX(5px);}
         .sidebar.collapsed .tab-btn.active { transform: none; }
 
-        .sidebar-bottom { margin-top: auto; border-top: 2px solid var(--main-sky); padding-top: 15px; text-align: center; width: 100%;}
+        .sidebar-bottom { margin-top: auto; border-top: 2px solid var(--main-sky); padding-top: 15px; text-align: left; width: 100%; position: relative;}
         .room-tag { background: #f0f4f8; color: var(--dark-blue); padding: 10px; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; border: 1px solid #cfd8dc; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; white-space: nowrap;}
         .room-tag:hover { background: #e53935; color: white; border-color: #e53935;}
         
@@ -2828,10 +2828,13 @@ var qrcode = function() {
             </div>
             <div class="sidebar-bottom">
                 <button class="tab-btn" onclick="openSettingsModal()" title="기초 세팅"><i class="fa-solid fa-gear"></i> <span class="tab-text">기초 세팅</span></button>
-                <button class="tab-btn" id="board-edit-btn" onclick="boardToggleEdit()" style="margin-bottom: 20px;" title="화면 수정(칸 숨기기·이동)"><i class="fa-solid fa-pen-to-square"></i> <span class="tab-text">화면 수정</span></button>
-                <div id="user-profile" class="user-profile-text" style="font-size:13px; font-weight:bold; color:#666; margin-bottom:5px;"></div>
-                <button class="room-tag" onclick="switchClass()" title="다른 학급으로 가기 · 새 학급 만들기"><i class="fa-solid fa-school"></i> <span>학급 전환·추가</span></button>
-                <div class="user-profile-text" style="font-size:11px; color:#aab4c2; margin-top:8px; cursor:pointer;" onclick="showVersionInfo()" title="변경 기록 보기">버전 <span id="app-version">-</span></div>
+                <button class="tab-btn" id="board-edit-btn" onclick="boardToggleEdit()" title="화면 수정(칸 숨기기·이동)"><i class="fa-solid fa-pen-to-square"></i> <span class="tab-text">화면 수정</span></button>
+                <div style="position:relative;">
+                    <button class="tab-btn" style="margin-bottom:14px;" onclick="classSwitchPopupToggle()" title="다른 학급으로 이동 · 새 학급 만들기"><i class="fa-solid fa-school"></i> <span class="tab-text">학급 전환·추가</span></button>
+                    <div id="class-switch-pop" style="display:none; position:absolute; bottom:100%; left:0; right:0; margin-bottom:6px; background:#fff; border:1px solid #e6ebf3; border-radius:12px; box-shadow:0 10px 28px rgba(56,78,126,0.2); padding:10px; z-index:300; max-height:320px; overflow-y:auto;"></div>
+                </div>
+                <div id="user-profile" class="user-profile-text" style="font-size:13px; font-weight:bold; color:#666; padding:0 6px; margin-bottom:4px;"></div>
+                <div class="user-profile-text" style="font-size:11px; color:#aab4c2; padding:0 6px; cursor:pointer;" onclick="showVersionInfo()" title="변경 기록 보기">버전 <span id="app-version">-</span></div>
             </div>
         </nav>
 
@@ -4032,9 +4035,11 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.20';
+        const APP_VERSION = '1.21';
         const APP_VERSION_DATE = '2026-09-02';
         const APP_CHANGELOG = [
+            'v1.21 (2026-09-02) — 🏫 사이드바 정렬 + 학급 전환 팝업',
+            '  · 사이드바 아래 정렬 왼쪽으로 맞춤 · [학급 전환·추가] 누르면 다른 학급을 바로 고르는 목록이 뜸',
             'v1.20 (2026-09-02) — 📆 미니 캘린더 전달·다음달 날짜 표시',
             '  · 앞뒤 빈칸에 전달/다음달 날짜를 흐리게 채움(클릭도 됨) — 달력이 꽉 참',
             'v1.19 (2026-09-02) — 🧩 화면 수정: 이동(드래그) + 버튼 위치 + 아이콘 정리',
@@ -4441,6 +4446,29 @@ var qrcode = function() {
             if(!confirm('다른 학급으로 이동할까요?\n(내 학급 목록에서 학급을 고르거나 새로 만들 수 있어요)')) return;
             exitRoom();
         }
+        // 🏫 사이드바 [학급 전환·추가] → 다른 학급을 바로 고르는 팝업(위로 뜸)
+        function classSwitchPopupToggle(){
+            const pop = document.getElementById('class-switch-pop'); if(!pop) return;
+            if(pop.style.display !== 'none'){ pop.style.display = 'none'; return; }
+            let list = (myClassesCache || []).slice();
+            if(currentRoom && !list.some(function(c){ return c.id === currentRoom; })){
+                const lt = document.querySelector('.logo-text');
+                list.unshift({ id: currentRoom, name: (lt && lt.innerText) || '우리 반', role: (typeof currentRole !== 'undefined' ? currentRole : 'owner') });
+            }
+            let html = '<div style="font-size:12px;color:#90a4ae;font-weight:800;margin:2px 4px 8px;"><i class="fa-solid fa-school"></i> 학급 이동</div>';
+            if(!list.length){ html += '<div style="font-size:12px;color:#aaa;padding:4px 6px 8px;">등록된 학급이 없어요.</div>'; }
+            list.forEach(function(c){
+                const on = c.id === currentRoom;
+                html += '<button onclick="classSwitchPick(\'' + c.id + '\',\'' + c.role + '\')" style="display:flex;width:100%;align-items:center;gap:8px;border:1px solid ' + (on ? '#5b97d1' : '#e6ebf3') + ';background:' + (on ? '#eaf2fb' : '#fff') + ';color:#51618a;border-radius:9px;padding:9px 11px;margin-bottom:6px;cursor:pointer;font-family:inherit;font-weight:700;font-size:13px;text-align:left;">' + (on ? '✓ ' : '') + escapeHtml(c.name) + (c.role === 'subject' ? ' <span style="color:#90a4ae;font-weight:400;font-size:11px;">(전담)</span>' : '') + '</button>';
+            });
+            html += '<div style="display:flex;gap:6px;margin-top:2px;">'
+                + '<button onclick="classSwitchPopupClose(); switchAddClass();" style="flex:1;border:1px dashed #c7d0e0;background:#f6f8fb;color:#5b97d1;border-radius:9px;padding:9px;cursor:pointer;font-weight:700;font-size:12px;font-family:inherit;"><i class="fa-solid fa-plus"></i> 새 학급</button>'
+                + '<button onclick="classSwitchPopupClose(); classManageOpen();" style="border:1px solid #e6ebf3;background:#fff;color:#78909c;border-radius:9px;padding:9px 11px;cursor:pointer;font-size:12px;font-family:inherit;"><i class="fa-solid fa-gear"></i> 관리</button>'
+                + '</div>';
+            pop.innerHTML = html; pop.style.display = 'block';
+        }
+        function classSwitchPopupClose(){ const p = document.getElementById('class-switch-pop'); if(p) p.style.display = 'none'; }
+        function classSwitchPick(cid, role){ classSwitchPopupClose(); if(cid === currentRoom) return; switchToClass(cid, role); }
 
         // 아침칠판·캘린더를 반별 → 선생님 공유 위치로 최초 1회 '복사' 이전(원본은 그대로 보존)
         function migrateSharedBoard(cid, uid) {
