@@ -2887,7 +2887,11 @@ var qrcode = function() {
                                 <button class="reset-btn" style="background:transparent; color:#546e7a; padding:4px 8px; box-shadow:none;" onclick="changeFontSize(2)" title="글자 확대"><i class="fa-solid fa-plus"></i></button>
                             </div>
                             
-                            <button class="action-btn" style="background:#2e9e83; padding: 8px 15px; border-radius: 8px;" onclick="pacingFillToday()" title="오늘 시간표 과목에 진도표 다음 차시 자동 입력"><i class="fa-solid fa-book-bookmark"></i> 진도 채우기</button>
+                            <div style="position:relative; display:flex; gap:0;">
+                                <button class="action-btn" style="background:#2e9e83; padding: 8px 12px; border-radius: 8px 0 0 8px;" onclick="pacingFillToday()" title="오늘 시간표 과목에 진도표 다음 차시 자동 입력"><i class="fa-solid fa-book-bookmark"></i> 진도 채우기</button>
+                                <button class="action-btn" style="background:#26866f; padding: 8px 10px; border-radius: 0 8px 8px 0; border-left:1px solid rgba(255,255,255,0.35);" onclick="pacingBoardPanelToggle()" title="오늘 과목별 차시를 앞뒤로 조정"><i class="fa-solid fa-sliders"></i> 조정</button>
+                                <div id="pacing-board-panel" style="display:none; position:absolute; top:calc(100% + 6px); right:0; width:300px; max-height:70vh; overflow-y:auto; background:#fff; border:1px solid #d8e0ea; border-radius:12px; box-shadow:0 8px 26px rgba(0,0,0,0.16); padding:12px; z-index:2500; text-align:left;"></div>
+                            </div>
                             <button class="action-btn" style="background:#7b6cd9; padding: 8px 15px; border-radius: 8px;" onclick="aiFillLessonsOpen()"><i class="fa-solid fa-robot"></i> AI 수업 입력</button>
                             <button class="action-btn" style="background:#5c6bc0; padding: 8px 15px; border-radius: 8px;" onclick="autoFillDashboard()"><i class="fa-solid fa-wand-magic-sparkles"></i> 불러오기</button>
                             <button class="action-btn" style="background:#0288d1; padding: 8px 15px; border-radius: 8px;" onclick="saveDashboard()"><i class="fa-solid fa-floppy-disk"></i> 저장</button>
@@ -4068,9 +4072,11 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.24';
+        const APP_VERSION = '1.25';
         const APP_VERSION_DATE = '2026-09-08';
         const APP_CHANGELOG = [
+            'v1.25 (2026-09-08) — 🎚️ 아침칠판에서 바로 진도 조정',
+            '  · [진도 채우기] 옆 [조정] 버튼 → 오늘 시간표 과목별 ◀ 이전/다음 ▶ 으로 차시를 그 자리에서 앞뒤로(칸 바로 다시 채워짐). 기초세팅 안 열어도 매일 조정 가능',
             'v1.24 (2026-09-08) — 📋 진도표 표 통째로 붙여넣기(엑셀)',
             '  · 진도표 관리에서 엑셀 표 전체를 붙여넣으면 과목별로 자동 분리, 넣을 과목만 체크(창체·체육·영어·전담은 자동 해제)해 한 번에 가져오기(AI 없이 정확)',
             'v1.23 (2026-09-08) — 📚 진도표 자동 입력',
@@ -5057,13 +5063,15 @@ var qrcode = function() {
         function pacingGet(){ try{ return JSON.parse(localStorage.getItem(pacingKey()) || 'null') || { subjects:{}, filled:{} }; }catch(e){ return { subjects:{}, filled:{} }; } }
         function pacingSave(p){ try{ localStorage.setItem(pacingKey(), JSON.stringify(p)); }catch(e){} }
         // 오늘(보드가 보는 날짜) 각 교시 과목에 그 과목의 다음 차시를 채움. 같은 날 다시 누르면 되돌리고 다시 채움(중복 방지)
-        function pacingFillToday(){
+        // adjust: {과목명: 증감} 이 있으면 되돌린 뒤 그 과목의 시작 차시를 앞뒤로 밀고 다시 채움(진도 조정용). silent면 안내 토스트 생략
+        function pacingFillToday(adjust, silent){
             const p = pacingGet();
             const date = getFormattedDate(viewDate);
             if(p.filled && p.filled[date]){
                 Object.keys(p.filled[date]).forEach(function(sub){ if(p.subjects[sub]) p.subjects[sub].idx = p.filled[date][sub].start; });
                 delete p.filled[date];
             }
+            if(adjust){ Object.keys(adjust).forEach(function(sub){ const S = p.subjects[sub]; if(S){ S.idx = Math.max(0, Math.min((S.list || []).length, (S.idx || 0) + adjust[sub])); } }); }
             const rec = {}; let filled = 0; const warns = []; let anySubject = false;
             for(let i=1;i<=6;i++){
                 const subEl = document.getElementById('view-tt-sub-' + i); if(!subEl) continue;
@@ -5078,13 +5086,63 @@ var qrcode = function() {
                 if(item.p) document.getElementById('view-tt-page-' + i).innerText = item.p;
                 S.idx = (S.idx || 0) + 1; rec[sub].count++; filled++;
             }
-            if(!anySubject){ alert('시간표 과목이 비어 있어요. 먼저 [불러오기]로 과목을 채운 뒤 눌러주세요.'); return; }
+            if(!anySubject){ if(!silent) alert('시간표 과목이 비어 있어요. 먼저 [불러오기]로 과목을 채운 뒤 눌러주세요.'); return; }
             if(!p.filled) p.filled = {};
             if(Object.keys(rec).length) p.filled[date] = rec;
             pacingSave(p);
             if(typeof saveDashboard === 'function') saveDashboard();
-            rpgToast('📚 진도 ' + filled + '칸 채움' + (warns.length ? ' · ' + warns.join(', ') : ''));
+            if(!silent) rpgToast('📚 진도 ' + filled + '칸 채움' + (warns.length ? ' · ' + warns.join(', ') : ''));
             var pm = document.getElementById('pacing-modal'); if(pm && pm.style.display === 'flex') pacingRenderList();
+            var bp = document.getElementById('pacing-board-panel'); if(bp && bp.style.display !== 'none') pacingBoardPanelRender();
+        }
+        // 📚 아침칠판 위 [진도 조정] 패널 — 오늘 시간표 과목별로 ◀▶ 차시를 앞뒤로 바꾸고 그 자리에서 다시 채움
+        function pacingBoardPanelToggle(){
+            const el = document.getElementById('pacing-board-panel'); if(!el) return;
+            if(el.style.display === 'none' || !el.style.display){ el.style.display = 'block'; pacingBoardPanelRender(); }
+            else { el.style.display = 'none'; }
+        }
+        function pacingBoardPanelRender(){
+            const el = document.getElementById('pacing-board-panel'); if(!el) return;
+            const p = pacingGet(); const date = getFormattedDate(viewDate);
+            // 오늘 시간표에 있는 과목(중복 제거, 순서 유지)
+            const order = []; const seen = {};
+            for(let i=1;i<=6;i++){ const se = document.getElementById('view-tt-sub-' + i); if(!se) continue; const s = (se.innerText || '').trim(); if(s && !seen[s]){ seen[s] = true; order.push(s); } }
+            let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+                + '<b style="color:#2e7d63;font-size:14px;">📚 오늘 진도 조정</b>'
+                + '<button onclick="pacingBoardPanelToggle()" style="border:none;background:#eef2f6;border-radius:50%;width:26px;height:26px;cursor:pointer;">✕</button></div>'
+                + '<div style="font-size:11px;color:#8a94a6;margin-bottom:8px;line-height:1.5;">과목별로 ◀ 이전 / 다음 ▶ 을 누르면 그 과목 칸이 바로 다시 채워져요.</div>';
+            if(!order.length){ html += '<div style="color:#aaa;font-size:12px;">시간표에 과목이 없어요. [불러오기]로 과목을 먼저 채우세요.</div>'; el.innerHTML = html; return; }
+            html += order.map(function(sub){
+                const S = p.subjects[sub];
+                if(!S || !S.list || !S.list.length){
+                    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border:1px solid #eef0f4;border-radius:9px;margin-bottom:6px;opacity:0.6;">'
+                        + '<b style="color:#51618a;min-width:52px;">' + escapeHtml(sub) + '</b>'
+                        + '<span style="font-size:11px;color:#c0392b;">진도표 없음</span></div>';
+                }
+                // 오늘 이 과목이 채워진 시작 차시(없으면 현재 idx)
+                const started = (p.filled && p.filled[date] && p.filled[date][sub]) ? p.filled[date][sub].start : (S.idx || 0);
+                const cnt = (p.filled && p.filled[date] && p.filled[date][sub]) ? p.filled[date][sub].count : 0;
+                const shown = cnt > 0 ? (started + 1) + (cnt > 1 ? ('~' + (started + cnt)) : '') + '차시' : ('다음 ' + ((S.idx || 0) + 1) + '차시');
+                const nextItem = S.list[started] || S.list[S.idx || 0] || {};
+                const prev = escapeHtml(((nextItem.p ? nextItem.p + ' · ' : '') + (nextItem.c || '')).slice(0, 30));
+                return '<div style="display:flex;align-items:center;gap:6px;padding:7px 8px;border:1px solid #e6ebf3;border-radius:9px;margin-bottom:6px;">'
+                    + '<b style="color:#51618a;min-width:52px;">' + escapeHtml(sub) + '</b>'
+                    + '<div style="flex:1;min-width:0;"><div style="font-size:11px;color:#2e9e83;font-weight:700;">' + shown + '</div>'
+                    + '<div style="font-size:11px;color:#9aa4b2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + prev + '</div></div>'
+                    + '<button onclick="pacingBoardAdjust(\'' + encodeURIComponent(sub) + '\',-1)" title="이전 차시로" style="border:1px solid #d7deea;background:#fff;border-radius:7px;padding:5px 9px;cursor:pointer;font-family:inherit;">◀</button>'
+                    + '<button onclick="pacingBoardAdjust(\'' + encodeURIComponent(sub) + '\',1)" title="다음 차시로" style="border:1px solid #d7deea;background:#fff;border-radius:7px;padding:5px 9px;cursor:pointer;font-family:inherit;">▶</button>'
+                    + '</div>';
+            }).join('');
+            html += '<div style="text-align:right;margin-top:4px;"><button onclick="pacingOpen()" style="border:none;background:transparent;color:#8a94a6;font-size:11px;cursor:pointer;text-decoration:underline;">진도표 전체 관리</button></div>';
+            el.innerHTML = html;
+        }
+        function pacingBoardAdjust(subEnc, delta){
+            const sub = decodeURIComponent(subEnc);
+            const p = pacingGet(); const date = getFormattedDate(viewDate);
+            // 오늘 아직 안 채웠으면 먼저 채운 뒤 조정(그래야 칸이 실제로 바뀜)
+            if(!(p.filled && p.filled[date])){ pacingFillToday(null, true); }
+            pacingFillToday({ [sub]: delta }, true);
+            rpgToast('📚 ' + sub + ' 차시 ' + (delta < 0 ? '이전' : '다음') + '으로');
         }
         // 진도표 관리 모달
         function pacingOpen(){ document.getElementById('pacing-modal').style.display = 'flex'; pacingRenderList(); }
