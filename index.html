@@ -2890,7 +2890,7 @@ var qrcode = function() {
                             <div style="position:relative; display:flex; gap:0;">
                                 <button class="action-btn" style="background:#2e9e83; padding: 8px 12px; border-radius: 8px 0 0 8px;" onclick="pacingFillToday()" title="오늘 시간표 과목에 진도표 다음 차시 자동 입력"><i class="fa-solid fa-book-bookmark"></i> 진도 채우기</button>
                                 <button class="action-btn" style="background:#26866f; padding: 8px 10px; border-radius: 0 8px 8px 0; border-left:1px solid rgba(255,255,255,0.35);" onclick="pacingBoardPanelToggle()" title="오늘 과목별 차시를 앞뒤로 조정"><i class="fa-solid fa-sliders"></i> 조정</button>
-                                <div id="pacing-board-panel" style="display:none; position:absolute; top:calc(100% + 6px); right:0; width:300px; max-height:70vh; overflow-y:auto; background:#fff; border:1px solid #d8e0ea; border-radius:12px; box-shadow:0 8px 26px rgba(0,0,0,0.16); padding:12px; z-index:2500; text-align:left;"></div>
+                                <div id="pacing-board-panel" style="display:none; position:fixed; top:120px; right:24px; width:290px; max-height:78vh; overflow-y:auto; background:#fff; border:1px solid #d8e0ea; border-radius:12px; box-shadow:0 8px 26px rgba(0,0,0,0.18); padding:12px; z-index:3200; text-align:left;"></div>
                             </div>
                             <button class="action-btn" style="background:#5c6bc0; padding: 8px 15px; border-radius: 8px;" onclick="autoFillDashboard()"><i class="fa-solid fa-wand-magic-sparkles"></i> 불러오기</button>
                             <button class="action-btn" style="background:#0288d1; padding: 8px 15px; border-radius: 8px;" onclick="saveDashboard()"><i class="fa-solid fa-floppy-disk"></i> 저장</button>
@@ -4056,9 +4056,11 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.26';
+        const APP_VERSION = '1.27';
         const APP_VERSION_DATE = '2026-09-08';
         const APP_CHANGELOG = [
+            'v1.27 (2026-09-09) — 🛠️ 진도 조정 손보기(저장 알림 제거 + 패널 오른쪽)',
+            '  · 차시 조정할 때 뜨던 "수동 저장" 알림창 제거(조용히 저장) · 조정 패널을 화면 오른쪽 위로 옮겨 과목 칸을 가리지 않게',
             'v1.26 (2026-09-08) — 🧹 [AI 수업 입력] 버튼 삭제',
             '  · 진도표(진도 채우기·조정)가 매일 수업 입력을 대신하므로 [AI 수업 입력] 버튼·기능 제거',
             'v1.25 (2026-09-08) — 🎚️ 아침칠판에서 바로 진도 조정',
@@ -5019,7 +5021,7 @@ var qrcode = function() {
             if(!p.filled) p.filled = {};
             if(Object.keys(rec).length) p.filled[date] = rec;
             pacingSave(p);
-            if(typeof saveDashboard === 'function') saveDashboard();
+            if(typeof saveDashboard === 'function') saveDashboard(true); // 조용히 저장(알림창 없이)
             if(!silent) rpgToast('📚 진도 ' + filled + '칸 채움' + (warns.length ? ' · ' + warns.join(', ') : ''));
             var pm = document.getElementById('pacing-modal'); if(pm && pm.style.display === 'flex') pacingRenderList();
             var bp = document.getElementById('pacing-board-panel'); if(bp && bp.style.display !== 'none') pacingBoardPanelRender();
