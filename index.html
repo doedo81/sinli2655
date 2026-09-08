@@ -3616,6 +3616,14 @@ var qrcode = function() {
                     <button onclick="pacingClose()" style="border:none; background:#f0f2f5; border-radius:50%; width:32px; height:32px; cursor:pointer; font-size:16px;">✕</button>
                 </div>
                 <p style="font-size:12px; color:#666; line-height:1.6; margin:0 0 12px;">과목별로 진도표(차시별 내용·쪽수)를 저장해두면, 아침칠판에서 <b>[📚 진도 채우기]</b>를 누를 때 오늘 시간표 과목에 <b>다음 차시</b>가 자동으로 들어가요.</p>
+                <div style="background:#eef6ff; border:1px solid #cfe2f7; border-radius:12px; padding:12px; margin-bottom:12px;">
+                    <div style="font-weight:800; color:#2f6cb5; font-size:13px; margin-bottom:4px;">📋 표 통째로 붙여넣기 <span style="font-weight:600;color:#7aa0c8;font-size:12px;">(추천 · 엑셀/스쿨마스터)</span></div>
+                    <p style="font-size:12px; color:#5c6b82; margin:0 0 8px; line-height:1.5;">엑셀에서 <b>제목 줄까지 포함해</b> 표 전체를 복사해 붙여넣으면 <b>과목별로 자동으로 나눠</b>줘요. 그 다음 넣을 과목만 체크하세요(창체·체육·영어·전담은 체크 해제). AI 없이 정확하게 들어갑니다.</p>
+                    <textarea id="pacing-bulk-paste" rows="5" placeholder="엑셀에서 표 전체(과목·학습내용·쪽수가 있는, 제목 줄 포함) 복사 → 붙여넣기" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box; font-family:'Pretendard'; font-size:13px; line-height:1.5;"></textarea>
+                    <div style="text-align:right; margin-top:8px;"><button class="action-btn" style="background:#2f6cb5; padding:9px 16px;" onclick="pacingBulkParse()"><i class="fa-solid fa-table-list"></i> 분석해서 과목 나누기</button></div>
+                    <div id="pacing-bulk-result"></div>
+                </div>
+                <div style="text-align:center;font-size:12px;color:#9aa4b2;margin-bottom:8px;">— 또는 과목 하나씩 (자유 형식은 AI로 정리) —</div>
                 <div style="background:#f2faf7; border:1px solid #cdeadf; border-radius:12px; padding:12px; margin-bottom:14px;">
                     <input id="pacing-subject" placeholder="과목명 (시간표와 똑같이 · 예: 국어)" style="width:100%; padding:9px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box; font-family:'Pretendard'; margin-bottom:8px;">
                     <textarea id="pacing-paste" rows="6" placeholder="스쿨마스터 진도표를 복사해 붙여넣기 (한 줄에 차시 하나 · 쪽수 있으면 같이)" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box; font-family:'Pretendard'; font-size:13px; line-height:1.5;"></textarea>
@@ -4060,9 +4068,11 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.23';
+        const APP_VERSION = '1.24';
         const APP_VERSION_DATE = '2026-09-08';
         const APP_CHANGELOG = [
+            'v1.24 (2026-09-08) — 📋 진도표 표 통째로 붙여넣기(엑셀)',
+            '  · 진도표 관리에서 엑셀 표 전체를 붙여넣으면 과목별로 자동 분리, 넣을 과목만 체크(창체·체육·영어·전담은 자동 해제)해 한 번에 가져오기(AI 없이 정확)',
             'v1.23 (2026-09-08) — 📚 진도표 자동 입력',
             '  · 기초세팅 [진도표 관리·입력]에 과목별 진도표를 붙여넣으면 AI가 차시별로 정리',
             '  · 아침칠판 [진도 채우기] 누르면 오늘 시간표 과목의 다음 차시 내용·쪽수를 자동 입력(같은 날 다시 눌러도 중복 없음, ◀▶로 앞뒤 조정)',
@@ -5042,6 +5052,7 @@ var qrcode = function() {
         }
 
         // 📚 진도표 — 과목별 차시(내용·쪽수)를 저장해두고, 오늘 시간표에 맞춰 다음 차시 자동 채우기
+        let pacingBulkTmp = null; // 표 통째로 붙여넣기 분석 결과(과목별 차시) 임시 보관
         function pacingKey(){ return 'pacing_' + (currentRoom || 'default'); }
         function pacingGet(){ try{ return JSON.parse(localStorage.getItem(pacingKey()) || 'null') || { subjects:{}, filled:{} }; }catch(e){ return { subjects:{}, filled:{} }; } }
         function pacingSave(p){ try{ localStorage.setItem(pacingKey(), JSON.stringify(p)); }catch(e){} }
@@ -5106,6 +5117,68 @@ var qrcode = function() {
         function pacingDeleteSubject(subEnc){
             const sub = decodeURIComponent(subEnc); if(!confirm('"' + sub + '" 진도표를 삭제할까요?')) return;
             const p = pacingGet(); delete p.subjects[sub]; pacingSave(p); pacingRenderList();
+        }
+        // 📋 표 통째로 붙여넣기(엑셀/스쿨마스터) — 과목별로 자동 분리 후 체크해서 가져오기
+        function pacingBulkParse(){
+            const raw = (document.getElementById('pacing-bulk-paste').value || '').replace(/\r/g, '');
+            const lines = raw.split('\n').filter(function(l){ return l.trim() !== ''; });
+            if(lines.length < 2){ alert('표를 붙여넣어 주세요. (엑셀에서 제목 줄까지 포함해 복사)'); return; }
+            const rows = lines.map(function(l){ return l.split('\t'); });
+            // 제목 줄 찾기: 과목/편제/교과 + 쪽수 가 같이 있는 줄
+            let hi = -1;
+            for(let i=0;i<Math.min(rows.length,6);i++){
+                const j = rows[i].join(' ');
+                if(/편제|교과|과목/.test(j) && /쪽수/.test(j)){ hi = i; break; }
+            }
+            if(hi < 0){ alert('제목 줄(과목·학습내용·쪽수)을 못 찾았어요.\n엑셀에서 제목 줄까지 포함해서 복사해 주세요.'); return; }
+            const h = rows[hi].map(function(c){ return (c || '').trim(); });
+            const subIdx = h.findIndex(function(c){ return /편제|교과|^과목/.test(c); });
+            let pageIdx = h.findIndex(function(c){ return /^쪽수$/.test(c); });
+            if(pageIdx < 0) pageIdx = h.findIndex(function(c){ return /쪽수/.test(c) && !/보조/.test(c); });
+            if(pageIdx < 0) pageIdx = h.findIndex(function(c){ return /쪽수/.test(c); });
+            const unitIdx = h.findIndex(function(c){ return /단원/.test(c); });
+            let contentIdx = h.findIndex(function(c){ return /학습내용|학습주제|^내용|주제/.test(c); });
+            if(contentIdx < 0) contentIdx = unitIdx;
+            if(subIdx < 0 || contentIdx < 0){ alert('과목 칸 또는 내용 칸을 못 찾았어요. 제목 줄을 확인해 주세요.'); return; }
+            const groups = {}; const order = [];
+            for(let i=hi+1;i<rows.length;i++){
+                const r = rows[i]; const sub = (r[subIdx] || '').trim(); if(!sub) continue;
+                let c = (r[contentIdx] || '').trim(); if(!c && unitIdx >= 0) c = (r[unitIdx] || '').trim();
+                const pg = pageIdx >= 0 ? (r[pageIdx] || '').trim() : '';
+                if(!c && !pg) continue;
+                if(!groups[sub]){ groups[sub] = []; order.push(sub); }
+                groups[sub].push({ c: c, p: pg });
+            }
+            if(!order.length){ alert('내용이 있는 줄을 못 찾았어요. 표 형식을 확인해 주세요.'); return; }
+            pacingBulkTmp = { groups: groups, order: order };
+            // 창체(자율·자치·동아리·진로)·체육·영어는 기본 체크 해제 — 담임이 직접 안 넣는 과목
+            const reExclude = /체육|영어|창체|창의적|자율|자치|동아리|진로|봉사|안전한생활/;
+            const el = document.getElementById('pacing-bulk-result');
+            el.innerHTML = '<div style="font-size:12px;color:#557;margin:10px 0 6px;">가져올 과목을 고르세요 <b>(창체·체육·영어·전담은 체크 해제)</b>:</div>'
+                + order.map(function(sub){
+                    const checked = reExclude.test(sub.replace(/\s/g,'')) ? '' : 'checked';
+                    return '<label style="display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid #dbe6f3;border-radius:8px;margin-bottom:6px;cursor:pointer;">'
+                        + '<input type="checkbox" class="pacing-bulk-cb" value="' + encodeURIComponent(sub) + '" ' + checked + ' style="width:16px;height:16px;">'
+                        + '<b style="color:#2f6cb5;">' + escapeHtml(sub) + '</b>'
+                        + '<span style="font-size:12px;color:#8a94a6;">' + groups[sub].length + '차시</span></label>';
+                }).join('')
+                + '<div style="text-align:right;margin-top:6px;"><button class="action-btn" style="background:#2f6cb5;padding:9px 16px;" onclick="pacingBulkImport()"><i class="fa-solid fa-download"></i> 선택한 과목 가져오기</button></div>';
+        }
+        function pacingBulkImport(){
+            if(!pacingBulkTmp){ alert('먼저 [분석해서 과목 나누기]를 눌러주세요.'); return; }
+            const cbs = Array.prototype.slice.call(document.querySelectorAll('.pacing-bulk-cb:checked'));
+            if(!cbs.length){ alert('가져올 과목을 하나 이상 선택하세요.'); return; }
+            const picked = cbs.map(function(cb){ return decodeURIComponent(cb.value); });
+            const p = pacingGet();
+            const existing = picked.filter(function(s){ return p.subjects[s]; });
+            if(existing.length && !confirm('이미 있는 과목(' + existing.join(', ') + ')은 새 내용으로 덮어쓰고 진도 위치도 처음으로 돌아갑니다. 계속할까요?')) return;
+            picked.forEach(function(sub){ p.subjects[sub] = { list: pacingBulkTmp.groups[sub].slice(), idx: 0 }; });
+            pacingSave(p);
+            document.getElementById('pacing-bulk-paste').value = '';
+            document.getElementById('pacing-bulk-result').innerHTML = '';
+            pacingBulkTmp = null;
+            pacingRenderList();
+            rpgToast('📚 ' + picked.length + '과목 진도표 가져옴!');
         }
         async function pacingAiParse(){
             const apiKey = localStorage.getItem('geminiApiKey');
