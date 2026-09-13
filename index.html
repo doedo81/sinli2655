@@ -3879,8 +3879,22 @@ var qrcode = function() {
             const m = String(now.getMinutes()).padStart(2, '0');
             const s = String(now.getSeconds()).padStart(2, '0');
             document.getElementById('real-clock').innerText = `${h}:${m}:${s}`;
+            checkDayRollover();
         }
         function getFormattedDate(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0'); }
+        // 🗓️ 하루 넘어감 자동 처리 — 브라우저를 켜둔 채 날짜가 바뀌면(예: 금요일→월요일) viewDate가 옛 날짜에 멈춰
+        //    월요일 내용이 금요일에 저장되던 문제를 막는다. '오늘'을 보고 있고 편집 중이 아닐 때만 오늘로 옮긴다.
+        function checkDayRollover() {
+            const nowKey = getFormattedDate(new Date());
+            if (nowKey === lastKnownDay) return;            // 날짜 안 바뀜 → 아무것도 안 함(1초마다 여기서 즉시 반환)
+            const wasViewingToday = getFormattedDate(viewDate) === lastKnownDay; // 과거 날짜를 보던 중이면 건드리지 않음
+            lastKnownDay = nowKey;
+            if (!wasViewingToday || isDashboardFocused || isTabletMode) return; // 과거 조회중·편집중·태블릿뷰면 자동 이동 안 함
+            viewDate = new Date();                          // 오늘로 갱신 → 이제 저장이 올바른 날짜로 감
+            const dow = viewDate.getDay();
+            if (dow >= 1 && dow <= 5) { if (typeof loadTodayBoard === 'function') loadTodayBoard(); } // 평일만 자동 채우기(주말 중복 저장 방지)
+            if (typeof renderCalendar === 'function') renderCalendar();
+        }
         
         let currentBoardFontSize = 18;
         function applyFontSize() {
@@ -3945,8 +3959,9 @@ var qrcode = function() {
         let rpgStudentMode = false;
         let listenersSet = false, numberOfGroups = 6;
         let currentScores = [], currentMiniScores = [], currentTasks = [], historyCheck = {}, allHomeworks = [], allBookmarks = {};
-        let viewDate = new Date(); let calDate = new Date(); 
-        let isDashboardFocused = false; 
+        let viewDate = new Date(); let calDate = new Date();
+        let lastKnownDay = getFormattedDate(new Date()); // 하루 넘어감 감지용(브라우저 켜둔 채 날짜 바뀌면 viewDate 자동 갱신)
+        let isDashboardFocused = false;
         
         let globalTotalStudents = 24;
         let globalStudentRosterStr = "";
@@ -4056,9 +4071,11 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.27';
+        const APP_VERSION = '1.28';
         const APP_VERSION_DATE = '2026-09-08';
         const APP_CHANGELOG = [
+            'v1.28 (2026-09-14) — 🗓️ 금·월 데이터 꼬임 수정(날짜 자동 갱신)',
+            '  · 브라우저를 켜둔 채 날짜가 바뀌면(예: 금요일→주말→월요일) 보던 날짜가 금요일에 멈춰 월요일 내용이 금요일에 저장되던 문제 수정. 하루 넘어가면 오늘로 자동 갱신(과거 조회·편집 중일 땐 안 건드림)',
             'v1.27 (2026-09-09) — 🛠️ 진도 조정 손보기(저장 알림 제거 + 패널 오른쪽)',
             '  · 차시 조정할 때 뜨던 "수동 저장" 알림창 제거(조용히 저장) · 조정 패널을 화면 오른쪽 위로 옮겨 과목 칸을 가리지 않게',
             'v1.26 (2026-09-08) — 🧹 [AI 수업 입력] 버튼 삭제',
