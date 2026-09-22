@@ -3047,7 +3047,6 @@ var qrcode = function() {
                     <canvas id="act-bg-canvas" style="position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none;"></canvas>
                     <canvas id="act-canvas"></canvas>
                     <div id="act-widgets"></div>
-                    <div id="act-hint">🖱️ <b>커서</b>로 위젯을 옮기고 · 필기하려면 <b>그리기</b>를 누르세요 · 오른쪽 <b>＋</b>로 화면을 추가할 수 있어요</div>
                     <div id="act-screens-bar"></div>
                     <div id="act-toolbar">
                         <button class="act-tool" data-role="cursor" onclick="actSetMode('cursor')" title="커서 (위젯 이동·사용)"><i class="fa-solid fa-arrow-pointer"></i><small>커서</small></button>
@@ -3937,7 +3936,7 @@ var qrcode = function() {
             point() { _tone(659.25, 0, 0.14, 'triangle', 0.42); _tone(987.77, 0.09, 0.26, 'triangle', 0.38); },
             ding() { _tone(880, 0, 0.16, 'sine', 0.4); _tone(1318.5, 0.1, 0.3, 'sine', 0.34); },
             levelup() { [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => _tone(f, i * 0.11, 0.45, 'triangle', 0.42)); },
-            timer() { for (let k = 0; k < 4; k++) { _tone(1046.5, k * 0.32, 0.18, 'square', 0.4); _tone(1318.5, k * 0.32 + 0.09, 0.18, 'square', 0.36); } },
+            timer() { for (let k = 0; k < 10; k++) { _tone(1046.5, k * 0.42, 0.22, 'square', 0.5); _tone(1318.5, k * 0.42 + 0.1, 0.22, 'square', 0.45); } },
             mission() { _tone(783.99, 0, 0.16, 'sine', 0.42); _tone(1046.5, 0.11, 0.2, 'sine', 0.42); _tone(1318.5, 0.26, 0.38, 'sine', 0.38); },
             warn() { _tone(311.13, 0, 0.3, 'sawtooth', 0.3); }
         };
@@ -4071,9 +4070,13 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.28';
-        const APP_VERSION_DATE = '2026-09-08';
+        const APP_VERSION = '1.29';
+        const APP_VERSION_DATE = '2026-09-22';
         const APP_CHANGELOG = [
+            'v1.29 (2026-09-22) — 🎲 활동 뽑기 위젯 손질 + 타이머 알림 + 자리배치 균형',
+            '  · 위젯 상단 안내문 제거 · 위젯을 화면 밖으로 못 나가게(제목줄이 항상 잡힘) · X 누르기 전엔 내용 유지',
+            '  · 타이머 종료 알림음을 더 길게(약 4초·10회) 울려 잘 안 들려도 인지되게',
+            '  · 자리배치 협동학습 모둠을 균형 배치(6모둠 → 위 3·아래 3)',
             'v1.28 (2026-09-14) — 🗓️ 금·월 데이터 꼬임 수정(날짜 자동 갱신)',
             '  · 브라우저를 켜둔 채 날짜가 바뀌면(예: 금요일→주말→월요일) 보던 날짜가 금요일에 멈춰 월요일 내용이 금요일에 저장되던 문제 수정. 하루 넘어가면 오늘로 자동 갱신(과거 조회·편집 중일 땐 안 건드림)',
             'v1.27 (2026-09-09) — 🛠️ 진도 조정 손보기(저장 알림 제거 + 패널 오른쪽)',
@@ -6546,7 +6549,9 @@ var qrcode = function() {
             return `<div class="seating-controls" style="display:flex; gap:22px; margin-bottom:12px; font-size:13px; color:#546e7a;"><span>학급 평균 <b style="color:#6a4bb5;">${classAvg.toFixed(1)}점</b></span><span>모둠간 편차 <b style="color:${dev > (all.length ? 3 : 0) ? '#e53935' : '#6a4bb5'};">${dev.toFixed(1)}점</b></span></div>`;
         }
         function nsHtmlCoop(groups, sv) {
-            let html = nsHtmlStats(groups, sv) + '<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px;">';
+            // 모둠을 위·아래 줄에 균형 있게 (6모둠 → 3/3, 4모둠 → 2/2 …)
+            const cols = Math.max(1, Math.ceil(Math.sqrt(groups.length)));
+            let html = nsHtmlStats(groups, sv) + `<div style="display:grid; grid-template-columns:repeat(${cols},minmax(0,1fr)); gap:16px;">`;
             groups.forEach((seats, gi) => {
                 const avg = nsGroupAvg(seats);
                 const badge = (!sv && avg !== null) ? `<span style="font-size:12px; color:#6a4bb5; font-weight:700;">평균 ${avg.toFixed(1)}점</span>` : '';
@@ -7292,7 +7297,21 @@ var qrcode = function() {
             const head = w.querySelector('.act-w-head');
             let sx, sy, ox, oy, drag = false;
             const start = e => { if (e.target.classList.contains('act-w-close')) return; drag = true; w.style.zIndex = ++actZ; const t = (e.touches && e.touches[0]) ? e.touches[0] : e; sx = t.clientX; sy = t.clientY; ox = w.offsetLeft; oy = w.offsetTop; e.preventDefault(); };
-            const move = e => { if (!drag) return; const t = (e.touches && e.touches[0]) ? e.touches[0] : e; w.style.left = (ox + t.clientX - sx) + 'px'; w.style.top = (oy + t.clientY - sy) + 'px'; };
+            const move = e => {
+                if (!drag) return;
+                const t = (e.touches && e.touches[0]) ? e.touches[0] : e;
+                let nl = ox + t.clientX - sx, nt = oy + t.clientY - sy;
+                // 🧱 위젯이 보드(화면)를 벗어나지 않게 — 제목줄(헤더)이 항상 잡히도록 제한
+                const par = w.offsetParent || document.getElementById('act-board');
+                if (par) {
+                    const headH = head.offsetHeight || 40;
+                    const maxL = Math.max(0, par.clientWidth - Math.min(w.offsetWidth, par.clientWidth));
+                    const maxT = Math.max(0, par.clientHeight - headH);
+                    nl = Math.max(0, Math.min(nl, maxL));
+                    nt = Math.max(0, Math.min(nt, maxT));
+                }
+                w.style.left = nl + 'px'; w.style.top = nt + 'px';
+            };
             const end = () => drag = false;
             head.addEventListener('mousedown', start); window.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
             head.addEventListener('touchstart', start, { passive: false }); window.addEventListener('touchmove', move, { passive: false }); window.addEventListener('touchend', end);
