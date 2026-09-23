@@ -2661,33 +2661,45 @@ var qrcode = function() {
         }
 
         /* 반응형 웹 모드 */
-        @media (max-width: 1100px) { 
-            #main-app { flex-direction: column; overflow-y: auto; }
-            /* 사이드바를 세로 3칸으로 쌓기: 로고 / 아이콘 줄 / 나가기 */
-            .sidebar { width: 100%; height: auto; flex-direction: column; align-items: stretch; padding: 10px 14px; gap: 10px;}
-            .sidebar .sidebar-header { margin: 0; border: none; padding: 0; width: 100%;}
-            /* 아이콘 줄: 화면 전체 폭을 쓰는 가로줄 (모자라면 자동 줄바꿈) */
-            .tab-container { display: flex !important; flex-direction: row !important; flex-wrap: wrap; width: 100% !important; margin: 0; gap: 8px; justify-content: flex-start;}
-            .tab-btn { width: auto !important; flex: 0 0 auto; padding: 12px 16px !important; margin: 0 !important; border-radius: 12px;}
-            .tab-text { display: none; }
-            .tab-btn i { font-size: 20px; width: auto; margin: 0;}
-            .tab-btn.active { transform: none; }
-            .sidebar-bottom { margin: 0; border: none; padding: 0; width: 100%; display: flex; flex-direction: row; gap: 8px; align-items: center;}
-            .sidebar-bottom .tab-btn { margin: 0 !important; }
-            .user-profile-text { display: none; }
-            .room-tag { margin-top: 0; padding: 12px; }
+        /* 🖥️ 좁은 화면: 사이드바는 '세로 아이콘 바'로 유지(위로 눕히지 않음).
+           - 평소엔 아이콘만, 마우스를 올리면 이름이 옆에 뜸
+           - 맨 위 ☰ 를 누르면 펼쳐져(이름·설정 다 보임)
+           - 본문은 창이 좁아질수록 글자·칸이 정비례로 함께 축소(zoom) */
+        @media (max-width: 1100px) {
+            .sidebar { width: 78px; padding: 20px 8px; align-items: center; }
+            .sidebar .logo-text, .sidebar .tab-text, .sidebar .user-profile-text { display: none; }
+            .sidebar .logo-icon { display: block !important; font-size: 24px; color: var(--accent-blue); margin: 0; }
+            .sidebar .sidebar-header { justify-content: center; gap: 6px; }
+            .sidebar .tab-container { align-items: center; }
+            .sidebar .tab-btn { width: 50px; height: 50px; padding: 14px; justify-content: center; border-radius: 50%; margin-bottom: 12px; position: relative; }
+            .sidebar .tab-btn i { font-size: 20px; width: auto; margin: 0; }
+            .sidebar .tab-btn.active { transform: none; }
+            .sidebar .sidebar-bottom { border-top: none; align-items: center; }
+            /* 마우스를 올릴 때만 이름을 옆에 말풍선으로 표시 */
+            .sidebar:not(.expanded) .tab-btn:hover .tab-text {
+                display: block; position: absolute; left: 60px; top: 50%; transform: translateY(-50%);
+                background: #434f70; color: #fff; padding: 6px 12px; border-radius: 8px; white-space: nowrap;
+                font-size: 14px; font-weight: 700; z-index: 500; box-shadow: 0 6px 18px rgba(0,0,0,0.28); pointer-events: none;
+            }
+            /* ☰ 로 펼친 상태: 원래 넓은 사이드바처럼 이름·설정 전부 보임 */
+            .sidebar.expanded { width: 240px; padding: 25px 15px; align-items: stretch; }
+            .sidebar.expanded .logo-text, .sidebar.expanded .tab-text, .sidebar.expanded .user-profile-text { display: block; }
+            .sidebar.expanded .sidebar-header { justify-content: space-between; }
+            .sidebar.expanded .tab-container { align-items: stretch; }
+            .sidebar.expanded .tab-btn { width: 100%; height: auto; padding: 15px 20px; justify-content: flex-start; border-radius: 12px; }
+            .sidebar.expanded .sidebar-bottom { align-items: stretch; }
+            /* 본문 정비례 축소 */
+            .main-content-wrapper { zoom: 0.9; }
             .dashboard-grid { grid-template-columns: 1fr; }
             .tt-row { flex-wrap: wrap; }
             .tt-side-wrapper { width: 100%; flex-direction: row; }
             .tt-page, .tt-prep-wrap { flex: 1; }
         }
+        @media (max-width: 900px) { .main-content-wrapper { zoom: 0.82; } }
+        @media (max-width: 720px) { .main-content-wrapper { zoom: 0.72; } }
 
         /* 📱 핸드폰 전용 (점수판 등 잘 보이게) */
         @media (max-width: 600px) {
-            /* 핸드폰에선 메뉴 아이콘을 조금 더 작게 (가로/아이콘 배치는 위 1100px 규칙 사용) */
-            .sidebar { padding: 8px 10px; }
-            .sidebar .tab-btn { padding: 10px !important; }
-            .tab-btn i { font-size: 18px; }
             .main-content-wrapper { padding: 12px 10px; }
             /* 점수판 안쪽 카드 여백 축소 */
             #score-tab > div { padding: 16px 12px !important; }
@@ -3867,9 +3879,20 @@ var qrcode = function() {
         // 사이드바 토글
         function toggleSidebar() {
             const sidebar = document.getElementById('mySidebar');
-            sidebar.classList.toggle('collapsed');
+            if (window.innerWidth <= 1100) {
+                // 좁은 화면: 아이콘 바 ↔ 펼침
+                sidebar.classList.toggle('expanded');
+            } else {
+                // 넓은 화면: 펼침 ↔ 아이콘만
+                sidebar.classList.remove('expanded');
+                sidebar.classList.toggle('collapsed');
+            }
             document.body.classList.toggle('sidebar-collapsed', sidebar.classList.contains('collapsed'));
         }
+        // 좁은 화면에서 넓어지면 펼침 상태 해제(넓은 화면 규칙과 충돌 방지)
+        window.addEventListener('resize', function () {
+            if (window.innerWidth > 1100) { var sb = document.getElementById('mySidebar'); if (sb) sb.classList.remove('expanded'); }
+        });
 
         // 시계 및 유틸
         function updateClock() {
@@ -4070,9 +4093,12 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.29';
-        const APP_VERSION_DATE = '2026-09-22';
+        const APP_VERSION = '1.30';
+        const APP_VERSION_DATE = '2026-09-23';
         const APP_CHANGELOG = [
+            'v1.30 (2026-09-23) — 📐 좁은 화면 대응: 세로 아이콘 사이드바 + 본문 정비례 축소',
+            '  · 창을 줄여도 왼쪽 바가 위로 안 눕고 세로 아이콘 바로 유지 · 아이콘에 마우스 올리면 이름이 옆에 뜸 · 맨 위 ☰ 누르면 펼쳐져 이름·설정 다 보임',
+            '  · 본문은 창이 좁아질수록 글자·칸이 정비례로 함께 축소',
             'v1.29 (2026-09-22) — 🎲 활동 뽑기 위젯 손질 + 타이머 알림 + 자리배치 균형',
             '  · 위젯 상단 안내문 제거 · 위젯을 화면 밖으로 못 나가게(제목줄이 항상 잡힘) · X 누르기 전엔 내용 유지',
             '  · 타이머 종료 알림음을 더 길게(약 4초·10회) 울려 잘 안 들려도 인지되게',
