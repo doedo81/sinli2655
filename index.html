@@ -2406,7 +2406,7 @@ var qrcode = function() {
 
         /* 📋 칠판 레이아웃 */
         .dashboard-grid { display: grid; grid-template-columns: 1fr 2.4fr 1fr; gap: 20px; align-items: start;}
-        .column-card { background: var(--white); border-radius: 18px; padding: 20px; box-shadow: var(--shadow); border: 1px solid rgba(120,144,180,0.12); display: flex; flex-direction: column; border-top: 5px solid var(--accent-blue); height: 100%;}
+        .column-card { background: var(--white); border-radius: 18px; padding: 20px; box-shadow: var(--shadow); border: 1px solid rgba(120,144,180,0.12); display: flex; flex-direction: column;  height: 100%;}
         .info-box { background: #f7fbff; border-radius: 12px; padding: 18px; margin-bottom: 15px; border: 1px solid #e6eef7; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
         .info-label { font-weight: 800; font-size: 15px; margin-bottom: 10px; display: block; color: var(--accent-blue); }
         
@@ -2499,7 +2499,7 @@ var qrcode = function() {
         .task-card.done { background: var(--accent-blue); color: white; border-color: var(--dark-blue); box-shadow: 0 4px 10px rgba(2,155,229,0.3);}
         
         /* 뽑기 & 미니점수판 */
-        .picker-box { background: white; padding: 25px; border-radius: 18px; box-shadow: var(--shadow); border: 1px solid rgba(120,144,180,0.12); border-top: 5px solid var(--accent-blue); text-align: center; }
+        .picker-box { background: white; padding: 25px; border-radius: 18px; box-shadow: var(--shadow); border: 1px solid rgba(120,144,180,0.12);  text-align: center; }
         .card-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 15px 0; min-height: 80px; align-items: center; }
         .flip-card { background-color: transparent; perspective: 1000px; cursor: pointer;}
         .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.4s; transform-style: preserve-3d; }
@@ -3093,7 +3093,7 @@ var qrcode = function() {
 
             <!-- 🌟 1. 점수판 탭 -->
             <div id="score-tab" class="content-section">
-                <div style="background:white; border-radius:20px; padding:30px; box-shadow:var(--shadow); border-top:5px solid var(--accent-blue); max-width:1100px; margin:0 auto;">
+                <div style="background:white; border-radius:20px; padding:30px; box-shadow:var(--shadow); max-width:1100px; margin:0 auto;">
                     <div style="margin-bottom: 25px; color: var(--dark-blue); font-weight:bold; text-align:center;">
                         모둠 수 설정: <input type="number" id="group-count-score" value="6" min="2" max="12" class="setting-input" style="padding:10px;"> <button class="action-btn" onclick="changeGroupCount('group-count-score')">적용</button>
                     </div>
@@ -3182,7 +3182,7 @@ var qrcode = function() {
                     <button class="action-btn" style="background:#fb8c00; padding:8px 15px; border-radius: 8px;" onclick="toggleHwView('stats')"><i class="fa-solid fa-chart-pie"></i> 제출 통계</button>
                 </div>
 
-                <div style="background:var(--white); border-radius:20px; padding:25px; box-shadow:var(--shadow); border-top:5px solid #00897b; margin-bottom:20px;">
+                <div style="background:var(--white); border-radius:20px; padding:25px; box-shadow:var(--shadow); margin-bottom:20px;">
                     <h2 style="margin:0 0 20px 0; color:#00695c; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-pen-to-square"></i> 새 과제 등록</h2>
                     <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; background:#e0f2f1; padding:20px; border-radius:15px; border:1px solid #b2dfdb;">
                         <input type="date" id="hw-date" style="padding:12px; border-radius:8px; border:1px solid #ccc; font-family:'Pretendard'; font-weight:700;">
@@ -4156,9 +4156,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.37';
+        const APP_VERSION = '1.38';
         const APP_VERSION_DATE = '2026-10-01';
         const APP_CHANGELOG = [
+            'v1.38 (2026-10-01) — 🎨 칸 위쪽 색 띠 없앰(모든 디자인에서 칸 테두리를 한 가지 색으로 깔끔하게)',
             'v1.37 (2026-10-01) — 🎨 유리·회색 테마 추가 · 어둡게 덜 어둡게 · 창 제목 "아침 칠판 대시보드" · 맨 위 파란 바도 테마색으로',
             'v1.36 (2026-10-01) — 🎨 디자인(테마) 고르기 + 배경 사진',
             '  · 사이드바 [🎨 디자인] → 하늘(기본)·유리 밝게·유리 어둡게·숲·따뜻한 크림 5가지 · 유리 디자인은 반투명 유리 패널 + 라임 포인트',
@@ -4286,7 +4287,7 @@ var qrcode = function() {
             const cur = themeCurrent();
             g.innerHTML = APP_THEMES.map(function(t){
                 return '<div class="theme-card' + (t.id === cur ? ' on' : '') + '" onclick="themeApply(\'' + t.id + '\')">'
-                    + '<div class="theme-sw" style="background:' + t.bg + ';"><i style="background:' + t.pnl + '; flex:0 0 14px;"></i><i style="background:' + t.pnl + ';"></i><i style="background:' + t.pnl + '; flex:2; border-top:3px solid ' + t.dot + ';"></i><i style="background:' + t.pnl + ';"></i></div>'
+                    + '<div class="theme-sw" style="background:' + t.bg + ';"><i style="background:' + t.pnl + '; flex:0 0 14px;"></i><i style="background:' + t.pnl + ';"></i><i style="background:' + t.pnl + '; flex:2;"></i><i style="background:' + t.pnl + ';"></i></div>'
                     + '<div class="theme-name">' + (t.id === cur ? '✔ ' : '') + t.name + '</div></div>';
             }).join('');
             let has = false; try { has = !!localStorage.getItem('appBgPhoto'); } catch(e){}
