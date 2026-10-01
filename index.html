@@ -2681,6 +2681,63 @@ var qrcode = function() {
         }
 
         /* 반응형 웹 모드 */
+        /* ================= 🎨 디자인 테마 (body[data-theme]) — 이 PC에만 저장 ================= */
+        body[data-theme] #main-app { background: var(--app-bg); background-size: cover; background-position: center; }
+        body[data-theme] .main-content-wrapper, body.has-photo .main-content-wrapper { background: transparent; }
+        /* 숲 */
+        body[data-theme="forest"] { --accent-blue:#4f8a5b; --dark-blue:#3c5a40; --main-sky:#edf3ea; --sub-sky:#d5e6cf;
+            --app-bg: linear-gradient(165deg,#f3f8f0 0%,#e3ede0 60%,#eef4ea 100%); }
+        body[data-theme="forest"] .tab-btn.active { background: linear-gradient(135deg,#5c9468 0%,#3f6b48 100%); box-shadow: 0 8px 20px rgba(63,107,72,0.30); }
+        body[data-theme="forest"] .info-box { background:#f8fbf6; border-color:#e2ecdd; }
+        /* 따뜻한 크림 */
+        body[data-theme="cream"] { --accent-blue:#c98a4b; --dark-blue:#7a5634; --main-sky:#faf3ea; --sub-sky:#f0e2cf;
+            --app-bg: linear-gradient(165deg,#fcf8f2 0%,#f5ebde 60%,#fbf5ee 100%); }
+        body[data-theme="cream"] .tab-btn.active { background: linear-gradient(135deg,#d39a5e 0%,#a86c35 100%); box-shadow: 0 8px 20px rgba(168,108,53,0.30); }
+        body[data-theme="cream"] .info-box { background:#fffbf6; border-color:#f1e5d6; }
+        /* 유리(라이트·다크) 공통 — 반투명 유리 패널 + 라임 포인트 */
+        body[data-theme="glass"] { --accent-blue:#8db31c; --dark-blue:#3f4a2b; --main-sky:rgba(255,255,255,0.45); --sub-sky:rgba(255,255,255,0.6);
+            --pnl:rgba(255,255,255,0.40); --pnl-in:rgba(255,255,255,0.42); --pnl-bd:rgba(255,255,255,0.65); --txt:#262b24; --muted:#59605a;
+            --app-bg: radial-gradient(900px 620px at 12% 88%, rgba(110,140,100,0.55), transparent 62%),
+                      radial-gradient(800px 560px at 88% 14%, rgba(255,238,214,0.95), transparent 60%),
+                      radial-gradient(700px 520px at 62% 92%, rgba(170,188,198,0.65), transparent 60%),
+                      linear-gradient(160deg,#ece7df 0%,#d3d9d5 100%); }
+        body[data-theme="glassdark"] { --accent-blue:#b4d93a; --dark-blue:#2b3220; --main-sky:rgba(255,255,255,0.08); --sub-sky:rgba(255,255,255,0.14);
+            --pnl:rgba(30,32,36,0.55); --pnl-in:rgba(255,255,255,0.07); --pnl-bd:rgba(255,255,255,0.13); --txt:#eef1f3; --muted:#b9c0c6;
+            --app-bg: radial-gradient(900px 620px at 12% 88%, rgba(90,120,80,0.45), transparent 62%),
+                      radial-gradient(800px 560px at 88% 14%, rgba(150,120,90,0.35), transparent 60%),
+                      linear-gradient(160deg,#30343a 0%,#17191c 100%); }
+        body[data-theme^="glass"] .sidebar, body[data-theme^="glass"] .column-card, body[data-theme^="glass"] .calendar-card {
+            background: var(--pnl) !important; -webkit-backdrop-filter: blur(22px) saturate(140%); backdrop-filter: blur(22px) saturate(140%);
+            border: 1px solid var(--pnl-bd) !important; box-shadow: 0 12px 40px rgba(0,0,0,0.14) !important; }
+        body[data-theme^="glass"] .column-card { border-radius: 26px; }
+        body[data-theme^="glass"] .sidebar { margin: 14px 0 14px 14px; border-radius: 28px; height: calc(100% - 28px); }
+        body[data-theme^="glass"] .calendar-card { border-radius: 18px; }
+        body[data-theme^="glass"] .info-box { background: var(--pnl-in) !important; border: 1px solid var(--pnl-bd) !important; box-shadow: none; border-radius: 18px; }
+        body[data-theme^="glass"] [contenteditable="true"], body[data-theme^="glass"] .tt-obj { color: var(--txt); }
+        body[data-theme^="glass"] [contenteditable="true"]:hover { background: rgba(255,255,255,0.18); }
+        body[data-theme^="glass"] [contenteditable="true"]:focus { background: rgba(255,255,255,0.22); }
+        body[data-theme^="glass"] .tt-row { border-bottom-color: var(--pnl-bd); }
+        body[data-theme^="glass"] .tt-label { background: var(--pnl-in); color: var(--accent-blue); }
+        body[data-theme^="glass"] .tt-page { background: var(--pnl-in); border-color: var(--pnl-bd); }
+        body[data-theme^="glass"] .tt-prep-wrap { background: var(--pnl-in); border-color: var(--pnl-bd); }
+        body[data-theme^="glass"] .tab-btn { color: var(--muted); }
+        body[data-theme^="glass"] .tab-btn:hover { background: rgba(255,255,255,0.22); color: var(--txt); }
+        body[data-theme^="glass"] .tab-btn.active { background: var(--accent-blue); color: #1f2a0c; box-shadow: 0 6px 18px rgba(140,180,30,0.35); }
+        body[data-theme^="glass"] .sidebar-header, body[data-theme^="glass"] .sidebar-bottom { border-color: var(--pnl-bd); }
+        body[data-theme="glassdark"] .cal-day, body[data-theme="glassdark"] .cal-date, body[data-theme="glassdark"] #cal-month-title,
+        body[data-theme="glassdark"] .user-profile-text, body[data-theme="glassdark"] .toggle-btn { color: var(--txt); }
+        body[data-theme="glassdark"] .info-label { filter: brightness(1.35); }
+        body[data-theme="glassdark"] [contenteditable="true"]:empty:before, body[data-theme="glassdark"] #view-meal:empty:before { color: #8a939b; }
+        body[data-theme="glassdark"] #view-meal { color: #d9d2c8 !important; }
+        body[data-theme^="glass"] span[onclick="mealPickFile()"] { background: rgba(255,255,255,0.18) !important; color: inherit !important; }
+        /* 테마 고르기 창 */
+        .theme-card { cursor: pointer; border-radius: 14px; border: 2px solid #e6ebf3; padding: 8px; background: #fff; transition: 0.15s; text-align: center; }
+        .theme-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.10); }
+        .theme-card.on { border-color: #5b97d1; box-shadow: 0 0 0 3px rgba(91,151,209,0.25); }
+        .theme-sw { height: 74px; border-radius: 10px; position: relative; overflow: hidden; display: flex; gap: 5px; padding: 8px; }
+        .theme-sw i { display: block; border-radius: 6px; flex: 1; }
+        .theme-name { font-size: 13px; font-weight: 800; color: #455a64; margin-top: 6px; }
+
         /* 🖥️ 창이 좁아지면 UI 전체를 '통째로 정비례 축소'.
            재배치(반응형)를 막기 위해 앱을 항상 '데스크톱 폭(1360px)'으로 고정하고,
            그 통짜를 창 크기에 맞춰 zoom 으로 매끄럽게 줄인다(→ fitApp() JS가 처리). */
@@ -2828,6 +2885,7 @@ var qrcode = function() {
             <div class="sidebar-bottom">
                 <button class="tab-btn" onclick="openSettingsModal()" title="기초 세팅"><i class="fa-solid fa-gear"></i> <span class="tab-text">기초 세팅</span></button>
                 <button class="tab-btn" id="board-edit-btn" onclick="boardToggleEdit()" title="화면 수정(칸 숨기기·이동)"><i class="fa-solid fa-pen-to-square"></i> <span class="tab-text">화면 수정</span></button>
+                <button class="tab-btn" onclick="themeOpen()" title="디자인(테마)·배경 사진"><i class="fa-solid fa-palette"></i> <span class="tab-text">디자인</span></button>
                 <div style="position:relative;">
                     <button class="tab-btn" style="margin-bottom:14px;" onclick="classSwitchPopupToggle()" title="다른 학급으로 이동 · 새 학급 만들기"><i class="fa-solid fa-school"></i> <span class="tab-text">학급 전환·추가</span></button>
                     <div id="class-switch-pop" style="display:none; position:absolute; bottom:100%; left:0; right:0; margin-bottom:6px; background:#fff; border:1px solid #e6ebf3; border-radius:12px; box-shadow:0 10px 28px rgba(56,78,126,0.2); padding:10px; z-index:300; max-height:320px; overflow-y:auto;"></div>
@@ -2842,6 +2900,28 @@ var qrcode = function() {
 
             <!-- 🏫 상단 학급 전환 바 (전담 여러 반) -->
             <div id="class-switch-bar"></div>
+
+            <!-- 🎨 디자인(테마) 고르기 -->
+            <div id="theme-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:3000; align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) this.style.display='none'">
+                <div style="background:#fff; border-radius:20px; max-width:620px; width:100%; max-height:88vh; overflow-y:auto; padding:22px; color:#2c3440;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <h2 style="margin:0; font-size:20px; color:#455a64;">🎨 디자인 고르기</h2>
+                        <span onclick="document.getElementById('theme-modal').style.display='none'" style="cursor:pointer; font-size:22px; color:#90a4ae;">✕</span>
+                    </div>
+                    <p style="font-size:13px; color:#78909c; margin:0 0 14px;">누르면 바로 바뀌어요. (이 컴퓨터에만 저장 — 교실 PC·집 PC 따로 고를 수 있어요)</p>
+                    <div id="theme-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px;"></div>
+                    <div style="margin-top:18px; padding-top:14px; border-top:1px solid #eef1f5;">
+                        <div style="font-weight:800; color:#455a64; margin-bottom:6px;">🖼️ 배경 사진</div>
+                        <p style="font-size:12.5px; color:#78909c; margin:0 0 10px;">교실 사진·풍경 사진을 넣으면 그 위에 유리 패널이 떠 보여요. (유리 디자인과 가장 잘 어울려요)</p>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                            <button class="action-btn" style="padding:9px 14px;" onclick="document.getElementById('theme-photo-file').click()"><i class="fa-solid fa-image"></i> 사진 넣기</button>
+                            <button class="reset-btn" id="theme-photo-del" style="padding:9px 14px;" onclick="themePhotoRemove()">사진 빼기</button>
+                            <span id="theme-photo-state" style="font-size:12px; color:#90a4ae;"></span>
+                        </div>
+                        <input type="file" id="theme-photo-file" accept="image/*" style="display:none" onchange="themePhotoPick(this)">
+                    </div>
+                </div>
+            </div>
 
             <!-- 학급 관리(삭제) 모달 -->
             <div id="class-manage-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:2000; align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) this.style.display='none'">
@@ -4070,9 +4150,12 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.35';
+        const APP_VERSION = '1.36';
         const APP_VERSION_DATE = '2026-10-01';
         const APP_CHANGELOG = [
+            'v1.36 (2026-10-01) — 🎨 디자인(테마) 고르기 + 배경 사진',
+            '  · 사이드바 [🎨 디자인] → 하늘(기본)·유리 밝게·유리 어둡게·숲·따뜻한 크림 5가지 · 유리 디자인은 반투명 유리 패널 + 라임 포인트',
+            '  · 배경 사진 넣기(교실·풍경 사진 위에 유리 패널) · 이 컴퓨터에만 저장',
             'v1.35 (2026-10-01) — 🍱 급식 칸 글씨 작게(전달사항보다 눈에 덜 띄게, 메뉴를 한 줄로 · 구분)',
             'v1.34 (2026-10-01) — 🍱 급식 칸 + 급식표 자동 채우기',
             '  · 아침칠판 알림장 아래에 [오늘의 급식] 칸 추가 · [📄 급식표 올리기]로 PDF·한글(HWPX)·사진을 올리면 AI가 날짜별로 정리해 자동 표시',
@@ -4168,6 +4251,60 @@ var qrcode = function() {
             alert('🌤️ 스카이 클래스   버전 ' + APP_VERSION + '  (' + APP_VERSION_DATE + ')\n\n────  변경 기록  ────\n' + APP_CHANGELOG.join('\n') + '\n\n※ 모든 변경은 자동 기록되어, 문제가 생기면 이전 버전으로 되돌릴 수 있어요.\n※ 큰 변경 전에는 [기초 세팅 → 전체 백업 내보내기]를 눌러두세요.');
         }
         document.addEventListener('DOMContentLoaded', function () { var el = document.getElementById('app-version'); if(el) el.textContent = 'v' + APP_VERSION; document.body.classList.add('sidebar-collapsed'); fitApp(); });
+        // 🎨 디자인 테마 + 배경 사진 (localStorage: appTheme, appBgPhoto)
+        const APP_THEMES = [
+            { id:'sky',       name:'하늘 (기본)',  bg:'linear-gradient(160deg,#f2f7fd,#dfeaf7)', pnl:'#ffffff', dot:'#5b97d1' },
+            { id:'glass',     name:'유리 · 밝게',  bg:'radial-gradient(circle at 15% 85%, #8fa887, transparent 60%), linear-gradient(160deg,#ece7df,#cfd6d2)', pnl:'rgba(255,255,255,0.55)', dot:'#8db31c' },
+            { id:'glassdark', name:'유리 · 어둡게', bg:'radial-gradient(circle at 15% 85%, #4d6145, transparent 60%), linear-gradient(160deg,#363a40,#17191c)', pnl:'rgba(40,42,46,0.75)', dot:'#b4d93a' },
+            { id:'forest',    name:'숲',           bg:'linear-gradient(160deg,#f3f8f0,#dbe8d6)', pnl:'#ffffff', dot:'#4f8a5b' },
+            { id:'cream',     name:'따뜻한 크림',  bg:'linear-gradient(160deg,#fcf8f2,#f0e2cf)', pnl:'#ffffff', dot:'#c98a4b' }
+        ];
+        function themeCurrent(){ try { return localStorage.getItem('appTheme') || 'sky'; } catch(e){ return 'sky'; } }
+        function themeApply(id){
+            if(!id || id === 'sky') document.body.removeAttribute('data-theme'); else document.body.setAttribute('data-theme', id);
+            try { localStorage.setItem('appTheme', id || 'sky'); } catch(e){}
+            themeRender();
+        }
+        function themePhotoApply(){
+            const app = document.getElementById('main-app'); if(!app) return;
+            let p = null; try { p = localStorage.getItem('appBgPhoto'); } catch(e){}
+            if(p){ app.style.backgroundImage = 'url("' + p + '")'; app.style.backgroundSize = 'cover'; app.style.backgroundPosition = 'center'; document.body.classList.add('has-photo'); }
+            else { app.style.backgroundImage = ''; app.style.backgroundSize = ''; app.style.backgroundPosition = ''; document.body.classList.remove('has-photo'); }
+        }
+        function themeRender(){
+            const g = document.getElementById('theme-grid'); if(!g) return;
+            const cur = themeCurrent();
+            g.innerHTML = APP_THEMES.map(function(t){
+                return '<div class="theme-card' + (t.id === cur ? ' on' : '') + '" onclick="themeApply(\'' + t.id + '\')">'
+                    + '<div class="theme-sw" style="background:' + t.bg + ';"><i style="background:' + t.pnl + '; flex:0 0 14px;"></i><i style="background:' + t.pnl + ';"></i><i style="background:' + t.pnl + '; flex:2; border-top:3px solid ' + t.dot + ';"></i><i style="background:' + t.pnl + ';"></i></div>'
+                    + '<div class="theme-name">' + (t.id === cur ? '✔ ' : '') + t.name + '</div></div>';
+            }).join('');
+            let has = false; try { has = !!localStorage.getItem('appBgPhoto'); } catch(e){}
+            const st = document.getElementById('theme-photo-state'); if(st) st.textContent = has ? '✔ 배경 사진 사용 중' : '배경 사진 없음';
+            const del = document.getElementById('theme-photo-del'); if(del) del.style.display = has ? '' : 'none';
+        }
+        function themeOpen(){ themeRender(); document.getElementById('theme-modal').style.display = 'flex'; }
+        function themePhotoPick(input){
+            const f = input.files && input.files[0]; input.value = ''; if(!f) return;
+            const url = URL.createObjectURL(f), img = new Image();
+            img.onload = function(){
+                const s = Math.min(1, 1920 / img.width), c = document.createElement('canvas');
+                c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+                c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+                URL.revokeObjectURL(url);
+                let data = c.toDataURL('image/jpeg', 0.8);
+                try { localStorage.setItem('appBgPhoto', data); }
+                catch(e){ try { localStorage.setItem('appBgPhoto', c.toDataURL('image/jpeg', 0.55)); } catch(e2){ alert('사진이 너무 커요. 다른 사진을 골라 주세요.'); return; } }
+                if(themeCurrent() === 'sky') themeApply('glass');
+                themePhotoApply(); themeRender();
+            };
+            img.onerror = function(){ alert('이 사진은 열 수 없어요.'); };
+            img.src = url;
+        }
+        function themePhotoRemove(){ try { localStorage.removeItem('appBgPhoto'); } catch(e){} themePhotoApply(); themeRender(); }
+        themeApply(themeCurrent());
+        document.addEventListener('DOMContentLoaded', themePhotoApply);
+
         // 🖥️ 창이 좁으면 앱 전체를 '데스크톱 폭(1360px) 고정' 상태로 두고 통짜 축소(재배치 없음)
         const APP_DESIGN_WIDTH = 1360;
         function fitApp() {
