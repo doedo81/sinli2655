@@ -7,11 +7,11 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>🌤️ 파스텔 스카이 스마트 대시보드 🌟</title>
+    <title>아침 칠판 대시보드</title>
 
     <!-- 📱 PWA(데스크톱/홈화면 설치) -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#5b97d1">
+    <meta name="theme-color" id="meta-theme-color" content="#e8eef6">
     <link rel="icon" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2701,11 +2701,17 @@ var qrcode = function() {
                       radial-gradient(800px 560px at 88% 14%, rgba(255,238,214,0.95), transparent 60%),
                       radial-gradient(700px 520px at 62% 92%, rgba(170,188,198,0.65), transparent 60%),
                       linear-gradient(160deg,#ece7df 0%,#d3d9d5 100%); }
-        body[data-theme="glassdark"] { --accent-blue:#b4d93a; --dark-blue:#2b3220; --main-sky:rgba(255,255,255,0.08); --sub-sky:rgba(255,255,255,0.14);
-            --pnl:rgba(30,32,36,0.55); --pnl-in:rgba(255,255,255,0.07); --pnl-bd:rgba(255,255,255,0.13); --txt:#eef1f3; --muted:#b9c0c6;
-            --app-bg: radial-gradient(900px 620px at 12% 88%, rgba(90,120,80,0.45), transparent 62%),
-                      radial-gradient(800px 560px at 88% 14%, rgba(150,120,90,0.35), transparent 60%),
-                      linear-gradient(160deg,#30343a 0%,#17191c 100%); }
+        body[data-theme="glassdark"] { --accent-blue:#b4d93a; --dark-blue:#2b3220; --main-sky:rgba(255,255,255,0.10); --sub-sky:rgba(255,255,255,0.16);
+            --pnl:rgba(58,62,68,0.55); --pnl-in:rgba(255,255,255,0.08); --pnl-bd:rgba(255,255,255,0.15); --txt:#f1f3f5; --muted:#c3c9ce;
+            --app-bg: radial-gradient(900px 620px at 12% 88%, rgba(100,130,90,0.45), transparent 62%),
+                      radial-gradient(800px 560px at 88% 14%, rgba(170,140,110,0.35), transparent 60%),
+                      linear-gradient(160deg,#545a62 0%,#33373c 100%); }
+        /* 유리 · 회색 (밝은 글씨 아닌 진한 글씨, 중간 톤 회색 배경) */
+        body[data-theme="glassgray"] { --accent-blue:#9cc21f; --dark-blue:#3a4048; --main-sky:rgba(255,255,255,0.30); --sub-sky:rgba(255,255,255,0.42);
+            --pnl:rgba(214,218,222,0.40); --pnl-in:rgba(255,255,255,0.28); --pnl-bd:rgba(255,255,255,0.42); --txt:#202428; --muted:#4a5056;
+            --app-bg: radial-gradient(900px 620px at 12% 88%, rgba(120,140,115,0.45), transparent 62%),
+                      radial-gradient(800px 560px at 88% 14%, rgba(235,232,226,0.75), transparent 60%),
+                      linear-gradient(160deg,#c3c6c9 0%,#8f949a 100%); }
         body[data-theme^="glass"] .sidebar, body[data-theme^="glass"] .column-card, body[data-theme^="glass"] .calendar-card {
             background: var(--pnl) !important; -webkit-backdrop-filter: blur(22px) saturate(140%); backdrop-filter: blur(22px) saturate(140%);
             border: 1px solid var(--pnl-bd) !important; box-shadow: 0 12px 40px rgba(0,0,0,0.14) !important; }
@@ -4150,9 +4156,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.36';
+        const APP_VERSION = '1.37';
         const APP_VERSION_DATE = '2026-10-01';
         const APP_CHANGELOG = [
+            'v1.37 (2026-10-01) — 🎨 유리·회색 테마 추가 · 어둡게 덜 어둡게 · 창 제목 "아침 칠판 대시보드" · 맨 위 파란 바도 테마색으로',
             'v1.36 (2026-10-01) — 🎨 디자인(테마) 고르기 + 배경 사진',
             '  · 사이드바 [🎨 디자인] → 하늘(기본)·유리 밝게·유리 어둡게·숲·따뜻한 크림 5가지 · 유리 디자인은 반투명 유리 패널 + 라임 포인트',
             '  · 배경 사진 넣기(교실·풍경 사진 위에 유리 패널) · 이 컴퓨터에만 저장',
@@ -4253,16 +4260,19 @@ var qrcode = function() {
         document.addEventListener('DOMContentLoaded', function () { var el = document.getElementById('app-version'); if(el) el.textContent = 'v' + APP_VERSION; document.body.classList.add('sidebar-collapsed'); fitApp(); });
         // 🎨 디자인 테마 + 배경 사진 (localStorage: appTheme, appBgPhoto)
         const APP_THEMES = [
-            { id:'sky',       name:'하늘 (기본)',  bg:'linear-gradient(160deg,#f2f7fd,#dfeaf7)', pnl:'#ffffff', dot:'#5b97d1' },
-            { id:'glass',     name:'유리 · 밝게',  bg:'radial-gradient(circle at 15% 85%, #8fa887, transparent 60%), linear-gradient(160deg,#ece7df,#cfd6d2)', pnl:'rgba(255,255,255,0.55)', dot:'#8db31c' },
-            { id:'glassdark', name:'유리 · 어둡게', bg:'radial-gradient(circle at 15% 85%, #4d6145, transparent 60%), linear-gradient(160deg,#363a40,#17191c)', pnl:'rgba(40,42,46,0.75)', dot:'#b4d93a' },
-            { id:'forest',    name:'숲',           bg:'linear-gradient(160deg,#f3f8f0,#dbe8d6)', pnl:'#ffffff', dot:'#4f8a5b' },
-            { id:'cream',     name:'따뜻한 크림',  bg:'linear-gradient(160deg,#fcf8f2,#f0e2cf)', pnl:'#ffffff', dot:'#c98a4b' }
+            { id:'sky',       name:'하늘 (기본)',  bg:'linear-gradient(160deg,#f2f7fd,#dfeaf7)', pnl:'#ffffff', dot:'#5b97d1', bar:'#e8eef6' },
+            { id:'glass',     name:'유리 · 밝게',  bg:'radial-gradient(circle at 15% 85%, #8fa887, transparent 60%), linear-gradient(160deg,#ece7df,#cfd6d2)', pnl:'rgba(255,255,255,0.55)', dot:'#8db31c', bar:'#e2dfd8' },
+            { id:'glassgray', name:'유리 · 회색',  bg:'radial-gradient(circle at 15% 85%, #8a9a86, transparent 60%), linear-gradient(160deg,#c3c6c9,#8f949a)', pnl:'rgba(236,238,240,0.6)', dot:'#9cc21f', bar:'#a9adb2' },
+            { id:'glassdark', name:'유리 · 어둡게', bg:'radial-gradient(circle at 15% 85%, #5f7356, transparent 60%), linear-gradient(160deg,#545a62,#33373c)', pnl:'rgba(58,62,68,0.75)', dot:'#b4d93a', bar:'#474c53' },
+            { id:'forest',    name:'숲',           bg:'linear-gradient(160deg,#f3f8f0,#dbe8d6)', pnl:'#ffffff', dot:'#4f8a5b', bar:'#e6eee2' },
+            { id:'cream',     name:'따뜻한 크림',  bg:'linear-gradient(160deg,#fcf8f2,#f0e2cf)', pnl:'#ffffff', dot:'#c98a4b', bar:'#f4ebdf' }
         ];
         function themeCurrent(){ try { return localStorage.getItem('appTheme') || 'sky'; } catch(e){ return 'sky'; } }
         function themeApply(id){
             if(!id || id === 'sky') document.body.removeAttribute('data-theme'); else document.body.setAttribute('data-theme', id);
             try { localStorage.setItem('appTheme', id || 'sky'); } catch(e){}
+            const t = APP_THEMES.find(function(x){ return x.id === (id || 'sky'); }) || APP_THEMES[0];
+            const mc = document.getElementById('meta-theme-color'); if(mc) mc.setAttribute('content', t.bar);
             themeRender();
         }
         function themePhotoApply(){
