@@ -2414,6 +2414,7 @@ var qrcode = function() {
         [contenteditable="true"] { outline: none; white-space: pre-wrap; min-height: 25px; transition: 0.2s; border-radius: 8px; padding: 6px; font-weight: 700; font-size: var(--board-font-size); line-height: 1.5; color: #2c3e50;}
         [contenteditable="true"]:hover { background: #f9fdff; cursor: text; }
         [contenteditable="true"]:focus { background: #ffffff; box-shadow: 0 0 0 2px var(--accent-blue) inset; }
+        #view-meal:empty:before { content: attr(data-placeholder); color: #b0bec5; font-weight: normal; display: block; }
         [contenteditable="true"]:empty:before { content: attr(data-placeholder); color: #b0bec5; font-weight: normal; pointer-events: none; display: block; }
 
         .read-only-mode [contenteditable="true"] { background: transparent !important; box-shadow: none !important; cursor: default !important; }
@@ -2968,6 +2969,7 @@ var qrcode = function() {
                     <div class="column-card" style="padding-top: 45px;">
                         <div class="info-box"><span class="info-label">📢 전달 사항</span><div id="view-notices-cal" style="display:none; margin-bottom:8px; font-weight:700; font-size:var(--board-font-size); color:#2c3e50; line-height:1.5;"></div><div class="info-content" id="view-notices" contenteditable="true" spellcheck="false" data-placeholder="클릭하여 입력"></div></div>
                         <div class="info-box" style="border-left: 5px solid #a5d6a7;"><span class="info-label" style="color:#5fa267;">📝 알림장</span><div class="info-content" id="view-allim" contenteditable="true" spellcheck="false" data-placeholder="클릭하여 입력"></div></div>
+                        <div class="info-box" style="border-left: 5px solid #ffcc80; background:#fffaf2;"><span class="info-label" style="color:#e08a1e; display:flex; justify-content:space-between; align-items:center;">🍱 오늘의 급식 <span onclick="mealPickFile()" title="급식표 파일(PDF·한글 HWPX·사진)을 올리면 날짜별로 자동 채움" style="cursor:pointer; font-size:12px; color:#b0855a; font-weight:700; background:#fff1dc; padding:2px 8px; border-radius:8px;">📄 급식표 올리기</span></span><div class="info-content" id="view-meal" style="white-space:pre-line;" data-placeholder="📄 급식표를 올리면 날짜별로 자동으로 채워져요"></div><input type="file" id="meal-file" accept=".pdf,.hwpx,.hwp,image/*" style="display:none" onchange="mealUpload(this)"></div>
                         <div class="info-box" style="background:#fdf1f6;"><span class="info-label" style="color: #db5e90;">🎂 생일 축하해요!</span><div class="info-content" id="view-birthday" contenteditable="true" spellcheck="false" data-placeholder="클릭하여 입력"></div></div>
                         
                         <div class="calendar-card" id="calendar-widget">
@@ -4068,9 +4070,12 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.33';
-        const APP_VERSION_DATE = '2026-09-23';
+        const APP_VERSION = '1.34';
+        const APP_VERSION_DATE = '2026-10-01';
         const APP_CHANGELOG = [
+            'v1.34 (2026-10-01) — 🍱 급식 칸 + 급식표 자동 채우기',
+            '  · 아침칠판 알림장 아래에 [오늘의 급식] 칸 추가 · [📄 급식표 올리기]로 PDF·한글(HWPX)·사진을 올리면 AI가 날짜별로 정리해 자동 표시',
+            '  · 예전 한글(.hwp)은 PDF나 HWPX로 저장해서 올리기 · [화면 수정]으로 숨기기/이동 가능',
             'v1.33 (2026-09-23) — 🔄 설치앱(PWA)이 항상 최신본을 받도록 수정',
             '  · 예전 화면이 캐시되어 업데이트가 안 보이던 문제 해결(서비스워커가 HTML을 항상 새로 받고, 새 버전이 뜨면 자동 새로고침)',
             'v1.32 (2026-09-23) — 📐 진짜 통짜 축소(재배치 없음): 데스크톱 폭 고정 후 창에 맞춰 축소',
@@ -4430,6 +4435,10 @@ var qrcode = function() {
             seatingCurrentRef = db.ref('rooms/' + currentRoom + '/seatingV2/current'); seatingSavesRef = db.ref('rooms/' + currentRoom + '/seatingV2/saves');
             rpgRef = db.ref('rooms/' + currentRoom + '/rpg');
             readingRef = db.ref('rooms/' + currentRoom + '/reading');
+            if(mealsRef) mealsRef.off();
+            mealsData = {};
+            mealsRef = db.ref('rooms/' + currentRoom + '/meals');
+            mealsRef.on('value', function(s){ mealsData = s.val() || {}; renderMeal(); });
             // 🔐 옛 방식(방 이름 직접 입력)으로 만든 방은 _meta가 없어 보안 규칙상 쓰기가 통째로 막힌다.
             //    읽기는 되는데 저장만 PERMISSION_DENIED가 나는 상태. 들어올 때마다 스스로 복구한다.
             ensureRoomWritable(auth.currentUser, currentRoom);
@@ -4915,6 +4924,7 @@ var qrcode = function() {
             { key:'duty',    label:'🧹 당번',       inner:'view-duty-nums' },
             { key:'notices', label:'📢 전달 사항', inner:'view-notices' },
             { key:'allim',   label:'📝 알림장',     inner:'view-allim' },
+            { key:'meal',    label:'🍱 급식',       inner:'view-meal' },
             { key:'birthday',label:'🎂 생일',       inner:'view-birthday' }
         ];
         function boardBlockEl(inner){ var e = document.getElementById(inner); return e ? e.closest('.info-box') : null; }
@@ -5877,7 +5887,105 @@ var qrcode = function() {
             });
         }
 
+        // 🍱 급식 — 급식표(PDF·한글 HWPX·사진)를 AI로 날짜별 정리해 rooms/<반>/meals/<YYYY-MM-DD> 에 저장
+        var mealsRef = null, mealsData = {};
+        function renderMeal() {
+            const el = document.getElementById('view-meal'); if(!el) return;
+            const m = mealsData && mealsData[getFormattedDate(viewDate)];
+            el.innerText = m || '';
+            if(!m){
+                const dow = viewDate.getDay();
+                el.setAttribute('data-placeholder', (dow === 0 || dow === 6) ? '주말 — 급식 없음'
+                    : (Object.keys(mealsData || {}).length ? '이 날은 급식 정보가 없어요' : '📄 급식표를 올리면 날짜별로 자동으로 채워져요'));
+            }
+        }
+        function mealPickFile() {
+            if(!currentRoom || !mealsRef){ alert('학급에 입장한 뒤 이용해 주세요.'); return; }
+            document.getElementById('meal-file').click();
+        }
+        function mealLoadScript(src) {
+            return new Promise(function(res, rej){ const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = function(){ rej(new Error('라이브러리를 불러오지 못했어요')); }; document.head.appendChild(s); });
+        }
+        function mealFileToBase64(file) {
+            return new Promise(function(res, rej){ const r = new FileReader(); r.onload = function(){ res(String(r.result).split(',')[1]); }; r.onerror = function(){ rej(r.error); }; r.readAsDataURL(file); });
+        }
+        // 한글(HWPX = zip+XML)에서 표 구조를 살려 글자만 뽑기
+        async function mealHwpxText(file) {
+            if(!window.JSZip) await mealLoadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+            const zip = await JSZip.loadAsync(file);
+            const names = Object.keys(zip.files).filter(function(n){ return /^Contents\/section\d+\.xml$/i.test(n); }).sort();
+            let out = '';
+            for(const n of names){
+                let xml = await zip.file(n).async('string');
+                xml = xml.replace(/<\/hp:tc>/g, ' | ').replace(/<\/hp:tr>/g, '\n').replace(/<\/hp:p>/g, ' ').replace(/<[^>]+>/g, '');
+                out += xml + '\n';
+            }
+            const ta = document.createElement('textarea'); ta.innerHTML = out;
+            return ta.value.replace(/[ \t]+/g, ' ');
+        }
+        async function mealUpload(input) {
+            const file = input.files && input.files[0]; input.value = '';
+            if(!file) return;
+            const apiKey = localStorage.getItem('geminiApiKey');
+            if(!apiKey){ alert('먼저 [기초 세팅]에서 구글(Gemini) API 키를 입력해 주세요.'); return; }
+            const name = file.name.toLowerCase();
+            if(/\.hwp$/.test(name)){
+                alert('예전 한글(.hwp) 파일은 브라우저에서 바로 읽을 수 없어요.\n\n한글에서 [파일 → 다른 이름으로 저장] → 파일 형식을 "PDF" 또는 "HWPX"로 바꿔 저장한 뒤 그 파일을 올려 주세요.');
+                return;
+            }
+            const el = document.getElementById('view-meal');
+            el.innerText = '🤖 급식표 읽는 중... (10~30초)';
+            try {
+                const y = viewDate.getFullYear(), mo = viewDate.getMonth() + 1;
+                const prompt = '이것은 한국 초등학교의 급식 식단표다. 날짜별 메뉴를 JSON으로만 반환하라.\n'
+                    + '형식: {"meals":[{"date":"YYYY-MM-DD","menu":"메뉴1\\n메뉴2\\n메뉴3"}]}\n'
+                    + '규칙: 표에 연도가 없으면 ' + y + '년으로 본다. 표에 월이 적혀 있으면 그 월을, 없으면 ' + mo + '월로 본다. '
+                    + '메뉴는 한 줄에 하나씩(\\n 로 구분). 알레르기 번호(예: (1.2.5.6), 1.5.6.)·칼로리·원산지·영양정보는 빼고 메뉴 이름만 쓴다. '
+                    + '급식이 없는 날(휴업일·공휴일·방학)은 넣지 않는다. 설명 없이 JSON만.';
+                let parts;
+                if(/\.hwpx$/.test(name)){
+                    const txt = await mealHwpxText(file);
+                    if(!txt.trim()) throw new Error('한글 파일에서 글자를 찾지 못했어요');
+                    parts = [{ text: prompt + '\n\n[식단표 내용]\n' + txt.slice(0, 60000) }];
+                } else if(/\.pdf$/.test(name) || file.type === 'application/pdf'){
+                    parts = [{ inlineData: { mimeType: 'application/pdf', data: await mealFileToBase64(file) } }, { text: prompt }];
+                } else if(/^image\//.test(file.type)){
+                    parts = [{ inlineData: { mimeType: file.type, data: await mealFileToBase64(file) } }, { text: prompt }];
+                } else {
+                    throw new Error('PDF · 한글(HWPX) · 사진 파일만 올릴 수 있어요');
+                }
+                const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=' + encodeURIComponent(apiKey);
+                const reqBody = JSON.stringify({ contents: [{ parts: parts }], generationConfig: { responseMimeType: 'application/json', temperature: 0 } });
+                let data = null;
+                for(let attempt = 0; attempt < 3; attempt++){
+                    const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: reqBody });
+                    data = await res.json();
+                    if(res.ok && !data.error) break;
+                    const msg = (data.error && data.error.message) || '';
+                    const transient = res.status === 503 || res.status === 429 || /overloaded|unavailable|try again/i.test(msg);
+                    if(transient && attempt < 2){ el.innerText = '🤖 혼잡… 재시도 ' + (attempt + 2) + '/3'; await new Promise(function(r){ setTimeout(r, 1500 * (attempt + 1)); }); continue; }
+                    throw new Error('AI 호출 오류: ' + (msg || res.status));
+                }
+                const cand = (data.candidates || [])[0];
+                let out = cand ? (((cand.content && cand.content.parts) || []).map(function(x){ return x.text || ''; }).join('')).trim() : '';
+                out = out.replace(/^```(?:json)?/, '').replace(/```$/, '').trim();
+                let parsed; try { parsed = JSON.parse(out || '{}'); } catch(e){ throw new Error('AI 응답을 이해하지 못했어요. 다시 시도해 주세요.'); }
+                const list = ((parsed && parsed.meals) || [])
+                    .filter(function(x){ return x && /^\d{4}-\d{2}-\d{2}$/.test(x.date || '') && (x.menu || '').trim(); })
+                    .map(function(x){ return { date: x.date, menu: String(x.menu).replace(/\\n/g, '\n').trim() }; })
+                    .sort(function(a, b){ return a.date < b.date ? -1 : 1; });
+                if(!list.length) throw new Error('식단을 찾지 못했어요. 파일이 급식표가 맞는지 확인해 주세요.');
+                const sample = list[0].date + ': ' + list[0].menu.split('\n').slice(0, 4).join(', ');
+                if(!confirm('🍱 급식 ' + list.length + '일치를 찾았어요 (' + list[0].date + ' ~ ' + list[list.length - 1].date + ')\n\n예) ' + sample + '\n\n아침칠판 급식칸에 저장할까요?\n(같은 날짜가 이미 있으면 새 내용으로 바뀌어요)')) return;
+                const upd = {}; list.forEach(function(m){ upd[m.date] = m.menu; });
+                await mealsRef.update(upd);
+                rpgToast('🍱 급식 ' + list.length + '일치 저장!');
+            } catch(e){ alert('급식표 읽기 오류: ' + e.message); }
+            finally { renderMeal(); }
+        }
+
         function renderCalendar() {
+            renderMeal();
             const y = calDate.getFullYear(), m = calDate.getMonth(); document.getElementById('cal-month-title').innerText = `${y}년 ${m + 1}월`;
             const first = new Date(y, m, 1).getDay(), last = new Date(y, m + 1, 0).getDate();
             const con = document.getElementById('cal-dates'); con.innerHTML = '';
