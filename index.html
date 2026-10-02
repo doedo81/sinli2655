@@ -2736,6 +2736,20 @@ var qrcode = function() {
         body[data-theme="glassdark"] [contenteditable="true"]:empty:before, body[data-theme="glassdark"] #view-meal:empty:before { color: #8a939b; }
         body[data-theme="glassdark"] #view-meal { color: #d9d2c8 !important; }
         body[data-theme^="glass"] span[onclick="mealPickFile()"] { background: rgba(255,255,255,0.18) !important; color: inherit !important; }
+        /* 다른 탭(점수판·과제·자리배치·성장·독서·바로가기·캘린더)의 큰 흰 카드도 유리판으로 */
+        body[data-theme="glass"]     { --pnl-tab: rgba(255,255,255,0.55); }
+        body[data-theme="glassgray"] { --pnl-tab: rgba(236,238,240,0.58); }
+        body[data-theme="glassdark"] { --pnl-tab: rgba(244,246,248,0.84); }
+        body[data-theme^="glass"] .content-section .picker-box,
+        body[data-theme^="glass"] .content-section > div[style*="background:white"],
+        body[data-theme^="glass"] .content-section > div[style*="background: white"],
+        body[data-theme^="glass"] .content-section > div[style*="background:var(--white)"],
+        body[data-theme^="glass"] .content-section > div[style*="background: var(--white)"] {
+            background: var(--pnl-tab) !important; -webkit-backdrop-filter: blur(22px) saturate(140%); backdrop-filter: blur(22px) saturate(140%);
+            border: 1px solid var(--pnl-bd) !important; box-shadow: 0 12px 40px rgba(0,0,0,0.14) !important; border-radius: 24px !important; }
+        /* 숲·크림: 큰 카드에 테마색을 살짝 */
+        body[data-theme="forest"] .content-section .picker-box { background:#fbfdf9; border-color:#e2ecdd; }
+        body[data-theme="cream"]  .content-section .picker-box { background:#fffcf8; border-color:#f1e5d6; }
         /* 테마 고르기 창 */
         .theme-card { cursor: pointer; border-radius: 14px; border: 2px solid #e6ebf3; padding: 8px; background: #fff; transition: 0.15s; text-align: center; }
         .theme-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.10); }
@@ -4156,9 +4170,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.38';
-        const APP_VERSION_DATE = '2026-10-01';
+        const APP_VERSION = '1.39';
+        const APP_VERSION_DATE = '2026-10-02';
         const APP_CHANGELOG = [
+            'v1.39 (2026-10-02) — 🎨 점수판·과제·자리배치·성장·독서·바로가기·캘린더 탭도 디자인 적용(유리 디자인에서 큰 카드가 유리판으로)',
             'v1.38 (2026-10-01) — 🎨 칸 위쪽 색 띠 없앰(모든 디자인에서 칸 테두리를 한 가지 색으로 깔끔하게)',
             'v1.37 (2026-10-01) — 🎨 유리·회색 테마 추가 · 어둡게 덜 어둡게 · 창 제목 "아침 칠판 대시보드" · 맨 위 파란 바도 테마색으로',
             'v1.36 (2026-10-01) — 🎨 디자인(테마) 고르기 + 배경 사진',
