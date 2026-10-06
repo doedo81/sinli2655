@@ -2807,6 +2807,64 @@ var qrcode = function() {
         @media (max-width: 1100px) { .dash-grid { grid-template-columns: repeat(2, 1fr); } .dash-row { grid-template-columns: 1fr; } }
         body[data-theme^="glass"] .dash-card { background: rgba(255,255,255,0.45); border-color: rgba(255,255,255,0.6); }
 
+        /* ===================== ⚔️ 장비 상점 + 🥊 친구 대결 ===================== */
+        .gear-box { background:#f7f9fc; border:1px solid #e3eaf3; border-radius:14px; padding:12px; margin-top:14px; text-align:left; }
+        .gear-head { display:flex; justify-content:space-between; align-items:center; font-weight:800; color:#51618a; margin-bottom:6px; gap:8px; }
+        .gear-coin { background:#fff4d6; color:#a86f00; border-radius:20px; padding:3px 10px; font-size:13px; white-space:nowrap; }
+        .gear-statline { font-size:12.5px; color:#455a64; font-weight:700; margin-bottom:4px; }
+        .gear-tip { font-size:11.5px; color:#90a4ae; margin-bottom:6px; line-height:1.5; }
+        .gear-slot-label { font-size:12px; color:#78909c; margin:10px 0 6px; font-weight:700; }
+        .gear-row { display:flex; flex-wrap:wrap; gap:6px; }
+        .gear-it { border:1px solid #d7deea; background:#fff; border-radius:10px; padding:6px 10px; font-size:12.5px; cursor:pointer; font-family:inherit; color:#37474f; display:inline-flex; flex-direction:column; align-items:flex-start; line-height:1.3; text-align:left; }
+        .gear-it small { font-size:10.5px; color:#8a98a8; font-weight:600; }
+        .gear-it.on { border:2px solid #5b97d1; background:#eaf2fb; }
+        .gear-it.buy b { color:#a86f00; }
+        .gear-it.poor { opacity:.5; }
+        .gear-it.lock { border-style:dashed; color:#b8c0c8; cursor:default; background:transparent; }
+        .gear-more { font-size:11.5px; color:#b0bec5; align-self:center; padding:0 4px; }
+        .bt-box { background:#fff7e9; border:1px solid #ffd9a0; border-radius:12px; padding:10px 12px; font-size:13.5px; color:#5d4a2c; line-height:1.6; }
+        .bt-box button, .bt-go { border:none; border-radius:9px; padding:7px 12px; font-weight:800; font-family:inherit; cursor:pointer; margin:4px 4px 0 0; background:#eceff1; color:#455a64; }
+        .bt-box button.ok, .bt-go { background:#ff8a3d; color:#fff; }
+        .bt-go { width:100%; padding:12px; font-size:15px; margin:0; }
+        #battle-modal { position:fixed; inset:0; z-index:6500; display:none; overflow-y:auto; color:#fff; font-family:'Pretendard',sans-serif;
+            background: radial-gradient(700px 420px at 80% 0%, rgba(255,138,61,0.25), transparent 60%), radial-gradient(600px 420px at 10% 100%, rgba(91,151,209,0.22), transparent 60%), linear-gradient(160deg,#232838 0%,#11141d 100%); }
+        .bt-wrap { max-width:540px; margin:0 auto; padding:14px; display:flex; flex-direction:column; gap:10px; min-height:100%; }
+        .bt-top { display:flex; justify-content:space-between; align-items:center; font-weight:800; color:#cfd8dc; font-size:13px; }
+        .bt-top button { border:1px solid rgba(255,255,255,0.25); background:transparent; color:#cfd8dc; border-radius:9px; padding:5px 10px; font-family:inherit; cursor:pointer; font-size:12px; }
+        .bt-fighter { background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:18px; padding:12px 14px; display:flex; align-items:center; gap:14px; position:relative; transition: box-shadow .3s; }
+        .bt-fighter.turn { box-shadow:0 0 0 2px #ffb74d, 0 0 26px rgba(255,183,77,0.35); }
+        .bt-av { position:relative; flex:none; width:96px; display:flex; justify-content:center; }
+        .bt-av .flip { transform:scaleX(-1); }
+        .bt-wpn { position:absolute; right:-12px; bottom:4px; font-size:32px; filter:drop-shadow(0 3px 4px rgba(0,0,0,.55)); }
+        .bt-shd { position:absolute; left:-12px; bottom:4px; font-size:26px; filter:drop-shadow(0 3px 4px rgba(0,0,0,.55)); }
+        .bt-info { flex:1; min-width:0; }
+        .bt-name { font-weight:900; font-size:17px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .bt-name small { font-size:12px; color:#b0bec5; font-weight:700; }
+        .bt-hp { height:14px; background:rgba(255,255,255,0.12); border-radius:8px; overflow:hidden; margin:7px 0 4px; }
+        .bt-hp i { display:block; height:100%; background:linear-gradient(90deg,#43a047,#9ccc65); transition:width .7s cubic-bezier(.2,.7,.2,1); }
+        .bt-hp i.low { background:linear-gradient(90deg,#e53935,#ffa726); }
+        .bt-meta { font-size:12px; color:#b0bec5; display:flex; justify-content:space-between; gap:6px; }
+        .bt-en { color:#ffd54f; letter-spacing:1px; }
+        .bt-guard { position:absolute; top:8px; right:12px; font-size:12px; background:rgba(91,151,209,0.35); border-radius:10px; padding:2px 8px; }
+        .bt-mid { text-align:center; padding:2px; }
+        .bt-turn { font-weight:900; font-size:19px; color:#ffcc80; }
+        .bt-turn.me { color:#ffd54f; text-shadow:0 0 14px rgba(255,213,79,0.5); }
+        .bt-log { font-size:12.5px; color:#cfd8dc; line-height:1.65; background:rgba(0,0,0,0.25); border-radius:12px; padding:8px 12px; min-height:62px; }
+        .bt-log div:last-child { color:#fff; font-weight:700; }
+        .bt-cards { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+        .bt-card { border:none; border-radius:14px; padding:12px 4px 10px; background:linear-gradient(160deg,#3d4c70,#283350); color:#fff; font-family:inherit; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px; box-shadow:0 6px 16px rgba(0,0,0,0.35); transition:transform .15s, box-shadow .15s; }
+        .bt-card:hover:not(:disabled) { transform:translateY(-5px); box-shadow:0 12px 24px rgba(0,0,0,0.45); }
+        .bt-card:disabled { opacity:.32; cursor:default; }
+        .bt-card.sp { background:linear-gradient(160deg,#c2410c,#7c2d12); }
+        .bt-card .e { font-size:28px; } .bt-card .n { font-weight:900; font-size:14px; } .bt-card .d { font-size:10.5px; color:#d6dde3; text-align:center; line-height:1.3; padding:0 2px; } .bt-card .c { font-size:11px; color:#ffd54f; }
+        .bt-end { text-align:center; background:rgba(255,255,255,0.08); border-radius:16px; padding:16px; }
+        .bt-end .w { font-size:26px; font-weight:900; color:#ffd54f; }
+        .bt-btn { border:none; border-radius:12px; padding:12px; font-weight:800; font-family:inherit; cursor:pointer; font-size:15px; }
+        @keyframes btShake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-9px)} 40%{transform:translateX(9px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(4px)} }
+        .bt-shake { animation: btShake .45s; }
+        @keyframes btFloat { 0%{opacity:0; transform:translate(-50%,0) scale(.7)} 15%{opacity:1; transform:translate(-50%,-12px) scale(1.2)} 100%{opacity:0; transform:translate(-50%,-64px) scale(1)} }
+        .bt-float { position:absolute; left:50%; top:6px; font-size:32px; font-weight:900; pointer-events:none; animation:btFloat 1.15s ease forwards; text-shadow:0 2px 8px rgba(0,0,0,0.7); z-index:3; }
+
         /* 테마 고르기 창 */
         .theme-card { cursor: pointer; border-radius: 14px; border: 2px solid #e6ebf3; padding: 8px; background: #fff; transition: 0.15s; text-align: center; }
         .theme-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.10); }
@@ -3382,6 +3440,7 @@ var qrcode = function() {
                                     <div id="rpg-menu">
                                         <div class="rpg-menu-label">수업 도구</div>
                                         <button onclick="rpgOpenMissions(); rpgCloseMenu();"><i class="fa-solid fa-bullseye" style="color:#e91e8c; width:18px;"></i> 미션</button>
+                                        <button onclick="battleWatchOpen(); rpgCloseMenu();"><i class="fa-solid fa-hand-fist" style="color:#ff7a2f; width:18px;"></i> 친구 대결 현황</button>
                                         <button onclick="rpgOpenExam(); rpgCloseMenu();"><i class="fa-solid fa-file-pen" style="color:#fb8c00; width:18px;"></i> 단원평가</button>
                                         <button id="rpg-grade-btn" style="display:none;" onclick="rpgOpenGrade(); rpgCloseMenu();"><i class="fa-solid fa-table-list" style="color:#455a64; width:18px;"></i> 평가 기록</button>
                                         <div class="rpg-menu-sep"></div>
@@ -4229,9 +4288,12 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.41';
+        const APP_VERSION = '1.42';
         const APP_VERSION_DATE = '2026-10-06';
         const APP_CHANGELOG = [
+            'v1.42 (2026-10-06) — ⚔️ 장비 상점(코인) + 🥊 친구와 실시간 턴제 대결',
+            '  · 무기·옷·방패·장신구 43종(Lv1~100) — 레벨이 되면 열리고 코인으로 구매 · 코인 = 받은 XP + 대결 보너스',
+            '  · 학생 화면에서 친구에게 대결 신청 → 각자 기기로 공격·방어·회복·필살기 카드 턴제 · 이기면 🪙15(하루 3번) · 선생님은 [관리→친구 대결 현황]으로 중계',
             'v1.41 (2026-10-06) — 🐞 성장 탭 "우리 반 성장 현황"이 안 보이던 문제 수정',
             'v1.40 (2026-10-06) — ✨ 다크 프리미엄 디자인 3종 + 움직임 효과 + 그래프',
             '  · 디자인 9가지: 다크 프리미엄(주황·보라·청록) 추가 · 탭 열 때 스르륵, 카드에 마우스 올리면 살짝 떠오름, 점수가 올라가며 바뀜',
@@ -4671,6 +4733,7 @@ var qrcode = function() {
             mealsData = {};
             mealsRef = db.ref('rooms/' + currentRoom + '/meals');
             mealsRef.on('value', function(s){ mealsData = s.val() || {}; renderMeal(); });
+            battleBind();
             // 🔐 옛 방식(방 이름 직접 입력)으로 만든 방은 _meta가 없어 보안 규칙상 쓰기가 통째로 막힌다.
             //    읽기는 되는데 저장만 PERMISSION_DENIED가 나는 상태. 들어올 때마다 스스로 복구한다.
             ensureRoomWritable(auth.currentUser, currentRoom);
@@ -9156,7 +9219,8 @@ var qrcode = function() {
             const headPick = '<div style="font-size:11px;color:#bbb;margin:14px 0 -2px;">✨ 꾸미기 (레벨 달성 시 해금)</div>'
                 + rpgPickerRow(id, '👒 머리 장식', 'head', RPG_ITEMS_HEAD, d.head, L.lv)
                 + rpgPickerRow(id, '🐾 펫', 'pet', RPG_ITEMS_PET, d.pet, L.lv)
-                + rpgPickerRow(id, '🖼️ 프레임', 'frame', RPG_ITEMS_FRAME, d.frame, L.lv);
+                + rpgPickerRow(id, '🖼️ 프레임', 'frame', RPG_ITEMS_FRAME, d.frame, L.lv)
+                + gearSectionHtml(id, d, L);
             document.getElementById('rpg-modal-body').innerHTML =
                 '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
                 + '<div style="display:flex;gap:10px;align-items:center;">'
@@ -10333,7 +10397,8 @@ var qrcode = function() {
                 rpgRef = db.ref('rooms/' + room + '/rpg');
                 readingRef = db.ref('rooms/' + room + '/reading');
                 settingsRef.once('value').then(function(s){ var v = s.val() || {}; globalStudentRosterStr = v.roster || ''; document.getElementById('student-classname').innerText = v.className || '우리 반'; _studentRosterReady = true; _tryStudentPending(); });
-                rpgRef.on('value', function(s){ rpgData = s.val() || {}; _studentRpgReady = true; if(studentNum != null) rpgRenderStudentPage(studentNum); _tryStudentPending(); });
+                rpgRef.on('value', function(s){ rpgData = s.val() || {}; _studentRpgReady = true; if(studentNum != null) rpgRenderStudentPage(studentNum); _tryStudentPending(); if(battleOpenId) battleRender(); });
+                battleBind();
                 readingRef.on('value', function(s){ readingData = s.val() || {}; if(studentNum != null) readingRenderStudentSection(studentNum); });
                 var saved = localStorage.getItem('studentNum_' + code);
                 if(saved){ studentNum = parseInt(saved); login.style.display = 'none'; document.getElementById('student-page').style.display = 'block'; setTimeout(function(){ rpgRenderStudentPage(studentNum); }, 300); }
@@ -10372,6 +10437,396 @@ var qrcode = function() {
             document.getElementById('student-num').value = ''; document.getElementById('student-pw').value = '';
             document.getElementById('student-login').style.display = 'flex';
         }
+        // ===================== ⚔️ 장비(코인 상점) + 🥊 친구 대결(실시간 턴제) =====================
+        // 코인 = 지금까지 받은 XP + 대결 보너스(coinBonus) − 쓴 코인(spent). 장비는 레벨이 되면 해금 → 코인으로 구매.
+        // 저장: rpg/students/<번호>/{inv:{아이템:true}, equip:{slot:아이템}, spent, coinBonus, bw, bl, battleDay, battleWins}
+        //       rooms/<반>/battles/<대결ID>  (성장 데이터와 분리 → 공격할 때마다 선생님 카드 화면이 다시 그려지지 않게)
+        const GEAR_SLOTS = [
+            { key:'weapon', name:'무기',    icon:'⚔️' },
+            { key:'armor',  name:'옷·갑옷', icon:'👕' },
+            { key:'shield', name:'방패',    icon:'🛡️' },
+            { key:'acc',    name:'장신구',  icon:'💍' }
+        ];
+        const RPG_GEAR = {
+            weapon: [
+                { id:'w_stick',   name:'나뭇가지',     emoji:'🪵', lv:1,   atk:2 },
+                { id:'w_dagger',  name:'단검',         emoji:'🗡️', lv:3,   atk:4 },
+                { id:'w_axe',     name:'나무꾼 도끼',  emoji:'🪓', lv:6,   atk:6 },
+                { id:'w_sword',   name:'기사의 검',    emoji:'⚔️', lv:10,  atk:8 },
+                { id:'w_hammer',  name:'대장장이 망치', emoji:'🔨', lv:15,  atk:10 },
+                { id:'w_bow',     name:'사냥꾼 활',    emoji:'🏹', lv:20,  atk:11, crit:3 },
+                { id:'w_wand',    name:'마법 지팡이',  emoji:'🪄', lv:25,  atk:13 },
+                { id:'w_trident', name:'바다의 삼지창', emoji:'🔱', lv:32,  atk:15 },
+                { id:'w_bigaxe',  name:'전투 도끼',    emoji:'⚒️', lv:40,  atk:18 },
+                { id:'w_fire',    name:'불꽃검',       emoji:'🔥', lv:50,  atk:21 },
+                { id:'w_ice',     name:'얼음 지팡이',  emoji:'❄️', lv:60,  atk:24 },
+                { id:'w_thunder', name:'번개 망치',    emoji:'⚡', lv:70,  atk:27 },
+                { id:'w_dragon',  name:'용의 창',      emoji:'🐉', lv:82,  atk:31 },
+                { id:'w_holy',    name:'빛의 성검',    emoji:'✨', lv:100, atk:36, crit:5 }
+            ],
+            armor: [
+                { id:'a_gym',     name:'학교 체육복',  emoji:'👕', lv:1,   def:1,  hp:5 },
+                { id:'a_cloth',   name:'모험가 옷',    emoji:'🧥', lv:4,   def:2,  hp:10 },
+                { id:'a_soccer',  name:'축구 유니폼',  emoji:'⚽', lv:8,   def:3,  hp:15 },
+                { id:'a_leather', name:'가죽 갑옷',    emoji:'🦺', lv:12,  def:4,  hp:20 },
+                { id:'a_dobok',   name:'태권도 도복',  emoji:'🥋', lv:18,  def:5,  hp:28 },
+                { id:'a_chain',   name:'사슬 갑옷',    emoji:'⛓️', lv:25,  def:7,  hp:35 },
+                { id:'a_robe',    name:'마법사 로브',  emoji:'🧙', lv:33,  def:8,  hp:45 },
+                { id:'a_ninja',   name:'닌자복',       emoji:'🥷', lv:42,  def:9,  hp:55 },
+                { id:'a_knight',  name:'기사 갑옷',    emoji:'🤺', lv:52,  def:11, hp:65 },
+                { id:'a_space',   name:'우주복',       emoji:'🚀', lv:64,  def:12, hp:78 },
+                { id:'a_dragon',  name:'용비늘 갑옷',  emoji:'🐲', lv:76,  def:14, hp:90 },
+                { id:'a_gold',    name:'황금 갑옷',    emoji:'🏆', lv:88,  def:16, hp:105 },
+                { id:'a_legend',  name:'전설의 갑옷',  emoji:'🌟', lv:100, def:18, hp:120 }
+            ],
+            shield: [
+                { id:'s_pot',     name:'냄비 뚜껑',    emoji:'🍳', lv:2,   def:1 },
+                { id:'s_wood',    name:'나무 방패',    emoji:'🟫', lv:6,   def:2,  hp:5 },
+                { id:'s_iron',    name:'철 방패',      emoji:'🛡️', lv:14,  def:4,  hp:10 },
+                { id:'s_turtle',  name:'거북 등껍질',  emoji:'🐢', lv:24,  def:6,  hp:18 },
+                { id:'s_knight',  name:'기사 방패',    emoji:'🔰', lv:36,  def:8,  hp:25 },
+                { id:'s_mirror',  name:'거울 방패',    emoji:'🪞', lv:50,  def:10, hp:32 },
+                { id:'s_ice',     name:'얼음 방패',    emoji:'🧊', lv:64,  def:12, hp:40 },
+                { id:'s_dragon',  name:'용의 방패',    emoji:'🐉', lv:80,  def:14, hp:50 },
+                { id:'s_legend',  name:'전설의 방패',  emoji:'💠', lv:96,  def:17, hp:60 }
+            ],
+            acc: [
+                { id:'c_clover',  name:'행운 클로버',  emoji:'🍀', lv:5,   crit:4 },
+                { id:'c_ring',    name:'힘의 반지',    emoji:'💍', lv:12,  atk:3 },
+                { id:'c_shoes',   name:'바람 신발',    emoji:'👟', lv:20,  spd:3, crit:2 },
+                { id:'c_necklace',name:'지혜 목걸이',  emoji:'📿', lv:30,  atk:2, hp:20 },
+                { id:'c_feather', name:'불사조 깃털',  emoji:'🪶', lv:45,  hp:35, crit:3 },
+                { id:'c_hourglass',name:'시간 모래시계', emoji:'⏳', lv:62, spd:6, atk:4 },
+                { id:'c_star',    name:'별의 왕관',    emoji:'⭐', lv:85,  atk:6, crit:6, hp:30 }
+            ]
+        };
+        const BATTLE_WIN_COINS = 15, BATTLE_DAILY = 3;
+        // 장비 그림: assets/gear/list.json 에 있는 아이템만 그림(assets/gear/<id>.png)으로, 나머지는 아이콘
+        var GEAR_IMAGES = {};
+        try { fetch('assets/gear/list.json', { cache:'no-store' }).then(function(r){ return r.ok ? r.json() : []; }).then(function(a){ (a || []).forEach(function(id){ GEAR_IMAGES[id] = true; }); }).catch(function(){}); } catch(e){}
+        function gearPrice(it){ return it.price != null ? it.price : (it.lv <= 1 ? 0 : Math.round((Math.pow(it.lv, 1.35) * 12 + 20) / 10) * 10); }
+        function gearFind(id){ for(const s in RPG_GEAR){ const it = RPG_GEAR[s].find(function(x){ return x.id === id; }); if(it) return Object.assign({ slot:s }, it); } return null; }
+        function gearCoins(d){ d = d || {}; return Math.max(0, (d.xp || 0) + (d.coinBonus || 0) - (d.spent || 0)); }
+        function gearOwned(d, it){ return !!((d && d.inv) || {})[it.id] || (gearPrice(it) === 0 && rpgLevel(d && d.xp).lv >= it.lv); }
+        function gearEquipped(d, slot){ const id = d && d.equip && d.equip[slot]; return id ? gearFind(id) : null; }
+        function gearIcon(it, px){
+            if(!it) return '';
+            if(GEAR_IMAGES[it.id]) return '<img src="assets/gear/' + it.id + '.png" alt="' + it.name + '" style="width:' + (px || 20) + 'px;height:' + (px || 20) + 'px;object-fit:contain;vertical-align:middle;">';
+            return '<span style="font-size:' + (px || 20) + 'px;line-height:1;">' + it.emoji + '</span>';
+        }
+        function gearStatText(it){ const a = []; if(it.atk) a.push('공격+' + it.atk); if(it.def) a.push('방어+' + it.def); if(it.hp) a.push('체력+' + it.hp); if(it.crit) a.push('치명+' + it.crit + '%'); if(it.spd) a.push('속도+' + it.spd); return a.join(' · '); }
+        function gearStatsOf(d){
+            d = d || {}; const L = rpgLevel(d.xp), st = d.stats || {};
+            let atk = 10 + Math.floor(((st.str || 0) + (st.int || 0)) / 3);
+            let def = 3 + Math.floor(((st.mnd || 0) + (st.wis || 0)) / 4);
+            let hp = 100 + Math.floor(L.lv / 2), crit = 5 + Math.min(15, st.cha || 0), spd = st.dex || 0;
+            GEAR_SLOTS.forEach(function(s){ const it = gearEquipped(d, s.key); if(!it) return; atk += it.atk || 0; def += it.def || 0; hp += it.hp || 0; crit += it.crit || 0; spd += it.spd || 0; });
+            return { atk:atk, def:def, hp:hp, crit:Math.min(35, crit), spd:spd };
+        }
+        function gearSectionHtml(num, d, L){
+            d = d || {}; const coins = gearCoins(d), s = gearStatsOf(d);
+            let h = '<div class="gear-box"><div class="gear-head"><span>⚔️ 장비</span><span class="gear-coin">🪙 ' + coins.toLocaleString() + ' 코인</span></div>'
+                + '<div class="gear-statline">❤️ 체력 ' + s.hp + ' · ⚔️ 공격 ' + s.atk + ' · 🛡️ 방어 ' + s.def + ' · 🎯 치명 ' + s.crit + '%</div>'
+                + '<div class="gear-tip">상점(XP)을 받으면 코인도 같이 쌓여요 · 레벨이 되면 열리고 코인으로 사요 · 대결에서 이기면 보너스 코인</div>';
+            GEAR_SLOTS.forEach(function(sl){
+                const eq = d.equip && d.equip[sl.key];
+                h += '<div class="gear-slot-label">' + sl.icon + ' ' + sl.name + '</div><div class="gear-row">'
+                    + '<button class="gear-it' + (!eq ? ' on' : '') + '" onclick="gearEquip(' + num + ',\'' + sl.key + '\',null)">없음</button>';
+                let lockedShown = 0, lockedMore = 0;
+                RPG_GEAR[sl.key].forEach(function(it){
+                    const price = gearPrice(it), stat = gearStatText(it);
+                    if(gearOwned(d, it)){
+                        h += '<button class="gear-it' + (eq === it.id ? ' on' : '') + '" onclick="gearEquip(' + num + ',\'' + sl.key + '\',\'' + it.id + '\')">' + gearIcon(it, 16) + ' ' + it.name + '<small>' + stat + '</small></button>';
+                    } else if(L.lv >= it.lv){
+                        h += '<button class="gear-it buy' + (coins < price ? ' poor' : '') + '" onclick="gearBuy(' + num + ',\'' + it.id + '\')">' + gearIcon(it, 16) + ' ' + it.name + ' <b>🪙' + price + '</b><small>' + stat + '</small></button>';
+                    } else if(lockedShown < 3){
+                        lockedShown++;
+                        h += '<span class="gear-it lock">🔒 ' + it.name + '<small>Lv' + it.lv + ' · ' + stat + '</small></span>';
+                    } else lockedMore++;
+                });
+                if(lockedMore) h += '<span class="gear-more">… 그 뒤로 ' + lockedMore + '개 더</span>';
+                h += '</div>';
+            });
+            return h + '</div>';
+        }
+        function gearBuy(num, id){
+            if(!rpgRef) return;
+            const it = gearFind(id); if(!it) return;
+            const price = gearPrice(it), d = (rpgData.students && rpgData.students[num]) || {};
+            if(rpgLevel(d.xp).lv < it.lv){ alert('Lv' + it.lv + '부터 살 수 있어요.'); return; }
+            if(gearCoins(d) < price){ alert('코인이 부족해요!\n필요: 🪙' + price + '  /  내 코인: 🪙' + gearCoins(d) + '\n\n상점을 받거나 대결에서 이기면 코인이 생겨요.'); return; }
+            if(!confirm(it.emoji + ' ' + it.name + '을(를) 🪙' + price + ' 코인에 살까요?\n(' + gearStatText(it) + ')\n\n사면 바로 착용돼요.')) return;
+            const upd = {}; upd['inv/' + id] = true; upd['spent'] = (d.spent || 0) + price; upd['equip/' + it.slot] = id;
+            rpgRef.child('students/' + num).update(upd).then(function(){ rpgToast(it.emoji + ' ' + it.name + ' 구매·착용!'); if(window.SFX) try{ SFX.levelup(); }catch(e){} })
+                .catch(function(e){ alert('구매 오류: ' + e.message + '\n(선생님께 보안 규칙 업데이트가 필요하다고 알려주세요)'); });
+        }
+        function gearEquip(num, slot, id){
+            if(!rpgRef) return;
+            rpgRef.child('students/' + num + '/equip/' + slot).set(id || null).then(function(){ rpgToast(id ? '착용 완료' : '벗음'); })
+                .catch(function(e){ alert('착용 오류: ' + e.message); });
+        }
+
+        // ---------- 🥊 대결 ----------
+        var battlesRef = null, battlesData = {}, battleOpenId = null, battleLastTs = 0, battlePrevHp = {};
+        const BATTLE_CARDS = {
+            attack:  { name:'공격',   emoji:'⚔️', cost:0, gain:1, desc:'무기로 공격' },
+            guard:   { name:'방어',   emoji:'🛡️', cost:0, gain:1, desc:'다음 공격 60% 막기 · 체력+5' },
+            heal:    { name:'회복',   emoji:'💚', cost:2, gain:0, desc:'최대 체력의 20% 회복' },
+            special: { name:'필살기', emoji:'💥', cost:3, gain:0, desc:'1.8배 강한 공격' }
+        };
+        function battleBind(){
+            if(!rpgRef) return;
+            if(battlesRef) battlesRef.off();
+            battlesData = {};
+            battlesRef = rpgRef.parent.child('battles');
+            battlesRef.on('value', function(s){ battlesData = s.val() || {}; battleOnData(); }, function(){ /* 규칙 미적용 시 조용히 */ });
+        }
+        function battleViewer(){ const sp = document.getElementById('student-page'); return (typeof studentNum !== 'undefined' && studentNum != null && sp && sp.style.display !== 'none') ? studentNum : null; }
+        function battleName(num){ const s = rpgParseRoster().find(function(x){ return x.id === num; }); return s ? s.name : (num + '번'); }
+        function battleActive(num){
+            let r = null;
+            Object.keys(battlesData).forEach(function(k){ const b = battlesData[k]; if(b && (b.a === num || b.b === num) && (b.status === 'invite' || b.status === 'play')) r = Object.assign({ id:k }, b); });
+            return r;
+        }
+        function battleRecord(num){ const d = (rpgData.students && rpgData.students[num]) || {}; return (d.bw || 0) + '승 ' + (d.bl || 0) + '패'; }
+        function battleLobbyHtml(num){
+            const mine = battleActive(num);
+            let h = '<div class="gear-box"><div class="gear-head"><span>🥊 친구와 대결</span><span style="font-size:12px;color:#90a4ae;">' + battleRecord(num) + '</span></div>';
+            if(mine && mine.status === 'invite' && mine.a === num){
+                h += '<div class="bt-box">⏳ <b>' + escapeHtml(battleName(mine.b)) + '</b>에게 대결 신청! 수락을 기다리는 중...<br><button onclick="battleCancel(\'' + mine.id + '\')">신청 취소</button></div>';
+            } else if(mine && mine.status === 'invite' && mine.b === num){
+                h += '<div class="bt-box">⚔️ <b>' + escapeHtml(battleName(mine.a)) + '</b>이(가) 대결을 신청했어요!<br><button class="ok" onclick="battleAccept(\'' + mine.id + '\')">수락하고 싸우기</button><button onclick="battleDecline(\'' + mine.id + '\')">거절</button></div>';
+            } else if(mine && mine.status === 'play'){
+                h += '<button class="bt-go" onclick="battleOpen(\'' + mine.id + '\')">⚔️ 대결 화면으로 돌아가기</button>';
+            } else {
+                h += '<div class="gear-tip">대결할 친구를 누르세요 · 이기면 🪙' + BATTLE_WIN_COINS + ' (하루 ' + BATTLE_DAILY + '번까지) · 장비가 좋을수록 강해져요</div><div class="gear-row">';
+                rpgParseRoster().filter(function(s){ return s.id !== num; }).forEach(function(s){
+                    const busy = battleActive(s.id);
+                    h += busy ? '<span class="gear-it lock">' + s.id + ' ' + escapeHtml(s.name) + '<small>대결 중</small></span>'
+                              : '<button class="gear-it" onclick="battleChallenge(' + num + ',' + s.id + ')">' + s.id + ' ' + escapeHtml(s.name) + '</button>';
+                });
+                h += '</div>';
+            }
+            return h + '</div>';
+        }
+        function battleRenderLobby(){ const el = document.getElementById('battle-lobby'), me = battleViewer(); if(el && me != null) el.innerHTML = battleLobbyHtml(me); }
+        function battleCleanup(){
+            if(!battlesRef) return; const now = Date.now();
+            Object.keys(battlesData).forEach(function(k){
+                const b = battlesData[k]; if(!b) return; const age = now - (b.updatedAt || b.createdAt || 0);
+                if((b.status === 'invite' && age > 10 * 60000) || ((b.status === 'done' || b.status === 'declined' || b.status === 'cancel') && age > 3 * 3600000) || age > 12 * 3600000) battlesRef.child(k).remove().catch(function(){});
+            });
+        }
+        function battleChallenge(me, opp){
+            if(!battlesRef) return;
+            if(battleActive(me)){ alert('이미 진행 중인 대결이 있어요.'); return; }
+            if(battleActive(opp)){ alert('그 친구는 다른 대결 중이에요.'); return; }
+            if(!confirm(battleName(opp) + '에게 대결을 신청할까요?')) return;
+            battleCleanup();
+            battlesRef.push({ a:me, b:opp, status:'invite', createdAt:Date.now(), updatedAt:Date.now() })
+                .catch(function(e){ alert('대결 신청 오류: ' + e.message + '\n(선생님께 보안 규칙 업데이트가 필요하다고 알려주세요)'); });
+        }
+        function battleCancel(id){ if(battlesRef) battlesRef.child(id).update({ status:'cancel', updatedAt:Date.now() }); }
+        function battleDecline(id){ if(battlesRef) battlesRef.child(id).update({ status:'declined', updatedAt:Date.now() }); }
+        function battleFighter(num){ const s = gearStatsOf((rpgData.students && rpgData.students[num]) || {}); return { hp:s.hp, max:s.hp, atk:s.atk, def:s.def, crit:s.crit, spd:s.spd, en:1, guard:false }; }
+        function battleAccept(id){
+            const b = battlesData[id]; if(!b || !battlesRef) return;
+            const pa = battleFighter(b.a), pb = battleFighter(b.b);
+            const first = pa.spd > pb.spd ? 'a' : (pb.spd > pa.spd ? 'b' : (Math.random() < 0.5 ? 'a' : 'b'));
+            const fn = first === 'a' ? battleName(b.a) : battleName(b.b);
+            battlesRef.child(id).transaction(function(x){
+                if(!x || x.status !== 'invite') return;
+                x.status = 'play'; x.p = { a:pa, b:pb }; x.turn = first; x.round = 1;
+                x.log = ['⚔️ 대결 시작! 먼저 공격: ' + fn]; x.updatedAt = Date.now();
+                return x;
+            });
+        }
+        function battleMove(id, card){
+            const me = battleViewer(); if(me == null || !battlesRef) return;
+            const nameOf = function(x, side){ return battleName(side === 'a' ? x.a : x.b); };
+            battlesRef.child(id).transaction(function(x){
+                if(!x || x.status !== 'play' || !x.p) return;
+                const side = x.a === me ? 'a' : (x.b === me ? 'b' : null);
+                if(!side || x.turn !== side) return;
+                const opp = side === 'a' ? 'b' : 'a', P = x.p[side], O = x.p[opp], c = BATTLE_CARDS[card];
+                if(!c || (P.en || 0) < c.cost) return;
+                P.guard = false;
+                let dmg = 0, crit = false, heal = 0, line = '';
+                if(card === 'attack' || card === 'special'){
+                    dmg = Math.max(3, Math.round(P.atk * (0.85 + Math.random() * 0.3) - O.def * 0.6));
+                    if(card === 'special') dmg = Math.round(dmg * 1.8);
+                    crit = Math.random() * 100 < P.crit; if(crit) dmg = Math.round(dmg * 1.6);
+                    let blocked = false;
+                    if(O.guard){ dmg = Math.max(1, Math.round(dmg * 0.4)); O.guard = false; blocked = true; }
+                    O.hp = Math.max(0, O.hp - dmg);
+                    line = c.emoji + ' ' + nameOf(x, side) + '의 ' + c.name + '! ' + (crit ? '💫치명타! ' : '') + (blocked ? '(방어로 막음) ' : '') + nameOf(x, opp) + ' -' + dmg;
+                } else if(card === 'guard'){
+                    P.guard = true; heal = Math.min(5, P.max - P.hp); P.hp += heal;
+                    line = '🛡️ ' + nameOf(x, side) + ' 방어 자세!' + (heal ? ' +' + heal : '');
+                } else if(card === 'heal'){
+                    heal = Math.min(Math.round(P.max * 0.2), P.max - P.hp); P.hp += heal;
+                    line = '💚 ' + nameOf(x, side) + ' 회복 +' + heal;
+                }
+                P.en = Math.min(5, (P.en || 0) - c.cost + c.gain);
+                x.last = { by:side, card:card, dmg:dmg, crit:crit, heal:heal, ts:Date.now() };
+                x.log = (x.log || []).concat([line]).slice(-6);
+                if(O.hp <= 0){ x.status = 'done'; x.winner = side; x.endedBy = 'ko'; x.log = x.log.concat(['🏆 ' + nameOf(x, side) + ' 승리!']).slice(-6); }
+                else { x.turn = opp; x.round = (x.round || 1) + 1; }
+                x.updatedAt = Date.now();
+                return x;
+            }, function(err, committed, snap){
+                if(err){ alert('대결 오류: ' + err.message); return; }
+                if(committed){ const v = snap.val(); if(v && v.status === 'done') battleSettle(id, v); if(window.SFX) try{ (card === 'heal' || card === 'guard') ? SFX.ding() : SFX.point(); }catch(e){} }
+            });
+        }
+        function battleEnd(id, how){
+            const me = battleViewer(); if(me == null || !battlesRef) return;
+            if(how === 'forfeit' && !confirm('정말 항복할까요? (패배로 기록돼요)')) return;
+            battlesRef.child(id).transaction(function(x){
+                if(!x || x.status !== 'play') return;
+                const side = x.a === me ? 'a' : (x.b === me ? 'b' : null); if(!side) return;
+                const opp = side === 'a' ? 'b' : 'a';
+                if(how === 'timeout'){ if(x.turn !== opp || Date.now() - (x.updatedAt || 0) < 60000) return; x.winner = side; x.log = (x.log || []).concat(['⌛ 상대가 응답이 없어 ' + battleName(side === 'a' ? x.a : x.b) + ' 승리']).slice(-6); }
+                else { x.winner = opp; x.log = (x.log || []).concat(['🏳️ ' + battleName(me) + ' 항복']).slice(-6); }
+                x.status = 'done'; x.endedBy = how; x.updatedAt = Date.now();
+                return x;
+            }, function(err, committed, snap){ if(committed){ const v = snap.val(); if(v && v.status === 'done') battleSettle(id, v); } });
+        }
+        // 결과 기록·보상(대결당 한 번만). 코인은 KO 승리 + 하루 BATTLE_DAILY번까지
+        function battleSettle(id, x){
+            battlesRef.child(id + '/settled').transaction(function(v){ if(v) return; return true; }, function(err, committed){
+                if(err || !committed) return;
+                const w = x.winner === 'a' ? x.a : x.b, l = x.winner === 'a' ? x.b : x.a;
+                const S = rpgData.students || {}, wd = S[w] || {}, ld = S[l] || {};
+                const today = getFormattedDate(new Date());
+                const winsToday = wd.battleDay === today ? (wd.battleWins || 0) : 0;
+                const upd = {};
+                upd['students/' + w + '/bw'] = (wd.bw || 0) + 1;
+                upd['students/' + l + '/bl'] = (ld.bl || 0) + 1;
+                if(x.endedBy === 'ko' && winsToday < BATTLE_DAILY){
+                    upd['students/' + w + '/coinBonus'] = (wd.coinBonus || 0) + BATTLE_WIN_COINS;
+                    upd['students/' + w + '/battleDay'] = today;
+                    upd['students/' + w + '/battleWins'] = winsToday + 1;
+                    battlesRef.child(id + '/reward').set(BATTLE_WIN_COINS).catch(function(){});
+                }
+                rpgRef.update(upd).catch(function(){});
+            });
+        }
+        function battleModalEl(){
+            let m = document.getElementById('battle-modal');
+            if(!m){ m = document.createElement('div'); m.id = 'battle-modal'; document.body.appendChild(m); }
+            return m;
+        }
+        function battleOpen(id){ battleOpenId = id; battleLastTs = 0; battlePrevHp = {}; battleRender(true); }
+        function battleClose(){ battleOpenId = null; battleModalEl().style.display = 'none'; battleRenderLobby(); }
+        function battleFighterHtml(x, side, isTop, isTurn){
+            const num = side === 'a' ? x.a : x.b, P = x.p[side];
+            const d = (rpgData.students && rpgData.students[num]) || {}, L = rpgLevel(d.xp);
+            const stu = rpgParseRoster().find(function(s){ return s.id === num; }) || { gender:'m', name:num + '번' };
+            const w = gearEquipped(d, 'weapon'), sh = gearEquipped(d, 'shield');
+            const pct = Math.max(0, Math.round(P.hp / P.max * 100)), prev = battlePrevHp[side] != null ? battlePrevHp[side] : pct;
+            let en = ''; for(let i = 0; i < 5; i++) en += i < (P.en || 0) ? '●' : '○';
+            return '<div class="bt-fighter' + (isTurn ? ' turn' : '') + '" id="bt-f-' + side + '">'
+                + (P.guard ? '<span class="bt-guard">🛡️ 방어 중</span>' : '')
+                + '<div class="bt-av"><div' + (isTop ? ' class="flip"' : '') + '>' + rpgAvatarImg(d.job, L.lv, stu.gender, 96, '', '') + '</div>'
+                + (w ? '<span class="bt-wpn">' + gearIcon(w, 32) + '</span>' : '') + (sh ? '<span class="bt-shd">' + gearIcon(sh, 26) + '</span>' : '') + '</div>'
+                + '<div class="bt-info"><div class="bt-name">' + escapeHtml(stu.name) + ' <small>Lv.' + L.lv + '</small></div>'
+                + '<div class="bt-hp"><i data-to="' + pct + '" class="' + (pct <= 30 ? 'low' : '') + '" style="width:' + prev + '%;"></i></div>'
+                + '<div class="bt-meta"><span>❤️ ' + P.hp + ' / ' + P.max + '</span><span class="bt-en" title="기력">' + en + '</span></div>'
+                + '<div class="bt-meta"><span>⚔️' + P.atk + ' 🛡️' + P.def + ' 🎯' + P.crit + '%</span></div></div></div>';
+        }
+        function battleRender(force){
+            const m = battleModalEl(), id = battleOpenId;
+            if(!id){ m.style.display = 'none'; return; }
+            const x = battlesData[id];
+            if(!x || !x.p){ if(x && (x.status === 'declined' || x.status === 'cancel')){ battleClose(); return; } m.style.display = 'none'; return; }
+            const me = battleViewer(), mySide = x.a === me ? 'a' : (x.b === me ? 'b' : null);
+            const bottom = mySide || 'a', top = bottom === 'a' ? 'b' : 'a';
+            const play = x.status === 'play', myTurn = play && mySide && x.turn === mySide;
+            let mid = '';
+            if(play){
+                const tn = battleName(x.turn === 'a' ? x.a : x.b);
+                mid = '<div class="bt-mid"><div class="bt-turn' + (myTurn ? ' me' : '') + '">' + (myTurn ? '⚡ 내 차례! 카드를 고르세요' : (mySide ? '⏳ ' + escapeHtml(tn) + ' 차례...' : '👀 ' + escapeHtml(tn) + ' 차례')) + '</div><div style="font-size:12px;color:#90a4ae;">' + (x.round || 1) + '번째 턴</div></div>';
+            }
+            const log = '<div class="bt-log">' + (x.log || []).map(function(l){ return '<div>' + escapeHtml(l) + '</div>'; }).join('') + '</div>';
+            let cards = '';
+            if(play && mySide){
+                const P = x.p[mySide];
+                cards = '<div class="bt-cards">' + Object.keys(BATTLE_CARDS).map(function(k){
+                    const c = BATTLE_CARDS[k], ok = myTurn && (P.en || 0) >= c.cost;
+                    return '<button class="bt-card' + (k === 'special' ? ' sp' : '') + '" ' + (ok ? '' : 'disabled') + ' onclick="battleMove(\'' + id + '\',\'' + k + '\')"><span class="e">' + c.emoji + '</span><span class="n">' + c.name + '</span><span class="d">' + c.desc + '</span><span class="c">' + (c.cost ? '기력 ' + c.cost : '기력 +1') + '</span></button>';
+                }).join('') + '</div>';
+                const stale = !myTurn && Date.now() - (x.updatedAt || 0) > 60000;
+                cards += '<div style="display:flex;gap:8px;">'
+                    + (stale ? '<button class="bt-btn" style="flex:1;background:#ffb74d;color:#3e2723;" onclick="battleEnd(\'' + id + '\',\'timeout\')">⌛ 상대가 1분째 응답 없음 → 승리로 끝내기</button>' : '')
+                    + '<button class="bt-btn" style="flex:' + (stale ? '0 0 auto' : '1') + ';background:rgba(255,255,255,0.1);color:#cfd8dc;" onclick="battleEnd(\'' + id + '\',\'forfeit\')">🏳️ 항복</button></div>';
+            }
+            let end = '';
+            if(x.status === 'done'){
+                const wn = battleName(x.winner === 'a' ? x.a : x.b), iWon = mySide && x.winner === mySide;
+                end = '<div class="bt-end"><div class="w">🏆 ' + escapeHtml(wn) + ' 승리!</div>'
+                    + '<div style="margin-top:6px;color:#cfd8dc;font-size:14px;">' + (mySide ? (iWon ? '축하해요! ' + (x.reward ? '🪙' + x.reward + ' 코인 획득' : (x.endedBy === 'ko' ? '(오늘 코인 보상은 다 받았어요)' : '')) : '아쉽지만 다음엔 이길 거예요! 장비를 바꿔보세요 💪') : '') + '</div>'
+                    + '<button class="bt-btn" style="margin-top:12px;width:100%;background:#ff8a3d;color:#fff;" onclick="battleClose()">닫기</button></div>';
+            }
+            m.innerHTML = '<div class="bt-wrap"><div class="bt-top"><span>🥊 친구 대결</span><button onclick="battleClose()">' + (play && mySide ? '잠시 나가기' : '닫기 ✕') + '</button></div>'
+                + battleFighterHtml(x, top, true, play && x.turn === top) + mid + log + battleFighterHtml(x, bottom, false, play && x.turn === bottom) + cards + end + '</div>';
+            m.style.display = 'block';
+            // HP 막대 애니메이션 + 맞은 쪽 흔들림 + 숫자 떠오름
+            requestAnimationFrame(function(){ requestAnimationFrame(function(){ m.querySelectorAll('.bt-hp i').forEach(function(i){ i.style.width = i.dataset.to + '%'; }); }); });
+            battlePrevHp = { a:Math.round(x.p.a.hp / x.p.a.max * 100), b:Math.round(x.p.b.hp / x.p.b.max * 100) };
+            if(x.last && x.last.ts && x.last.ts !== battleLastTs){
+                const fresh = battleLastTs !== 0 || Date.now() - x.last.ts < 4000;
+                battleLastTs = x.last.ts;
+                if(fresh){
+                    const hitSide = x.last.dmg ? (x.last.by === 'a' ? 'b' : 'a') : x.last.by;
+                    const el = document.getElementById('bt-f-' + hitSide);
+                    if(el){
+                        if(x.last.dmg) el.classList.add('bt-shake');
+                        const f = document.createElement('div'); f.className = 'bt-float';
+                        f.style.color = x.last.dmg ? (x.last.crit ? '#ffd54f' : '#ff6e6e') : '#81c784';
+                        f.textContent = x.last.dmg ? ('-' + x.last.dmg + (x.last.crit ? '!' : '')) : (x.last.heal ? '+' + x.last.heal : '🛡️');
+                        el.appendChild(f);
+                    }
+                }
+            }
+        }
+        function battleOnData(){
+            const me = battleViewer();
+            if(me != null){
+                battleRenderLobby();
+                const mine = battleActive(me);
+                if(mine && mine.status === 'play' && battleOpenId !== mine.id) battleOpen(mine.id);
+            }
+            if(battleOpenId) battleRender();
+            const wl = document.getElementById('battle-watch-list'); if(wl && document.getElementById('battle-watch').style.display === 'flex') battleWatchRender();
+        }
+        // 교사: 진행 중인 대결 보기(교실 TV로 중계)
+        function battleWatchOpen(){
+            let w = document.getElementById('battle-watch');
+            if(!w){
+                w = document.createElement('div'); w.id = 'battle-watch';
+                w.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:6400; align-items:center; justify-content:center; padding:16px;';
+                w.onclick = function(e){ if(e.target === w) w.style.display = 'none'; };
+                w.innerHTML = '<div style="background:#fff; border-radius:18px; max-width:480px; width:100%; max-height:85vh; overflow-y:auto; padding:20px;">'
+                    + '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><h2 style="margin:0; font-size:19px; color:#455a64;">🥊 친구 대결 현황</h2><span onclick="document.getElementById(\'battle-watch\').style.display=\'none\'" style="cursor:pointer; font-size:20px; color:#90a4ae;">✕</span></div>'
+                    + '<p style="font-size:12.5px; color:#78909c; margin:0 0 10px;">학생들이 자기 기기(학생 화면)에서 친구에게 대결을 신청해요. 진행 중인 대결을 누르면 교실 화면으로 볼 수 있어요.</p>'
+                    + '<div id="battle-watch-list"></div></div>';
+                document.body.appendChild(w);
+            }
+            battleWatchRender(); w.style.display = 'flex';
+        }
+        function battleWatchRender(){
+            const el = document.getElementById('battle-watch-list'); if(!el) return;
+            const ks = Object.keys(battlesData).filter(function(k){ return battlesData[k] && battlesData[k].status !== 'declined' && battlesData[k].status !== 'cancel'; })
+                .sort(function(p, q){ return (battlesData[q].updatedAt || 0) - (battlesData[p].updatedAt || 0); });
+            if(!ks.length){ el.innerHTML = '<div style="text-align:center; color:#b0bec5; padding:20px;">아직 대결이 없어요</div>'; return; }
+            el.innerHTML = ks.map(function(k){
+                const b = battlesData[k], an = battleName(b.a), bn = battleName(b.b);
+                const st = b.status === 'play' ? '<b style="color:#ef6c00;">진행 중 ❤️' + b.p.a.hp + ' : ' + b.p.b.hp + '</b>' : b.status === 'invite' ? '<span style="color:#90a4ae;">신청 대기</span>' : '<span style="color:#43a047;">🏆 ' + escapeHtml(battleName(b.winner === 'a' ? b.a : b.b)) + ' 승</span>';
+                return '<div onclick="' + (b.p ? 'battleOpen(\'' + k + '\')' : '') + '" style="border:1px solid #e6ebf3; border-radius:12px; padding:10px 12px; margin-bottom:8px; cursor:' + (b.p ? 'pointer' : 'default') + '; display:flex; justify-content:space-between; gap:8px; font-size:14px;"><span>' + escapeHtml(an) + ' ⚔️ ' + escapeHtml(bn) + '</span>' + st + '</div>';
+            }).join('');
+        }
+
         function rpgRenderStudentPage(num){
             var stu = rpgParseRoster().find(function(x){ return x.id === num; }); if(!stu) return;
             var d = (rpgData.students && rpgData.students[num]) || {};
@@ -10392,7 +10847,9 @@ var qrcode = function() {
                 + '<div style="font-size:11px;color:#bbb;margin:14px 0 -2px;">✨ 꾸미기 (레벨 달성 시 해금)</div>'
                 + rpgPickerRow(num, '👒 머리 장식', 'head', RPG_ITEMS_HEAD, d.head, L.lv)
                 + rpgPickerRow(num, '🐾 펫', 'pet', RPG_ITEMS_PET, d.pet, L.lv)
-                + rpgPickerRow(num, '🖼️ 프레임', 'frame', RPG_ITEMS_FRAME, d.frame, L.lv);
+                + rpgPickerRow(num, '🖼️ 프레임', 'frame', RPG_ITEMS_FRAME, d.frame, L.lv)
+                + gearSectionHtml(num, d, L)
+                + '<div id="battle-lobby">' + battleLobbyHtml(num) + '</div>';
             readingRenderStudentSection(num);
             readingApplyStudentTab();
         }
