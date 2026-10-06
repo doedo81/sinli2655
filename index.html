@@ -4229,9 +4229,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.40';
+        const APP_VERSION = '1.41';
         const APP_VERSION_DATE = '2026-10-06';
         const APP_CHANGELOG = [
+            'v1.41 (2026-10-06) — 🐞 성장 탭 "우리 반 성장 현황"이 안 보이던 문제 수정',
             'v1.40 (2026-10-06) — ✨ 다크 프리미엄 디자인 3종 + 움직임 효과 + 그래프',
             '  · 디자인 9가지: 다크 프리미엄(주황·보라·청록) 추가 · 탭 열 때 스르륵, 카드에 마우스 올리면 살짝 떠오름, 점수가 올라가며 바뀜',
             '  · 점수판: 모둠 점수 막대그래프(순위순) · 성장: 우리 반 성장 현황(학생 수·평균/최고 레벨·경험치·레벨 분포·반 평균 능력치·다음 레벨 진행률)',
@@ -4676,7 +4677,6 @@ var qrcode = function() {
             rpgRef.on('value', snap => {
                 rpgData = snap.val() || {};
                 if(document.getElementById('rpg-grid')) renderRpgGrid();
-                rpgRenderDash();
                 if(rpgBulkMode) rpgRenderBulkActions();
                 var _am = document.getElementById('rpg-actions-modal'); if(_am && _am.style.display === 'flex') rpgRenderActionsList();
                 var _gm = document.getElementById('rpg-grade-modal'); if(_gm && _gm.style.display === 'flex') rpgRenderGrade();
@@ -9062,6 +9062,7 @@ var qrcode = function() {
             const grid = document.getElementById('rpg-grid');
             const empty = document.getElementById('rpg-empty');
             if(!grid) return;
+            rpgRenderDash(); // 명단이 늦게 불러와져도 화면 그릴 때마다 현황판도 같이 갱신
             rpgLocked = localStorage.getItem('rpgLock_' + currentRoom) === '1'; rpgUpdateLockUI();
             rpgStudentMode = localStorage.getItem('rpgStu_' + currentRoom) === '1';
             var _tb = document.getElementById('rpg-teacher-btns'); if(_tb) _tb.style.display = rpgStudentMode ? 'none' : 'flex';
