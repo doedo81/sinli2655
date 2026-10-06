@@ -2730,11 +2730,11 @@ var qrcode = function() {
         body[data-theme^="glass"] .tab-btn:hover { background: rgba(255,255,255,0.22); color: var(--txt); }
         body[data-theme^="glass"] .tab-btn.active { background: var(--accent-blue); color: #1f2a0c; box-shadow: 0 6px 18px rgba(140,180,30,0.35); }
         body[data-theme^="glass"] .sidebar-header, body[data-theme^="glass"] .sidebar-bottom { border-color: var(--pnl-bd); }
-        body[data-theme="glassdark"] .cal-day, body[data-theme="glassdark"] .cal-date, body[data-theme="glassdark"] #cal-month-title,
-        body[data-theme="glassdark"] .user-profile-text, body[data-theme="glassdark"] .toggle-btn { color: var(--txt); }
-        body[data-theme="glassdark"] .info-label { filter: brightness(1.35); }
-        body[data-theme="glassdark"] [contenteditable="true"]:empty:before, body[data-theme="glassdark"] #view-meal:empty:before { color: #8a939b; }
-        body[data-theme="glassdark"] #view-meal { color: #d9d2c8 !important; }
+        body.theme-dark .cal-day, body.theme-dark .cal-date, body.theme-dark #cal-month-title,
+        body.theme-dark .user-profile-text, body.theme-dark .toggle-btn { color: var(--txt); }
+        body.theme-dark .info-label { filter: brightness(1.35); }
+        body.theme-dark [contenteditable="true"]:empty:before, body.theme-dark #view-meal:empty:before { color: #8a939b; }
+        body.theme-dark #view-meal { color: #d9d2c8 !important; }
         body[data-theme^="glass"] span[onclick="mealPickFile()"] { background: rgba(255,255,255,0.18) !important; color: inherit !important; }
         /* 다른 탭(점수판·과제·자리배치·성장·독서·바로가기·캘린더)의 큰 흰 카드도 유리판으로 */
         body[data-theme="glass"]     { --pnl-tab: rgba(255,255,255,0.55); }
@@ -2750,6 +2750,63 @@ var qrcode = function() {
         /* 숲·크림: 큰 카드에 테마색을 살짝 */
         body[data-theme="forest"] .content-section .picker-box { background:#fbfdf9; border-color:#e2ecdd; }
         body[data-theme="cream"]  .content-section .picker-box { background:#fffcf8; border-color:#f1e5d6; }
+        /* ===== 다크 프리미엄 (주황·보라·청록) — 짙은 판 + 강조색 하나 ===== */
+        body[data-theme="glassorange"], body[data-theme="glassviolet"], body[data-theme="glassteal"] {
+            --dark-blue:#1d1f24; --main-sky:rgba(255,255,255,0.06); --sub-sky:rgba(255,255,255,0.10);
+            --pnl:rgba(30,32,37,0.90); --pnl-in:rgba(255,255,255,0.05); --pnl-bd:rgba(255,255,255,0.09); --txt:#f1f2f4; --muted:#a7abb3;
+            --pnl-tab: rgba(240,241,244,0.93); }
+        body[data-theme="glassorange"] { --accent-blue:#ff7a2f;
+            --app-bg: radial-gradient(760px 480px at 88% 8%, rgba(255,122,47,0.22), transparent 62%), radial-gradient(700px 520px at 8% 92%, rgba(255,160,90,0.10), transparent 60%), linear-gradient(160deg,#25272c 0%,#16171a 100%); }
+        body[data-theme="glassviolet"] { --accent-blue:#9d7dff;
+            --app-bg: radial-gradient(760px 480px at 88% 8%, rgba(157,125,255,0.24), transparent 62%), radial-gradient(700px 520px at 8% 92%, rgba(110,160,255,0.12), transparent 60%), linear-gradient(160deg,#25262e 0%,#16161c 100%); }
+        body[data-theme="glassteal"] { --accent-blue:#2fd1bd;
+            --app-bg: radial-gradient(760px 480px at 88% 8%, rgba(47,209,189,0.20), transparent 62%), radial-gradient(700px 520px at 8% 92%, rgba(80,170,255,0.10), transparent 60%), linear-gradient(160deg,#22282a 0%,#141819 100%); }
+        body.theme-premium #real-clock { color: var(--accent-blue); text-shadow: 0 0 18px color-mix(in srgb, var(--accent-blue) 45%, transparent); }
+        body.theme-premium .tab-btn.active { color: #16171a; box-shadow: 0 6px 22px color-mix(in srgb, var(--accent-blue) 45%, transparent); }
+        body[data-theme="glassviolet"] .tab-btn.active { color: #fff; }
+        body.theme-premium .info-box:hover { border-color: color-mix(in srgb, var(--accent-blue) 45%, transparent) !important; }
+
+        /* ===== ✨ 움직임 효과 (모든 디자인) ===== */
+        @keyframes secIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+        @keyframes cardIn { from { opacity: 0; transform: translateY(16px) scale(0.985); } to { opacity: 1; transform: none; } }
+        @keyframes numPop { 0% { transform: scale(1); } 40% { transform: scale(1.22); } 100% { transform: scale(1); } }
+        .content-section.active { animation: secIn 0.38s cubic-bezier(.2,.7,.2,1) both; }
+        .content-section.active .column-card { animation: cardIn 0.5s cubic-bezier(.2,.7,.2,1) both; }
+        .content-section.active .column-card:nth-child(2) { animation-delay: 0.07s; }
+        .content-section.active .column-card:nth-child(3) { animation-delay: 0.14s; }
+        .info-box, .group-card, #rpg-grid > *, #reading-grid > *, .dash-card { transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s; }
+        .info-box:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,0,0,0.08); }
+        .group-card:hover, #rpg-grid > *:hover, #reading-grid > *:hover, .dash-card:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(0,0,0,0.13); }
+        .num-pop { display: inline-block; animation: numPop 0.45s ease; }
+        @media (prefers-reduced-motion: reduce) { .content-section.active, .content-section.active .column-card, .num-pop { animation: none !important; } }
+
+        /* ===== 📊 그래프 (점수판 막대 · 성장 반 현황) ===== */
+        #score-chart { margin: -10px 0 22px; display: flex; flex-direction: column; gap: 8px; }
+        .sc-row { display: grid; grid-template-columns: 64px 1fr 54px; align-items: center; gap: 10px; }
+        .sc-name { font-weight: 800; color: var(--dark-blue); font-size: 15px; text-align: right; }
+        .sc-track { height: 22px; background: rgba(120,144,180,0.12); border-radius: 11px; overflow: hidden; }
+        .sc-fill { height: 100%; width: 0; border-radius: 11px; transition: width 0.8s cubic-bezier(.2,.7,.2,1); }
+        .sc-val { font-weight: 900; color: var(--dark-blue); font-size: 17px; }
+        .dash-wrap { margin-bottom: 16px; }
+        .dash-head { display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: 800; color: var(--dark-blue); margin-bottom: 10px; user-select: none; }
+        .dash-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .dash-card { background: rgba(120,144,180,0.07); border: 1px solid rgba(120,144,180,0.16); border-radius: 16px; padding: 14px 16px; min-width: 0; }
+        .dash-k { font-size: 12px; color: #78909c; font-weight: 700; margin-bottom: 4px; }
+        .dash-v { font-size: 28px; font-weight: 900; color: var(--dark-blue); line-height: 1.15; }
+        .dash-s { font-size: 12px; color: #90a4ae; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dash-row { display: grid; grid-template-columns: 1.35fr 1fr 0.75fr; gap: 12px; margin-top: 12px; }
+        .dash-bars { display: flex; align-items: flex-end; gap: 8px; height: 120px; padding-top: 18px; }
+        .dash-bcol { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; min-width: 0; }
+        .dash-bar { width: 100%; max-width: 46px; background: var(--accent-blue); border-radius: 8px 8px 3px 3px; height: 0; transition: height 0.8s cubic-bezier(.2,.7,.2,1); position: relative; min-height: 3px; }
+        .dash-bar b { position: absolute; top: -18px; left: 0; right: 0; text-align: center; font-size: 12px; color: var(--dark-blue); }
+        .dash-bl { font-size: 11px; color: #90a4ae; margin-top: 4px; white-space: nowrap; }
+        .dash-stat { display: grid; grid-template-columns: 58px 1fr 34px; align-items: center; gap: 8px; margin: 7px 0; font-size: 13px; font-weight: 700; color: #546e7a; }
+        .dash-stat .sc-track { height: 10px; }
+        .dash-donut { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .dash-donut svg circle.v { transition: stroke-dashoffset 1s cubic-bezier(.2,.7,.2,1); }
+        @media (max-width: 1100px) { .dash-grid { grid-template-columns: repeat(2, 1fr); } .dash-row { grid-template-columns: 1fr; } }
+        body[data-theme^="glass"] .dash-card { background: rgba(255,255,255,0.45); border-color: rgba(255,255,255,0.6); }
+
         /* 테마 고르기 창 */
         .theme-card { cursor: pointer; border-radius: 14px; border: 2px solid #e6ebf3; padding: 8px; background: #fff; transition: 0.15s; text-align: center; }
         .theme-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.10); }
@@ -3112,6 +3169,7 @@ var qrcode = function() {
                         모둠 수 설정: <input type="number" id="group-count-score" value="6" min="2" max="12" class="setting-input" style="padding:10px;"> <button class="action-btn" onclick="changeGroupCount('group-count-score')">적용</button>
                     </div>
                     <div id="ranking-board" style="text-align:center; font-size:22px; font-weight:bold; background:#eceff1; padding:15px; border-radius:10px; margin-bottom:25px; color:var(--dark-blue);">🏆 순위 계산 중...</div>
+                    <div id="score-chart"></div>
                     
                     <div class="grid-container" id="scoreboard"></div>
                     
@@ -3381,6 +3439,7 @@ var qrcode = function() {
                         아직 학생 명단이 없어요.<br>위 <b>[명단 입력/수정]</b> 버튼을 눌러 학생을 추가해 주세요.
                     </div>
 
+                    <div id="rpg-dash" class="dash-wrap"></div>
                     <div id="rpg-view-modes" style="display:none; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
                         <button type="button" class="rpg-vm-btn" data-mode="number" onclick="rpgSetViewMode('number')">🔢 번호순</button>
                         <button type="button" class="rpg-vm-btn" data-mode="seating" onclick="rpgSetViewMode('seating')">🪑 자리배치</button>
@@ -4170,9 +4229,12 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.39';
-        const APP_VERSION_DATE = '2026-10-02';
+        const APP_VERSION = '1.40';
+        const APP_VERSION_DATE = '2026-10-06';
         const APP_CHANGELOG = [
+            'v1.40 (2026-10-06) — ✨ 다크 프리미엄 디자인 3종 + 움직임 효과 + 그래프',
+            '  · 디자인 9가지: 다크 프리미엄(주황·보라·청록) 추가 · 탭 열 때 스르륵, 카드에 마우스 올리면 살짝 떠오름, 점수가 올라가며 바뀜',
+            '  · 점수판: 모둠 점수 막대그래프(순위순) · 성장: 우리 반 성장 현황(학생 수·평균/최고 레벨·경험치·레벨 분포·반 평균 능력치·다음 레벨 진행률)',
             'v1.39 (2026-10-02) — 🎨 점수판·과제·자리배치·성장·독서·바로가기·캘린더 탭도 디자인 적용(유리 디자인에서 큰 카드가 유리판으로)',
             'v1.38 (2026-10-01) — 🎨 칸 위쪽 색 띠 없앰(모든 디자인에서 칸 테두리를 한 가지 색으로 깔끔하게)',
             'v1.37 (2026-10-01) — 🎨 유리·회색 테마 추가 · 어둡게 덜 어둡게 · 창 제목 "아침 칠판 대시보드" · 맨 위 파란 바도 테마색으로',
@@ -4279,7 +4341,10 @@ var qrcode = function() {
             { id:'sky',       name:'하늘 (기본)',  bg:'linear-gradient(160deg,#f2f7fd,#dfeaf7)', pnl:'#ffffff', dot:'#5b97d1', bar:'#e8eef6' },
             { id:'glass',     name:'유리 · 밝게',  bg:'radial-gradient(circle at 15% 85%, #8fa887, transparent 60%), linear-gradient(160deg,#ece7df,#cfd6d2)', pnl:'rgba(255,255,255,0.55)', dot:'#8db31c', bar:'#e2dfd8' },
             { id:'glassgray', name:'유리 · 회색',  bg:'radial-gradient(circle at 15% 85%, #8a9a86, transparent 60%), linear-gradient(160deg,#c3c6c9,#8f949a)', pnl:'rgba(236,238,240,0.6)', dot:'#9cc21f', bar:'#a9adb2' },
-            { id:'glassdark', name:'유리 · 어둡게', bg:'radial-gradient(circle at 15% 85%, #5f7356, transparent 60%), linear-gradient(160deg,#545a62,#33373c)', pnl:'rgba(58,62,68,0.75)', dot:'#b4d93a', bar:'#474c53' },
+            { id:'glassdark', name:'유리 · 어둡게', bg:'radial-gradient(circle at 15% 85%, #5f7356, transparent 60%), linear-gradient(160deg,#545a62,#33373c)', pnl:'rgba(58,62,68,0.75)', dot:'#b4d93a', bar:'#474c53', dark:true },
+            { id:'glassorange', name:'다크 프리미엄 · 주황', bg:'radial-gradient(circle at 85% 10%, rgba(255,122,47,0.55), transparent 55%), linear-gradient(160deg,#25272c,#16171a)', pnl:'rgba(34,36,41,0.95)', dot:'#ff7a2f', bar:'#1f2125', dark:true, premium:true },
+            { id:'glassviolet', name:'다크 프리미엄 · 보라', bg:'radial-gradient(circle at 85% 10%, rgba(157,125,255,0.55), transparent 55%), linear-gradient(160deg,#25262e,#16161c)', pnl:'rgba(34,35,42,0.95)', dot:'#9d7dff', bar:'#1f2026', dark:true, premium:true },
+            { id:'glassteal',   name:'다크 프리미엄 · 청록', bg:'radial-gradient(circle at 85% 10%, rgba(47,209,189,0.5), transparent 55%), linear-gradient(160deg,#22282a,#141819)', pnl:'rgba(32,37,38,0.95)', dot:'#2fd1bd', bar:'#1d2223', dark:true, premium:true },
             { id:'forest',    name:'숲',           bg:'linear-gradient(160deg,#f3f8f0,#dbe8d6)', pnl:'#ffffff', dot:'#4f8a5b', bar:'#e6eee2' },
             { id:'cream',     name:'따뜻한 크림',  bg:'linear-gradient(160deg,#fcf8f2,#f0e2cf)', pnl:'#ffffff', dot:'#c98a4b', bar:'#f4ebdf' }
         ];
@@ -4289,6 +4354,8 @@ var qrcode = function() {
             try { localStorage.setItem('appTheme', id || 'sky'); } catch(e){}
             const t = APP_THEMES.find(function(x){ return x.id === (id || 'sky'); }) || APP_THEMES[0];
             const mc = document.getElementById('meta-theme-color'); if(mc) mc.setAttribute('content', t.bar);
+            document.body.classList.toggle('theme-dark', !!t.dark);
+            document.body.classList.toggle('theme-premium', !!t.premium);
             themeRender();
         }
         function themePhotoApply(){
@@ -4303,7 +4370,7 @@ var qrcode = function() {
             g.innerHTML = APP_THEMES.map(function(t){
                 return '<div class="theme-card' + (t.id === cur ? ' on' : '') + '" onclick="themeApply(\'' + t.id + '\')">'
                     + '<div class="theme-sw" style="background:' + t.bg + ';"><i style="background:' + t.pnl + '; flex:0 0 14px;"></i><i style="background:' + t.pnl + ';"></i><i style="background:' + t.pnl + '; flex:2;"></i><i style="background:' + t.pnl + ';"></i></div>'
-                    + '<div class="theme-name">' + (t.id === cur ? '✔ ' : '') + t.name + '</div></div>';
+                    + '<div class="theme-name">' + (t.id === cur ? '✔ ' : '') + '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:' + t.dot + ';margin-right:4px;vertical-align:1px;"></span>' + t.name + '</div></div>';
             }).join('');
             let has = false; try { has = !!localStorage.getItem('appBgPhoto'); } catch(e){}
             const st = document.getElementById('theme-photo-state'); if(st) st.textContent = has ? '✔ 배경 사진 사용 중' : '배경 사진 없음';
@@ -4609,6 +4676,7 @@ var qrcode = function() {
             rpgRef.on('value', snap => {
                 rpgData = snap.val() || {};
                 if(document.getElementById('rpg-grid')) renderRpgGrid();
+                rpgRenderDash();
                 if(rpgBulkMode) rpgRenderBulkActions();
                 var _am = document.getElementById('rpg-actions-modal'); if(_am && _am.style.display === 'flex') rpgRenderActionsList();
                 var _gm = document.getElementById('rpg-grade-modal'); if(_gm && _gm.style.display === 'flex') rpgRenderGrade();
@@ -4965,12 +5033,12 @@ var qrcode = function() {
             });
             scoresRef.on('value', snap => {
                 const data = snap.val() || {};
-                for (let i = 0; i < numberOfGroups; i++) { currentScores[i] = data[i] || 0; if(document.getElementById(`score-${i}`)) document.getElementById(`score-${i}`).innerText = currentScores[i]; }
+                for (let i = 0; i < numberOfGroups; i++) { currentScores[i] = data[i] || 0; animateNumber(document.getElementById(`score-${i}`), currentScores[i]); }
                 updateRankings();
             });
             miniScoresRef.on('value', snap => {
                 const data = snap.val() || {};
-                for(let i=0; i<numberOfGroups; i++) { currentMiniScores[i] = data[i] || 0; if(document.getElementById(`mini-score-${i}`)) document.getElementById(`mini-score-${i}`).innerText = currentMiniScores[i]; }
+                for(let i=0; i<numberOfGroups; i++) { currentMiniScores[i] = data[i] || 0; animateNumber(document.getElementById(`mini-score-${i}`), currentMiniScores[i]); }
             });
             tasksRef.on('value', snap => { currentTasks = snap.val() || {}; buildTaskBoard(); });
             
@@ -7292,7 +7360,31 @@ var qrcode = function() {
         }
         
         function changeScore(i, a) { pointSound.currentTime=0; pointSound.play().catch(e=>e); scoresRef.child(String(i)).set((currentScores[i]||0) + a); }
-        function updateRankings() { let r = []; for(let i=0; i<numberOfGroups; i++) r.push({g: i+1, s: currentScores[i]||0}); r.sort((a,b) => b.s - a.s); document.getElementById('ranking-board').innerHTML = '🏆 ' + r.map(x => `${x.g}모둠`).join(' - '); }
+        function updateRankings() { let r = []; for(let i=0; i<numberOfGroups; i++) r.push({g: i+1, s: currentScores[i]||0}); r.sort((a,b) => b.s - a.s); document.getElementById('ranking-board').innerHTML = '🏆 ' + r.map(x => `${x.g}모둠`).join(' - '); renderScoreChart(r); }
+        // 📊 점수판 막대그래프 (순위순, 부드럽게 늘어남)
+        const SCORE_COLORS = ['#2196f3','#ff9800','#4caf50','#9c27b0','#f44336','#00bcd4']; // 모둠 카드 색과 같게
+        function renderScoreChart(r){
+            const box = document.getElementById('score-chart'); if(!box) return;
+            const max = Math.max(1, ...r.map(function(x){ return Math.max(0, x.s); }));
+            const prev = {}; box.querySelectorAll('.sc-row').forEach(function(row){ prev[row.dataset.g] = row.querySelector('.sc-fill').style.width; });
+            box.innerHTML = r.map(function(x){
+                return '<div class="sc-row" data-g="' + x.g + '"><div class="sc-name">' + x.g + '모둠</div><div class="sc-track"><div class="sc-fill" style="width:' + (prev[x.g] || '0%') + '; background:' + SCORE_COLORS[(x.g - 1) % SCORE_COLORS.length] + ';"></div></div><div class="sc-val">' + x.s + '</div></div>';
+            }).join('');
+            requestAnimationFrame(function(){ requestAnimationFrame(function(){
+                box.querySelectorAll('.sc-row').forEach(function(row, i){ row.querySelector('.sc-fill').style.width = Math.max(2, Math.max(0, r[i].s) / max * 100) + '%'; });
+            }); });
+        }
+        // ✨ 숫자가 부드럽게 올라가며 바뀜(+ 톡 튀는 효과)
+        function animateNumber(el, to, dur){
+            if(!el) return;
+            to = Number(to) || 0;
+            const from = el.dataset.num !== undefined ? Number(el.dataset.num) : (parseFloat(el.innerText) || 0);
+            el.dataset.num = to;
+            if(from === to){ el.innerText = to; return; }
+            const t0 = performance.now(); dur = dur || 550;
+            (function step(t){ const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3); el.innerText = Math.round(from + (to - from) * e); if(p < 1) requestAnimationFrame(step); })(t0);
+            el.classList.remove('num-pop'); void el.offsetWidth; el.classList.add('num-pop');
+        }
 
         let resetConfirmState = false; let resetTimer;
         function resetAllScores() {
@@ -9157,6 +9249,58 @@ var qrcode = function() {
         function rpgCardClick(id){ if(rpgBulkMode) rpgToggleSelect(id); else rpgOpen(id); }
 
         // 성장 탭 진입 시: 기본으로 '일괄 지급' 모드를 켜서 바로 점수를 줄 수 있게
+        // 📊 성장 — 우리 반 현황(요약 카드 · 레벨 분포 · 반 평균 능력치 · 평균 진행률)
+        function rpgDashToggle(){ try{ localStorage.setItem('rpgDashOpen', localStorage.getItem('rpgDashOpen') === '0' ? '1' : '0'); }catch(e){} rpgRenderDash(); }
+        function rpgRenderDash(){
+            const box = document.getElementById('rpg-dash'); if(!box || !rpgRef) return;
+            const roster = rpgParseRoster();
+            if(!roster.length){ box.innerHTML = ''; return; }
+            let open = true; try{ open = localStorage.getItem('rpgDashOpen') !== '0'; }catch(e){}
+            const studs = (rpgData && rpgData.students) || {};
+            const rows = roster.map(function(st){ const d = studs[st.id] || {}; const L = rpgLevel(d.xp); return { st:st, d:d, L:L, pct:rpgLevelPct(L) }; });
+            const n = rows.length;
+            const totalXp = rows.reduce(function(a, r){ return a + (r.d.xp || 0); }, 0);
+            const avgLv = rows.reduce(function(a, r){ return a + r.L.lv; }, 0) / n;
+            const top = rows.slice().sort(function(a, b){ return (b.d.xp || 0) - (a.d.xp || 0); })[0];
+            const avgPct = Math.round(rows.reduce(function(a, r){ return a + r.pct; }, 0) / n);
+            const head = '<div class="dash-head" onclick="rpgDashToggle()"><span>📊 우리 반 성장 현황</span><span style="font-size:13px; color:#90a4ae;">' + (open ? '접기 ▲' : '펼치기 ▼') + '</span></div>';
+            if(!open){ box.innerHTML = head; return; }
+            // 다시 그릴 때 0부터가 아니라 직전 값에서 이어서 움직이도록 기억
+            const prevNums = Array.from(box.querySelectorAll('[data-num-to]')).map(function(e){ return e.dataset.numTo; });
+            const prevH = Array.from(box.querySelectorAll('.dash-bar')).map(function(e){ return e.style.height; });
+            const prevW = Array.from(box.querySelectorAll('.sc-fill[data-w]')).map(function(e){ return e.style.width; });
+            const prevC = box.querySelector('circle.v'); const prevOff = prevC ? prevC.style.strokeDashoffset : '';
+            const maxLv = Math.max.apply(null, rows.map(function(r){ return r.L.lv; }));
+            const nb = Math.max(3, Math.ceil(maxLv / 10));
+            const buckets = new Array(nb).fill(0); rows.forEach(function(r){ buckets[Math.min(nb - 1, Math.floor((r.L.lv - 1) / 10))]++; });
+            const bmax = Math.max(1, Math.max.apply(null, buckets));
+            const bars = buckets.map(function(c, i){ return '<div class="dash-bcol"><div class="dash-bar" data-h="' + Math.round(c / bmax * 100) + '"><b>' + (c || '') + '</b></div><div class="dash-bl">Lv' + (i * 10 + 1) + '~' + (i * 10 + 10) + '</div></div>'; }).join('');
+            const statAvg = RPG_STATS.map(function(st){ return { s:st, v: rows.reduce(function(a, r){ return a + ((r.d.stats && r.d.stats[st.key]) || 0); }, 0) / n }; });
+            const smax = Math.max(1, Math.max.apply(null, statAvg.map(function(x){ return x.v; })));
+            const stats = statAvg.map(function(x){ return '<div class="dash-stat"><span>' + x.s.emoji + ' ' + x.s.name + '</span><div class="sc-track"><div class="sc-fill" data-w="' + Math.max(2, x.v / smax * 100) + '" style="background:var(--accent-blue);"></div></div><span style="text-align:right;">' + (Math.round(x.v * 10) / 10) + '</span></div>'; }).join('');
+            const C = 2 * Math.PI * 42;
+            const donut = '<svg width="120" height="120" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="rgba(120,144,180,0.18)" stroke-width="10"/><circle class="v" cx="50" cy="50" r="42" fill="none" stroke="var(--accent-blue)" stroke-width="10" stroke-linecap="round" stroke-dasharray="' + C + '" stroke-dashoffset="' + C + '" data-off="' + (C * (1 - avgPct / 100)) + '" transform="rotate(-90 50 50)"/><text x="50" y="56" text-anchor="middle" font-size="20" font-weight="900" fill="currentColor">' + avgPct + '%</text></svg>';
+            box.innerHTML = head
+                + '<div class="dash-grid">'
+                + '<div class="dash-card"><div class="dash-k">👥 학생 수</div><div class="dash-v" data-num-to="' + n + '">0</div><div class="dash-s">명</div></div>'
+                + '<div class="dash-card"><div class="dash-k">⭐ 평균 레벨</div><div class="dash-v">Lv ' + avgLv.toFixed(1) + '</div><div class="dash-s">반 전체 평균</div></div>'
+                + '<div class="dash-card"><div class="dash-k">🏆 최고 레벨</div><div class="dash-v">Lv <span data-num-to="' + top.L.lv + '">0</span></div><div class="dash-s">' + escapeHtml(top.st.name || (top.st.id + '번')) + '</div></div>'
+                + '<div class="dash-card"><div class="dash-k">✨ 반 전체 경험치</div><div class="dash-v" data-num-to="' + totalXp + '">0</div><div class="dash-s">XP 합계</div></div>'
+                + '</div><div class="dash-row">'
+                + '<div class="dash-card"><div class="dash-k">📈 레벨 분포</div><div class="dash-bars">' + bars + '</div></div>'
+                + '<div class="dash-card"><div class="dash-k">💪 반 평균 능력치</div>' + stats + '</div>'
+                + '<div class="dash-card dash-donut" style="color:var(--dark-blue);"><div class="dash-k" style="align-self:flex-start;">🎯 다음 레벨까지 평균</div>' + donut + '</div>'
+                + '</div>';
+            box.querySelectorAll('.dash-bar').forEach(function(e, i){ if(prevH[i]) e.style.height = prevH[i]; });
+            box.querySelectorAll('.sc-fill[data-w]').forEach(function(e, i){ if(prevW[i]) e.style.width = prevW[i]; });
+            if(prevOff){ const c = box.querySelector('circle.v'); if(c) c.style.strokeDashoffset = prevOff; }
+            requestAnimationFrame(function(){ requestAnimationFrame(function(){
+                box.querySelectorAll('.dash-bar').forEach(function(b){ b.style.height = b.dataset.h + '%'; });
+                box.querySelectorAll('.sc-fill[data-w]').forEach(function(f){ f.style.width = f.dataset.w + '%'; });
+                box.querySelectorAll('circle.v').forEach(function(c){ c.style.strokeDashoffset = c.dataset.off; });
+                box.querySelectorAll('[data-num-to]').forEach(function(el, i){ el.dataset.num = prevNums[i] !== undefined ? prevNums[i] : 0; el.innerText = el.dataset.num; animateNumber(el, el.dataset.numTo, 800); });
+            }); });
+        }
         function rpgOnShow(){
             rpgStudentMode = localStorage.getItem('rpgStu_' + currentRoom) === '1';
             if(!rpgStudentMode && !rpgBulkMode){
