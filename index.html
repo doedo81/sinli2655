@@ -2977,6 +2977,33 @@ var qrcode = function() {
         .tm-sel { font-size:13px; color:#cfd8dc; text-align:center; }
         .tm-cmd { display:flex; gap:8px; }
 
+        /* ----- ⚔️ 1:1 대결 좌우 무대 + 펫 동료 ----- */
+        .bt-stage { display:grid; grid-template-columns:1fr 22px 1fr; gap:6px; align-items:stretch; padding:10px 6px 14px; border-radius:18px;
+            background:radial-gradient(ellipse at 50% 92%, rgba(255,200,120,.22), transparent 60%), linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.28)); }
+        .bt-vs { align-self:center; text-align:center; font-weight:900; color:#ffb74d; font-size:15px; }
+        .bt-fighter.side { flex-direction:column; align-items:stretch; gap:3px; padding:10px; min-width:0; }
+        .bt-fighter.side .bt-name { font-size:15px; }
+        .bt-fighter.side.R .bt-name { text-align:right; }
+        .bt-fighter.side.R .bt-meta { flex-direction:row-reverse; }
+        .bt-fighter.side .bt-av { width:96px; height:116px; margin:6px auto 2px; align-items:flex-end; }
+        .bt-pet { position:absolute; bottom:0; line-height:0; z-index:2; filter:drop-shadow(0 4px 3px rgba(0,0,0,.5)); }
+        .bt-fighter.side.L .bt-pet { right:-34px; }
+        .bt-fighter.side.R .bt-pet { left:-34px; }
+        .bt-fighter.side.R .bt-wpn { right:auto; left:-12px; }
+        .bt-fighter.side.R .bt-shd { left:auto; right:-12px; }
+        @keyframes btLungeX { 0% { transform:translateX(0); } 35% { transform:translateX(var(--lunge)) scale(1.05); } 100% { transform:translateX(0); } }
+        .bt-stage .bt-lunge, .bt-stage .bt-lunge-big { animation-name:btLungeX; position:relative; z-index:5; }
+        @keyframes btPetGo { 0% { transform:translateX(0); } 40% { transform:translateX(var(--plx)) scale(1.25); } 100% { transform:translateX(0); } }
+        .bt-petgo { animation:btPetGo .5s ease; z-index:6; }
+        .bt-fighter.side .bt-slash { left:6%; top:66%; width:84%; }
+        .bt-fighter.side .bt-burst { left:42%; top:60%; }
+        .bt-fighter.side .bt-crit { left:32%; top:38%; }
+        .bt-fighter.side .bt-float { top:36%; }
+        .bt-fighter.side .bt-bubble { left:50%; top:64%; margin-left:-56px; }
+        .bt-fighter.side .bt-guard { top:96px; bottom:auto; right:8px; z-index:4; }
+        .bt-fighter.side.R .bt-guard { right:auto; left:8px; }
+        .bt-fighter.side .bt-power { right:auto; left:50%; transform:translateX(-50%); white-space:nowrap; }
+
         /* 테마 고르기 창 */
         .theme-card { cursor: pointer; border-radius: 14px; border: 2px solid #e6ebf3; padding: 8px; background: #fff; transition: 0.15s; text-align: center; }
         .theme-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.10); }
@@ -4401,9 +4428,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.49';
+        const APP_VERSION = '1.50';
         const APP_VERSION_DATE = '2026-10-06';
         const APP_CHANGELOG = [
+            'v1.50 (2026-10-08) — ⚔️ 1:1 대결도 좌우로 마주 보기 + 펫 동료가 옆에 서서 공격 때 따라 한 번 더 때림',
             'v1.49 (2026-10-08) — 🎬 대결 미리보기를 🐾 팀 대결(판 위)로 · 1:1 미리보기는 [친구 대결 현황]에서 따로',
             'v1.48 (2026-10-08) — 🐾 팀 대결: 내 캐릭터 + 펫 2마리를 판(앞줄·뒷줄)에 배치하고 유닛별로 공격·방어·필살기·가방(물약) 턴제 · 1:1 대결도 그대로',
             'v1.47 (2026-10-08) — 🕹️ 오락실식 대결: 선공 룰렛 · 연타로 힘 모으기(최대 1.5배) · 필살기 컷인 · 무기 속성 효과(불·얼음·번개·물·빛…) · 화면 흔들림',
@@ -10772,7 +10800,10 @@ var qrcode = function() {
         }
         function battleCancel(id){ if(battlesRef) battlesRef.child(id).update({ status:'cancel', updatedAt:Date.now() }); }
         function battleDecline(id){ if(battlesRef) battlesRef.child(id).update({ status:'declined', updatedAt:Date.now() }); }
-        function battleFighter(num){ const s = gearStatsOf((rpgData.students && rpgData.students[num]) || {}); return { hp:s.hp, max:s.hp, atk:s.atk, def:s.def, crit:s.crit, spd:s.spd, en:1, guard:false }; }
+        function battleFighter(num){
+            const d = (rpgData.students && rpgData.students[num]) || {}, st = gearStatsOf(d), pid = teamCompanions(d)[0], ps = teamPetStats(pid);
+            return { hp:st.hp, max:st.hp, atk:st.atk, def:st.def, crit:st.crit, spd:st.spd, en:1, guard:false, pet:pid, patk:ps.atk };
+        }
         function battleAccept(id){
             const b = battlesData[id]; if(!b || !battlesRef) return;
             if(b.mode === 'team') return teamAccept(id);
@@ -10796,7 +10827,7 @@ var qrcode = function() {
                 const opp = side === 'a' ? 'b' : 'a', P = x.p[side], O = x.p[opp], c = BATTLE_CARDS[card];
                 if(!c || (P.en || 0) < c.cost) return;
                 P.guard = false;
-                let dmg = 0, crit = false, heal = 0, line = '';
+                let dmg = 0, crit = false, heal = 0, line = '', petDmg = 0;
                 if(card === 'attack' || card === 'special'){
                     dmg = Math.max(3, Math.round(P.atk * (0.85 + Math.random() * 0.3) - O.def * 0.6));
                     if(card === 'special') dmg = Math.round(dmg * 1.8);
@@ -10805,7 +10836,8 @@ var qrcode = function() {
                     let blocked = false;
                     if(O.guard){ dmg = Math.max(1, Math.round(dmg * 0.4)); O.guard = false; blocked = true; }
                     O.hp = Math.max(0, O.hp - dmg);
-                    line = c.emoji + ' ' + nameOf(x, side) + '의 ' + c.name + '! ' + (crit ? '💫치명타! ' : '') + (blocked ? '(방어로 막음) ' : '') + nameOf(x, opp) + ' -' + dmg;
+                    if(P.pet && O.hp > 0){ petDmg = Math.max(1, Math.round((P.patk || 6) * (0.8 + Math.random() * 0.4) - O.def * 0.4)); O.hp = Math.max(0, O.hp - petDmg); }
+                    line = c.emoji + ' ' + nameOf(x, side) + '의 ' + c.name + '! ' + (crit ? '💫치명타! ' : '') + (blocked ? '(방어로 막음) ' : '') + nameOf(x, opp) + ' -' + dmg + (petDmg ? ' · 🐾펫 -' + petDmg : '');
                 } else if(card === 'guard'){
                     P.guard = true; heal = Math.min(5, P.max - P.hp); P.hp += heal;
                     line = '🛡️ ' + nameOf(x, side) + ' 방어 자세!' + (heal ? ' +' + heal : '');
@@ -10814,7 +10846,7 @@ var qrcode = function() {
                     line = '💚 ' + nameOf(x, side) + ' 회복 +' + heal;
                 }
                 P.en = Math.min(5, (P.en || 0) - c.cost + c.gain);
-                x.last = { by:side, card:card, dmg:dmg, crit:crit, heal:heal, power:Math.max(1, Math.min(1.5, Number(power) || 1)), ts:Date.now() }; x.charge = null;
+                x.last = { by:side, card:card, dmg:dmg, petDmg:petDmg, crit:crit, heal:heal, power:Math.max(1, Math.min(1.5, Number(power) || 1)), ts:Date.now() }; x.charge = null;
                 x.log = (x.log || []).concat([line]).slice(-6);
                 if(O.hp <= 0){ x.status = 'done'; x.winner = side; x.endedBy = 'ko'; x.log = x.log.concat(['🏆 ' + nameOf(x, side) + ' 승리!']).slice(-6); }
                 else { x.turn = opp; x.round = (x.round || 1) + 1; }
@@ -10866,7 +10898,7 @@ var qrcode = function() {
         }
         function battleOpen(id){ battleOpenId = id; battleLastTs = 0; battlePrevHp = {}; battleRender(true); }
         function battleClose(){ if(battleDemoState) battleDemoStop(); battleOpenId = null; battleModalEl().style.display = 'none'; battleRenderLobby(); }
-        function battleFighterHtml(x, side, isTop, isTurn){
+        function battleFighterHtml(x, side, isRight, isTurn){
             const num = side === 'a' ? x.a : x.b, P = x.p[side];
             const d = (rpgData.students && rpgData.students[num]) || {}, L = rpgLevel(d.xp);
             const stu = rpgParseRoster().find(function(s){ return s.id === num; }) || { gender:'m', name:num + '번' };
@@ -10875,14 +10907,15 @@ var qrcode = function() {
             let en = ''; for(let i = 0; i < 5; i++) en += i < (P.en || 0) ? '●' : '○';
             const pose = x.status === 'done' ? (x.winner === side ? ' bt-victory' : ' bt-ko') : '';
             const charging = battleIsCharging(x) && x.charge.by === side;
-            return '<div class="bt-fighter' + (isTurn ? ' turn' : '') + (P.guard ? ' guarding' : '') + (charging ? ' charging' : '') + '" id="bt-f-' + side + '">'
+            return '<div class="bt-fighter side ' + (isRight ? 'R' : 'L') + (isTurn ? ' turn' : '') + (P.guard ? ' guarding' : '') + (charging ? ' charging' : '') + '" id="bt-f-' + side + '">'
                 + (P.guard ? '<span class="bt-guard">🛡️ 방어 중</span>' : '')
-                + '<div class="bt-av"><div class="bt-body' + pose + '"><div' + (isTop ? ' class="flip"' : '') + '>' + rpgAvatarImg(d.job, L.lv, stu.gender, 96, '', '') + '</div></div>'
-                + (w ? '<span class="bt-wpn">' + gearIcon(w, 32) + '</span>' : '') + (sh ? '<span class="bt-shd">' + gearIcon(sh, 26) + '</span>' : '') + '</div>'
-                + '<div class="bt-info"><div class="bt-name">' + escapeHtml(stu.name) + ' <small>Lv.' + L.lv + '</small></div>'
+                + '<div class="bt-name">' + escapeHtml(stu.name) + ' <small>Lv.' + L.lv + '</small></div>'
                 + '<div class="bt-hp"><i data-to="' + pct + '" class="' + (pct <= 30 ? 'low' : '') + '" style="width:' + prev + '%;"></i></div>'
-                + '<div class="bt-meta"><span>❤️ ' + P.hp + ' / ' + P.max + '</span><span class="bt-en" title="기력">' + en + '</span></div>'
-                + '<div class="bt-meta"><span>⚔️' + P.atk + ' 🛡️' + P.def + ' 🎯' + P.crit + '%</span></div></div></div>';
+                + '<div class="bt-meta"><span>❤️ ' + P.hp + '/' + P.max + '</span><span class="bt-en" title="기력">' + en + '</span></div>'
+                + '<div class="bt-av"><div class="bt-body' + pose + '"><div' + (isRight ? ' class="flip"' : '') + '>' + rpgAvatarImg(d.job, L.lv, stu.gender, 96, '', '') + '</div></div>'
+                + (w ? '<span class="bt-wpn">' + gearIcon(w, 30) + '</span>' : '') + (sh ? '<span class="bt-shd">' + gearIcon(sh, 24) + '</span>' : '')
+                + (P.pet ? '<span class="bt-pet">' + rpgPetVisual(P.pet, 36, 999) + '</span>' : '') + '</div>'
+                + '<div class="bt-meta" style="justify-content:center;"><span>⚔️' + P.atk + ' 🛡️' + P.def + ' 🎯' + P.crit + '%</span></div></div>';
         }
         function battleRender(force){
             const m = battleModalEl(), id = battleOpenId;
@@ -10923,7 +10956,8 @@ var qrcode = function() {
                     + '<button class="bt-btn" style="margin-top:12px;width:100%;background:#ff8a3d;color:#fff;" onclick="battleClose()">닫기</button></div>';
             }
             m.innerHTML = '<div class="bt-wrap"><div class="bt-top"><span>' + (battleDemoState ? '🎬 대결 미리보기 · 연습(저장 안 됨)' : '🥊 친구 대결') + '</span><button onclick="battleClose()">' + (play && mySide ? '잠시 나가기' : '닫기 ✕') + '</button></div>'
-                + battleFighterHtml(x, top, true, play && x.turn === top) + mid + log + battleFighterHtml(x, bottom, false, play && x.turn === bottom) + cards + end + '</div>';
+                + '<div class="bt-stage">' + battleFighterHtml(x, bottom, false, play && x.turn === bottom) + '<div class="bt-vs">VS</div>' + battleFighterHtml(x, top, true, play && x.turn === top) + '</div>'
+                + mid + log + cards + end + '</div>';
             m.style.display = 'block';
             // HP 막대 애니메이션 + 맞은 쪽 흔들림 + 숫자 떠오름
             const hpDelay = (x.last && x.last.ts && x.last.ts !== battleLastTs && x.last.card === 'special') ? 1400 : 260;
@@ -11019,7 +11053,7 @@ var qrcode = function() {
                 setTimeout(function(){
                     const A2 = document.getElementById('bt-f-' + by), T2 = document.getElementById('bt-f-' + tg);
                     if(!A2 || !T2) return;
-                    A2.style.setProperty('--lunge', ((by === topSide) ? 1 : -1) * (big ? 56 : 36) + 'px');
+                    A2.style.setProperty('--lunge', ((by === topSide) ? -1 : 1) * (big ? 90 : 60) + 'px');
                     add(A2, big ? 'bt-lunge-big' : 'bt-lunge', big ? 780 : 560);
                     const w = A2.querySelector('.bt-wpn'); if(w) add(w, 'bt-swing', 560);
                     if(Ls.power >= 1.2) { const pw = fx(A2, 'bt-power', '파워 x' + Ls.power.toFixed(1) + '!', 1100); }
@@ -11033,6 +11067,18 @@ var qrcode = function() {
                         if(Ls.crit) fx(T2, 'bt-crit', '💫', 800);
                         add(T2, 'bt-shake', 500); add(T2, 'bt-hit', 600);
                         float(T2, '-' + Ls.dmg + (Ls.crit ? '!' : ''), Ls.crit ? '#ffd54f' : '#ff6e6e');
+                        if(Ls.petDmg){
+                            battleAnimUntil = Math.max(battleAnimUntil, Date.now() + 1300);
+                            setTimeout(function(){
+                                const A3 = document.getElementById('bt-f-' + by), pe = A3 && A3.querySelector('.bt-pet');
+                                if(pe){ pe.style.setProperty('--plx', ((by === topSide) ? -1 : 1) * 80 + 'px'); add(pe, 'bt-petgo', 520); }
+                                setTimeout(function(){
+                                    const T4 = document.getElementById('bt-f-' + tg); if(!T4) return;
+                                    fx(T4, 'bt-burst', '🐾', 700, '--dx:24px;--dy:-34px;'); add(T4, 'bt-shake', 400);
+                                    const f = fx(T4, 'bt-float', '-' + Ls.petDmg, 1100); f.style.color = '#ffb74d'; f.style.marginTop = '28px';
+                                }, 230);
+                            }, 420);
+                        }
                         if(window.SFX) try{ big ? SFX.levelup() : SFX.point(); }catch(e){}
                     }, big ? 300 : 220);
                 }, wait);
