@@ -3475,6 +3475,7 @@ var qrcode = function() {
                                         <div class="rpg-menu-label">수업 도구</div>
                                         <button onclick="rpgOpenMissions(); rpgCloseMenu();"><i class="fa-solid fa-bullseye" style="color:#e91e8c; width:18px;"></i> 미션</button>
                                         <button onclick="battleWatchOpen(); rpgCloseMenu();"><i class="fa-solid fa-hand-fist" style="color:#ff7a2f; width:18px;"></i> 친구 대결 현황</button>
+                                        <button onclick="battleDemoStart(); rpgCloseMenu();"><i class="fa-solid fa-clapperboard" style="color:#ff7a2f; width:18px;"></i> 대결 미리보기</button>
                                         <button onclick="rpgOpenExam(); rpgCloseMenu();"><i class="fa-solid fa-file-pen" style="color:#fb8c00; width:18px;"></i> 단원평가</button>
                                         <button id="rpg-grade-btn" style="display:none;" onclick="rpgOpenGrade(); rpgCloseMenu();"><i class="fa-solid fa-table-list" style="color:#455a64; width:18px;"></i> 평가 기록</button>
                                         <div class="rpg-menu-sep"></div>
@@ -4322,9 +4323,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.45';
+        const APP_VERSION = '1.46';
         const APP_VERSION_DATE = '2026-10-06';
         const APP_CHANGELOG = [
+            'v1.46 (2026-10-08) — 🎬 대결 미리보기(성장→관리→대결 미리보기): 1·2번 학생 캐릭터가 자동으로 싸우는 연습 화면, 저장 안 됨',
             'v1.45 (2026-10-08) — 🎬 대결 움직임: 돌진·무기 휘두르기·베기·맞으면 번쩍/흔들림·필살기 화면 번쩍·방어 보호막·회복 반짝이·쓰러짐/승리 점프',
             'v1.44 (2026-10-08) — 🎨 장비 43종 그림 적용(Antigravity 제작) · 상점 그림 크게',
             'v1.43 (2026-10-08) — 🍱 급식표 날짜 밀림 방지 + 저장 전 날짜별 전체 확인 + 급식 칸 직접 고치기',
@@ -10637,7 +10639,7 @@ var qrcode = function() {
             if(battlesRef) battlesRef.off();
             battlesData = {};
             battlesRef = rpgRef.parent.child('battles');
-            battlesRef.on('value', function(s){ battlesData = s.val() || {}; battleOnData(); }, function(){ /* 규칙 미적용 시 조용히 */ });
+            battlesRef.on('value', function(s){ if(battleDemoState){ battleDemoState.realData = s.val() || {}; return; } battlesData = s.val() || {}; battleOnData(); }, function(){ /* 규칙 미적용 시 조용히 */ });
         }
         function battleViewer(){ const sp = document.getElementById('student-page'); return (typeof studentNum !== 'undefined' && studentNum != null && sp && sp.style.display !== 'none') ? studentNum : null; }
         function battleName(num){ const s = rpgParseRoster().find(function(x){ return x.id === num; }); return s ? s.name : (num + '번'); }
@@ -10699,8 +10701,8 @@ var qrcode = function() {
                 return x;
             });
         }
-        function battleMove(id, card){
-            const me = battleViewer(); if(me == null || !battlesRef) return;
+        function battleMove(id, card, asNum){
+            const me = asNum != null ? asNum : battleViewer(); if(me == null || !battlesRef) return;
             const nameOf = function(x, side){ return battleName(side === 'a' ? x.a : x.b); };
             battlesRef.child(id).transaction(function(x){
                 if(!x || x.status !== 'play' || !x.p) return;
@@ -10752,6 +10754,7 @@ var qrcode = function() {
         }
         // 결과 기록·보상(대결당 한 번만). 코인은 KO 승리 + 하루 BATTLE_DAILY번까지
         function battleSettle(id, x){
+            if(battleDemoState) return;
             battlesRef.child(id + '/settled').transaction(function(v){ if(v) return; return true; }, function(err, committed){
                 if(err || !committed) return;
                 const w = x.winner === 'a' ? x.a : x.b, l = x.winner === 'a' ? x.b : x.a;
@@ -10776,7 +10779,7 @@ var qrcode = function() {
             return m;
         }
         function battleOpen(id){ battleOpenId = id; battleLastTs = 0; battlePrevHp = {}; battleRender(true); }
-        function battleClose(){ battleOpenId = null; battleModalEl().style.display = 'none'; battleRenderLobby(); }
+        function battleClose(){ if(battleDemoState) battleDemoStop(); battleOpenId = null; battleModalEl().style.display = 'none'; battleRenderLobby(); }
         function battleFighterHtml(x, side, isTop, isTurn){
             const num = side === 'a' ? x.a : x.b, P = x.p[side];
             const d = (rpgData.students && rpgData.students[num]) || {}, L = rpgLevel(d.xp);
@@ -10830,7 +10833,7 @@ var qrcode = function() {
                     + '<div style="margin-top:6px;color:#cfd8dc;font-size:14px;">' + (mySide ? (iWon ? '축하해요! ' + (x.reward ? '🪙' + x.reward + ' 코인 획득' : (x.endedBy === 'ko' ? '(오늘 코인 보상은 다 받았어요)' : '')) : '아쉽지만 다음엔 이길 거예요! 장비를 바꿔보세요 💪') : '') + '</div>'
                     + '<button class="bt-btn" style="margin-top:12px;width:100%;background:#ff8a3d;color:#fff;" onclick="battleClose()">닫기</button></div>';
             }
-            m.innerHTML = '<div class="bt-wrap"><div class="bt-top"><span>🥊 친구 대결</span><button onclick="battleClose()">' + (play && mySide ? '잠시 나가기' : '닫기 ✕') + '</button></div>'
+            m.innerHTML = '<div class="bt-wrap"><div class="bt-top"><span>' + (battleDemoState ? '🎬 대결 미리보기 · 연습(저장 안 됨)' : '🥊 친구 대결') + '</span><button onclick="battleClose()">' + (play && mySide ? '잠시 나가기' : '닫기 ✕') + '</button></div>'
                 + battleFighterHtml(x, top, true, play && x.turn === top) + mid + log + battleFighterHtml(x, bottom, false, play && x.turn === bottom) + cards + end + '</div>';
             m.style.display = 'block';
             // HP 막대 애니메이션 + 맞은 쪽 흔들림 + 숫자 떠오름
@@ -10887,6 +10890,56 @@ var qrcode = function() {
             if(battleOpenId) battleRender();
             const wl = document.getElementById('battle-watch-list'); if(wl && document.getElementById('battle-watch').style.display === 'flex') battleWatchRender();
         }
+        // 🎬 대결 미리보기 — 우리 반 1·2번 학생 캐릭터로 자동 대결(메모리 안에서만, 아무것도 저장 안 함)
+        var battleDemoState = null;
+        function battleDemoStart(){
+            const ros = rpgParseRoster();
+            if(ros.length < 2){ alert('학생 명단이 2명 이상 있어야 미리보기를 볼 수 있어요.'); return; }
+            if(battleDemoState) battleDemoStop();
+            const wv = document.getElementById('battle-watch'); if(wv) wv.style.display = 'none';
+            const a = ros[0].id, b = ros[1].id;
+            rpgData.students = rpgData.students || {};
+            const S = rpgData.students;
+            const st = { a:a, b:b, keepA:S[a], keepB:S[b], realRef:battlesRef, realData:battlesData, store:{}, timer:null, wait:0 };
+            // 미리보기용 장비(화면에만 잠깐)
+            S[a] = Object.assign({}, S[a] || {}, { xp:Math.max((S[a] || {}).xp || 0, 9000), equip:{ weapon:'w_fire', armor:'a_knight', shield:'s_ice' } });
+            S[b] = Object.assign({}, S[b] || {}, { xp:Math.max((S[b] || {}).xp || 0, 8500), equip:{ weapon:'w_thunder', armor:'a_robe', shield:'s_turtle' } });
+            battleDemoState = st;
+            battlesRef = { off:function(){}, on:function(){}, child:function(path){ return {
+                transaction:function(fn, cb){
+                    const cur = st.store[path] ? JSON.parse(JSON.stringify(st.store[path])) : null;
+                    const nv = fn(cur);
+                    if(nv === undefined){ if(cb) cb(null, false, { val:function(){ return cur; } }); return Promise.resolve(); }
+                    st.store[path] = nv; battlesData = st.store; if(battleOpenId) battleRender();
+                    if(cb) cb(null, true, { val:function(){ return nv; } }); return Promise.resolve();
+                },
+                set:function(){ return Promise.resolve(); }, update:function(){ return Promise.resolve(); }, remove:function(){ return Promise.resolve(); }
+            }; } };
+            const newRound = function(){
+                st.store = { demo:{ a:a, b:b, status:'play', p:{ a:battleFighter(a), b:battleFighter(b) }, turn:'a', round:1, log:['🎬 미리보기 대결 시작! (연습이라 저장 안 돼요)'], createdAt:Date.now(), updatedAt:Date.now() } };
+                battlesData = st.store; battleOpen('demo');
+            };
+            newRound();
+            st.timer = setInterval(function(){
+                const x = st.store.demo; if(!x) return;
+                if(x.status !== 'play'){ if(!st.wait) st.wait = Date.now(); if(Date.now() - st.wait > 4500){ st.wait = 0; newRound(); } return; }
+                const P = x.p[x.turn];
+                let card = 'attack';
+                if(P.en >= 3 && Math.random() < 0.7) card = 'special';
+                else if(P.hp < P.max * 0.35 && P.en >= 2) card = 'heal';
+                else if(Math.random() < 0.18) card = 'guard';
+                battleMove('demo', card, x.turn === 'a' ? x.a : x.b);
+            }, 1700);
+        }
+        function battleDemoStop(){
+            const st = battleDemoState; if(!st) return;
+            clearInterval(st.timer);
+            battleDemoState = null;
+            const S = rpgData.students || {};
+            if(st.keepA === undefined) delete S[st.a]; else S[st.a] = st.keepA;
+            if(st.keepB === undefined) delete S[st.b]; else S[st.b] = st.keepB;
+            battlesRef = st.realRef; battlesData = st.realData || {};
+        }
         // 교사: 진행 중인 대결 보기(교실 TV로 중계)
         function battleWatchOpen(){
             let w = document.getElementById('battle-watch');
@@ -10897,6 +10950,7 @@ var qrcode = function() {
                 w.innerHTML = '<div style="background:#fff; border-radius:18px; max-width:480px; width:100%; max-height:85vh; overflow-y:auto; padding:20px;">'
                     + '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><h2 style="margin:0; font-size:19px; color:#455a64;">🥊 친구 대결 현황</h2><span onclick="document.getElementById(\'battle-watch\').style.display=\'none\'" style="cursor:pointer; font-size:20px; color:#90a4ae;">✕</span></div>'
                     + '<p style="font-size:12.5px; color:#78909c; margin:0 0 10px;">학생들이 자기 기기(학생 화면)에서 친구에게 대결을 신청해요. 진행 중인 대결을 누르면 교실 화면으로 볼 수 있어요.</p>'
+                    + '<button onclick="battleDemoStart()" style="width:100%; border:none; border-radius:12px; padding:12px; margin-bottom:12px; background:#ff8a3d; color:#fff; font-weight:800; font-size:15px; cursor:pointer; font-family:inherit;">🎬 대결 미리보기 (연습 · 저장 안 됨)</button>'
                     + '<div id="battle-watch-list"></div></div>';
                 document.body.appendChild(w);
             }
