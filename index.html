@@ -2865,6 +2865,40 @@ var qrcode = function() {
         @keyframes btFloat { 0%{opacity:0; transform:translate(-50%,0) scale(.7)} 15%{opacity:1; transform:translate(-50%,-12px) scale(1.2)} 100%{opacity:0; transform:translate(-50%,-64px) scale(1)} }
         .bt-float { position:absolute; left:50%; top:6px; font-size:32px; font-weight:900; pointer-events:none; animation:btFloat 1.15s ease forwards; text-shadow:0 2px 8px rgba(0,0,0,0.7); z-index:3; }
 
+        /* ----- 🎬 대결 움직임 ----- */
+        @keyframes btIdle { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-5px); } }
+        .bt-body { animation: btIdle 2.4s ease-in-out infinite; position:relative; }
+        .bt-fighter.turn .bt-body { animation-duration: 1.2s; }
+        @keyframes btLunge { 0% { transform:translateY(0); } 35% { transform:translateY(var(--lunge)) scale(1.04); } 100% { transform:translateY(0); } }
+        .bt-lunge { animation: btLunge .5s cubic-bezier(.3,.7,.3,1); z-index:4; }
+        .bt-lunge-big { animation: btLunge .75s cubic-bezier(.3,.7,.3,1); z-index:4; }
+        .bt-wpn { transform-origin: 30% 80%; }
+        @keyframes btSwing { 0% { transform:rotate(0); } 30% { transform:rotate(-55deg) scale(1.25); } 62% { transform:rotate(85deg) scale(1.4); } 100% { transform:rotate(0); } }
+        .bt-swing { animation: btSwing .5s ease; }
+        @keyframes btHitFlash { 0%,100% { filter:none; } 25% { filter:brightness(1.7) saturate(2.2) drop-shadow(0 0 14px rgba(255,60,60,.95)); } }
+        .bt-hit .bt-body { animation: btHitFlash .55s ease; }
+        @keyframes btSlashA { 0% { transform:rotate(-28deg) scaleX(0); opacity:1; } 55% { transform:rotate(-28deg) scaleX(1); opacity:1; } 100% { transform:rotate(-28deg) scaleX(1.1); opacity:0; } }
+        @keyframes btSlashB { 0% { transform:rotate(28deg) scaleX(0); opacity:1; } 55% { transform:rotate(28deg) scaleX(1); opacity:1; } 100% { transform:rotate(28deg) scaleX(1.1); opacity:0; } }
+        .bt-slash { position:absolute; left:6px; top:50%; width:120px; height:9px; margin-top:-5px; border-radius:6px; background:linear-gradient(90deg,transparent,#fff,#ffe082,transparent); box-shadow:0 0 16px #fff; animation:btSlashA .42s ease-out forwards; z-index:5; pointer-events:none; }
+        .bt-slash.b { animation-name: btSlashB; animation-delay: .08s; transform:scaleX(0); }
+        @keyframes btFlash { 0% { opacity:0; } 18% { opacity:1; } 100% { opacity:0; } }
+        .bt-flash { position:fixed; inset:0; pointer-events:none; z-index:6600; background:radial-gradient(circle, rgba(255,230,170,.9), rgba(255,120,40,.45) 55%, transparent 80%); animation:btFlash .65s ease-out forwards; }
+        @keyframes btCrit { 0% { transform:scale(.2) rotate(0); opacity:0; } 30% { transform:scale(1.5) rotate(40deg); opacity:1; } 100% { transform:scale(1) rotate(90deg); opacity:0; } }
+        .bt-crit { position:absolute; left:52px; top:18%; font-size:46px; animation:btCrit .75s ease-out forwards; z-index:6; pointer-events:none; }
+        @keyframes btRaise { 0% { transform:none; } 40% { transform:translateX(20px) scale(1.7); } 100% { transform:translateX(12px) scale(1.35); } }
+        .bt-raise { animation: btRaise .5s ease forwards; z-index:5; }
+        @keyframes btBubble { 0% { transform:scale(.4); opacity:0; } 40% { transform:scale(1.06); opacity:1; } 100% { transform:scale(1); opacity:0; } }
+        .bt-bubble { position:absolute; left:-8px; top:50%; width:112px; height:112px; margin-top:-56px; border-radius:50%; border:3px solid rgba(120,190,255,.95); box-shadow:0 0 24px rgba(120,190,255,.85), inset 0 0 24px rgba(120,190,255,.5); animation:btBubble .85s ease-out forwards; pointer-events:none; z-index:4; }
+        @keyframes btPulse { 0%,100% { opacity:.45; } 50% { opacity:1; } }
+        .bt-fighter.guarding .bt-av::after { content:''; position:absolute; left:-6px; right:-6px; top:-6px; bottom:-6px; border-radius:50%; border:2px solid rgba(120,190,255,.75); box-shadow:0 0 16px rgba(120,190,255,.6); animation:btPulse 1.6s ease-in-out infinite; pointer-events:none; }
+        @keyframes btSpark { 0% { transform:translateY(0) scale(.5); opacity:0; } 20% { opacity:1; } 100% { transform:translateY(-90px) scale(1.15); opacity:0; } }
+        .bt-spark { position:absolute; bottom:12px; font-size:18px; animation:btSpark 1s ease-out both; pointer-events:none; z-index:5; }
+        @keyframes btKO { to { transform:rotate(-80deg) translate(-10px,24px); opacity:.45; filter:grayscale(1); } }
+        .bt-body.bt-ko { animation: btKO .8s ease forwards; }
+        @keyframes btJump { 0%,100% { transform:translateY(0); } 40% { transform:translateY(-16px); } }
+        .bt-body.bt-victory { animation: btJump .9s ease-in-out infinite; }
+        /* 대결 움직임은 게임의 핵심이라 '애니메이션 줄이기' 설정과 상관없이 항상 보여줌(학교 PC는 이 설정이 켜진 경우가 많음) */
+
         /* 테마 고르기 창 */
         .theme-card { cursor: pointer; border-radius: 14px; border: 2px solid #e6ebf3; padding: 8px; background: #fff; transition: 0.15s; text-align: center; }
         .theme-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.10); }
@@ -4288,9 +4322,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.44';
+        const APP_VERSION = '1.45';
         const APP_VERSION_DATE = '2026-10-06';
         const APP_CHANGELOG = [
+            'v1.45 (2026-10-08) — 🎬 대결 움직임: 돌진·무기 휘두르기·베기·맞으면 번쩍/흔들림·필살기 화면 번쩍·방어 보호막·회복 반짝이·쓰러짐/승리 점프',
             'v1.44 (2026-10-08) — 🎨 장비 43종 그림 적용(Antigravity 제작) · 상점 그림 크게',
             'v1.43 (2026-10-08) — 🍱 급식표 날짜 밀림 방지 + 저장 전 날짜별 전체 확인 + 급식 칸 직접 고치기',
             'v1.42 (2026-10-06) — ⚔️ 장비 상점(코인) + 🥊 친구와 실시간 턴제 대결',
@@ -10590,7 +10625,7 @@ var qrcode = function() {
         }
 
         // ---------- 🥊 대결 ----------
-        var battlesRef = null, battlesData = {}, battleOpenId = null, battleLastTs = 0, battlePrevHp = {};
+        var battlesRef = null, battlesData = {}, battleOpenId = null, battleLastTs = 0, battlePrevHp = {}, battleAnimUntil = 0, battleDeferT = null;
         const BATTLE_CARDS = {
             attack:  { name:'공격',   emoji:'⚔️', cost:0, gain:1, desc:'무기로 공격' },
             guard:   { name:'방어',   emoji:'🛡️', cost:0, gain:1, desc:'다음 공격 60% 막기 · 체력+5' },
@@ -10749,9 +10784,10 @@ var qrcode = function() {
             const w = gearEquipped(d, 'weapon'), sh = gearEquipped(d, 'shield');
             const pct = Math.max(0, Math.round(P.hp / P.max * 100)), prev = battlePrevHp[side] != null ? battlePrevHp[side] : pct;
             let en = ''; for(let i = 0; i < 5; i++) en += i < (P.en || 0) ? '●' : '○';
-            return '<div class="bt-fighter' + (isTurn ? ' turn' : '') + '" id="bt-f-' + side + '">'
+            const pose = x.status === 'done' ? (x.winner === side ? ' bt-victory' : ' bt-ko') : '';
+            return '<div class="bt-fighter' + (isTurn ? ' turn' : '') + (P.guard ? ' guarding' : '') + '" id="bt-f-' + side + '">'
                 + (P.guard ? '<span class="bt-guard">🛡️ 방어 중</span>' : '')
-                + '<div class="bt-av"><div' + (isTop ? ' class="flip"' : '') + '>' + rpgAvatarImg(d.job, L.lv, stu.gender, 96, '', '') + '</div>'
+                + '<div class="bt-av"><div class="bt-body' + pose + '"><div' + (isTop ? ' class="flip"' : '') + '>' + rpgAvatarImg(d.job, L.lv, stu.gender, 96, '', '') + '</div></div>'
                 + (w ? '<span class="bt-wpn">' + gearIcon(w, 32) + '</span>' : '') + (sh ? '<span class="bt-shd">' + gearIcon(sh, 26) + '</span>' : '') + '</div>'
                 + '<div class="bt-info"><div class="bt-name">' + escapeHtml(stu.name) + ' <small>Lv.' + L.lv + '</small></div>'
                 + '<div class="bt-hp"><i data-to="' + pct + '" class="' + (pct <= 30 ? 'low' : '') + '" style="width:' + prev + '%;"></i></div>'
@@ -10763,6 +10799,9 @@ var qrcode = function() {
             if(!id){ m.style.display = 'none'; return; }
             const x = battlesData[id];
             if(!x || !x.p){ if(x && (x.status === 'declined' || x.status === 'cancel')){ battleClose(); return; } m.style.display = 'none'; return; }
+            if(!force && x.last && x.last.ts === battleLastTs && Date.now() < battleAnimUntil){
+                clearTimeout(battleDeferT); battleDeferT = setTimeout(function(){ battleRender(true); }, battleAnimUntil - Date.now() + 30); return;
+            }
             const me = battleViewer(), mySide = x.a === me ? 'a' : (x.b === me ? 'b' : null);
             const bottom = mySide || 'a', top = bottom === 'a' ? 'b' : 'a';
             const play = x.status === 'play', myTurn = play && mySide && x.turn === mySide;
@@ -10795,22 +10834,47 @@ var qrcode = function() {
                 + battleFighterHtml(x, top, true, play && x.turn === top) + mid + log + battleFighterHtml(x, bottom, false, play && x.turn === bottom) + cards + end + '</div>';
             m.style.display = 'block';
             // HP 막대 애니메이션 + 맞은 쪽 흔들림 + 숫자 떠오름
-            requestAnimationFrame(function(){ requestAnimationFrame(function(){ m.querySelectorAll('.bt-hp i').forEach(function(i){ i.style.width = i.dataset.to + '%'; }); }); });
+            setTimeout(function(){ m.querySelectorAll('.bt-hp i').forEach(function(i){ i.style.width = i.dataset.to + '%'; }); }, 260);
             battlePrevHp = { a:Math.round(x.p.a.hp / x.p.a.max * 100), b:Math.round(x.p.b.hp / x.p.b.max * 100) };
             if(x.last && x.last.ts && x.last.ts !== battleLastTs){
                 const fresh = battleLastTs !== 0 || Date.now() - x.last.ts < 4000;
                 battleLastTs = x.last.ts;
-                if(fresh){
-                    const hitSide = x.last.dmg ? (x.last.by === 'a' ? 'b' : 'a') : x.last.by;
-                    const el = document.getElementById('bt-f-' + hitSide);
-                    if(el){
-                        if(x.last.dmg) el.classList.add('bt-shake');
-                        const f = document.createElement('div'); f.className = 'bt-float';
-                        f.style.color = x.last.dmg ? (x.last.crit ? '#ffd54f' : '#ff6e6e') : '#81c784';
-                        f.textContent = x.last.dmg ? ('-' + x.last.dmg + (x.last.crit ? '!' : '')) : (x.last.heal ? '+' + x.last.heal : '🛡️');
-                        el.appendChild(f);
-                    }
-                }
+                if(fresh) battleAnimate(x, top);
+            }
+        }
+        // 🎬 마지막 행동을 움직임으로 보여주기
+        function battleAnimate(x, topSide){
+            const Ls = x.last, by = Ls.by, tg = by === 'a' ? 'b' : 'a';
+            const A = document.getElementById('bt-f-' + by), T = document.getElementById('bt-f-' + tg);
+            if(!A || !T) return;
+            const add = function(el, cls, ms){ el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(function(){ el.classList.remove(cls); }, ms); };
+            const fx = function(parent, cls, txt, ms, style){ const e = document.createElement('div'); e.className = cls; if(txt) e.textContent = txt; if(style) e.style.cssText += style; parent.appendChild(e); setTimeout(function(){ e.remove(); }, ms); return e; };
+            const float = function(el, txt, color){ const f = fx(el, 'bt-float', txt, 1200); f.style.color = color; };
+            if(Ls.card === 'attack' || Ls.card === 'special'){
+                const big = Ls.card === 'special';
+                A.style.setProperty('--lunge', ((by === topSide) ? 1 : -1) * (big ? 56 : 36) + 'px');
+                add(A, big ? 'bt-lunge-big' : 'bt-lunge', big ? 780 : 560);
+                const w = A.querySelector('.bt-wpn'); if(w) add(w, 'bt-swing', 560);
+                battleAnimUntil = Date.now() + (big ? 1400 : 1100);
+                setTimeout(function(){
+                    const fire = 'background:linear-gradient(90deg,transparent,#fff3e0,#ff7043,transparent);height:14px;box-shadow:0 0 22px #ff7043;';
+                    if(big) fx(battleModalEl(), 'bt-flash', '', 700);
+                    fx(T, 'bt-slash', '', 520, big ? fire : '');
+                    if(big) fx(T, 'bt-slash b', '', 600, fire);
+                    if(Ls.crit) fx(T, 'bt-crit', '💫', 800);
+                    add(T, 'bt-shake', 500); add(T, 'bt-hit', 600);
+                    float(T, '-' + Ls.dmg + (Ls.crit ? '!' : ''), Ls.crit ? '#ffd54f' : '#ff6e6e');
+                }, big ? 300 : 220);
+            } else if(Ls.card === 'guard'){
+                const sh = A.querySelector('.bt-shd'); if(sh) add(sh, 'bt-raise', 900);
+                fx(A.querySelector('.bt-av') || A, 'bt-bubble', '', 900);
+                float(A, Ls.heal ? '+' + Ls.heal : '🛡️', Ls.heal ? '#81c784' : '#90caf9');
+                battleAnimUntil = Date.now() + 950;
+            } else if(Ls.card === 'heal'){
+                const av = A.querySelector('.bt-av') || A, sp = ['✨', '💚', '✨', '➕', '✨', '💚', '✨'];
+                sp.forEach(function(ch, i){ fx(av, 'bt-spark', ch, 1300, 'left:' + (6 + Math.random() * 78) + 'px; animation-delay:' + (i * 0.07) + 's;'); });
+                float(A, '+' + Ls.heal, '#81c784');
+                battleAnimUntil = Date.now() + 1200;
             }
         }
         function battleOnData(){
