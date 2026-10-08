@@ -3004,6 +3004,38 @@ var qrcode = function() {
         .bt-fighter.side.R .bt-guard { right:auto; left:8px; }
         .bt-fighter.side .bt-power { right:auto; left:50%; transform:translateX(-50%); white-space:nowrap; }
 
+        /* ----- 🏟️ 대결 무대: 배경 + 바둑판 바닥 ----- */
+        .bt-arena { position:relative; height:330px; border-radius:18px; overflow:hidden; box-shadow:0 14px 30px rgba(0,0,0,.45); }
+        .bt-bg { position:absolute; left:0; width:100%; bottom:38%; height:46%; }
+        .bt-floor { position:absolute; left:-35%; right:-35%; bottom:-8%; height:56%; transform:perspective(420px) rotateX(58deg); transform-origin:50% 100%;
+            background:conic-gradient(var(--t1) 25%, var(--t2) 0 50%, var(--t1) 0 75%, var(--t2) 0) 0 0/64px 64px; box-shadow:inset 0 40px 50px rgba(0,0,0,.25); }
+        .scene-forest { background:linear-gradient(180deg,#86cdfb 0%,#cdeeff 52%,#e9f6d6 100%); --t1:#79b552; --t2:#64a043; }
+        .scene-castle { background:linear-gradient(180deg,#ffab7e 0%,#ffd9b0 55%,#f6e6cd 100%); --t1:#a39a8a; --t2:#8c8475; }
+        .scene-desert { background:linear-gradient(180deg,#7cc6ff 0%,#ffe6ad 62%,#ffe2a0 100%); --t1:#e7c784; --t2:#d6b26a; }
+        .scene-night  { background:linear-gradient(180deg,#0e1a3c 0%,#2a3c70 60%,#3a4c84 100%); --t1:#3f5285; --t2:#33456f; }
+        .bt-vsb { position:absolute; left:50%; top:47%; transform:translate(-50%,-50%); font-weight:900; font-size:22px; color:#fff; text-shadow:0 2px 6px rgba(0,0,0,.6), 0 0 14px #ff8a3d; z-index:4; }
+        .bt-hud { position:absolute; top:9px; width:45%; background:rgba(12,14,24,.64); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); border-radius:12px; padding:7px 9px; z-index:6; border:1px solid rgba(255,255,255,.14); color:#fff; }
+        .bt-hud.L { left:8px; } .bt-hud.R { right:8px; text-align:right; } .bt-hud.R .bt-meta { flex-direction:row-reverse; }
+        .bt-hud.on { box-shadow:0 0 0 2px #ffb74d, 0 0 16px rgba(255,183,77,.55); }
+        .bt-hud .bt-name { font-size:14px; } .bt-hud .bt-hp { height:10px; margin:4px 0 3px; } .bt-hud .bt-meta.small { font-size:11px; color:#cfd8dc; }
+        .bt-fig { position:absolute; bottom:13%; width:110px; margin-left:-55px; display:flex; justify-content:center; z-index:3; }
+        .bt-fig.L { left:27%; } .bt-fig.R { left:73%; }
+        .bt-fig .bt-av { position:relative; width:96px; height:112px; display:flex; justify-content:center; align-items:flex-end; }
+        .bt-fig::before { content:''; position:absolute; bottom:-6px; left:50%; width:92px; height:18px; margin-left:-46px; border-radius:50%; background:radial-gradient(ellipse, rgba(0,0,0,.5), transparent 70%); }
+        .bt-fig.turn::after { content:''; position:absolute; bottom:-12px; left:50%; width:116px; height:28px; margin-left:-58px; border-radius:50%; border:3px solid #ffd54f; box-shadow:0 0 18px #ffd54f; animation:btPulse 1.2s ease-in-out infinite; z-index:-1; }
+        .bt-fig.guarding .bt-av::after { content:''; position:absolute; left:-8px; right:-8px; top:-6px; bottom:-6px; border-radius:50%; border:2px solid rgba(120,190,255,.8); box-shadow:0 0 16px rgba(120,190,255,.7); animation:btPulse 1.6s ease-in-out infinite; pointer-events:none; }
+        .bt-fig.charging .bt-body { animation-duration:.35s; filter:drop-shadow(0 0 12px #ffd54f); }
+        .bt-fig.L .bt-pet { left:-46px; right:auto; } .bt-fig.R .bt-pet { right:-46px; left:auto; }
+        .bt-fig .bt-shd { bottom:46px; }
+        .bt-fig.R .bt-wpn { right:auto; left:-12px; } .bt-fig.R .bt-shd { left:auto; right:-12px; }
+        .bt-arena .bt-lunge, .bt-arena .bt-lunge-big { animation-name:btLungeX; z-index:7; }
+        .bt-fig .bt-slash { left:-2px; top:50%; width:100px; } .bt-fig .bt-burst { left:42%; top:42%; } .bt-fig .bt-crit { left:28%; top:6%; }
+        .bt-fig .bt-float { top:-16px; } .bt-fig .bt-bubble { left:50%; top:50%; margin:-56px 0 0 -56px; } .bt-fig .bt-power { top:-34px; left:50%; right:auto; transform:translateX(-50%); white-space:nowrap; }
+        .tm-scene { position:relative; border-radius:18px; overflow:hidden; padding:54px 6px 8px; }
+        .tm-scene .bt-bg { top:0; bottom:auto; height:84px; }
+        .tm-scene .tm-board { position:relative; z-index:2; }
+        .tm-scene .tm-rowlbl { color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.7); position:relative; z-index:2; }
+
         /* 테마 고르기 창 */
         .theme-card { cursor: pointer; border-radius: 14px; border: 2px solid #e6ebf3; padding: 8px; background: #fff; transition: 0.15s; text-align: center; }
         .theme-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.10); }
@@ -4428,9 +4460,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.50';
+        const APP_VERSION = '1.51';
         const APP_VERSION_DATE = '2026-10-06';
         const APP_CHANGELOG = [
+            'v1.51 (2026-10-08) — 🏟️ 대결 무대: 배경 4종(숲·성·사막·밤) + 바둑판 바닥 위에 캐릭터·펫이 서서 싸움 · 이름·체력은 위쪽 게임 화면처럼',
             'v1.50 (2026-10-08) — ⚔️ 1:1 대결도 좌우로 마주 보기 + 펫 동료가 옆에 서서 공격 때 따라 한 번 더 때림',
             'v1.49 (2026-10-08) — 🎬 대결 미리보기를 🐾 팀 대결(판 위)로 · 1:1 미리보기는 [친구 대결 현황]에서 따로',
             'v1.48 (2026-10-08) — 🐾 팀 대결: 내 캐릭터 + 펫 2마리를 판(앞줄·뒷줄)에 배치하고 유닛별로 공격·방어·필살기·가방(물약) 턴제 · 1:1 대결도 그대로',
@@ -10891,6 +10924,25 @@ var qrcode = function() {
                 rpgRef.update(upd).catch(function(){});
             });
         }
+        const BATTLE_SCENES = ['forest', 'castle', 'desert', 'night'];
+        function battleSceneOf(id){ let h = 7; String(id).split('').forEach(function(c){ h = (h * 31 + c.charCodeAt(0)) >>> 0; }); return BATTLE_SCENES[h % BATTLE_SCENES.length]; }
+        function battleSceneSvg(sc){
+            const svg = function(inner){ return '<svg class="bt-bg" viewBox="0 0 400 200" preserveAspectRatio="none" aria-hidden="true">' + inner + '</svg>'; };
+            const tree = function(x, h, c){ return '<rect x="' + (x - 3) + '" y="' + (200 - 26) + '" width="6" height="26" fill="#5b3b22"/><polygon points="' + x + ',' + (200 - 26 - h) + ' ' + (x - 16) + ',' + (200 - 22) + ' ' + (x + 16) + ',' + (200 - 22) + '" fill="' + c + '"/>'; };
+            if(sc === 'forest') return svg('<circle cx="330" cy="38" r="22" fill="#fff6b8"/><path d="M0 130 Q70 80 140 120 T280 105 T400 100 V200 H0Z" fill="#8cc272"/><path d="M0 155 Q90 115 180 150 T340 140 T400 145 V200 H0Z" fill="#5f9a4c"/>'
+                + tree(30, 50, '#2f6b3a') + tree(64, 38, '#3d7d45') + tree(250, 46, '#2f6b3a') + tree(300, 58, '#356f3c') + tree(362, 40, '#3d7d45'));
+            if(sc === 'castle') return svg('<circle cx="80" cy="58" r="26" fill="#fff0c8"/><path d="M0 150 Q100 110 200 140 T400 130 V200 H0Z" fill="#c9957a"/>'
+                + '<rect x="196" y="78" width="128" height="122" fill="#6a5468"/><rect x="182" y="52" width="30" height="148" fill="#5c4a5c"/><rect x="308" y="52" width="30" height="148" fill="#5c4a5c"/>'
+                + '<rect x="182" y="44" width="8" height="10" fill="#5c4a5c"/><rect x="193" y="44" width="8" height="10" fill="#5c4a5c"/><rect x="204" y="44" width="8" height="10" fill="#5c4a5c"/>'
+                + '<rect x="308" y="44" width="8" height="10" fill="#5c4a5c"/><rect x="319" y="44" width="8" height="10" fill="#5c4a5c"/><rect x="330" y="44" width="8" height="10" fill="#5c4a5c"/>'
+                + '<path d="M246 200 V150 Q260 132 274 150 V200Z" fill="#3b2c3a"/><line x1="260" y1="78" x2="260" y2="40" stroke="#3b2c3a" stroke-width="3"/><polygon points="260,40 284,48 260,56" fill="#e64a4a"/>');
+            if(sc === 'desert') return svg('<circle cx="320" cy="34" r="24" fill="#fff8d2"/><polygon points="70,170 140,92 210,170" fill="#d9b468"/><polygon points="140,92 210,170 176,170" fill="#c49d55"/>'
+                + '<path d="M0 160 Q80 125 170 158 T400 150 V200 H0Z" fill="#ecc884"/><path d="M0 182 Q120 150 240 178 T400 172 V200 H0Z" fill="#dcb06a"/>'
+                + '<rect x="310" y="128" width="10" height="50" rx="5" fill="#4f8a4a"/><rect x="298" y="140" width="8" height="20" rx="4" fill="#4f8a4a"/><rect x="324" y="134" width="8" height="22" rx="4" fill="#4f8a4a"/>');
+            let stars = ''; [[30,20],[80,48],[130,16],[190,38],[240,14],[280,58],[360,22],[110,70],[60,90]].forEach(function(p){ stars += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="1.6" fill="#fff"/>'; });
+            return svg(stars + '<circle cx="322" cy="44" r="20" fill="#fdf5d6"/><circle cx="315" cy="40" r="4" fill="#e8dfbd"/><circle cx="328" cy="50" r="3" fill="#e8dfbd"/>'
+                + '<polygon points="0,170 60,110 120,160 180,95 250,165 310,115 400,170 400,200 0,200" fill="#22305a"/><polygon points="0,185 90,140 170,180 260,145 340,180 400,160 400,200 0,200" fill="#1a2547"/>');
+        }
         function battleModalEl(){
             let m = document.getElementById('battle-modal');
             if(!m){ m = document.createElement('div'); m.id = 'battle-modal'; document.body.appendChild(m); }
@@ -10898,24 +10950,29 @@ var qrcode = function() {
         }
         function battleOpen(id){ battleOpenId = id; battleLastTs = 0; battlePrevHp = {}; battleRender(true); }
         function battleClose(){ if(battleDemoState) battleDemoStop(); battleOpenId = null; battleModalEl().style.display = 'none'; battleRenderLobby(); }
-        function battleFighterHtml(x, side, isRight, isTurn){
+        function battleHudHtml(x, side, isRight, isTurn){
             const num = side === 'a' ? x.a : x.b, P = x.p[side];
             const d = (rpgData.students && rpgData.students[num]) || {}, L = rpgLevel(d.xp);
-            const stu = rpgParseRoster().find(function(s){ return s.id === num; }) || { gender:'m', name:num + '번' };
-            const w = gearEquipped(d, 'weapon'), sh = gearEquipped(d, 'shield');
+            const stu = rpgParseRoster().find(function(s){ return s.id === num; }) || { name:num + '번' };
             const pct = Math.max(0, Math.round(P.hp / P.max * 100)), prev = battlePrevHp[side] != null ? battlePrevHp[side] : pct;
             let en = ''; for(let i = 0; i < 5; i++) en += i < (P.en || 0) ? '●' : '○';
-            const pose = x.status === 'done' ? (x.winner === side ? ' bt-victory' : ' bt-ko') : '';
-            const charging = battleIsCharging(x) && x.charge.by === side;
-            return '<div class="bt-fighter side ' + (isRight ? 'R' : 'L') + (isTurn ? ' turn' : '') + (P.guard ? ' guarding' : '') + (charging ? ' charging' : '') + '" id="bt-f-' + side + '">'
-                + (P.guard ? '<span class="bt-guard">🛡️ 방어 중</span>' : '')
+            return '<div class="bt-hud ' + (isRight ? 'R' : 'L') + (isTurn ? ' on' : '') + '">'
                 + '<div class="bt-name">' + escapeHtml(stu.name) + ' <small>Lv.' + L.lv + '</small></div>'
                 + '<div class="bt-hp"><i data-to="' + pct + '" class="' + (pct <= 30 ? 'low' : '') + '" style="width:' + prev + '%;"></i></div>'
-                + '<div class="bt-meta"><span>❤️ ' + P.hp + '/' + P.max + '</span><span class="bt-en" title="기력">' + en + '</span></div>'
+                + '<div class="bt-meta"><span>❤️ ' + P.hp + '/' + P.max + (P.guard ? ' 🛡️' : '') + '</span><span class="bt-en" title="기력">' + en + '</span></div>'
+                + '<div class="bt-meta small"><span>⚔️' + P.atk + ' 🛡️' + P.def + ' 🎯' + P.crit + '%</span></div></div>';
+        }
+        function battleFigureHtml(x, side, isRight, isTurn){
+            const num = side === 'a' ? x.a : x.b, P = x.p[side];
+            const d = (rpgData.students && rpgData.students[num]) || {}, L = rpgLevel(d.xp);
+            const stu = rpgParseRoster().find(function(s){ return s.id === num; }) || { gender:'m' };
+            const w = gearEquipped(d, 'weapon'), sh = gearEquipped(d, 'shield');
+            const pose = x.status === 'done' ? (x.winner === side ? ' bt-victory' : ' bt-ko') : '';
+            const charging = battleIsCharging(x) && x.charge.by === side;
+            return '<div class="bt-fig ' + (isRight ? 'R' : 'L') + (isTurn ? ' turn' : '') + (P.guard ? ' guarding' : '') + (charging ? ' charging' : '') + '" id="bt-f-' + side + '">'
                 + '<div class="bt-av"><div class="bt-body' + pose + '"><div' + (isRight ? ' class="flip"' : '') + '>' + rpgAvatarImg(d.job, L.lv, stu.gender, 96, '', '') + '</div></div>'
                 + (w ? '<span class="bt-wpn">' + gearIcon(w, 30) + '</span>' : '') + (sh ? '<span class="bt-shd">' + gearIcon(sh, 24) + '</span>' : '')
-                + (P.pet ? '<span class="bt-pet">' + rpgPetVisual(P.pet, 36, 999) + '</span>' : '') + '</div>'
-                + '<div class="bt-meta" style="justify-content:center;"><span>⚔️' + P.atk + ' 🛡️' + P.def + ' 🎯' + P.crit + '%</span></div></div>';
+                + (P.pet ? '<span class="bt-pet">' + rpgPetVisual(P.pet, 36, 999) + '</span>' : '') + '</div></div>';
         }
         function battleRender(force){
             const m = battleModalEl(), id = battleOpenId;
@@ -10956,7 +11013,9 @@ var qrcode = function() {
                     + '<button class="bt-btn" style="margin-top:12px;width:100%;background:#ff8a3d;color:#fff;" onclick="battleClose()">닫기</button></div>';
             }
             m.innerHTML = '<div class="bt-wrap"><div class="bt-top"><span>' + (battleDemoState ? '🎬 대결 미리보기 · 연습(저장 안 됨)' : '🥊 친구 대결') + '</span><button onclick="battleClose()">' + (play && mySide ? '잠시 나가기' : '닫기 ✕') + '</button></div>'
-                + '<div class="bt-stage">' + battleFighterHtml(x, bottom, false, play && x.turn === bottom) + '<div class="bt-vs">VS</div>' + battleFighterHtml(x, top, true, play && x.turn === top) + '</div>'
+                + '<div class="bt-arena scene-' + battleSceneOf(id) + '">' + battleSceneSvg(battleSceneOf(id)) + '<div class="bt-floor"></div>'
+                + battleHudHtml(x, bottom, false, play && x.turn === bottom) + battleHudHtml(x, top, true, play && x.turn === top) + '<div class="bt-vsb">VS</div>'
+                + battleFigureHtml(x, bottom, false, play && x.turn === bottom) + battleFigureHtml(x, top, true, play && x.turn === top) + '</div>'
                 + mid + log + cards + end + '</div>';
             m.style.display = 'block';
             // HP 막대 애니메이션 + 맞은 쪽 흔들림 + 숫자 떠오름
@@ -11053,7 +11112,7 @@ var qrcode = function() {
                 setTimeout(function(){
                     const A2 = document.getElementById('bt-f-' + by), T2 = document.getElementById('bt-f-' + tg);
                     if(!A2 || !T2) return;
-                    A2.style.setProperty('--lunge', ((by === topSide) ? -1 : 1) * (big ? 90 : 60) + 'px');
+                    A2.style.setProperty('--lunge', ((by === topSide) ? -1 : 1) * (big ? 130 : 95) + 'px');
                     add(A2, big ? 'bt-lunge-big' : 'bt-lunge', big ? 780 : 560);
                     const w = A2.querySelector('.bt-wpn'); if(w) add(w, 'bt-swing', 560);
                     if(Ls.power >= 1.2) { const pw = fx(A2, 'bt-power', '파워 x' + Ls.power.toFixed(1) + '!', 1100); }
@@ -11071,7 +11130,7 @@ var qrcode = function() {
                             battleAnimUntil = Math.max(battleAnimUntil, Date.now() + 1300);
                             setTimeout(function(){
                                 const A3 = document.getElementById('bt-f-' + by), pe = A3 && A3.querySelector('.bt-pet');
-                                if(pe){ pe.style.setProperty('--plx', ((by === topSide) ? -1 : 1) * 80 + 'px'); add(pe, 'bt-petgo', 520); }
+                                if(pe){ pe.style.setProperty('--plx', ((by === topSide) ? -1 : 1) * 110 + 'px'); add(pe, 'bt-petgo', 520); }
                                 setTimeout(function(){
                                     const T4 = document.getElementById('bt-f-' + tg); if(!T4) return;
                                     fx(T4, 'bt-burst', '🐾', 700, '--dx:24px;--dy:-34px;'); add(T4, 'bt-shake', 400);
@@ -11351,7 +11410,7 @@ var qrcode = function() {
                     + '<button class="bt-btn" style="margin-top:12px;width:100%;background:#ff8a3d;color:#fff;" onclick="battleClose()">닫기</button></div>';
             }
             m.innerHTML = '<div class="bt-wrap"><div class="bt-top"><span>' + (battleDemoState ? '🎬 팀 대결 미리보기 · 연습(저장 안 됨)' : '🐾 팀 대결') + '</span><button onclick="battleClose()">' + ((play || setup) && mySide ? '잠시 나가기' : '닫기 ✕') + '</button></div>'
-                + head + '<div class="tm-msg">' + msg + '</div>' + teamBoardHtml(x, left, mySide) + log + cmd + end + '</div>';
+                + head + '<div class="tm-msg">' + msg + '</div>' + '<div class="tm-scene scene-' + battleSceneOf(id) + '">' + battleSceneSvg(battleSceneOf(id)) + teamBoardHtml(x, left, mySide) + '</div>' + log + cmd + end + '</div>';
             m.style.display = 'block';
             const fresh = x.last && x.last.ts && x.last.ts !== battleLastTs;
             const hpDelay = (fresh && x.last.act === 'special') ? 1400 : 260;
