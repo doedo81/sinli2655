@@ -4288,9 +4288,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.43';
+        const APP_VERSION = '1.44';
         const APP_VERSION_DATE = '2026-10-06';
         const APP_CHANGELOG = [
+            'v1.44 (2026-10-08) — 🎨 장비 43종 그림 적용(Antigravity 제작) · 상점 그림 크게',
             'v1.43 (2026-10-08) — 🍱 급식표 날짜 밀림 방지 + 저장 전 날짜별 전체 확인 + 급식 칸 직접 고치기',
             'v1.42 (2026-10-06) — ⚔️ 장비 상점(코인) + 🥊 친구와 실시간 턴제 대결',
             '  · 무기·옷·방패·장신구 43종(Lv1~100) — 레벨이 되면 열리고 코인으로 구매 · 코인 = 받은 XP + 대결 보너스',
@@ -10558,9 +10559,9 @@ var qrcode = function() {
                 RPG_GEAR[sl.key].forEach(function(it){
                     const price = gearPrice(it), stat = gearStatText(it);
                     if(gearOwned(d, it)){
-                        h += '<button class="gear-it' + (eq === it.id ? ' on' : '') + '" onclick="gearEquip(' + num + ',\'' + sl.key + '\',\'' + it.id + '\')">' + gearIcon(it, 16) + ' ' + it.name + '<small>' + stat + '</small></button>';
+                        h += '<button class="gear-it' + (eq === it.id ? ' on' : '') + '" onclick="gearEquip(' + num + ',\'' + sl.key + '\',\'' + it.id + '\')">' + gearIcon(it, 26) + ' ' + it.name + '<small>' + stat + '</small></button>';
                     } else if(L.lv >= it.lv){
-                        h += '<button class="gear-it buy' + (coins < price ? ' poor' : '') + '" onclick="gearBuy(' + num + ',\'' + it.id + '\')">' + gearIcon(it, 16) + ' ' + it.name + ' <b>🪙' + price + '</b><small>' + stat + '</small></button>';
+                        h += '<button class="gear-it buy' + (coins < price ? ' poor' : '') + '" onclick="gearBuy(' + num + ',\'' + it.id + '\')">' + gearIcon(it, 26) + ' ' + it.name + ' <b>🪙' + price + '</b><small>' + stat + '</small></button>';
                     } else if(lockedShown < 3){
                         lockedShown++;
                         h += '<span class="gear-it lock">🔒 ' + it.name + '<small>Lv' + it.lv + ' · ' + stat + '</small></span>';
