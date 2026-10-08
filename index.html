@@ -3184,7 +3184,7 @@ var qrcode = function() {
                     <div class="column-card" style="padding-top: 45px;">
                         <div class="info-box"><span class="info-label">📢 전달 사항</span><div id="view-notices-cal" style="display:none; margin-bottom:8px; font-weight:700; font-size:var(--board-font-size); color:#2c3e50; line-height:1.5;"></div><div class="info-content" id="view-notices" contenteditable="true" spellcheck="false" data-placeholder="클릭하여 입력"></div></div>
                         <div class="info-box" style="border-left: 5px solid #a5d6a7;"><span class="info-label" style="color:#5fa267;">📝 알림장</span><div class="info-content" id="view-allim" contenteditable="true" spellcheck="false" data-placeholder="클릭하여 입력"></div></div>
-                        <div class="info-box" style="border-left: 5px solid #ffcc80; background:#fffaf2;"><span class="info-label" style="color:#e08a1e; display:flex; justify-content:space-between; align-items:center;">🍱 오늘의 급식 <span onclick="mealPickFile()" title="급식표 파일(PDF·한글 HWPX·사진)을 올리면 날짜별로 자동 채움" style="cursor:pointer; font-size:12px; color:#b0855a; font-weight:700; background:#fff1dc; padding:2px 8px; border-radius:8px;">📄 급식표 올리기</span></span><div class="info-content" id="view-meal" style="font-size:13px; font-weight:500; line-height:1.45; color:#7a6a58;" data-placeholder="📄 급식표를 올리면 날짜별로 자동으로 채워져요"></div><input type="file" id="meal-file" accept=".pdf,.hwpx,.hwp,image/*" style="display:none" onchange="mealUpload(this)"></div>
+                        <div class="info-box" style="border-left: 5px solid #ffcc80; background:#fffaf2;"><span class="info-label" style="color:#e08a1e; display:flex; justify-content:space-between; align-items:center;">🍱 오늘의 급식 <span onclick="mealPickFile()" title="급식표 파일(PDF·한글 HWPX·사진)을 올리면 날짜별로 자동 채움" style="cursor:pointer; font-size:12px; color:#b0855a; font-weight:700; background:#fff1dc; padding:2px 8px; border-radius:8px;">📄 급식표 올리기</span></span><div class="info-content" id="view-meal" contenteditable="true" spellcheck="false" onblur="mealSaveEdit()" title="눌러서 직접 고칠 수 있어요" style="font-size:13px; font-weight:500; line-height:1.45; color:#7a6a58;" data-placeholder="📄 급식표를 올리면 날짜별로 자동으로 채워져요"></div><input type="file" id="meal-file" accept=".pdf,.hwpx,.hwp,image/*" style="display:none" onchange="mealUpload(this)"></div>
                         <div class="info-box" style="background:#fdf1f6;"><span class="info-label" style="color: #db5e90;">🎂 생일 축하해요!</span><div class="info-content" id="view-birthday" contenteditable="true" spellcheck="false" data-placeholder="클릭하여 입력"></div></div>
                         
                         <div class="calendar-card" id="calendar-widget">
@@ -4288,9 +4288,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.42';
+        const APP_VERSION = '1.43';
         const APP_VERSION_DATE = '2026-10-06';
         const APP_CHANGELOG = [
+            'v1.43 (2026-10-08) — 🍱 급식표 날짜 밀림 방지 + 저장 전 날짜별 전체 확인 + 급식 칸 직접 고치기',
             'v1.42 (2026-10-06) — ⚔️ 장비 상점(코인) + 🥊 친구와 실시간 턴제 대결',
             '  · 무기·옷·방패·장신구 43종(Lv1~100) — 레벨이 되면 열리고 코인으로 구매 · 코인 = 받은 XP + 대결 보너스',
             '  · 학생 화면에서 친구에게 대결 신청 → 각자 기기로 공격·방어·회복·필살기 카드 턴제 · 이기면 🪙15(하루 3번) · 선생님은 [관리→친구 대결 현황]으로 중계',
@@ -6184,8 +6185,16 @@ var qrcode = function() {
 
         // 🍱 급식 — 급식표(PDF·한글 HWPX·사진)를 AI로 날짜별 정리해 rooms/<반>/meals/<YYYY-MM-DD> 에 저장
         var mealsRef = null, mealsData = {};
+        function mealSaveEdit() {
+            const el = document.getElementById('view-meal'); if(!el || !mealsRef) return;
+            const k = getFormattedDate(viewDate);
+            const text = el.innerText.split(/\s*·\s*|\n/).map(function(x){ return x.trim(); }).filter(Boolean).join('\n');
+            if(text === ((mealsData && mealsData[k]) || '')) return;
+            mealsRef.child(k).set(text || null).then(function(){ rpgToast('🍱 ' + (text ? '급식 고침' : '급식 지움')); }).catch(function(e){ alert('저장 오류: ' + e.message); });
+        }
         function renderMeal() {
             const el = document.getElementById('view-meal'); if(!el) return;
+            if(document.activeElement === el) return; // 고치는 중엔 덮어쓰지 않기
             const m = mealsData && mealsData[getFormattedDate(viewDate)];
             el.innerText = m ? m.split(/\n/).map(function(x){ return x.trim(); }).filter(Boolean).join(' · ') : '';
             if(!m){
@@ -6236,7 +6245,12 @@ var qrcode = function() {
                     + '형식: {"meals":[{"date":"YYYY-MM-DD","menu":"메뉴1\\n메뉴2\\n메뉴3"}]}\n'
                     + '규칙: 표에 연도가 없으면 ' + y + '년으로 본다. 표에 월이 적혀 있으면 그 월을, 없으면 ' + mo + '월로 본다. '
                     + '메뉴는 한 줄에 하나씩(\\n 로 구분). 알레르기 번호(예: (1.2.5.6), 1.5.6.)·칼로리·원산지·영양정보는 빼고 메뉴 이름만 쓴다. '
-                    + '급식이 없는 날(휴업일·공휴일·방학)은 넣지 않는다. 설명 없이 JSON만.';
+                    + '급식이 없는 날(휴업일·공휴일·방학)은 넣지 않는다.\n'
+                    + '★ 날짜를 정하는 법(가장 중요): 식단표는 월~금 요일 열로 된 달력 모양이다. 각 칸 맨 위의 작은 숫자가 그 칸의 날짜다. '
+                    + '메뉴는 반드시 그 메뉴가 들어 있는 칸의 날짜 숫자로 정한다. 그림·포스터·공휴일 표시만 있는 칸(예: 한글날, 캠페인 그림)은 급식이 없는 날이니 건너뛰되, '
+                    + '다른 날의 메뉴를 그 칸으로 당기거나 밀지 마라. 메뉴를 순서대로 세어서 날짜를 매기지 마라.\n'
+                    + '각 항목에 그 칸이 있는 요일 열을 "dow"로 함께 적어라(월/화/수/목/금). 형식: {"meals":[{"date":"YYYY-MM-DD","dow":"화","menu":"..."}]}\n'
+                    + '설명 없이 JSON만.';
                 let parts;
                 if(/\.hwpx$/.test(name)){
                     const txt = await mealHwpxText(file);
@@ -6267,11 +6281,19 @@ var qrcode = function() {
                 let parsed; try { parsed = JSON.parse(out || '{}'); } catch(e){ throw new Error('AI 응답을 이해하지 못했어요. 다시 시도해 주세요.'); }
                 const list = ((parsed && parsed.meals) || [])
                     .filter(function(x){ return x && /^\d{4}-\d{2}-\d{2}$/.test(x.date || '') && (x.menu || '').trim(); })
-                    .map(function(x){ return { date: x.date, menu: String(x.menu).replace(/\\n/g, '\n').trim() }; })
+                    .map(function(x){ return { date: x.date, dow: x.dow || '', menu: String(x.menu).replace(/\\n/g, '\n').trim() }; })
                     .sort(function(a, b){ return a.date < b.date ? -1 : 1; });
                 if(!list.length) throw new Error('식단을 찾지 못했어요. 파일이 급식표가 맞는지 확인해 주세요.');
-                const sample = list[0].date + ': ' + list[0].menu.split('\n').slice(0, 4).join(', ');
-                if(!confirm('🍱 급식 ' + list.length + '일치를 찾았어요 (' + list[0].date + ' ~ ' + list[list.length - 1].date + ')\n\n예) ' + sample + '\n\n아침칠판 급식칸에 저장할까요?\n(같은 날짜가 이미 있으면 새 내용으로 바뀌어요)')) return;
+                const DOW = ['일','월','화','수','목','금','토'];
+                let bad = 0;
+                const lines = list.map(function(m){
+                    const ps = m.date.split('-').map(Number), real = DOW[new Date(ps[0], ps[1] - 1, ps[2]).getDay()];
+                    const wrong = (m.dow && m.dow.charAt(0) !== real) || real === '토' || real === '일';
+                    if(wrong) bad++;
+                    return (wrong ? '⚠️ ' : '') + ps[1] + '/' + ps[2] + '(' + real + ') ' + m.menu.split('\n').slice(0, 3).join(', ');
+                });
+                const warn = bad ? '\n⚠️ 요일이 안 맞는 날이 ' + bad + '개 있어요. 날짜가 밀렸을 수 있으니 [취소] 후 다시 올려보세요.\n' : '';
+                if(!confirm('🍱 급식 ' + list.length + '일치를 찾았어요. 날짜가 맞는지 확인해 주세요.\n' + warn + '\n' + lines.join('\n') + '\n\n이대로 저장할까요? (틀린 날은 저장 후 급식 칸을 눌러 직접 고칠 수 있어요)')) return;
                 const upd = {}; list.forEach(function(m){ upd[m.date] = m.menu; });
                 await mealsRef.update(upd);
                 rpgToast('🍱 급식 ' + list.length + '일치 저장!');
