@@ -2932,6 +2932,51 @@ var qrcode = function() {
         #bt-roulette .nm { min-width:120px; padding:14px 16px; border-radius:16px; font-size:20px; font-weight:900; background:rgba(255,255,255,.1); border:2px solid rgba(255,255,255,.2); transition:background .05s; }
         #bt-roulette .nm.on { background:#ffb74d; color:#3e2723; border-color:#fff; box-shadow:0 0 26px rgba(255,183,77,.8); }
 
+        /* ----- 🐾 팀 대결 판 ----- */
+        .tm-head { display:flex; align-items:center; gap:8px; }
+        .tm-side { flex:1; background:rgba(255,255,255,.07); border-radius:12px; padding:7px 10px; display:flex; flex-direction:column; gap:1px; font-size:14px; border:1px solid rgba(255,255,255,.1); min-width:0; }
+        .tm-side b { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .tm-side.R { text-align:right; align-items:flex-end; }
+        .tm-side.on { box-shadow:0 0 0 2px #ffb74d, 0 0 18px rgba(255,183,77,.4); }
+        .tm-vs { font-weight:900; color:#ffb74d; font-size:18px; }
+        .tm-msg { text-align:center; font-weight:800; color:#ffcc80; font-size:14.5px; min-height:20px; line-height:1.45; }
+        .tm-board { perspective:900px; margin-top:2px; }
+        .tm-grid { display:grid; grid-template-columns:1fr 1fr 12px 1fr 1fr; gap:6px; transform:rotateX(22deg); transform-style:preserve-3d; padding:30px 10px 14px; border-radius:18px;
+            background:radial-gradient(ellipse at 50% 45%, rgba(255,200,120,.22), transparent 70%), linear-gradient(180deg,#3b3227,#221c16); box-shadow:inset 0 0 30px rgba(0,0,0,.6), 0 18px 30px rgba(0,0,0,.45); }
+        .tm-cell { position:relative; aspect-ratio:1/1; border-radius:10px; transform-style:preserve-3d; cursor:pointer; box-shadow:inset 0 2px 0 rgba(255,255,255,.14), inset 0 -4px 0 rgba(0,0,0,.35); }
+        .tm-cell.L { background:linear-gradient(160deg,#55709a,#33445f); }
+        .tm-cell.R { background:linear-gradient(160deg,#9a5a55,#5e3434); }
+        .tm-cell.front { filter:brightness(1.12); }
+        .tm-cell.tgt { box-shadow:0 0 0 3px #ff5252, 0 0 18px rgba(255,82,82,.85); animation:btPulse .9s ease-in-out infinite; }
+        .tm-cell.ally { box-shadow:0 0 0 3px #69f0ae, 0 0 18px rgba(105,240,174,.75); animation:btPulse .9s ease-in-out infinite; }
+        .tm-cell.pick { box-shadow:inset 0 0 0 2px rgba(255,213,79,.7); }
+        .tm-rowlbl { display:grid; grid-template-columns:1fr 1fr 12px 1fr 1fr; gap:6px; padding:0 10px; font-size:10.5px; color:#90a4ae; text-align:center; margin-top:2px; }
+        .tm-unit { position:absolute; left:-10px; right:-10px; bottom:24%; display:flex; justify-content:center; transform-style:preserve-3d; z-index:2; pointer-events:none; }
+        .tm-stand { transform:rotateX(-22deg); transform-origin:bottom center; display:flex; flex-direction:column; align-items:center; }
+        .tm-body { position:relative; line-height:0; animation:btIdle 2.4s ease-in-out infinite; filter:drop-shadow(0 6px 4px rgba(0,0,0,.55)); }
+        .tm-flip.on { transform:scaleX(-1); }
+        .tm-wpn { position:absolute; right:-12px; bottom:4px; line-height:0; transform-origin:30% 80%; }
+        .tm-hp { width:52px; height:6px; background:rgba(0,0,0,.5); border-radius:4px; overflow:hidden; margin-bottom:3px; }
+        .tm-hp i { display:block; height:100%; background:linear-gradient(90deg,#43a047,#9ccc65); transition:width .7s cubic-bezier(.2,.7,.2,1); }
+        .tm-hp i.low { background:linear-gradient(90deg,#e53935,#ffa726); }
+        .tm-name { font-size:10.5px; font-weight:800; color:#fff; background:rgba(0,0,0,.5); border-radius:6px; padding:1px 5px; margin-top:2px; white-space:nowrap; max-width:84px; overflow:hidden; text-overflow:ellipsis; line-height:1.45; }
+        .tm-unit.dead .tm-body { animation:none; filter:grayscale(1) brightness(.55); transform:rotate(-75deg) translate(-6px,10px); opacity:.6; }
+        .tm-unit.sel .tm-body { filter:drop-shadow(0 0 9px #ffd54f) drop-shadow(0 0 3px #ffd54f); }
+        .tm-unit.charging .tm-body { animation-duration:.35s; filter:drop-shadow(0 0 12px #ffd54f); }
+        .tm-unit.guarding .tm-body::after { content:''; position:absolute; left:-10px; right:-10px; top:-8px; bottom:-6px; border-radius:50%; border:2px solid rgba(120,190,255,.8); box-shadow:0 0 14px rgba(120,190,255,.7); animation:btPulse 1.6s ease-in-out infinite; }
+        .tm-hidden { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:900; color:rgba(255,255,255,.35); }
+        @keyframes tmLunge { 0% { transform:translateX(0); } 40% { transform:translateX(var(--lx)) scale(1.1); } 100% { transform:translateX(0); } }
+        .tm-lunge { animation:tmLunge .6s cubic-bezier(.3,.7,.3,1); z-index:9; }
+        .tm-unit .bt-slash { left:-6px; width:96px; }
+        .tm-unit .bt-burst { left:42%; top:30%; }
+        .tm-unit .bt-crit { left:24%; top:-6px; font-size:34px; }
+        .tm-unit .bt-float { top:-26px; font-size:24px; }
+        .tm-unit .bt-power { top:-34px; right:auto; left:50%; transform:translateX(-50%); white-space:nowrap; }
+        .tm-unit .bt-bubble { left:50%; top:40%; width:80px; height:80px; margin:-40px 0 0 -40px; }
+        .tm-unit .bt-spark { bottom:0; }
+        .tm-sel { font-size:13px; color:#cfd8dc; text-align:center; }
+        .tm-cmd { display:flex; gap:8px; }
+
         /* 테마 고르기 창 */
         .theme-card { cursor: pointer; border-radius: 14px; border: 2px solid #e6ebf3; padding: 8px; background: #fff; transition: 0.15s; text-align: center; }
         .theme-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.10); }
@@ -4356,9 +4401,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.47';
+        const APP_VERSION = '1.48';
         const APP_VERSION_DATE = '2026-10-06';
         const APP_CHANGELOG = [
+            'v1.48 (2026-10-08) — 🐾 팀 대결: 내 캐릭터 + 펫 2마리를 판(앞줄·뒷줄)에 배치하고 유닛별로 공격·방어·필살기·가방(물약) 턴제 · 1:1 대결도 그대로',
             'v1.47 (2026-10-08) — 🕹️ 오락실식 대결: 선공 룰렛 · 연타로 힘 모으기(최대 1.5배) · 필살기 컷인 · 무기 속성 효과(불·얼음·번개·물·빛…) · 화면 흔들림',
             'v1.46 (2026-10-08) — 🎬 대결 미리보기(성장→관리→대결 미리보기): 1·2번 학생 캐릭터가 자동으로 싸우는 연습 화면, 저장 안 됨',
             'v1.45 (2026-10-08) — 🎬 대결 움직임: 돌진·무기 휘두르기·베기·맞으면 번쩍/흔들림·필살기 화면 번쩍·방어 보호막·회복 반짝이·쓰러짐/승리 점프',
@@ -10679,7 +10725,7 @@ var qrcode = function() {
         function battleName(num){ const s = rpgParseRoster().find(function(x){ return x.id === num; }); return s ? s.name : (num + '번'); }
         function battleActive(num){
             let r = null;
-            Object.keys(battlesData).forEach(function(k){ const b = battlesData[k]; if(b && (b.a === num || b.b === num) && (b.status === 'invite' || b.status === 'play')) r = Object.assign({ id:k }, b); });
+            Object.keys(battlesData).forEach(function(k){ const b = battlesData[k]; if(b && (b.a === num || b.b === num) && (b.status === 'invite' || b.status === 'setup' || b.status === 'play')) r = Object.assign({ id:k }, b); });
             return r;
         }
         function battleRecord(num){ const d = (rpgData.students && rpgData.students[num]) || {}; return (d.bw || 0) + '승 ' + (d.bl || 0) + '패'; }
@@ -10687,12 +10733,15 @@ var qrcode = function() {
             const mine = battleActive(num);
             let h = '<div class="gear-box"><div class="gear-head"><span>🥊 친구와 대결</span><span style="font-size:12px;color:#90a4ae;">' + battleRecord(num) + '</span></div>';
             if(mine && mine.status === 'invite' && mine.a === num){
-                h += '<div class="bt-box">⏳ <b>' + escapeHtml(battleName(mine.b)) + '</b>에게 대결 신청! 수락을 기다리는 중...<br><button onclick="battleCancel(\'' + mine.id + '\')">신청 취소</button></div>';
+                h += '<div class="bt-box">⏳ <b>' + escapeHtml(battleName(mine.b)) + '</b>에게 ' + (mine.mode === 'team' ? '🐾 팀 대결' : '⚔️ 1:1 대결') + ' 신청! 수락을 기다리는 중...<br><button onclick="battleCancel(\'' + mine.id + '\')">신청 취소</button></div>';
             } else if(mine && mine.status === 'invite' && mine.b === num){
-                h += '<div class="bt-box">⚔️ <b>' + escapeHtml(battleName(mine.a)) + '</b>이(가) 대결을 신청했어요!<br><button class="ok" onclick="battleAccept(\'' + mine.id + '\')">수락하고 싸우기</button><button onclick="battleDecline(\'' + mine.id + '\')">거절</button></div>';
-            } else if(mine && mine.status === 'play'){
+                h += '<div class="bt-box">⚔️ <b>' + escapeHtml(battleName(mine.a)) + '</b>이(가) ' + (mine.mode === 'team' ? '🐾 팀 대결(캐릭터+펫)' : '⚔️ 1:1 대결') + '을 신청했어요!<br><button class="ok" onclick="battleAccept(\'' + mine.id + '\')">수락하고 싸우기</button><button onclick="battleDecline(\'' + mine.id + '\')">거절</button></div>';
+            } else if(mine && (mine.status === 'play' || mine.status === 'setup')){
                 h += '<button class="bt-go" onclick="battleOpen(\'' + mine.id + '\')">⚔️ 대결 화면으로 돌아가기</button>';
             } else {
+                const bm = battleModeGet();
+                h += '<div class="gear-row" style="margin-bottom:8px;"><button class="gear-it' + (bm === 'duel' ? ' on' : '') + '" onclick="battleModeSet(\'duel\')">⚔️ 1:1 대결<small>캐릭터끼리 맞대결</small></button>'
+                    + '<button class="gear-it' + (bm === 'team' ? ' on' : '') + '" onclick="battleModeSet(\'team\')">🐾 팀 대결<small>캐릭터 + 펫 2마리 · 판 위 배치</small></button></div>';
                 h += '<div class="gear-tip">대결할 친구를 누르세요 · 이기면 🪙' + BATTLE_WIN_COINS + ' (하루 ' + BATTLE_DAILY + '번까지) · 장비가 좋을수록 강해져요</div><div class="gear-row">';
                 rpgParseRoster().filter(function(s){ return s.id !== num; }).forEach(function(s){
                     const busy = battleActive(s.id);
@@ -10717,7 +10766,7 @@ var qrcode = function() {
             if(battleActive(opp)){ alert('그 친구는 다른 대결 중이에요.'); return; }
             if(!confirm(battleName(opp) + '에게 대결을 신청할까요?')) return;
             battleCleanup();
-            battlesRef.push({ a:me, b:opp, status:'invite', createdAt:Date.now(), updatedAt:Date.now() })
+            battlesRef.push({ a:me, b:opp, mode:battleModeGet(), status:'invite', createdAt:Date.now(), updatedAt:Date.now() })
                 .catch(function(e){ alert('대결 신청 오류: ' + e.message + '\n(선생님께 보안 규칙 업데이트가 필요하다고 알려주세요)'); });
         }
         function battleCancel(id){ if(battlesRef) battlesRef.child(id).update({ status:'cancel', updatedAt:Date.now() }); }
@@ -10725,6 +10774,7 @@ var qrcode = function() {
         function battleFighter(num){ const s = gearStatsOf((rpgData.students && rpgData.students[num]) || {}); return { hp:s.hp, max:s.hp, atk:s.atk, def:s.def, crit:s.crit, spd:s.spd, en:1, guard:false }; }
         function battleAccept(id){
             const b = battlesData[id]; if(!b || !battlesRef) return;
+            if(b.mode === 'team') return teamAccept(id);
             const pa = battleFighter(b.a), pb = battleFighter(b.b);
             const first = pa.spd > pb.spd ? 'a' : (pb.spd > pa.spd ? 'b' : (Math.random() < 0.5 ? 'a' : 'b'));
             const fn = first === 'a' ? battleName(b.a) : battleName(b.b);
@@ -10837,10 +10887,11 @@ var qrcode = function() {
             const m = battleModalEl(), id = battleOpenId;
             if(!id){ m.style.display = 'none'; return; }
             const x = battlesData[id];
-            if(!x || !x.p){ if(x && (x.status === 'declined' || x.status === 'cancel')){ battleClose(); return; } m.style.display = 'none'; return; }
+            if(!x || (!x.p && !x.units)){ if(x && (x.status === 'declined' || x.status === 'cancel')){ battleClose(); return; } m.style.display = 'none'; return; }
             if(!force && x.last && x.last.ts === battleLastTs && Date.now() < battleAnimUntil){
                 clearTimeout(battleDeferT); battleDeferT = setTimeout(function(){ battleRender(true); }, battleAnimUntil - Date.now() + 30); return;
             }
+            if(x.mode === 'team'){ teamRender(m, id, x); return; }
             const me = battleViewer(), mySide = x.a === me ? 'a' : (x.b === me ? 'b' : null);
             const bottom = mySide || 'a', top = bottom === 'a' ? 'b' : 'a';
             const play = x.status === 'play', myTurn = play && mySide && x.turn === mySide;
@@ -10903,7 +10954,7 @@ var qrcode = function() {
         function battlePick(id, card){
             if(card === 'attack' || card === 'special') battleMashStart(id, card); else battleMove(id, card);
         }
-        function battleMashStart(id, card){
+        function battleMashStart(id, card, onDone){
             const me = battleViewer(), x = battlesData[id];
             if(me == null || !x || x.status !== 'play') return;
             const side = x.a === me ? 'a' : (x.b === me ? 'b' : null);
@@ -10925,13 +10976,13 @@ var qrcode = function() {
                 clearInterval(iv); document.removeEventListener('keydown', key);
                 const power = 1 + Math.min(taps, 25) / 25 * 0.5;
                 ov.innerHTML = '<div class="t">파워 x' + power.toFixed(2) + '!</div><div class="sub">' + taps + '번 눌렀어요</div>';
-                setTimeout(function(){ ov.remove(); battleMove(id, card, null, power); }, 650);
+                setTimeout(function(){ ov.remove(); if(onDone) onDone(power); else battleMove(id, card, null, power); }, 650);
             }, 50);
         }
         // 필살기 컷인
-        function battleCutIn(by, x){
+        function battleCutIn(by, x, imgSrc){
             const num = by === 'a' ? x.a : x.b, d = (rpgData.students || {})[num] || {}, w = gearEquipped(d, 'weapon');
-            const img = document.querySelector('#bt-f-' + by + ' .bt-body img');
+            const img0 = document.querySelector('#bt-f-' + by + ' .bt-body img'), img = imgSrc ? { src:imgSrc } : img0;
             const c = document.createElement('div'); c.className = 'bt-cutin';
             c.innerHTML = '<div class="band"><div class="lines"></div>' + (img ? '<img src="' + img.src + '" alt="">' : '')
                 + '<div class="nm"><small>' + escapeHtml(battleName(num)) + '의 필살기</small>' + ((w && BATTLE_SKILL[w.id]) || '필살 일격') + '!</div>'
@@ -11001,11 +11052,312 @@ var qrcode = function() {
             if(me != null){
                 battleRenderLobby();
                 const mine = battleActive(me);
-                if(mine && mine.status === 'play' && battleOpenId !== mine.id) battleOpen(mine.id);
+                if(mine && (mine.status === 'play' || mine.status === 'setup') && battleOpenId !== mine.id) battleOpen(mine.id);
             }
             if(battleOpenId) battleRender();
             const wl = document.getElementById('battle-watch-list'); if(wl && document.getElementById('battle-watch').style.display === 'flex') battleWatchRender();
         }
+        // ===================== 🐾 팀 대결 — 내 캐릭터 + 펫 동료 2, 판(앞줄·뒷줄) 위 배치 턴제 =====================
+        // battles/<id> = { mode:'team', a, b, status:'invite'|'setup'|'play'|'done', units:{a:{u0..u2},b:{..}}, en:{a,b}, bag:{a:{potion,power},b},
+        //                  ready:{a,b}, turn, round, log, last:{by,unit,act,tSide,tUid,dmg,crit,heal,power,ts}, winner, endedBy }
+        // 칸: f0~f2 = 앞줄(위·가운데·아래), b0~b2 = 뒷줄. 앞줄에 살아 있는 유닛이 있으면 뒷줄은 공격받지 않음.
+        var teamSel = null, teamPrevHp = {};
+        const PET_ELEMENT = { phoenix:'fire', dragon:'fire', divine_dragon:'holy', penguin:'ice', kraken:'water', unicorn:'holy', pegasus:'wind', griffin:'wind', fox:'magic', rabbit:'magic' };
+        function battleModeGet(){ try { return localStorage.getItem('battleMode') === 'team' ? 'team' : 'duel'; } catch(e){ return 'duel'; } }
+        function battleModeSet(m){ try { localStorage.setItem('battleMode', m); } catch(e){} battleRenderLobby(); }
+        function teamCompanions(d){
+            const L = rpgLevel(d.xp);
+            let pets = RPG_ITEMS_PET.filter(function(p){ return L.lv >= p.level; }).sort(function(p, q){ return q.level - p.level; }).map(function(p){ return p.id; });
+            if(d.pet && pets.indexOf(d.pet) >= 0) pets = [d.pet].concat(pets.filter(function(x){ return x !== d.pet; }));
+            ['chick', 'cat'].forEach(function(f){ if(pets.length < 2 && pets.indexOf(f) < 0) pets.push(f); }); // 펫이 부족하면 기본 동료
+            return pets.slice(0, 2);
+        }
+        function teamPetStats(petId){
+            const it = RPG_ITEMS_PET.find(function(p){ return p.id === petId; }) || { level:3 }, lv = it.level;
+            return { hp:Math.round(45 + lv * 1.6), atk:Math.round(6 + lv * 0.35), def:Math.round(2 + lv * 0.15), crit:5, spd:Math.round(lv / 10) };
+        }
+        function teamBuildUnits(num){
+            const d = (rpgData.students || {})[num] || {}, h = gearStatsOf(d);
+            const u = { u0:{ kind:'hero', hp:h.hp, max:h.hp, atk:h.atk, def:h.def, crit:h.crit, spd:h.spd, cell:'f1' } };
+            teamCompanions(d).forEach(function(pid, i){ const s = teamPetStats(pid); u['u' + (i + 1)] = { kind:'pet', pet:pid, hp:s.hp, max:s.hp, atk:s.atk, def:s.def, crit:s.crit, spd:s.spd, cell:(i === 0 ? 'b0' : 'b2') }; });
+            return u;
+        }
+        function teamUnitAt(x, side, cell){ const us = (x.units || {})[side] || {}; for(const k in us){ if(us[k].cell === cell) return k; } return null; }
+        function teamUnitName(x, side, uid){
+            const U = ((x.units || {})[side] || {})[uid]; if(!U) return '';
+            if(U.kind === 'hero') return battleName(side === 'a' ? x.a : x.b);
+            const it = RPG_ITEMS_PET.find(function(p){ return p.id === U.pet; }); return it ? it.name.replace(/^\S+\s/, '') : '동료';
+        }
+        function teamTargets(x, side){
+            const us = x.units[side], alive = Object.keys(us).filter(function(k){ return us[k].hp > 0; });
+            const front = alive.filter(function(k){ return us[k].cell.charAt(0) === 'f'; });
+            return front.length ? front : alive;
+        }
+        function teamAccept(id){
+            const b = battlesData[id]; if(!b || !battlesRef) return;
+            const ua = teamBuildUnits(b.a), ub = teamBuildUnits(b.b);
+            battlesRef.child(id).transaction(function(x){
+                if(!x || x.status !== 'invite') return;
+                x.status = 'setup'; x.units = { a:ua, b:ub }; x.en = { a:1, b:1 };
+                x.bag = { a:{ potion:2, power:1 }, b:{ potion:2, power:1 } }; x.ready = { a:false, b:false };
+                x.log = ['🐾 팀 대결! 서로 자리를 정하는 중...']; x.updatedAt = Date.now();
+                return x;
+            });
+        }
+        function teamMoveUnit(id, side, uid, cell){
+            battlesRef.child(id).transaction(function(x){
+                if(!x || x.status !== 'setup' || (x.ready || {})[side]) return;
+                const us = x.units[side]; if(!us[uid]) return;
+                const other = teamUnitAt(x, side, cell), from = us[uid].cell;
+                us[uid].cell = cell; if(other && other !== uid) us[other].cell = from;
+                x.updatedAt = Date.now(); return x;
+            });
+        }
+        function teamReady(id){
+            const me = battleViewer(); if(me == null || !battlesRef) return;
+            teamSel = null;
+            battlesRef.child(id).transaction(function(x){
+                if(!x || x.status !== 'setup') return;
+                const side = x.a === me ? 'a' : (x.b === me ? 'b' : null); if(!side) return;
+                x.ready = x.ready || {}; x.ready[side] = true;
+                if(x.ready.a && x.ready.b){
+                    const sa = x.units.a.u0.spd || 0, sb = x.units.b.u0.spd || 0;
+                    x.turn = sa > sb ? 'a' : (sb > sa ? 'b' : (Math.random() < 0.5 ? 'a' : 'b'));
+                    x.status = 'play'; x.round = 1;
+                    x.log = (x.log || []).concat(['⚔️ 전투 시작! 먼저: ' + battleName(x.turn === 'a' ? x.a : x.b)]).slice(-6);
+                }
+                x.updatedAt = Date.now(); return x;
+            });
+        }
+        function teamCancel(id){ if(battlesRef) battlesRef.child(id).update({ status:'cancel', updatedAt:Date.now() }).catch(function(){}); battleClose(); }
+        function teamAct(id, mv, asNum){
+            const me = asNum != null ? asNum : battleViewer(); if(me == null || !battlesRef) return;
+            battlesRef.child(id).transaction(function(x){
+                if(!x || x.status !== 'play' || x.mode !== 'team') return;
+                const side = x.a === me ? 'a' : (x.b === me ? 'b' : null); if(!side || x.turn !== side) return;
+                const opp = side === 'a' ? 'b' : 'a', U = x.units[side][mv.unit]; if(!U || U.hp <= 0) return;
+                Object.keys(x.units[side]).forEach(function(k){ x.units[side][k].guard = false; }); // 우리 차례가 오면 방어 풀림
+                x.en = x.en || { a:1, b:1 }; x.bag = x.bag || { a:{}, b:{} };
+                const nm = function(s, k){ return teamUnitName(x, s, k); };
+                let dmg = 0, crit = false, heal = 0, line = '', cost = 0, gain = 1, tSide = null, tUid = null;
+                if(mv.act === 'attack' || mv.act === 'special'){
+                    if(mv.act === 'special'){ if(U.kind !== 'hero' || (x.en[side] || 0) < 3) return; cost = 3; gain = 0; }
+                    if(teamTargets(x, opp).indexOf(mv.target) < 0) return;
+                    tSide = opp; tUid = mv.target;
+                    const T = x.units[opp][mv.target];
+                    dmg = Math.max(3, Math.round(U.atk * (0.85 + Math.random() * 0.3) - T.def * 0.6));
+                    if(mv.act === 'special') dmg = Math.round(dmg * 1.8);
+                    dmg = Math.round(dmg * Math.max(1, Math.min(1.5, Number(mv.power) || 1)));
+                    if(U.buff){ dmg = Math.round(dmg * U.buff); U.buff = null; }
+                    crit = Math.random() * 100 < (U.crit || 5); if(crit) dmg = Math.round(dmg * 1.6);
+                    let blocked = false; if(T.guard){ dmg = Math.max(1, Math.round(dmg * 0.4)); T.guard = false; blocked = true; }
+                    T.hp = Math.max(0, T.hp - dmg);
+                    line = (mv.act === 'special' ? '💥 ' + nm(side, mv.unit) + '의 필살기! ' : '⚔️ ' + nm(side, mv.unit) + '의 공격! ') + (crit ? '💫치명타! ' : '') + (blocked ? '(방어로 막음) ' : '') + nm(opp, mv.target) + ' -' + dmg + (T.hp <= 0 ? ' 💀쓰러짐' : '');
+                } else if(mv.act === 'guard'){
+                    U.guard = true; heal = Math.min(5, U.max - U.hp); U.hp += heal; tSide = side; tUid = mv.unit;
+                    line = '🛡️ ' + nm(side, mv.unit) + ' 방어 자세!';
+                } else if(mv.act === 'potion' || mv.act === 'power'){
+                    const bag = x.bag[side] || {}; if(!(bag[mv.act] > 0)) return;
+                    const T = x.units[side][mv.target]; if(!T || T.hp <= 0) return;
+                    tSide = side; tUid = mv.target; bag[mv.act]--; x.bag[side] = bag; gain = 0;
+                    if(mv.act === 'potion'){ heal = Math.min(Math.round(T.max * 0.3), T.max - T.hp); T.hp += heal; line = '🧪 ' + nm(side, mv.target) + ' 회복 물약 +' + heal; }
+                    else { T.buff = 1.5; line = '💪 ' + nm(side, mv.target) + ' 힘의 물약! 다음 공격 1.5배'; }
+                } else return;
+                x.en[side] = Math.min(5, (x.en[side] || 0) - cost + gain);
+                x.last = { by:side, unit:mv.unit, act:mv.act, tSide:tSide, tUid:tUid, dmg:dmg, crit:crit, heal:heal, power:Math.max(1, Math.min(1.5, Number(mv.power) || 1)), ts:Date.now() };
+                x.charge = null;
+                x.log = (x.log || []).concat([line]).slice(-6);
+                const oppAlive = Object.keys(x.units[opp]).some(function(k){ return x.units[opp][k].hp > 0; });
+                if(!oppAlive){ x.status = 'done'; x.winner = side; x.endedBy = 'ko'; x.log = x.log.concat(['🏆 ' + battleName(side === 'a' ? x.a : x.b) + ' 팀 승리!']).slice(-6); }
+                else { x.turn = opp; x.round = (x.round || 1) + 1; }
+                x.updatedAt = Date.now(); return x;
+            }, function(err, committed, snap){
+                if(err){ alert('대결 오류: ' + err.message); return; }
+                if(committed){ teamSel = null; const v = snap.val(); if(v && v.status === 'done') battleSettle(id, v); }
+            });
+        }
+        // 판 누르기(배치·유닛 선택·대상 선택 모두 여기서)
+        function teamTapCell(side, cell){
+            const id = battleOpenId, x = battlesData[id]; if(!x || x.mode !== 'team') return;
+            const me = battleViewer(), mySide = x.a === me ? 'a' : (x.b === me ? 'b' : null); if(!mySide) return;
+            const uid = teamUnitAt(x, side, cell);
+            if(x.status === 'setup'){
+                if(side !== mySide || (x.ready || {})[mySide]) return;
+                if(teamSel && teamSel.setupUnit){ if(teamSel.setupUnit !== uid) teamMoveUnit(id, mySide, teamSel.setupUnit, cell); teamSel = null; battleRender(true); return; }
+                if(uid){ teamSel = { setupUnit:uid }; battleRender(true); }
+                return;
+            }
+            if(x.status !== 'play' || x.turn !== mySide) return;
+            if(teamSel && teamSel.unit && teamSel.action && teamSel.action !== 'bag'){
+                const act = teamSel.action;
+                if(act === 'attack' || act === 'special'){
+                    if(side === mySide || !uid || teamTargets(x, side).indexOf(uid) < 0) return;
+                    const U = x.units[mySide][teamSel.unit], mv = { unit:teamSel.unit, act:act, target:uid };
+                    if(U.kind === 'hero') battleMashStart(id, act, function(p){ mv.power = p; teamAct(id, mv); });
+                    else teamAct(id, mv);
+                    return;
+                }
+                if(act === 'potion' || act === 'power'){
+                    if(side !== mySide || !uid || x.units[side][uid].hp <= 0) return;
+                    teamAct(id, { unit:teamSel.unit, act:act, target:uid }); return;
+                }
+            }
+            if(side === mySide && uid && x.units[side][uid].hp > 0){ teamSel = { unit:uid }; battleRender(true); }
+        }
+        function teamDo(k){
+            const id = battleOpenId, x = battlesData[id]; if(!x || !teamSel || !teamSel.unit) return;
+            if(k === 'back'){ teamSel = (teamSel.action === 'potion' || teamSel.action === 'power') ? { unit:teamSel.unit, action:'bag' } : { unit:teamSel.unit }; battleRender(true); return; }
+            if(k === 'guard'){ teamAct(id, { unit:teamSel.unit, act:'guard' }); return; }
+            teamSel.action = k; battleRender(true);
+        }
+        function teamUnitHtml(x, side, uid, flip, mySide){
+            const U = x.units[side][uid], num = side === 'a' ? x.a : x.b;
+            let vis = '';
+            if(U.kind === 'hero'){
+                const d = (rpgData.students || {})[num] || {}, L = rpgLevel(d.xp);
+                const stu = rpgParseRoster().find(function(s){ return s.id === num; }) || { gender:'m' };
+                vis = rpgAvatarImg(d.job, L.lv, stu.gender, 58, '', '');
+                const w = gearEquipped(d, 'weapon'); if(w) vis += '<span class="tm-wpn">' + gearIcon(w, 22) + '</span>';
+            } else vis = rpgPetVisual(U.pet, 40, 999);
+            const pct = Math.max(0, Math.round(U.hp / U.max * 100)), key = side + uid, prev = teamPrevHp[key] != null ? teamPrevHp[key] : pct;
+            let cls = '';
+            if(U.hp <= 0) cls += ' dead';
+            if(U.guard && U.hp > 0) cls += ' guarding';
+            if(teamSel && side === mySide && (teamSel.unit === uid || teamSel.setupUnit === uid)) cls += ' sel';
+            if(U.kind === 'hero' && battleIsCharging(x) && x.charge.by === side) cls += ' charging';
+            return '<div class="tm-unit' + cls + '" id="tm-' + side + '-' + uid + '"><div class="tm-stand">'
+                + '<div class="tm-hp"><i data-to="' + pct + '" class="' + (pct <= 30 ? 'low' : '') + '" style="width:' + prev + '%;"></i></div>'
+                + '<div class="tm-body"><div class="tm-flip' + (flip ? ' on' : '') + '">' + vis + '</div></div>'
+                + '<div class="tm-name">' + escapeHtml(teamUnitName(x, side, uid)) + (U.buff ? ' 💪' : '') + '</div></div></div>';
+        }
+        function teamBoardHtml(x, left, mySide){
+            const right = left === 'a' ? 'b' : 'a', setup = x.status === 'setup';
+            const act = teamSel && teamSel.action, tg = (act === 'attack' || act === 'special') && mySide ? teamTargets(x, mySide === 'a' ? 'b' : 'a') : [];
+            let h = '<div class="tm-board"><div class="tm-grid">';
+            for(let r = 0; r < 3; r++){
+                [[left, 'b' + r, 'L'], [left, 'f' + r, 'L'], null, [right, 'f' + r, 'R'], [right, 'b' + r, 'R']].forEach(function(c){
+                    if(!c){ h += '<div class="tm-gap"></div>'; return; }
+                    const side = c[0], cell = c[1], lr = c[2], uid = teamUnitAt(x, side, cell);
+                    const hide = setup && mySide && side !== mySide;
+                    let cc = 'tm-cell ' + lr + (cell.charAt(0) === 'f' ? ' front' : '');
+                    if(uid && tg.indexOf(uid) >= 0 && side !== mySide) cc += ' tgt';
+                    if(uid && (act === 'potion' || act === 'power') && side === mySide && x.units[side][uid].hp > 0) cc += ' ally';
+                    if(setup && teamSel && teamSel.setupUnit && side === mySide) cc += ' pick';
+                    h += '<div class="' + cc + '" onclick="teamTapCell(\'' + side + '\',\'' + cell + '\')">'
+                        + (uid ? (hide ? '<div class="tm-hidden">?</div>' : teamUnitHtml(x, side, uid, lr === 'R', mySide)) : '') + '</div>';
+                });
+            }
+            return h + '</div><div class="tm-rowlbl"><span>뒷줄</span><span>앞줄</span><span></span><span>앞줄</span><span>뒷줄</span></div></div>';
+        }
+        function teamRender(m, id, x){
+            const me = battleViewer(), mySide = x.a === me ? 'a' : (x.b === me ? 'b' : null);
+            const left = mySide || 'a', right = left === 'a' ? 'b' : 'a';
+            const setup = x.status === 'setup', play = x.status === 'play', myTurn = play && mySide && x.turn === mySide;
+            if(!setup && !myTurn) teamSel = null;
+            const nameOf = function(s){ return battleName(s === 'a' ? x.a : x.b); };
+            const en = x.en || { a:1, b:1 }, bag = ((x.bag || {})[left]) || {};
+            const pips = function(n){ let t = ''; for(let i = 0; i < 5; i++) t += i < (n || 0) ? '●' : '○'; return t; };
+            const head = '<div class="tm-head"><div class="tm-side L' + (play && x.turn === left ? ' on' : '') + '"><b>' + escapeHtml(nameOf(left)) + '</b><span class="bt-en" title="기력">' + pips(en[left]) + '</span></div><div class="tm-vs">VS</div>'
+                + '<div class="tm-side R' + (play && x.turn === right ? ' on' : '') + '"><b>' + escapeHtml(nameOf(right)) + '</b><span class="bt-en">' + pips(en[right]) + '</span></div></div>';
+            let msg = '';
+            if(setup){ const rd = x.ready || {}; msg = mySide ? (rd[mySide] ? '⏳ 친구가 자리를 정하길 기다리는 중...' : '🧩 자리 정하기! 내 유닛을 누르고 → 옮길 칸을 누르세요 (앞줄이 먼저 맞아요)') : '🧩 두 사람이 자리를 정하는 중...'; }
+            else if(play){
+                const chg = battleIsCharging(x), labels = { attack:'공격', special:'필살기', potion:'회복 물약', power:'힘의 물약' };
+                msg = chg ? '⚡ ' + escapeHtml(nameOf(x.charge.by)) + ' 힘을 모으는 중!!'
+                    : myTurn ? (teamSel && teamSel.action && teamSel.action !== 'bag' ? '🎯 ' + labels[teamSel.action] + ' — ' + ((teamSel.action === 'attack' || teamSel.action === 'special') ? '빨갛게 빛나는 적을 누르세요' : '초록으로 빛나는 우리 편을 누르세요')
+                        : teamSel && teamSel.unit ? '명령을 고르세요' : '⚡ 내 차례! 움직일 유닛을 누르세요')
+                    : (mySide ? '⏳ ' + escapeHtml(nameOf(x.turn)) + ' 차례...' : '👀 ' + escapeHtml(nameOf(x.turn)) + ' 차례');
+            }
+            const log = '<div class="bt-log">' + (x.log || []).slice(-3).map(function(l){ return '<div>' + escapeHtml(l) + '</div>'; }).join('') + '</div>';
+            const cbtn = function(k, e, n, d, ok, cls){ return '<button class="bt-card ' + (cls || '') + '" ' + (ok ? '' : 'disabled') + ' onclick="teamDo(\'' + k + '\')"><span class="e">' + e + '</span><span class="n">' + n + '</span><span class="d">' + d + '</span></button>'; };
+            let cmd = '';
+            if(setup && mySide && !(x.ready || {})[mySide]){
+                cmd = '<div class="tm-cmd"><button class="bt-btn" style="flex:2;background:#ff8a3d;color:#fff;" onclick="teamReady(\'' + id + '\')">✅ 자리 정하기 끝!</button><button class="bt-btn" style="flex:1;background:rgba(255,255,255,0.1);color:#cfd8dc;" onclick="teamCancel(\'' + id + '\')">대결 취소</button></div>';
+            } else if(myTurn && teamSel && teamSel.unit){
+                const U = x.units[mySide][teamSel.unit], hero = U.kind === 'hero';
+                if(!teamSel.action){
+                    cmd = '<div class="tm-sel">선택: <b>' + escapeHtml(teamUnitName(x, mySide, teamSel.unit)) + '</b> · ❤️' + U.hp + '/' + U.max + ' ⚔️' + U.atk + ' 🛡️' + U.def + (U.buff ? ' · 💪다음 공격 1.5배' : '') + '</div><div class="bt-cards">'
+                        + cbtn('attack', '⚔️', '공격', hero ? '연타로 더 세게!' : '적 하나 공격', true)
+                        + cbtn('guard', '🛡️', '방어', '다음 공격 60% 막기', true)
+                        + cbtn('special', '💥', '필살기', hero ? '기력 3 · 1.8배' : '캐릭터만 가능', hero && (en[mySide] || 0) >= 3, 'sp')
+                        + cbtn('bag', '🎒', '가방', '🧪' + (bag.potion || 0) + ' · 💪' + (bag.power || 0), (bag.potion || 0) + (bag.power || 0) > 0) + '</div>';
+                } else if(teamSel.action === 'bag'){
+                    cmd = '<div class="bt-cards" style="grid-template-columns:1fr 1fr 1fr;">'
+                        + cbtn('potion', '🧪', '회복 물약', '우리 편 30% 회복 · 남은 ' + (bag.potion || 0), (bag.potion || 0) > 0)
+                        + cbtn('power', '💪', '힘의 물약', '다음 공격 1.5배 · 남은 ' + (bag.power || 0), (bag.power || 0) > 0)
+                        + cbtn('back', '↩️', '뒤로', '', true) + '</div>';
+                } else {
+                    cmd = '<button class="bt-btn" style="width:100%;background:rgba(255,255,255,0.1);color:#cfd8dc;" onclick="teamDo(\'back\')">↩️ 다시 고르기</button>';
+                }
+            }
+            if(play && mySide){
+                const stale = !myTurn && Date.now() - (x.updatedAt || 0) > 60000;
+                cmd += '<div style="display:flex;gap:8px;">'
+                    + (stale ? '<button class="bt-btn" style="flex:1;background:#ffb74d;color:#3e2723;" onclick="battleEnd(\'' + id + '\',\'timeout\')">⌛ 상대가 1분째 응답 없음 → 승리로 끝내기</button>' : '')
+                    + '<button class="bt-btn" style="flex:' + (stale ? '0 0 auto' : '1') + ';background:rgba(255,255,255,0.08);color:#90a4ae;font-size:13px;padding:9px;" onclick="battleEnd(\'' + id + '\',\'forfeit\')">🏳️ 항복</button></div>';
+            }
+            let end = '';
+            if(x.status === 'done'){
+                const iWon = mySide && x.winner === mySide;
+                end = '<div class="bt-end"><div class="w">🏆 ' + escapeHtml(nameOf(x.winner)) + ' 팀 승리!</div>'
+                    + '<div style="margin-top:6px;color:#cfd8dc;font-size:14px;">' + (mySide ? (iWon ? '축하해요! ' + (x.reward ? '🪙' + x.reward + ' 코인 획득' : (x.endedBy === 'ko' ? '(오늘 코인 보상은 다 받았어요)' : '')) : '아쉽지만 다음엔 자리를 바꿔 보세요! 🧩') : '') + '</div>'
+                    + '<button class="bt-btn" style="margin-top:12px;width:100%;background:#ff8a3d;color:#fff;" onclick="battleClose()">닫기</button></div>';
+            }
+            m.innerHTML = '<div class="bt-wrap"><div class="bt-top"><span>🐾 팀 대결</span><button onclick="battleClose()">' + ((play || setup) && mySide ? '잠시 나가기' : '닫기 ✕') + '</button></div>'
+                + head + '<div class="tm-msg">' + msg + '</div>' + teamBoardHtml(x, left, mySide) + log + cmd + end + '</div>';
+            m.style.display = 'block';
+            const fresh = x.last && x.last.ts && x.last.ts !== battleLastTs;
+            const hpDelay = (fresh && x.last.act === 'special') ? 1400 : 260;
+            setTimeout(function(){ m.querySelectorAll('.tm-hp i').forEach(function(i){ i.style.width = i.dataset.to + '%'; }); }, hpDelay);
+            ['a', 'b'].forEach(function(s){ const us = (x.units || {})[s] || {}; Object.keys(us).forEach(function(k){ teamPrevHp[s + k] = Math.max(0, Math.round(us[k].hp / us[k].max * 100)); }); });
+            if(play && x.round === 1 && !x.last && !battleIntroShown[id] && Date.now() - (x.updatedAt || 0) < 15000){ battleIntroShown[id] = true; battleRoulette(x); }
+            if(fresh){ const isNew = battleLastTs !== 0 || Date.now() - x.last.ts < 4000; battleLastTs = x.last.ts; if(isNew) teamAnimate(x, left); }
+        }
+        function teamAnimate(x, leftSide){
+            const Ls = x.last; if(!Ls) return;
+            const getA = function(){ return document.getElementById('tm-' + Ls.by + '-' + Ls.unit); }, getT = function(){ return Ls.tSide ? document.getElementById('tm-' + Ls.tSide + '-' + Ls.tUid) : null; };
+            const A = getA(); if(!A) return;
+            const add = function(el, cls, ms){ el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(function(){ el.classList.remove(cls); }, ms); };
+            const fx = function(parent, cls, txt, ms, style){ const e = document.createElement('div'); e.className = cls; if(txt) e.textContent = txt; if(style) e.style.cssText += style; parent.appendChild(e); setTimeout(function(){ e.remove(); }, ms); return e; };
+            const float = function(el, txt, color){ const f = fx(el, 'bt-float', txt, 1200); f.style.color = color; };
+            const U = x.units[Ls.by][Ls.unit];
+            if(Ls.act === 'attack' || Ls.act === 'special'){
+                const big = Ls.act === 'special';
+                const el = U.kind === 'hero' ? battleElementOf(Ls.by === 'a' ? x.a : x.b) : BATTLE_ELEM[PET_ELEMENT[U.pet] || 'normal'];
+                if(big){ const im = A.querySelector('img'); battleCutIn(Ls.by, x, im ? im.src : ''); }
+                battleAnimUntil = Date.now() + (big ? 2400 : 1100);
+                setTimeout(function(){
+                    const A2 = getA(), T2 = getT(); if(!A2) return;
+                    const dx = T2 ? (T2.getBoundingClientRect().left - A2.getBoundingClientRect().left) * 0.7 : (Ls.by === leftSide ? 60 : -60);
+                    A2.style.setProperty('--lx', Math.round(dx) + 'px'); add(A2, 'tm-lunge', 650);
+                    const w = A2.querySelector('.tm-wpn'); if(w) add(w, 'bt-swing', 560);
+                    if(Ls.power >= 1.2) fx(A2, 'bt-power', '파워 x' + Ls.power.toFixed(1) + '!', 1100);
+                    setTimeout(function(){
+                        const T3 = getT(); if(!T3) return;
+                        const fire = 'background:linear-gradient(90deg,transparent,#fff3e0,' + el.line + ',transparent);height:12px;box-shadow:0 0 20px ' + el.line + ';';
+                        if(big){ const f = fx(document.body, 'bt-flash', '', 700); f.style.background = 'radial-gradient(circle, rgba(255,255,255,.85), ' + el.flash + ' 55%, transparent 80%)'; const wr = battleModalEl().querySelector('.bt-wrap'); if(wr) add(wr, 'bt-cam', 600); }
+                        fx(T3, 'bt-slash', '', 520, big ? fire : '');
+                        if(big) fx(T3, 'bt-slash b', '', 600, fire);
+                        const n = big ? 14 : (el.key === 'normal' ? 0 : 5);
+                        for(let i = 0; i < n; i++){ const ang = Math.random() * Math.PI * 2, r = 40 + Math.random() * (big ? 90 : 50); fx(T3, 'bt-burst', el.p[i % el.p.length], 900, '--dx:' + Math.round(Math.cos(ang) * r) + 'px;--dy:' + Math.round(Math.sin(ang) * r * 0.7) + 'px;animation-delay:' + (i * 0.02) + 's;'); }
+                        if(Ls.crit) fx(T3, 'bt-crit', '💫', 800);
+                        add(T3, 'bt-shake', 500); add(T3, 'bt-hit', 600);
+                        float(T3, '-' + Ls.dmg + (Ls.crit ? '!' : ''), Ls.crit ? '#ffd54f' : '#ff6e6e');
+                        if(window.SFX) try{ big ? SFX.levelup() : SFX.point(); }catch(e){}
+                    }, big ? 300 : 230);
+                }, big ? 1050 : 0);
+            } else if(Ls.act === 'guard'){
+                fx(A, 'bt-bubble', '', 900); float(A, '🛡️', '#90caf9'); battleAnimUntil = Date.now() + 950;
+                if(window.SFX) try{ SFX.ding(); }catch(e){}
+            } else if(Ls.act === 'potion' || Ls.act === 'power'){
+                const T = getT() || A, sp = Ls.act === 'potion' ? ['✨','💚','✨','➕','✨','💚'] : ['💪','🔥','💪','✨','🔥','💪'];
+                sp.forEach(function(ch, i){ fx(T, 'bt-spark', ch, 1300, 'left:' + (10 + Math.random() * 60) + '%; animation-delay:' + (i * 0.07) + 's;'); });
+                float(T, Ls.act === 'potion' ? '+' + Ls.heal : '💪x1.5', Ls.act === 'potion' ? '#81c784' : '#ff8a65');
+                battleAnimUntil = Date.now() + 1200;
+                if(window.SFX) try{ SFX.ding(); }catch(e){}
+            }
+        }
+
         // 🎬 대결 미리보기 — 우리 반 1·2번 학생 캐릭터로 자동 대결(메모리 안에서만, 아무것도 저장 안 함)
         var battleDemoState = null;
         function battleDemoStart(){
@@ -11079,8 +11431,9 @@ var qrcode = function() {
             if(!ks.length){ el.innerHTML = '<div style="text-align:center; color:#b0bec5; padding:20px;">아직 대결이 없어요</div>'; return; }
             el.innerHTML = ks.map(function(k){
                 const b = battlesData[k], an = battleName(b.a), bn = battleName(b.b);
-                const st = b.status === 'play' ? '<b style="color:#ef6c00;">진행 중 ❤️' + b.p.a.hp + ' : ' + b.p.b.hp + '</b>' : b.status === 'invite' ? '<span style="color:#90a4ae;">신청 대기</span>' : '<span style="color:#43a047;">🏆 ' + escapeHtml(battleName(b.winner === 'a' ? b.a : b.b)) + ' 승</span>';
-                return '<div onclick="' + (b.p ? 'battleOpen(\'' + k + '\')' : '') + '" style="border:1px solid #e6ebf3; border-radius:12px; padding:10px 12px; margin-bottom:8px; cursor:' + (b.p ? 'pointer' : 'default') + '; display:flex; justify-content:space-between; gap:8px; font-size:14px;"><span>' + escapeHtml(an) + ' ⚔️ ' + escapeHtml(bn) + '</span>' + st + '</div>';
+                const alive = function(s){ const us = (b.units || {})[s] || {}; return Object.keys(us).filter(function(k){ return us[k].hp > 0; }).length; };
+                const st = b.status === 'play' ? '<b style="color:#ef6c00;">진행 중 ' + (b.units ? '🐾 ' + alive('a') + ' : ' + alive('b') + '명' : '❤️' + b.p.a.hp + ' : ' + b.p.b.hp) + '</b>' : b.status === 'setup' ? '<span style="color:#90a4ae;">🧩 배치 중</span>' : b.status === 'invite' ? '<span style="color:#90a4ae;">신청 대기</span>' : '<span style="color:#43a047;">🏆 ' + escapeHtml(battleName(b.winner === 'a' ? b.a : b.b)) + ' 승</span>';
+                return '<div onclick="' + ((b.p || b.units) ? 'battleOpen(\'' + k + '\')' : '') + '" style="border:1px solid #e6ebf3; border-radius:12px; padding:10px 12px; margin-bottom:8px; cursor:' + ((b.p || b.units) ? 'pointer' : 'default') + '; display:flex; justify-content:space-between; gap:8px; font-size:14px;"><span>' + escapeHtml(an) + ' ⚔️ ' + escapeHtml(bn) + '</span>' + st + '</div>';
             }).join('');
         }
 
