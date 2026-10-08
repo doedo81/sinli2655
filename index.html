@@ -3553,7 +3553,7 @@ var qrcode = function() {
                                         <div class="rpg-menu-label">수업 도구</div>
                                         <button onclick="rpgOpenMissions(); rpgCloseMenu();"><i class="fa-solid fa-bullseye" style="color:#e91e8c; width:18px;"></i> 미션</button>
                                         <button onclick="battleWatchOpen(); rpgCloseMenu();"><i class="fa-solid fa-hand-fist" style="color:#ff7a2f; width:18px;"></i> 친구 대결 현황</button>
-                                        <button onclick="battleDemoStart(); rpgCloseMenu();"><i class="fa-solid fa-clapperboard" style="color:#ff7a2f; width:18px;"></i> 대결 미리보기</button>
+                                        <button onclick="battleDemoStart('team'); rpgCloseMenu();"><i class="fa-solid fa-clapperboard" style="color:#ff7a2f; width:18px;"></i> 대결 미리보기</button>
                                         <button onclick="rpgOpenExam(); rpgCloseMenu();"><i class="fa-solid fa-file-pen" style="color:#fb8c00; width:18px;"></i> 단원평가</button>
                                         <button id="rpg-grade-btn" style="display:none;" onclick="rpgOpenGrade(); rpgCloseMenu();"><i class="fa-solid fa-table-list" style="color:#455a64; width:18px;"></i> 평가 기록</button>
                                         <div class="rpg-menu-sep"></div>
@@ -4401,9 +4401,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.48';
+        const APP_VERSION = '1.49';
         const APP_VERSION_DATE = '2026-10-06';
         const APP_CHANGELOG = [
+            'v1.49 (2026-10-08) — 🎬 대결 미리보기를 🐾 팀 대결(판 위)로 · 1:1 미리보기는 [친구 대결 현황]에서 따로',
             'v1.48 (2026-10-08) — 🐾 팀 대결: 내 캐릭터 + 펫 2마리를 판(앞줄·뒷줄)에 배치하고 유닛별로 공격·방어·필살기·가방(물약) 턴제 · 1:1 대결도 그대로',
             'v1.47 (2026-10-08) — 🕹️ 오락실식 대결: 선공 룰렛 · 연타로 힘 모으기(최대 1.5배) · 필살기 컷인 · 무기 속성 효과(불·얼음·번개·물·빛…) · 화면 흔들림',
             'v1.46 (2026-10-08) — 🎬 대결 미리보기(성장→관리→대결 미리보기): 1·2번 학생 캐릭터가 자동으로 싸우는 연습 화면, 저장 안 됨',
@@ -11303,7 +11304,7 @@ var qrcode = function() {
                     + '<div style="margin-top:6px;color:#cfd8dc;font-size:14px;">' + (mySide ? (iWon ? '축하해요! ' + (x.reward ? '🪙' + x.reward + ' 코인 획득' : (x.endedBy === 'ko' ? '(오늘 코인 보상은 다 받았어요)' : '')) : '아쉽지만 다음엔 자리를 바꿔 보세요! 🧩') : '') + '</div>'
                     + '<button class="bt-btn" style="margin-top:12px;width:100%;background:#ff8a3d;color:#fff;" onclick="battleClose()">닫기</button></div>';
             }
-            m.innerHTML = '<div class="bt-wrap"><div class="bt-top"><span>🐾 팀 대결</span><button onclick="battleClose()">' + ((play || setup) && mySide ? '잠시 나가기' : '닫기 ✕') + '</button></div>'
+            m.innerHTML = '<div class="bt-wrap"><div class="bt-top"><span>' + (battleDemoState ? '🎬 팀 대결 미리보기 · 연습(저장 안 됨)' : '🐾 팀 대결') + '</span><button onclick="battleClose()">' + ((play || setup) && mySide ? '잠시 나가기' : '닫기 ✕') + '</button></div>'
                 + head + '<div class="tm-msg">' + msg + '</div>' + teamBoardHtml(x, left, mySide) + log + cmd + end + '</div>';
             m.style.display = 'block';
             const fresh = x.last && x.last.ts && x.last.ts !== battleLastTs;
@@ -11360,7 +11361,8 @@ var qrcode = function() {
 
         // 🎬 대결 미리보기 — 우리 반 1·2번 학생 캐릭터로 자동 대결(메모리 안에서만, 아무것도 저장 안 함)
         var battleDemoState = null;
-        function battleDemoStart(){
+        function battleDemoStart(mode){
+            mode = mode === 'duel' ? 'duel' : 'team';
             const ros = rpgParseRoster();
             if(ros.length < 2){ alert('학생 명단이 2명 이상 있어야 미리보기를 볼 수 있어요.'); return; }
             if(battleDemoState) battleDemoStop();
@@ -11384,13 +11386,28 @@ var qrcode = function() {
                 set:function(){ return Promise.resolve(); }, update:function(){ return Promise.resolve(); }, remove:function(){ return Promise.resolve(); }
             }; } };
             const newRound = function(){
-                st.store = { demo:{ a:a, b:b, status:'play', p:{ a:battleFighter(a), b:battleFighter(b) }, turn:'a', round:1, log:['🎬 미리보기 대결 시작! (연습이라 저장 안 돼요)'], createdAt:Date.now(), updatedAt:Date.now() } };
+                st.store = { demo: mode === 'team'
+                    ? { mode:'team', a:a, b:b, status:'play', units:{ a:teamBuildUnits(a), b:teamBuildUnits(b) }, en:{ a:1, b:1 }, bag:{ a:{ potion:2, power:1 }, b:{ potion:2, power:1 } }, ready:{ a:true, b:true }, turn:'a', round:1, log:['🎬 팀 대결 미리보기 시작! (연습이라 저장 안 돼요)'], createdAt:Date.now(), updatedAt:Date.now() }
+                    : { a:a, b:b, status:'play', p:{ a:battleFighter(a), b:battleFighter(b) }, turn:'a', round:1, log:['🎬 미리보기 대결 시작! (연습이라 저장 안 돼요)'], createdAt:Date.now(), updatedAt:Date.now() } };
+                if(mode === 'team'){ const ub = st.store.demo.units.b; ub.u0.cell = 'f1'; if(ub.u1) ub.u1.cell = 'f0'; if(ub.u2) ub.u2.cell = 'b1'; } // 상대는 다른 진형
                 battlesData = st.store; battleOpen('demo');
             };
             newRound();
             st.timer = setInterval(function(){
                 const x = st.store.demo; if(!x) return;
                 if(x.status !== 'play'){ if(!st.wait) st.wait = Date.now(); if(Date.now() - st.wait > 4500){ st.wait = 0; newRound(); } return; }
+                if(x.mode === 'team'){
+                    const s = x.turn, o = s === 'a' ? 'b' : 'a', us = x.units[s], num = s === 'a' ? x.a : x.b;
+                    const alive = Object.keys(us).filter(function(k){ return us[k].hp > 0; });
+                    const uid = alive[Math.floor(Math.random() * alive.length)], tg = teamTargets(x, o), t = tg[Math.floor(Math.random() * tg.length)];
+                    const hurt = alive.filter(function(k){ return us[k].hp < us[k].max * 0.4; })[0], bag = (x.bag || {})[s] || {};
+                    if(us[uid].kind === 'hero' && (x.en[s] || 0) >= 3 && Math.random() < 0.7) teamAct('demo', { unit:uid, act:'special', target:t, power:1.1 + Math.random() * 0.4 }, num);
+                    else if(hurt && bag.potion > 0 && Math.random() < 0.6) teamAct('demo', { unit:uid, act:'potion', target:hurt }, num);
+                    else if(bag.power > 0 && Math.random() < 0.12) teamAct('demo', { unit:uid, act:'power', target:alive[0] }, num);
+                    else if(Math.random() < 0.12) teamAct('demo', { unit:uid, act:'guard' }, num);
+                    else teamAct('demo', { unit:uid, act:'attack', target:t, power:us[uid].kind === 'hero' ? 1.1 + Math.random() * 0.4 : 1 }, num);
+                    return;
+                }
                 const P = x.p[x.turn];
                 let card = 'attack';
                 if(P.en >= 3 && Math.random() < 0.7) card = 'special';
@@ -11418,7 +11435,8 @@ var qrcode = function() {
                 w.innerHTML = '<div style="background:#fff; border-radius:18px; max-width:480px; width:100%; max-height:85vh; overflow-y:auto; padding:20px;">'
                     + '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><h2 style="margin:0; font-size:19px; color:#455a64;">🥊 친구 대결 현황</h2><span onclick="document.getElementById(\'battle-watch\').style.display=\'none\'" style="cursor:pointer; font-size:20px; color:#90a4ae;">✕</span></div>'
                     + '<p style="font-size:12.5px; color:#78909c; margin:0 0 10px;">학생들이 자기 기기(학생 화면)에서 친구에게 대결을 신청해요. 진행 중인 대결을 누르면 교실 화면으로 볼 수 있어요.</p>'
-                    + '<button onclick="battleDemoStart()" style="width:100%; border:none; border-radius:12px; padding:12px; margin-bottom:12px; background:#ff8a3d; color:#fff; font-weight:800; font-size:15px; cursor:pointer; font-family:inherit;">🎬 대결 미리보기 (연습 · 저장 안 됨)</button>'
+                    + '<div style="display:flex; gap:8px; margin-bottom:12px;"><button onclick="battleDemoStart(\'team\')" style="flex:1; border:none; border-radius:12px; padding:12px; background:#ff8a3d; color:#fff; font-weight:800; font-size:14px; cursor:pointer; font-family:inherit;">🎬 🐾 팀 대결 미리보기</button>'
+                    + '<button onclick="battleDemoStart(\'duel\')" style="flex:1; border:none; border-radius:12px; padding:12px; background:#5c6c95; color:#fff; font-weight:800; font-size:14px; cursor:pointer; font-family:inherit;">🎬 ⚔️ 1:1 미리보기</button></div>'
                     + '<div id="battle-watch-list"></div></div>';
                 document.body.appendChild(w);
             }
