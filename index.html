@@ -3046,6 +3046,10 @@ var qrcode = function() {
         .tm-scene .bt-bgimg { height:100%; }
         .tm-scene.has-img .tm-grid { background:rgba(28,22,16,.42); -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px); }
 
+        /* 효과 그림(assets/battle/fx_*.png) */
+        @keyframes btFxPop { 0% { transform:scale(.3) rotate(-15deg); opacity:0; } 25% { transform:scale(1.15) rotate(0); opacity:1; } 70% { opacity:1; } 100% { transform:scale(1.25); opacity:0; } }
+        .bt-fxi { position:absolute; left:50%; top:45%; pointer-events:none; z-index:8; animation:btFxPop .75s ease-out forwards; filter:drop-shadow(0 0 10px rgba(255,255,255,.5)); }
+
         /* 테마 고르기 창 */
         .theme-card { cursor: pointer; border-radius: 14px; border: 2px solid #e6ebf3; padding: 8px; background: #fff; transition: 0.15s; text-align: center; }
         .theme-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.10); }
@@ -4470,9 +4474,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.52';
+        const APP_VERSION = '1.53';
         const APP_VERSION_DATE = '2026-10-06';
         const APP_CHANGELOG = [
+            'v1.53 (2026-10-12) — 🎨 대결 배경 그림 4장 + 기술 효과 그림 8장 적용(Antigravity 제작)',
             'v1.52 (2026-10-08) — 🗡️ 무기·방패를 손 높이로 · 배경 그림 파일을 넣으면 자동으로 바뀌게 준비',
             'v1.51 (2026-10-08) — 🏟️ 대결 무대: 배경 4종(숲·성·사막·밤) + 바둑판 바닥 위에 캐릭터·펫이 서서 싸움 · 이름·체력은 위쪽 게임 화면처럼',
             'v1.50 (2026-10-08) — ⚔️ 1:1 대결도 좌우로 마주 보기 + 펫 동료가 옆에 서서 공격 때 따라 한 번 더 때림',
@@ -10962,6 +10967,13 @@ var qrcode = function() {
             if(BATTLE_IMAGES['bg_' + sc]) return '<img class="bt-bgimg" src="assets/battle/bg_' + sc + '.jpg" alt="">';
             return battleSceneSvg(sc) + (withFloor ? '<div class="bt-floor"></div>' : '');
         }
+        function battleFxSprite(parent, key, size){
+            if(!parent || !BATTLE_IMAGES['fx_' + key]) return false;
+            const im = document.createElement('img'); im.className = 'bt-fxi'; im.src = 'assets/battle/fx_' + key + '.png'; im.alt = '';
+            im.style.width = im.style.height = size + 'px'; im.style.marginLeft = im.style.marginTop = (-size / 2) + 'px';
+            parent.appendChild(im); setTimeout(function(){ im.remove(); }, 800); return true;
+        }
+        function battleFxKey(el){ return BATTLE_IMAGES['fx_' + el.key] ? el.key : 'slash'; }
         function battleModalEl(){
             let m = document.getElementById('battle-modal');
             if(!m){ m = document.createElement('div'); m.id = 'battle-modal'; document.body.appendChild(m); }
@@ -11139,6 +11151,7 @@ var qrcode = function() {
                         const fire = 'background:linear-gradient(90deg,transparent,#fff3e0,' + el.line + ',transparent);height:14px;box-shadow:0 0 22px ' + el.line + ';';
                         if(big){ const f = fx(document.body, 'bt-flash', '', 700); f.style.background = 'radial-gradient(circle, rgba(255,255,255,.85), ' + el.flash + ' 55%, transparent 80%)'; const wr = battleModalEl().querySelector('.bt-wrap'); if(wr) add(wr, 'bt-cam', 600); }
                         fx(T2, 'bt-slash', '', 520, big ? fire : '');
+                        battleFxSprite(T2, battleFxKey(el), big ? 170 : 120); if(Ls.crit) setTimeout(function(){ battleFxSprite(T2, 'crit', 100); }, 120);
                         if(big) fx(T2, 'bt-slash b', '', 600, fire);
                         const n = big ? 14 : (el.key === 'normal' ? 0 : 5);
                         for(let i = 0; i < n; i++){ const ang = Math.random() * Math.PI * 2, r = 50 + Math.random() * (big ? 110 : 60); fx(T2, 'bt-burst', el.p[i % el.p.length], 900, '--dx:' + Math.round(Math.cos(ang) * r) + 'px;--dy:' + Math.round(Math.sin(ang) * r * 0.7) + 'px;animation-delay:' + (i * 0.02) + 's;'); }
@@ -11162,13 +11175,13 @@ var qrcode = function() {
                 }, wait);
             } else if(Ls.card === 'guard'){
                 const sh = A.querySelector('.bt-shd'); if(sh) add(sh, 'bt-raise', 900);
-                fx(A.querySelector('.bt-av') || A, 'bt-bubble', '', 900);
+                fx(A.querySelector('.bt-av') || A, 'bt-bubble', '', 900); battleFxSprite(A.querySelector('.bt-av') || A, 'shield', 130);
                 float(A, Ls.heal ? '+' + Ls.heal : '🛡️', Ls.heal ? '#81c784' : '#90caf9');
                 battleAnimUntil = Date.now() + 950;
             } else if(Ls.card === 'heal'){
                 const av = A.querySelector('.bt-av') || A, sp = ['✨', '💚', '✨', '➕', '✨', '💚', '✨'];
                 sp.forEach(function(ch, i){ fx(av, 'bt-spark', ch, 1300, 'left:' + (6 + Math.random() * 78) + 'px; animation-delay:' + (i * 0.07) + 's;'); });
-                float(A, '+' + Ls.heal, '#81c784');
+                battleFxSprite(A.querySelector('.bt-av') || A, 'heal', 120); float(A, '+' + Ls.heal, '#81c784');
                 battleAnimUntil = Date.now() + 1200;
             }
         }
@@ -11462,6 +11475,7 @@ var qrcode = function() {
                         const fire = 'background:linear-gradient(90deg,transparent,#fff3e0,' + el.line + ',transparent);height:12px;box-shadow:0 0 20px ' + el.line + ';';
                         if(big){ const f = fx(document.body, 'bt-flash', '', 700); f.style.background = 'radial-gradient(circle, rgba(255,255,255,.85), ' + el.flash + ' 55%, transparent 80%)'; const wr = battleModalEl().querySelector('.bt-wrap'); if(wr) add(wr, 'bt-cam', 600); }
                         fx(T3, 'bt-slash', '', 520, big ? fire : '');
+                        battleFxSprite(T3, battleFxKey(el), big ? 130 : 90); if(Ls.crit) setTimeout(function(){ battleFxSprite(T3, 'crit', 72); }, 120);
                         if(big) fx(T3, 'bt-slash b', '', 600, fire);
                         const n = big ? 14 : (el.key === 'normal' ? 0 : 5);
                         for(let i = 0; i < n; i++){ const ang = Math.random() * Math.PI * 2, r = 40 + Math.random() * (big ? 90 : 50); fx(T3, 'bt-burst', el.p[i % el.p.length], 900, '--dx:' + Math.round(Math.cos(ang) * r) + 'px;--dy:' + Math.round(Math.sin(ang) * r * 0.7) + 'px;animation-delay:' + (i * 0.02) + 's;'); }
@@ -11472,11 +11486,12 @@ var qrcode = function() {
                     }, big ? 300 : 230);
                 }, big ? 1050 : 0);
             } else if(Ls.act === 'guard'){
-                fx(A, 'bt-bubble', '', 900); float(A, '🛡️', '#90caf9'); battleAnimUntil = Date.now() + 950;
+                fx(A, 'bt-bubble', '', 900); battleFxSprite(A, 'shield', 90); float(A, '🛡️', '#90caf9'); battleAnimUntil = Date.now() + 950;
                 if(window.SFX) try{ SFX.ding(); }catch(e){}
             } else if(Ls.act === 'potion' || Ls.act === 'power'){
                 const T = getT() || A, sp = Ls.act === 'potion' ? ['✨','💚','✨','➕','✨','💚'] : ['💪','🔥','💪','✨','🔥','💪'];
                 sp.forEach(function(ch, i){ fx(T, 'bt-spark', ch, 1300, 'left:' + (10 + Math.random() * 60) + '%; animation-delay:' + (i * 0.07) + 's;'); });
+                if(Ls.act === 'potion') battleFxSprite(T, 'heal', 84);
                 float(T, Ls.act === 'potion' ? '+' + Ls.heal : '💪x1.5', Ls.act === 'potion' ? '#81c784' : '#ff8a65');
                 battleAnimUntil = Date.now() + 1200;
                 if(window.SFX) try{ SFX.ding(); }catch(e){}
