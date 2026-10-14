@@ -4474,9 +4474,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.54';
+        const APP_VERSION = '1.55';
         const APP_VERSION_DATE = '2026-10-06';
         const APP_CHANGELOG = [
+            'v1.55 (2026-10-14) — 👕 산 옷을 캐릭터가 입은 모습으로 보여줄 준비(옷 그림이 들어오면 카드·학생 화면·대결에 자동 적용)',
             'v1.54 (2026-10-14) — 🎨 펫 7종 · 머리 장식 9종 · 직업 캐릭터 2·3단계 18장 그림 적용',
             'v1.53 (2026-10-12) — 🎨 대결 배경 그림 4장 + 기술 효과 그림 8장 적용(Antigravity 제작)',
             'v1.52 (2026-10-08) — 🗡️ 무기·방패를 손 높이로 · 배경 그림 파일을 넣으면 자동으로 바뀌게 준비',
@@ -8836,9 +8837,19 @@ var qrcode = function() {
             if(next < srcs.length){ img.src = srcs[next]; return; }
             img.onerror = null;
         }
-        function rpgAvatarImg(job, level, gender, heightPx, extraStyle, attrs){
+        // 👕 옷 입은 모습: assets/outfit/<직업|novice>_<m|f>_<옷id>.png (list.json에 있는 것만). 없으면 직업·레벨 그림
+        var OUTFIT_IMAGES = {};
+        try { fetch('assets/outfit/list.json', { cache:'no-store' }).then(function(r){ return r.ok ? r.json() : []; }).then(function(a){ (a || []).forEach(function(id){ OUTFIT_IMAGES[id] = true; }); if((a || []).length && typeof renderRpgGrid === 'function' && rpgRef) try{ renderRpgGrid(); }catch(e){} }).catch(function(){}); } catch(e){}
+        function rpgOutfitKey(job, gender, armorId){
+            if(!armorId) return null;
+            const k = ((job && RPG_JOBS[job]) ? job : 'novice') + '_' + (gender === 'F' ? 'f' : 'm') + '_' + armorId;
+            return OUTFIT_IMAGES[k] ? k : null;
+        }
+        function rpgArmorOf(d){ return (d && d.equip && d.equip.armor) || null; }
+        function rpgAvatarImg(job, level, gender, heightPx, extraStyle, attrs, armorId){
             const keys = rpgAvatarFallbackKeys(job, level, gender);
             const srcs = keys.map(function(key){ return 'assets/avatars/' + key + '.png?v=7'; });
+            const ok = rpgOutfitKey(job, gender, armorId); if(ok) srcs.unshift('assets/outfit/' + ok + '.png?v=1');
             return '<img src="' + srcs[0] + '" alt="" ' + (attrs || '') + ' data-rpg-fallback-index="0" data-rpg-fallback-srcs="' + srcs.join('|') + '" onerror="rpgAvatarFallback(this)" style="height:' + heightPx + 'px;width:auto;' + (extraStyle || '') + '">';
         }
 
@@ -9312,7 +9323,7 @@ var qrcode = function() {
                 + (d.pet ? '<div style="position:absolute;top:44px;right:2px;z-index:4;">' + rpgPetVisual(d.pet, 40, L.lv) + '</div>' : '')
                 + '<div style="position:relative;width:max-content;margin:14px auto 2px;">'
                 + rpgAuraOverlay(L.lv, 80, d.job)
-                + rpgAvatarImg(d.job, L.lv, stu.gender, 80, 'display:block;position:relative;z-index:1;', 'loading="lazy"')
+                + rpgAvatarImg(d.job, L.lv, stu.gender, 80, 'display:block;position:relative;z-index:1;', 'loading="lazy"', rpgArmorOf(d))
                 + '</div>'
                 + '<div style="display:flex;justify-content:space-between;align-items:center;gap:4px;">'
                 + '<span style="font-weight:800;color:#51618a;">' + stu.name + '</span>'
@@ -9445,7 +9456,7 @@ var qrcode = function() {
                 + '<div style="display:flex;gap:10px;align-items:center;">'
                 + '<div style="position:relative;">'
                 + rpgAuraOverlay(L.lv, 110, d.job)
-                + rpgAvatarImg(d.job, L.lv, stu.gender, 110, 'position:relative;z-index:1;', '')
+                + rpgAvatarImg(d.job, L.lv, stu.gender, 110, 'position:relative;z-index:1;', '', rpgArmorOf(d))
                 + '</div>'
                 + '<div><div style="font-size:18px;font-weight:800;color:#51618a;">' + stu.name + ' <span style="font-size:13px;color:#7b6cd9;">' + (job ? job.emoji + job.name : '견습생') + '</span> ' + rpgHeadVisual(d.head, 22) + rpgPetVisual(d.pet, 22, L.lv) + '</div>'
                 + '<div style="font-size:13px;color:#888;">Lv.' + L.lv + ' · ' + stu.id + '번</div></div>'
@@ -10234,7 +10245,7 @@ var qrcode = function() {
             const latest = readingLatestEntry(stu.id);
             const rd = (rpgData.students && rpgData.students[stu.id]) || {};
             const L = (typeof rpgLevel === 'function') ? rpgLevel(rd.xp) : { lv:1 };
-            const avatar = (typeof rpgAvatarImg === 'function') ? rpgAvatarImg(rd.job, L.lv, stu.gender, 42, 'border-radius:50%;', 'loading="lazy"') : '';
+            const avatar = (typeof rpgAvatarImg === 'function') ? rpgAvatarImg(rd.job, L.lv, stu.gender, 42, 'border-radius:50%;', 'loading="lazy"', rpgArmorOf(rd)) : '';
             const snippet = latest ? readingClip(latest.quote || latest.thought || '', 34) : '';
             return '<div onclick="readingOpenModal(' + stu.id + ')" style="cursor:pointer;background:' + (doneToday ? '#f3fbf4' : '#fff') + ';border:1px solid ' + (doneToday ? '#bfe3c4' : '#e6ebf3') + ';border-top:4px solid ' + (doneToday ? '#43a047' : '#b0bec5') + ';border-radius:14px;padding:12px;box-shadow:0 3px 10px rgba(120,144,180,0.10);transition:transform .12s;" onmouseover="this.style.transform=\'translateY(-3px)\'" onmouseout="this.style.transform=\'\'">'
                 + '<div style="display:flex;align-items:center;gap:8px;">'
@@ -11002,7 +11013,7 @@ var qrcode = function() {
             const pose = x.status === 'done' ? (x.winner === side ? ' bt-victory' : ' bt-ko') : '';
             const charging = battleIsCharging(x) && x.charge.by === side;
             return '<div class="bt-fig ' + (isRight ? 'R' : 'L') + (isTurn ? ' turn' : '') + (P.guard ? ' guarding' : '') + (charging ? ' charging' : '') + '" id="bt-f-' + side + '">'
-                + '<div class="bt-av"><div class="bt-body' + pose + '"><div' + (isRight ? ' class="flip"' : '') + '>' + rpgAvatarImg(d.job, L.lv, stu.gender, 96, '', '') + '</div></div>'
+                + '<div class="bt-av"><div class="bt-body' + pose + '"><div' + (isRight ? ' class="flip"' : '') + '>' + rpgAvatarImg(d.job, L.lv, stu.gender, 96, '', '', rpgArmorOf(d)) + '</div></div>'
                 + (w ? '<span class="bt-wpn">' + gearIcon(w, 30) + '</span>' : '') + (sh ? '<span class="bt-shd">' + gearIcon(sh, 24) + '</span>' : '')
                 + (P.pet ? '<span class="bt-pet">' + rpgPetVisual(P.pet, 36, 999) + '</span>' : '') + '</div></div>';
         }
@@ -11355,7 +11366,7 @@ var qrcode = function() {
             if(U.kind === 'hero'){
                 const d = (rpgData.students || {})[num] || {}, L = rpgLevel(d.xp);
                 const stu = rpgParseRoster().find(function(s){ return s.id === num; }) || { gender:'m' };
-                vis = rpgAvatarImg(d.job, L.lv, stu.gender, 58, '', '');
+                vis = rpgAvatarImg(d.job, L.lv, stu.gender, 58, '', '', rpgArmorOf(d));
                 const w = gearEquipped(d, 'weapon'); if(w) vis += '<span class="tm-wpn">' + gearIcon(w, 22) + '</span>';
             } else vis = rpgPetVisual(U.pet, 40, 999);
             const pct = Math.max(0, Math.round(U.hp / U.max * 100)), key = side + uid, prev = teamPrevHp[key] != null ? teamPrevHp[key] : pct;
@@ -11604,7 +11615,7 @@ var qrcode = function() {
             if(L.lv >= 10 && !d.job){ jobSection = '<div style="background:#f6f4ff;border:1px solid #d9d2f5;border-radius:12px;padding:12px;margin-top:14px;"><div style="font-weight:700;color:#5b4bb5;margin-bottom:8px;">✨ 레벨 10 달성! 전직할 직업을 고르세요</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">' + Object.keys(RPG_JOBS).map(function(k){ return '<button onclick="rpgSetJob(' + num + ',\'' + k + '\')" style="border:1px solid #d9d2f5;background:#fff;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">' + RPG_JOBS[k].emoji + ' ' + RPG_JOBS[k].name + '</button>'; }).join('') + '</div></div>'; }
             document.getElementById('student-page-body').innerHTML =
                 '<div style="text-align:center;"><div style="position:relative;display:inline-block;">' + rpgAuraOverlay(L.lv, 150, d.job)
-                + rpgAvatarImg(d.job, L.lv, stu.gender, 150, 'position:relative;z-index:1;', '')
+                + rpgAvatarImg(d.job, L.lv, stu.gender, 150, 'position:relative;z-index:1;', '', rpgArmorOf(d))
                 + '</div>'
                 + '<div style="font-size:20px;font-weight:800;color:#51618a;margin-top:8px;">' + stu.name + ' <span style="font-size:13px;color:#7b6cd9;">' + (job ? job.emoji + job.name : '견습생') + '</span> ' + rpgHeadVisual(d.head, 24) + rpgPetVisual(d.pet, 24, L.lv) + '</div>'
                 + '<div style="font-size:13px;color:#888;">Lv.' + L.lv + ' · ' + stu.id + '번</div></div>'
