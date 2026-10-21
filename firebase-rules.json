@@ -135,6 +135,14 @@
         ".read": true,
         ".write": true
       }
+    },
+    "opinionBoard": {
+      "rooms": {
+        "$code": {
+          ".read": true,
+          ".write": true
+        }
+      }
     }
   }
 }
