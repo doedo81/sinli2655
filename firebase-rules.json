@@ -20,11 +20,11 @@
     },
     "rooms": {
       "$cid": {
-        ".read": "auth != null && (data.child('_meta/ownerUid').val() === auth.uid || data.child('_members').child(auth.uid).exists())",
-        ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && (!data.exists() || data.child('_meta/ownerUid').val() === auth.uid || data.child('_members').child(auth.uid).exists())",
+        ".read": "auth != null && (data.child('_meta/ownerUid').val() === auth.uid || (data.child('_members').child(auth.uid).exists() && data.child('_members').child(auth.uid).child('role').val() !== 'bot'))",
+        ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && (!data.exists() || data.child('_meta/ownerUid').val() === auth.uid || (data.child('_members').child(auth.uid).exists() && data.child('_members').child(auth.uid).child('role').val() !== 'bot'))",
         "_members": {
           "$uid": {
-            ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider !== 'anonymous' && ( !newData.exists() || !root.child('rooms').child($cid).child('_meta/ownerUid').exists() || root.child('rooms').child($cid).child('_meta/ownerUid').val() === auth.uid || ( root.child('rooms').child($cid).child('_meta/code').exists() && newData.child('code').val() === root.child('rooms').child($cid).child('_meta/code').val() ) )"
+            ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider !== 'anonymous' && ( !newData.exists() || !root.child('rooms').child($cid).child('_meta/ownerUid').exists() || root.child('rooms').child($cid).child('_meta/ownerUid').val() === auth.uid || ( root.child('rooms').child($cid).child('_meta/code').exists() && newData.child('code').val() === root.child('rooms').child($cid).child('_meta/code').val() )  ) && newData.child('role').val() !== 'bot' && data.child('role').val() !== 'bot'"
           }
         },
         "studentSessions": {
@@ -42,18 +42,42 @@
           ".read": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).exists()",
           "students": {
             "$num": {
-              "head":       { ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num" },
-              "pet":        { ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num" },
-              "frame":      { ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num" },
-              "job":        { ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num" },
-              "inv":        { ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num" },
-              "equip":      { ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num" },
-              "spent":      { ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num && newData.isNumber() && newData.val() >= (data.exists() ? data.val() : 0)" },
-              "coinBonus":  { ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num && newData.isNumber() && newData.val() >= (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 15" },
-              "bw":         { ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num && newData.isNumber() && newData.val() <= (data.exists() ? data.val() : 0) + 1" },
-              "bl":         { ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num && newData.isNumber() && newData.val() <= (data.exists() ? data.val() : 0) + 1" },
-              "battleDay":  { ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num" },
-              "battleWins": { ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num && newData.isNumber() && newData.val() <= 3" }
+              "head": {
+                ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num"
+              },
+              "pet": {
+                ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num"
+              },
+              "frame": {
+                ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num"
+              },
+              "job": {
+                ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num"
+              },
+              "inv": {
+                ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num"
+              },
+              "equip": {
+                ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num"
+              },
+              "spent": {
+                ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num && newData.isNumber() && newData.val() >= (data.exists() ? data.val() : 0)"
+              },
+              "coinBonus": {
+                ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num && newData.isNumber() && newData.val() >= (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 15"
+              },
+              "bw": {
+                ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num && newData.isNumber() && newData.val() <= (data.exists() ? data.val() : 0) + 1"
+              },
+              "bl": {
+                ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num && newData.isNumber() && newData.val() <= (data.exists() ? data.val() : 0) + 1"
+              },
+              "battleDay": {
+                ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num"
+              },
+              "battleWins": {
+                ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num && newData.isNumber() && newData.val() <= 3"
+              }
             }
           }
         },
@@ -61,15 +85,42 @@
           ".read": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).exists()",
           "students": {
             "$num": {
-              "books":   { ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num" },
-              "entries": { ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num" },
-              "streak":  { ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num" }
+              "books": {
+                ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num"
+              },
+              "entries": {
+                ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num"
+              },
+              "streak": {
+                ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num"
+              }
             }
           }
         },
         "battles": {
           ".read": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).exists()",
           ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).exists()"
+        },
+        "skyDashboard": {
+          ".read": "auth != null && root.child('rooms').child($cid).child('_members').child(auth.uid).child('role').val() === 'bot'",
+          ".write": "auth != null && root.child('rooms').child($cid).child('_members').child(auth.uid).child('role').val() === 'bot'"
+        },
+        "boardHistory": {
+          ".read": "auth != null && root.child('rooms').child($cid).child('_members').child(auth.uid).child('role').val() === 'bot'",
+          ".write": "auth != null && root.child('rooms').child($cid).child('_members').child(auth.uid).child('role').val() === 'bot'"
+        },
+        "calendarEvents": {
+          ".read": "auth != null && root.child('rooms').child($cid).child('_members').child(auth.uid).child('role').val() === 'bot'",
+          ".write": "auth != null && root.child('rooms').child($cid).child('_members').child(auth.uid).child('role').val() === 'bot'"
+        },
+        "meals": {
+          ".read": "auth != null && root.child('rooms').child($cid).child('_members').child(auth.uid).child('role').val() === 'bot'",
+          ".write": "auth != null && root.child('rooms').child($cid).child('_members').child(auth.uid).child('role').val() === 'bot'"
+        },
+        "_meta": {
+          "name": {
+            ".read": "auth != null && root.child('rooms').child($cid).child('_members').child(auth.uid).child('role').val() === 'bot'"
+          }
         }
       }
     },

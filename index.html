@@ -4127,6 +4127,13 @@ var qrcode = function() {
                     <input type="password" id="set-gemini-key" placeholder="AIza... (없으면 비워두세요)" style="width:100%; padding:9px; border-radius:8px; border:1px solid #ccc; font-family:monospace;">
                 </div>
 
+                <div class="setting-group" style="background:#f3effb; padding:14px; border-radius:10px; border:1px solid #ddd0f3;">
+                    <label style="color:#7b6cd9;">🤖 클로드 도우미 연결 (아침칠판 자동 입력)</label>
+                    <p style="font-size:12px; color:#666; margin:4px 0 8px 0; line-height:1.5;">클로드 전용 계정이 이 반의 <b>알림장·시간표·캘린더·급식</b>만 고칠 수 있게 해요. 점수·학생 정보·비밀번호는 못 봐요.<br>Firebase 콘솔 → Authentication → 사용자에서 도우미 계정의 <b>사용자 UID</b>를 복사해 넣으세요.</p>
+                    <div id="bot-status" style="font-size:13px; color:#555; margin-bottom:8px;"></div>
+                    <div style="display:flex; gap:6px;"><button type="button" class="reset-btn" style="background:#7b6cd9; box-shadow:none; font-size:13px;" onclick="botConnect()">도우미 연결</button><button type="button" class="reset-btn" style="background:#eceff4; color:#e57373; box-shadow:none; font-size:13px;" onclick="botDisconnect()">연결 끊기</button></div>
+                </div>
+
                 <div class="setting-group"><label>당번 기본 할 일</label><textarea id="set-duty-tasks" style="height:60px; font-weight:700;"></textarea></div>
                 <div class="setting-group"><label>📅 시간표 (아침자습 · 1~6교시)</label></div>
                 <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
@@ -4479,9 +4486,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.60';
+        const APP_VERSION = '1.61';
         const APP_VERSION_DATE = '2026-10-21';
         const APP_CHANGELOG = [
+            'v1.61 (2026-10-21) — 🤖 클로드 도우미 연결(설정): 클로드가 알림장·시간표·캘린더·급식만 직접 고칠 수 있음',
             'v1.60 (2026-10-21) — 🔐 보안 강화: 비밀번호 암호화 저장, 학생별 비밀번호, 자기 번호 칸만 수정, 다른 반 접근 차단',
             'v1.59 (2026-10-21) — 🧪 데모반 추가(주소 끝에 ?demo=1 → 진짜 반과 완전히 분리된 연습용 가짜 데이터)',
             'v1.58 (2026-10-15) — 👕 옷 그림 136장 모두 완성!',
@@ -8658,6 +8666,7 @@ var qrcode = function() {
                     : ('현재 설정: ' + WEATHER_DEFAULT.place + ' — 기본값');
                 document.getElementById('set-birthdays').value = d.birthdays || "";
                 document.getElementById('set-gemini-key').value = localStorage.getItem('geminiApiKey') || "";
+                botRefreshStatus();
                 var _cb = document.getElementById('set-show-classbar'); if(_cb){ try{ _cb.checked = localStorage.getItem('hideClassBar') !== '1'; }catch(e){ _cb.checked = true; } }
                 if(typeof bellLoadSettings === 'function') bellLoadSettings();
                 document.getElementById('set-duty-tasks').value = d.duty || "";
@@ -9560,6 +9569,33 @@ var qrcode = function() {
                     if(Object.keys(rm).length) return rpgRef.update(rm);
                 });
             }).catch(function(e){ console.warn('비번 이전 실패', e); _secMigrated = false; });
+        }
+        // 🤖 클로드 도우미(MCP) — _members/<uid> = {role:'bot'} → 보안 규칙상 아침칠판 칸(skyDashboard·boardHistory·calendarEvents·meals)만 읽기·쓰기
+        function botRefreshStatus(){
+            const el = document.getElementById('bot-status'); if(!el || !currentRoom) return;
+            db.ref('rooms/' + currentRoom + '/_members').once('value').then(function(s){
+                const m = s.val() || {}, bots = Object.keys(m).filter(function(k){ return m[k] && m[k].role === 'bot'; });
+                el.innerHTML = bots.length ? '✅ 연결됨: ' + bots.map(function(k){ return escapeHtml((m[k].name || '도우미') + ' (' + k.slice(0, 6) + '…)'); }).join(', ') : '연결된 도우미 없음';
+            }).catch(function(){ el.textContent = ''; });
+        }
+        function botConnect(){
+            if(currentRole === 'subject'){ alert('담임 선생님만 연결할 수 있어요.'); return; }
+            const uid = (prompt('도우미 계정의 사용자 UID를 붙여넣으세요\n(Firebase 콘솔 → Authentication → 사용자)') || '').trim();
+            if(!uid) return;
+            if(!/^[A-Za-z0-9]{20,40}$/.test(uid)){ alert('UID 모양이 아니에요. 다시 복사해 주세요.'); return; }
+            if(auth.currentUser && uid === auth.currentUser.uid){ alert('선생님 본인 계정은 도우미로 연결할 수 없어요.'); return; }
+            db.ref('rooms/' + currentRoom + '/_members/' + uid).set({ role: 'bot', name: '클로드 도우미', at: Date.now() })
+                .then(function(){ rpgToast('🤖 클로드 도우미를 연결했어요'); botRefreshStatus(); })
+                .catch(function(e){ alert('연결 오류: ' + e.message); });
+        }
+        function botDisconnect(){
+            db.ref('rooms/' + currentRoom + '/_members').once('value').then(function(s){
+                const m = s.val() || {}, ups = {};
+                Object.keys(m).forEach(function(k){ if(m[k] && m[k].role === 'bot') ups[k] = null; });
+                if(!Object.keys(ups).length){ alert('연결된 도우미가 없어요.'); return; }
+                if(!confirm('클로드 도우미 연결을 끊을까요? (바로 아침칠판을 못 고치게 돼요)')) return;
+                return db.ref('rooms/' + currentRoom + '/_members').update(ups).then(function(){ rpgToast('도우미 연결을 끊었어요'); botRefreshStatus(); });
+            }).catch(function(e){ alert('오류: ' + e.message); });
         }
         function rpgExitStudentMode(){
             var done = function(){
