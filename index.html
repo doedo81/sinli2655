@@ -3141,7 +3141,7 @@ var qrcode = function() {
         <div class="login-box" id="room-box" style="display:none;">
             <div style="color:var(--accent-blue); font-size:30px; margin-bottom:10px;"><i class="fa-solid fa-chalkboard-user"></i></div>
             <h2 style="margin:0 0 10px 0; color:var(--dark-blue);">🌤️ 스카이 클래스</h2>
-            <p style="color:#7f8c8d; font-size:14px; margin-bottom:20px;">접속할 방 이름을 입력하세요.<br>(예: 신리초5학년5반)</p>
+            <p style="color:#7f8c8d; font-size:14px; margin-bottom:20px;">접속할 방 이름을 입력하세요.<br>(예: 행복초5학년1반)</p>
             <input type="text" id="room-name-input" style="width:100%; padding:15px; font-size:18px; border:2px solid var(--sub-sky); border-radius:12px; margin-bottom:15px; text-align:center; font-family:'Pretendard';" placeholder="방 이름" onkeypress="if(event.key === 'Enter') enterRoom()">
             <button class="action-btn" style="width:100%; padding: 15px; font-size: 16px;" id="enter-room-btn" onclick="enterRoom()">교실 입장하기</button>
             <button class="reset-btn" style="width:100%; margin-top:10px; background:transparent; color:#5b97d1; box-shadow:none;" onclick="backToClasses()">← 내 학급으로</button>
@@ -4321,6 +4321,8 @@ var qrcode = function() {
           appId: "1:566976944507:web:84f7518d7fce10035dc5de"
         };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        // 🧪 개발용: 내 PC(localhost)에서 ?emu=1 → 가짜 Firebase(에뮬레이터)에 연결해 보안 규칙까지 시험
+        if(!window.DEMO && /[?&]emu=1/.test(location.search) && /^(localhost|127\.0\.0\.1)$/.test(location.hostname)){ firebase.database().useEmulator('127.0.0.1', 9400); firebase.auth().useEmulator('http://127.0.0.1:9099'); }
         const db = window.DEMO ? DEMO.db : firebase.database(); const auth = window.DEMO ? DEMO.auth : firebase.auth();
         // 🔔 효과음: 외부 파일 대신 WebAudio로 합성 (네트워크 불필요·항상 재생)
         let _audioAC = null;
@@ -4424,6 +4426,7 @@ var qrcode = function() {
                 // 🔐 보안 규칙이 auth를 요구하므로, 저장된 로그인 세션이 복원될 때까지 기다렸다가 입장한다.
                 //    태블릿에서 구글 로그인을 한 번만 해두면 이후로는 자동으로 유지된다.
                 auth.onAuthStateChanged(user => {
+                    if(user && user.isAnonymous){ if(window._stuFlow) return; user = null; }
                     if(user) {
                         document.getElementById('auth-overlay').style.display = 'none';
                         currentRole = localStorage.getItem('classRole') || 'owner';
@@ -4449,6 +4452,7 @@ var qrcode = function() {
             } catch(e) {}
 
             auth.onAuthStateChanged(user => {
+                if(user && user.isAnonymous){ if(window._stuFlow) return; user = null; }
                 if(user) {
                     try { localStorage.setItem('teacherUid', user.uid); } catch(e) {}
                     document.getElementById('role-choice').style.display = 'none';
@@ -4475,9 +4479,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.59';
+        const APP_VERSION = '1.60';
         const APP_VERSION_DATE = '2026-10-21';
         const APP_CHANGELOG = [
+            'v1.60 (2026-10-21) — 🔐 보안 강화: 비밀번호 암호화 저장, 학생별 비밀번호, 자기 번호 칸만 수정, 다른 반 접근 차단',
             'v1.59 (2026-10-21) — 🧪 데모반 추가(주소 끝에 ?demo=1 → 진짜 반과 완전히 분리된 연습용 가짜 데이터)',
             'v1.58 (2026-10-15) — 👕 옷 그림 136장 모두 완성!',
             'v1.57 (2026-10-15) — 👕 다시 그린 옷 그림 9장 추가(전설의 갑옷 체크무늬 해결)',
@@ -4871,7 +4876,7 @@ var qrcode = function() {
         // 학급 만들기 → classId·코드 생성, 나를 담임(owner)으로 등록
         function createClass() {
             const user = auth.currentUser; if(!user) return alert('로그인이 필요해요.');
-            const name = prompt('학급 이름을 입력하세요\n(예: 신리초 5학년 5반)');
+            const name = prompt('학급 이름을 입력하세요\n(예: 행복초 5학년 1반)');
             if(!name || !name.trim()) return;
             const classId = db.ref('rooms').push().key;
             const code = genClassCode();
@@ -4933,6 +4938,10 @@ var qrcode = function() {
             seatingCurrentRef = db.ref('rooms/' + currentRoom + '/seatingV2/current'); seatingSavesRef = db.ref('rooms/' + currentRoom + '/seatingV2/saves');
             rpgRef = db.ref('rooms/' + currentRoom + '/rpg');
             readingRef = db.ref('rooms/' + currentRoom + '/reading');
+            if(secretsRef) secretsRef.off();
+            rpgSecrets = {}; _secMigrated = false; _secLoaded = false;
+            secretsRef = db.ref('rooms/' + currentRoom + '/secrets');
+            secretsRef.on('value', function(s){ rpgSecrets = s.val() || {}; _secLoaded = true; rpgSecurityMigrate(); }, function(){});
             if(mealsRef) mealsRef.off();
             mealsData = {};
             mealsRef = db.ref('rooms/' + currentRoom + '/meals');
@@ -4943,6 +4952,7 @@ var qrcode = function() {
             ensureRoomWritable(auth.currentUser, currentRoom);
             rpgRef.on('value', snap => {
                 rpgData = snap.val() || {};
+                rpgSecurityMigrate();
                 if(document.getElementById('rpg-grid')) renderRpgGrid();
                 if(rpgBulkMode) rpgRenderBulkActions();
                 var _am = document.getElementById('rpg-actions-modal'); if(_am && _am.style.display === 'flex') rpgRenderActionsList();
@@ -4997,7 +5007,7 @@ var qrcode = function() {
                     const s = snap.val();
                     const savedNames = nameSnap && nameSnap.val();
                     globalTotalStudents = s.totalStudents || 24;
-                    globalStudentRosterStr = savedNames || s.roster || "";
+                    globalStudentRosterStr = savedNames || s.roster || ""; if(typeof rpgSecurityMigrate === "function") setTimeout(rpgSecurityMigrate, 0);
                     globalWeatherLat = (typeof s.weatherLat === 'number') ? s.weatherLat : null;
                     globalWeatherLon = (typeof s.weatherLon === 'number') ? s.weatherLon : null;
                     globalWeatherPlace = s.weatherPlace || "";
@@ -6535,7 +6545,7 @@ var qrcode = function() {
         function gcalCfg(){ try{ return JSON.parse(localStorage.getItem('gcalCfg') || 'null') || {}; }catch(e){ return {}; } }
         function gcalCfgSave(c){ try{ localStorage.setItem('gcalCfg', JSON.stringify(c)); }catch(e){} }
         function gcalDefaultUrl(){
-            const email = (typeof auth !== 'undefined' && auth.currentUser && auth.currentUser.email) || 'doedo81@gmail.com';
+            const email = (typeof auth !== 'undefined' && auth.currentUser && auth.currentUser.email) || '';
             return 'https://calendar.google.com/calendar/embed?src=' + encodeURIComponent(email) + '&ctz=Asia%2FSeoul&mode=MONTH';
         }
         function gcalSetView(v){ const c = gcalCfg(); c.view = v; gcalCfgSave(c); applyGcalView(); }
@@ -9509,24 +9519,68 @@ var qrcode = function() {
             rpgClose(); renderRpgGrid();
             rpgToast('🎒 학생 모드 — 학생이 자기 캐릭터를 꾸밀 수 있어요');
         }
+        // 🔐 비밀번호는 글자 그대로 저장하지 않는다 → 되돌릴 수 없는 SHA-256 해시만 rooms/<반>/secrets 에 (선생님만 읽기 가능)
+        //    학생 비번 확인은 보안 규칙이 서버에서 해시를 대조한다(학생 기기는 정답 해시를 볼 수 없음).
+        let rpgSecrets = {}, secretsRef = null, _secMigrated = false, _secLoaded = false;
+        function sha256Hex(str){
+            return crypto.subtle.digest('SHA-256', new TextEncoder().encode(str)).then(function(b){
+                return Array.from(new Uint8Array(b)).map(function(x){ return x.toString(16).padStart(2, '0'); }).join('');
+            });
+        }
+        function stuPwHash(cid, num, pw){ return sha256Hex(cid + '|stu|' + num + '|' + String(pw || '').trim()); }
+        function pinHashOf(cid, pin){ return sha256Hex(cid + '|pin|' + String(pin || '').trim()); }
+        function rpgHasPin(){ return !!(rpgSecrets.pinHash || (rpgData.config && rpgData.config.pin)); }
+        function rpgCheckPin(entered){
+            if(rpgSecrets.pinHash) return pinHashOf(currentRoom, entered).then(function(h){ return h === rpgSecrets.pinHash; });
+            return Promise.resolve(String(entered || '').trim() === ((rpgData.config && rpgData.config.pin) || ''));
+        }
+        function rpgGenPw(){ var a = new Uint32Array(1); crypto.getRandomValues(a); return String(1000 + (a[0] % 9000)); }
+        // 선생님 기기에서 한 번: 옛 평문 비번 → 해시로 옮기고 평문은 지운다
+        function rpgSecurityMigrate(){
+            if(_secMigrated || !_secLoaded || !rpgRef || !currentRoom || rpgStudentMode) return;
+            var u = auth.currentUser; if(!u || u.isAnonymous || currentRole === 'subject') return;
+            if(!globalStudentRosterStr) return;
+            _secMigrated = true;
+            var jobs = [], ups = {}, cid = currentRoom;
+            var pin = rpgData.config && rpgData.config.pin;
+            if(pin){ jobs.push(pinHashOf(cid, pin).then(function(h){ if(!rpgSecrets.pinHash) ups['pinHash'] = h; })); }
+            var have = rpgSecrets.pw || {};
+            rpgParseRoster().forEach(function(st){
+                if(have[st.id]) return;
+                var d = (rpgData.students && rpgData.students[st.id]) || {};
+                jobs.push(stuPwHash(cid, st.id, d.pw || '123456').then(function(h){ ups['pw/' + st.id] = h; }));
+            });
+            Promise.all(jobs).then(function(){
+                var hasPlain = Object.keys(rpgData.students || {}).some(function(n){ return rpgData.students[n] && rpgData.students[n].pw; });
+                if(!Object.keys(ups).length && !pin && !hasPlain) return;
+                return secretsRef.update(ups).then(function(){
+                    var rm = {};
+                    if(pin) rm['config/pin'] = null;
+                    Object.keys(rpgData.students || {}).forEach(function(n){ if(rpgData.students[n] && rpgData.students[n].pw) rm['students/' + n + '/pw'] = null; });
+                    if(Object.keys(rm).length) return rpgRef.update(rm);
+                });
+            }).catch(function(e){ console.warn('비번 이전 실패', e); _secMigrated = false; });
+        }
         function rpgExitStudentMode(){
-            const pin = (rpgData.config && rpgData.config.pin) || '';
-            if(pin){ const e = prompt('선생님 비밀번호를 입력하세요'); if(e === null) return; if(e.trim() !== pin){ alert('비밀번호가 틀렸어요.'); return; } }
-            rpgStudentMode = false; localStorage.removeItem('rpgStu_' + currentRoom);
-            rpgClose(); renderRpgGrid();
-            rpgToast('선생님 모드');
+            var done = function(){
+                rpgStudentMode = false; localStorage.removeItem('rpgStu_' + currentRoom);
+                rpgClose(); renderRpgGrid();
+                rpgToast('선생님 모드');
+            };
+            if(!rpgHasPin()) return done();
+            const e = prompt('선생님 비밀번호를 입력하세요'); if(e === null) return;
+            rpgCheckPin(e).then(function(ok){ if(ok) done(); else alert('비밀번호가 틀렸어요.'); });
         }
 
         function rpgToggleLock(){
             if(!rpgRef) return;
             if(!rpgLocked){
-                var pin = (rpgData.config && rpgData.config.pin) || '';
-                if(!pin){
+                if(!rpgHasPin()){
                     var np = prompt('평가 기록을 보호할 비밀번호를 정하세요 (숫자 4자리 권장)\n잠가도 상벌점은 그대로 쓸 수 있고, 평가 기록만 숨겨져요.');
                     if(np === null) return;
                     np = np.trim();
                     if(!np){ alert('비밀번호를 입력해주세요.'); return; }
-                    rpgRef.child('config/pin').set(np);
+                    pinHashOf(currentRoom, np).then(function(h){ return secretsRef.child('pinHash').set(h); }).catch(function(e){ alert('저장 오류: ' + e.message); });
                 }
                 rpgLocked = true;
                 localStorage.setItem('rpgLock_' + currentRoom, '1');
@@ -9535,13 +9589,13 @@ var qrcode = function() {
             } else {
                 var entered = prompt('잠금 해제 비밀번호를 입력하세요');
                 if(entered === null) return;
-                var real = (rpgData.config && rpgData.config.pin) || '';
-                if(entered.trim() === real){
+                rpgCheckPin(entered).then(function(ok){
+                    if(!ok){ alert('비밀번호가 틀렸어요.'); return; }
                     rpgLocked = false;
                     localStorage.removeItem('rpgLock_' + currentRoom);
                     rpgUpdateLockUI(); renderRpgGrid();
                     rpgToast('🔓 잠금 해제');
-                } else { alert('비밀번호가 틀렸어요.'); }
+                });
             }
         }
 
@@ -10617,56 +10671,90 @@ var qrcode = function() {
         }
 
         // ---- 학생 로그인(핸드폰) ----
-        let studentNum = null, studentCodeCur = null, _studentRosterReady = false, _studentRpgReady = false, _studentPendingLogin = false;
+        let studentNum = null, studentCodeCur = null, _studentRosterReady = false, _studentRpgReady = false, _studentPendingLogin = false, _studentBound = false;
+        // 학생 기기는 익명 로그인 → rooms/<반>/studentSessions/<uid> = {번호, 비번해시}를 쓴다.
+        // 보안 규칙이 이 해시를 secrets/pw/<번호>와 대조해서 맞을 때만 저장을 허락 → 그 뒤로 자기 번호 칸만 쓸 수 있다.
+        function stuEnsureAuth(){
+            if(auth.currentUser) return Promise.resolve(auth.currentUser);
+            if(!auth.signInAnonymously) return Promise.resolve(null);
+            return auth.signInAnonymously().then(function(r){ return r && r.user; }).catch(function(e){ console.warn('익명 로그인 실패(콘솔에서 켜야 함):', e && e.code); return null; });
+        }
+        function stuSessionRef(){ var u = auth.currentUser; return (u && currentRoom) ? db.ref('rooms/' + currentRoom + '/studentSessions/' + u.uid) : null; }
+        function rpgStudentShowPage(){
+            document.getElementById('student-login').style.display = 'none';
+            document.getElementById('student-page').style.display = 'block';
+            if(_studentRpgReady && studentNum != null) rpgRenderStudentPage(studentNum);
+        }
+        function rpgStudentBind(){
+            if(_studentBound) return; _studentBound = true;
+            settingsRef.once('value').then(function(s){ var v = s.val() || {}; globalStudentRosterStr = v.roster || ''; _studentRosterReady = true; if(studentNum != null && _studentRpgReady) rpgRenderStudentPage(studentNum); }).catch(function(){});
+            rpgRef.on('value', function(s){ rpgData = s.val() || {}; _studentRpgReady = true; if(studentNum != null) rpgRenderStudentPage(studentNum); if(battleOpenId) battleRender(); }, function(e){ console.warn('성장 데이터 읽기 거부', e && e.message); });
+            battleBind();
+            readingRef.on('value', function(s){ readingData = s.val() || {}; if(studentNum != null) readingRenderStudentSection(studentNum); }, function(){});
+        }
         function rpgStudentInit(code){
+            window._stuFlow = true;
             studentCodeCur = code; _studentRosterReady = false; _studentRpgReady = false;
             var scEl = document.getElementById('student-code'); if(scEl) scEl.value = code;
             var ov = document.getElementById('auth-overlay'); if(ov) ov.style.display = 'none';
             var app = document.getElementById('main-app'); if(app) app.style.display = 'none';
-            db.ref('studentCodes/' + code).once('value').then(function(snap){
+            var login = document.getElementById('student-login');
+            stuEnsureAuth().then(function(){ return db.ref('studentCodes/' + code).once('value'); }).then(function(snap){
                 var room = snap.val();
-                var login = document.getElementById('student-login');
                 if(!room){ _studentPendingLogin = false; login.style.display = 'flex'; document.getElementById('student-classname').innerText = '방 번호를 다시 확인하세요'; alert('잘못된 방 번호(코드)예요. 선생님께 다시 받아주세요.'); return; }
                 currentRoom = room;
                 settingsRef = db.ref('rooms/' + room + '/settings/dashboardDefaults');
                 rpgRef = db.ref('rooms/' + room + '/rpg');
                 readingRef = db.ref('rooms/' + room + '/reading');
-                settingsRef.once('value').then(function(s){ var v = s.val() || {}; globalStudentRosterStr = v.roster || ''; document.getElementById('student-classname').innerText = v.className || '우리 반'; _studentRosterReady = true; _tryStudentPending(); });
-                rpgRef.on('value', function(s){ rpgData = s.val() || {}; _studentRpgReady = true; if(studentNum != null) rpgRenderStudentPage(studentNum); _tryStudentPending(); if(battleOpenId) battleRender(); });
-                battleBind();
-                readingRef.on('value', function(s){ readingData = s.val() || {}; if(studentNum != null) readingRenderStudentSection(studentNum); });
+                settingsRef.child('className').once('value').then(function(s){ document.getElementById('student-classname').innerText = s.val() || '우리 반'; }).catch(function(){});
                 var saved = localStorage.getItem('studentNum_' + code);
-                if(saved){ studentNum = parseInt(saved); login.style.display = 'none'; document.getElementById('student-page').style.display = 'block'; setTimeout(function(){ rpgRenderStudentPage(studentNum); }, 300); }
-                else { login.style.display = 'flex'; }
-            }).catch(function(e){ _studentPendingLogin = false; alert('접속 오류: ' + e.message); });
-        }
-        function _tryStudentPending(){
-            if(_studentPendingLogin && _studentRosterReady && _studentRpgReady){ _studentPendingLogin = false; rpgStudentDoLogin(); }
+                var sref = stuSessionRef();
+                var check = sref ? sref.once('value').then(function(ss){ var v = ss.val(); return !!(saved && v && String(v.num) === String(saved)); }) : Promise.reject(new Error('no-auth'));
+                check.catch(function(){ return 'legacy'; }).then(function(ok){
+                    // ok=true: 세션 유효 · 'legacy': 옛 규칙(세션 확인 불가) → 예전처럼 저장된 번호로
+                    if(saved && (ok === true || ok === 'legacy')){
+                        studentNum = parseInt(saved); rpgStudentShowPage(); rpgStudentBind();
+                    } else {
+                        if(saved) localStorage.removeItem('studentNum_' + code);
+                        login.style.display = 'flex';
+                        if(_studentPendingLogin){ _studentPendingLogin = false; rpgStudentDoLogin(); }
+                    }
+                });
+            }).catch(function(e){ _studentPendingLogin = false; login.style.display = 'flex'; alert('접속 오류: ' + e.message); });
         }
         // 학생: 방번호 + 번호 + 비번을 화면에서 입력해 로그인
         function rpgStudentManualLogin(){
             var code = (document.getElementById('student-code').value || '').trim().toUpperCase();
             if(!code){ alert('방 번호(코드)를 입력해주세요.'); return; }
             if(!document.getElementById('student-num').value){ alert('내 번호를 입력해주세요.'); return; }
-            if(code === studentCodeCur && _studentRosterReady && _studentRpgReady){ rpgStudentDoLogin(); return; }
+            if(code === studentCodeCur && currentRoom){ rpgStudentDoLogin(); return; }
             _studentPendingLogin = true;
             rpgStudentInit(code);
         }
         function rpgStudentDoLogin(){
             var num = parseInt(document.getElementById('student-num').value);
-            var pw = document.getElementById('student-pw').value;
+            var pw = (document.getElementById('student-pw').value || '').trim();
             if(!num){ alert('내 번호를 입력해주세요.'); return; }
-            var stu = rpgParseRoster().find(function(x){ return x.id === num; });
-            if(!stu){ alert('그 번호의 학생이 명단에 없어요.'); return; }
-            var d = (rpgData.students && rpgData.students[num]) || {};
-            var realpw = d.pw || '123456';
-            if(pw !== realpw){ alert('비밀번호가 틀렸어요. (기본 비밀번호는 123456)'); return; }
-            studentNum = num; localStorage.setItem('studentNum_' + studentCodeCur, num);
-            document.getElementById('student-login').style.display = 'none';
-            document.getElementById('student-page').style.display = 'block';
-            rpgRenderStudentPage(num);
+            if(!pw){ alert('비밀번호를 입력해주세요.'); return; }
+            var finish = function(){
+                studentNum = num; localStorage.setItem('studentNum_' + studentCodeCur, num);
+                rpgStudentShowPage(); rpgStudentBind();
+            };
+            var wrong = function(){ alert('비밀번호가 틀렸어요. 모르면 선생님께 물어보세요.'); };
+            stuEnsureAuth().then(function(){
+                var sref = stuSessionRef(); if(!sref) throw new Error('no-auth');
+                return stuPwHash(currentRoom, num, pw).then(function(h){ return sref.set({ num: String(num), h: h, at: Date.now() }); });
+            }).then(finish).catch(function(){
+                // 거부됨 → 새 규칙이면 '비번 틀림'. 옛 규칙(성장 데이터가 공개)이면 예전 방식으로 확인
+                rpgRef.once('value').then(function(s){
+                    var d = ((s.val() || {}).students || {})[num] || {};
+                    if(pw !== (d.pw || '123456')) return wrong();
+                    finish();
+                }).catch(wrong);
+            });
         }
         function rpgStudentLogout(){
+            var sref = stuSessionRef(); if(sref) sref.remove().catch(function(){});
             localStorage.removeItem('studentNum_' + studentCodeCur); studentNum = null;
             document.getElementById('student-page').style.display = 'none';
             document.getElementById('student-num').value = ''; document.getElementById('student-pw').value = '';
@@ -10938,25 +11026,41 @@ var qrcode = function() {
                 return x;
             }, function(err, committed, snap){ if(committed){ const v = snap.val(); if(v && v.status === 'done') battleSettle(id, v); } });
         }
-        // 결과 기록·보상(대결당 한 번만). 코인은 KO 승리 + 하루 BATTLE_DAILY번까지
+        // 결과 기록·보상 — 보안 규칙상 학생은 '자기 번호 칸'만 쓸 수 있으므로 양쪽이 각자 자기 결과만 기록한다.
+        // settled_a / settled_b 트랜잭션으로 한 번씩만. 코인은 KO 승리 + 하루 BATTLE_DAILY번까지.
+        // (옛 대결은 settled=true 로 이미 정산됨 → 다시 기록하지 않음)
+        function battleSettleSides(x){
+            const me = battleViewer();
+            if(me != null){
+                if(String(x.a) === String(me)) return ['a'];
+                if(String(x.b) === String(me)) return ['b'];
+                return [];
+            }
+            const u = auth.currentUser;
+            return (u && !u.isAnonymous) ? ['a', 'b'] : [];
+        }
         function battleSettle(id, x){
-            if(battleDemoState) return;
-            battlesRef.child(id + '/settled').transaction(function(v){ if(v) return; return true; }, function(err, committed){
-                if(err || !committed) return;
-                const w = x.winner === 'a' ? x.a : x.b, l = x.winner === 'a' ? x.b : x.a;
-                const S = rpgData.students || {}, wd = S[w] || {}, ld = S[l] || {};
-                const today = getFormattedDate(new Date());
-                const winsToday = wd.battleDay === today ? (wd.battleWins || 0) : 0;
-                const upd = {};
-                upd['students/' + w + '/bw'] = (wd.bw || 0) + 1;
-                upd['students/' + l + '/bl'] = (ld.bl || 0) + 1;
-                if(x.endedBy === 'ko' && winsToday < BATTLE_DAILY){
-                    upd['students/' + w + '/coinBonus'] = (wd.coinBonus || 0) + BATTLE_WIN_COINS;
-                    upd['students/' + w + '/battleDay'] = today;
-                    upd['students/' + w + '/battleWins'] = winsToday + 1;
-                    battlesRef.child(id + '/reward').set(BATTLE_WIN_COINS).catch(function(){});
-                }
-                rpgRef.update(upd).catch(function(){});
+            if(battleDemoState || !x || x.status !== 'done' || !x.winner || x.settled || !rpgData || !rpgData.students) return;
+            battleSettleSides(x).forEach(function(side){
+                if(x['settled_' + side]) return;
+                battlesRef.child(id + '/settled_' + side).transaction(function(v){ if(v) return; return true; }, function(err, committed){
+                    if(err || !committed) return;
+                    const num = x[side], won = x.winner === side;
+                    const d = (rpgData.students && rpgData.students[num]) || {};
+                    const upd = {};
+                    if(won){
+                        upd['bw'] = (d.bw || 0) + 1;
+                        const today = getFormattedDate(new Date());
+                        const winsToday = d.battleDay === today ? (d.battleWins || 0) : 0;
+                        if(x.endedBy === 'ko' && winsToday < BATTLE_DAILY){
+                            upd['coinBonus'] = (d.coinBonus || 0) + BATTLE_WIN_COINS;
+                            upd['battleDay'] = today;
+                            upd['battleWins'] = winsToday + 1;
+                            battlesRef.child(id + '/reward').set(BATTLE_WIN_COINS).catch(function(){});
+                        }
+                    } else upd['bl'] = (d.bl || 0) + 1;
+                    rpgRef.child('students/' + num).update(upd).catch(function(e){ console.warn('대결 기록 실패', e && e.message); });
+                });
             });
         }
         const BATTLE_SCENES = ['forest', 'castle', 'desert', 'night'];
@@ -11205,6 +11309,8 @@ var qrcode = function() {
         function battleOnData(){
             const me = battleViewer();
             if(me != null){
+                // 상대 기기에서 끝난 대결도 내 결과는 내 기기가 기록
+                Object.keys(battlesData || {}).forEach(function(id){ const x = battlesData[id]; if(x && x.status === 'done' && !x.settled && (String(x.a) === String(me) || String(x.b) === String(me))) battleSettle(id, x); });
                 battleRenderLobby();
                 const mine = battleActive(me);
                 if(mine && (mine.status === 'play' || mine.status === 'setup') && battleOpenId !== mine.id) battleOpen(mine.id);
@@ -11656,13 +11762,14 @@ var qrcode = function() {
                     + qrHtml
                     + '<div style="background:#f6f8fb;border-radius:10px;padding:10px 12px;font-size:12px;word-break:break-all;margin-bottom:8px;">🔗 ' + url + '</div>'
                     + '<div style="font-size:14px;">접속 코드(방 번호): <b style="font-size:20px;color:#5b97d1;">' + code + '</b></div>'
-                    + '<div style="margin-top:10px;"><button onclick="rpgPrintStudentCards()" style="width:100%;border:none;background:#43a047;color:#fff;border-radius:9px;padding:11px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;"><i class="fa-solid fa-print"></i> 학생별 카드 인쇄 (한 명씩 잘라서 나눠주기)</button></div>'
-                    + '<p style="font-size:12px;color:#888;margin-top:10px;line-height:1.7;">• 학생: <b>자기 번호</b> + 기본 비밀번호 <b>123456</b><br>• QR·방번호는 <b>반 전체가 같아요</b>. 카드마다 다른 건 자기 번호뿐이에요<br>• 위 QR을 TV·칠판에 띄워도 되고, 카드로 잘라 나눠줘도 돼요<br>• ⚠️ 지금은 간편 로그인이에요 (다른 번호로도 들어갈 수 있어요).</p>';
+                    + '<div style="margin-top:10px;"><button onclick="rpgIssuePasswords()" style="width:100%;border:none;background:#43a047;color:#fff;border-radius:9px;padding:11px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;"><i class="fa-solid fa-key"></i> 학생별 비밀번호 새로 만들고 카드 인쇄</button></div>'
+                    + '<div style="display:flex;gap:6px;margin-top:6px;"><button onclick="rpgResetOnePw()" style="flex:1;border:1px solid #cfe0f3;background:#fff;color:#5b97d1;border-radius:9px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">한 명만 비번 새로</button><button onclick="rpgPrintStudentCards()" style="flex:1;border:1px solid #cfe0f3;background:#fff;color:#5b97d1;border-radius:9px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">카드만 인쇄(비번 칸 비움)</button><button onclick="rpgLogoutAllStudents()" style="flex:1;border:1px solid #f3cfcf;background:#fff;color:#e57373;border-radius:9px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">모든 학생 로그아웃</button></div>'
+                    + '<p style="font-size:12px;color:#888;margin-top:10px;line-height:1.7;">• 학생: <b>방 번호 + 자기 번호 + 자기 비밀번호</b><br>• 비밀번호는 <b>학생마다 달라요</b>. 암호로 바꿔 저장해서 선생님도 다시 볼 수 없어요 → 잊으면 [한 명만 비번 새로]<br>• 비번을 새로 만들기 전까지는 기본 비밀번호 <b>123456</b>이에요<br>• 다른 친구 번호로는 들어갈 수 없고, 자기 번호 칸만 바꿀 수 있어요.</p>';
             };
             var code = rpgData.config && rpgData.config.studentCode;
             if(code){ show(code); }
             else {
-                var nc = String(Math.floor(1000 + Math.random() * 9000));
+                var nc = genClassCode();
                 rpgRef.child('config/studentCode').set(nc);
                 db.ref('studentCodes/' + nc).set(currentRoom).then(function(){ show(nc); }).catch(function(e){ alert(e.message); });
             }
@@ -11670,7 +11777,32 @@ var qrcode = function() {
         }
 
         // 학생별 접속 카드 인쇄 — 한 명당 카드 하나(QR + 이름·번호 + 방번호 + 비번). A4에 여러 개 배치 → 잘라서 나눠주기
-        function rpgPrintStudentCards(){
+        function rpgIssuePasswords(){
+            var roster = rpgParseRoster();
+            if(!roster.length){ alert('학생 명단이 없어요.'); return; }
+            if(!confirm('학생 ' + roster.length + '명의 비밀번호를 새로 만들까요?\n\n• 숫자 4자리, 학생마다 달라요\n• 바로 카드가 열려요 — 꼭 인쇄해서 나눠주세요(다시 볼 수 없어요)\n• 지금 로그인된 학생은 모두 로그아웃돼요')) return;
+            var pwMap = {}, ups = {}, jobs = [];
+            roster.forEach(function(st){ var pw = rpgGenPw(); pwMap[st.id] = pw; jobs.push(stuPwHash(currentRoom, st.id, pw).then(function(h){ ups['secrets/pw/' + st.id] = h; })); });
+            Promise.all(jobs).then(function(){
+                ups['studentSessions'] = null;
+                return db.ref('rooms/' + currentRoom).update(ups);
+            }).then(function(){ rpgPrintStudentCards(pwMap); rpgToast('🔑 새 비밀번호를 만들었어요 — 카드를 인쇄해 주세요'); })
+              .catch(function(e){ alert('저장 오류: ' + e.message); });
+        }
+        function rpgResetOnePw(){
+            var n = parseInt(prompt('비밀번호를 새로 만들 학생 번호를 입력하세요') || '');
+            if(!n) return;
+            if(!rpgParseRoster().some(function(s){ return s.id === n; })){ alert('명단에 없는 번호예요.'); return; }
+            var pw = rpgGenPw();
+            stuPwHash(currentRoom, n, pw).then(function(h){ return secretsRef.child('pw/' + n).set(h); })
+                .then(function(){ alert(n + '번 학생의 새 비밀번호:  ' + pw + '\n\n학생에게 알려주세요. (창을 닫으면 다시 볼 수 없어요)'); })
+                .catch(function(e){ alert('저장 오류: ' + e.message); });
+        }
+        function rpgLogoutAllStudents(){
+            if(!confirm('모든 학생 기기를 로그아웃할까요? (다시 비밀번호로 들어와야 해요)')) return;
+            db.ref('rooms/' + currentRoom + '/studentSessions').remove().then(function(){ rpgToast('모든 학생을 로그아웃했어요'); }).catch(function(e){ alert(e.message); });
+        }
+        function rpgPrintStudentCards(pwMap){
             var code = rpgData.config && rpgData.config.studentCode;
             if(!code){ alert('먼저 방 번호가 만들어져야 해요. 잠시 후 다시 눌러주세요.'); return; }
             var roster = rpgParseRoster();
@@ -11686,7 +11818,7 @@ var qrcode = function() {
                     + '<div class="info">'
                     + '<div class="name">' + s.id + '번 ' + escapeHtml(s.name) + '</div>'
                     + '<div class="row">방 번호 <b>' + code + '</b></div>'
-                    + '<div class="row">내 번호 <b>' + s.id + '</b> · 비번 <b>123456</b></div>'
+                    + '<div class="row">내 번호 <b>' + s.id + '</b> · 비번 <b>' + ((pwMap && pwMap[s.id]) || '______') + '</b></div>'
                     + '<div class="url">' + escapeHtml(url) + '</div>'
                     + '</div></div>';
             }).join('');
@@ -11707,7 +11839,7 @@ var qrcode = function() {
                 + '<div class="toolbar"><button onclick="window.print()">🖨️ 인쇄하기</button>'
                 + ' &nbsp;<span style="font-size:12px;color:#666;">한 명당 카드 하나예요. 잘라서 나눠주세요. (QR·방번호는 반 전체 동일)</span></div>'
                 + '<h1>📱 우리 반 독서·성장 접속 카드' + (roomName ? ' — ' + escapeHtml(roomName.trim()) : '') + '</h1>'
-                + '<p class="sub">QR을 찍거나 주소로 접속 → <b>방 번호 + 내 번호 + 비밀번호 123456</b> 입력 · 학생 ' + roster.length + '명</p>'
+                + '<p class="sub">QR을 찍거나 주소로 접속 → <b>방 번호 + 내 번호 + 내 비밀번호</b> 입력 · 학생 ' + roster.length + '명</p>'
                 + '<div class="grid">' + cards + '</div>'
                 + '</body></html>';
             var w = window.open('', '_blank');
