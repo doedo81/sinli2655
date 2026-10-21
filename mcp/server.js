@@ -39,12 +39,12 @@ async function idToken() {
   return tok.id;
 }
 
-const SAFE_KEY = /^[A-Za-z0-9_\-]+$/;
+const SAFE_KEY = /^[^\/.#$\[\]\s]+$/; // Firebase 키에 못 쓰는 문자·경로 이동 차단 (한글 반 이름은 허용)
 function roomPath(sub) {
   const cid = loadConfig().classId;
   if (!SAFE_KEY.test(cid)) throw new Error('classId 모양이 이상해요');
   sub.split('/').forEach(p => { if (!SAFE_KEY.test(p)) throw new Error('잘못된 경로: ' + sub); });
-  return 'rooms/' + cid + '/' + sub;
+  return ['rooms', cid].concat(sub.split('/')).map(encodeURIComponent).join('/');
 }
 async function rest(method, sub, body) {
   const url = DB + '/' + roomPath(sub) + '.json?auth=' + (await idToken()) + DB_NS;
