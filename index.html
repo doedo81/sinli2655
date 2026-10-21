@@ -39,6 +39,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script>if(/[?&]demo=1/.test(location.search)) document.write('<script src="demo.js?v=1"><\/script>');</script>
     <!-- qrcode-generator (inlined, MIT, Kazuhiko Arase) -->
     <script>
 //---------------------------------------------------------------------
@@ -4320,7 +4321,7 @@ var qrcode = function() {
           appId: "1:566976944507:web:84f7518d7fce10035dc5de"
         };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const db = firebase.database(); const auth = firebase.auth();
+        const db = window.DEMO ? DEMO.db : firebase.database(); const auth = window.DEMO ? DEMO.auth : firebase.auth();
         // 🔔 효과음: 외부 파일 대신 WebAudio로 합성 (네트워크 불필요·항상 재생)
         let _audioAC = null;
         function _audioCtx() { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; if (!_audioAC) _audioAC = new AC(); if (_audioAC.state === 'suspended') _audioAC.resume(); return _audioAC; }
@@ -4474,9 +4475,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.58';
-        const APP_VERSION_DATE = '2026-10-15';
+        const APP_VERSION = '1.59';
+        const APP_VERSION_DATE = '2026-10-21';
         const APP_CHANGELOG = [
+            'v1.59 (2026-10-21) — 🧪 데모반 추가(주소 끝에 ?demo=1 → 진짜 반과 완전히 분리된 연습용 가짜 데이터)',
             'v1.58 (2026-10-15) — 👕 옷 그림 136장 모두 완성!',
             'v1.57 (2026-10-15) — 👕 다시 그린 옷 그림 9장 추가(전설의 갑옷 체크무늬 해결)',
             'v1.56 (2026-10-15) — 👕 옷 입은 캐릭터 그림 124장 적용(산 옷이 카드·학생 화면·대결에 그대로 보임)',
@@ -11723,5 +11725,7 @@ var qrcode = function() {
             setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, big ? 1500 : 1000);
         }
     </script>
+    <!-- 💼 교사 업무 통합 대시보드 위젯 -->
+    <script src="teacher_widget.js"></script>
 </body>
 </html>
