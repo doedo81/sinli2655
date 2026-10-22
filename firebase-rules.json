@@ -97,6 +97,24 @@
             }
           }
         },
+        "diary": {
+          "topics": {
+            ".read": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).exists()"
+          },
+          "entries": {
+            "$num": {
+              ".read": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num",
+              "$tid": {
+                ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num && root.child('rooms').child($cid).child('diary/topics').child($tid).exists() && (!newData.exists() || (newData.child('text').isString() && newData.child('text').val().length <= 5000))"
+              }
+            }
+          },
+          "feedback": {
+            "$num": {
+              ".read": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num"
+            }
+          }
+        },
         "battles": {
           ".read": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).exists()",
           ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).exists()"

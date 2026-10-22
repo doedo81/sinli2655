@@ -3170,11 +3170,13 @@ var qrcode = function() {
                 <div style="display:flex; gap:6px; flex:1;">
                     <button id="stu-tab-rpg" onclick="readingStudentTab('rpg')" style="flex:1; padding:10px; border:none; border-radius:12px; font-weight:800; font-size:15px; cursor:pointer; font-family:'Pretendard'; background:#e8edf3; color:#8595a8;">🎮 성장</button>
                     <button id="stu-tab-reading" onclick="readingStudentTab('reading')" style="flex:1; padding:10px; border:none; border-radius:12px; font-weight:800; font-size:15px; cursor:pointer; font-family:'Pretendard'; background:#43a047; color:#fff;">📚 독서</button>
+                    <button id="stu-tab-diary" onclick="readingStudentTab('diary')" style="flex:1; padding:10px; border:none; border-radius:12px; font-weight:800; font-size:15px; cursor:pointer; font-family:'Pretendard'; background:#e8edf3; color:#8595a8; white-space:nowrap;">📝 일기</button>
                 </div>
                 <button onclick="rpgStudentLogout()" style="border:1px solid #ccc; background:#fff; color:#888; border-radius:10px; padding:6px 12px; font-size:13px; cursor:pointer; font-family:'Pretendard';">로그아웃</button>
             </div>
             <div id="student-page-body" style="background:#fff; border-radius:18px; padding:20px; display:none;"></div>
             <div id="reading-student-section" style="background:#fff; border-radius:18px; padding:20px;"></div>
+            <div id="diary-student-section" style="background:#fff; border-radius:18px; padding:20px; display:none;"></div>
             <p style="text-align:center; font-size:11px; color:#b0bec5; margin-top:14px;">상벌점·평가는 선생님만 줄 수 있어요</p>
         </div>
     </div>
@@ -3201,6 +3203,7 @@ var qrcode = function() {
                 <button class="tab-btn" onclick="switchTab('seating')" title="자리 배치"><i class="fa-solid fa-chair"></i> <span class="tab-text">자리 배치</span></button>
                 <button class="tab-btn" onclick="switchTab('rpg')" title="성장(상벌점)"><i class="fa-solid fa-dragon"></i> <span class="tab-text">성장</span></button>
                 <button class="tab-btn" onclick="switchTab('reading')" title="독서"><i class="fa-solid fa-book-open"></i> <span class="tab-text">독서</span></button>
+                <button class="tab-btn" onclick="switchTab('diary')" title="주제일기"><i class="fa-solid fa-pen-nib"></i> <span class="tab-text">주제일기</span></button>
                 <button class="tab-btn" onclick="switchTab('bookmark')" title="바로가기"><i class="fa-solid fa-link"></i> <span class="tab-text">바로가기</span></button>
             </div>
             <div class="sidebar-bottom">
@@ -3370,6 +3373,7 @@ var qrcode = function() {
                     <div class="column-card" style="padding-top: 45px;">
                         <div class="info-box"><span class="info-label">📢 전달 사항</span><div id="view-notices-cal" style="display:none; margin-bottom:8px; font-weight:700; font-size:var(--board-font-size); color:#2c3e50; line-height:1.5;"></div><div class="info-content" id="view-notices" contenteditable="true" spellcheck="false" data-placeholder="클릭하여 입력"></div></div>
                         <div class="info-box" style="border-left: 5px solid #a5d6a7;"><span class="info-label" style="color:#5fa267;">📝 알림장</span><div class="info-content" id="view-allim" contenteditable="true" spellcheck="false" data-placeholder="클릭하여 입력"></div></div>
+                        <div class="info-box" style="border-left: 5px solid #b39ddb; background:#f8f5ff;"><span class="info-label" style="color:#7e57c2;">✏️ 오늘의 주제일기</span><div class="info-content" id="view-diary" onclick="diaryBoardClick()" style="cursor:pointer; font-size:var(--board-font-size); line-height:1.5;"></div></div>
                         <div class="info-box" style="border-left: 5px solid #ffcc80; background:#fffaf2;"><span class="info-label" style="color:#e08a1e; display:flex; justify-content:space-between; align-items:center;">🍱 오늘의 급식 <span onclick="mealPickFile()" title="급식표 파일(PDF·한글 HWPX·사진)을 올리면 날짜별로 자동 채움" style="cursor:pointer; font-size:12px; color:#b0855a; font-weight:700; background:#fff1dc; padding:2px 8px; border-radius:8px;">📄 급식표 올리기</span></span><div class="info-content" id="view-meal" contenteditable="true" spellcheck="false" onblur="mealSaveEdit()" title="눌러서 직접 고칠 수 있어요" style="font-size:13px; font-weight:500; line-height:1.45; color:#7a6a58;" data-placeholder="📄 급식표를 올리면 날짜별로 자동으로 채워져요"></div><input type="file" id="meal-file" accept=".pdf,.hwpx,.hwp,image/*" style="display:none" onchange="mealUpload(this)"></div>
                         <div class="info-box" style="background:#fdf1f6;"><span class="info-label" style="color: #db5e90;">🎂 생일 축하해요!</span><div class="info-content" id="view-birthday" contenteditable="true" spellcheck="false" data-placeholder="클릭하여 입력"></div></div>
                         
@@ -3717,6 +3721,60 @@ var qrcode = function() {
                 <div class="picker-box" style="margin-top:16px; text-align:left;">
                     <h3 style="color:var(--dark-blue); margin:0 0 10px;"><i class="fa-solid fa-bell"></i> 우리 반 소식</h3>
                     <div id="reading-feed"></div>
+                </div>
+            </div>
+
+            <!-- ✏️ 주제일기 탭 (선생님이 주제를 내면 학생이 핸드폰·태블릿으로 씀) -->
+            <div id="diary-tab" class="content-section">
+                <div class="picker-box">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                        <h2 style="color:var(--dark-blue); margin:0;"><i class="fa-solid fa-pen-nib"></i> 주제일기</h2>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button class="action-btn" style="background:#78909c; padding:10px 14px;" onclick="rpgOpenStudentGuide()"><i class="fa-solid fa-qrcode"></i> 학생 접속 안내</button>
+                            <button class="action-btn" style="background:#5b6fb5; padding:10px 14px;" onclick="diaryPrint()"><i class="fa-solid fa-print"></i> 모아 인쇄</button>
+                            <button class="action-btn" id="diary-reward-btn" style="background:#43a047; padding:10px 14px;" onclick="diaryReward()"><i class="fa-solid fa-gift"></i> 상점 주기</button>
+                            <button class="action-btn" style="background:#7e57c2; padding:10px 18px;" onclick="diaryOpenTopicModal()"><i class="fa-solid fa-plus"></i> 새 주제 내기</button>
+                        </div>
+                    </div>
+                    <div id="diary-topics" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:14px;"></div>
+                    <div id="diary-topic-head"></div>
+                    <div id="diary-empty" style="display:none; text-align:center; color:#888; padding:40px 20px; line-height:1.7;"></div>
+                    <div id="diary-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:14px;"></div>
+                    <p style="text-align:center; font-size:11px; color:#cbd3dc; margin-top:16px;">카드를 누르면 그 학생의 글을 읽고 도장·한마디를 남길 수 있어요 · 친구들 글은 학생끼리 서로 볼 수 없어요</p>
+                </div>
+            </div>
+
+            <!-- 주제일기: 주제 내기/고치기 -->
+            <div id="diary-topic-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2100; align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) diaryCloseTopicModal()">
+                <div style="background:#fff; border-radius:18px; max-width:480px; width:100%; max-height:90vh; overflow-y:auto; padding:22px;">
+                    <h3 id="diary-tm-title" style="margin:0 0 12px; color:#51618a;">✏️ 새 주제 내기</h3>
+                    <label style="font-size:13px; font-weight:700; color:#555;">주제</label>
+                    <input id="diary-tm-name" placeholder="예) 요술램프가 있다면 빌고 싶은 세 가지 소원" style="width:100%; padding:11px; border:2px solid #d9d0f0; border-radius:8px; margin:6px 0 8px; box-sizing:border-box; font-family:'Pretendard'; font-size:15px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span style="font-size:12px; color:#999;">💡 눌러서 바로 넣기</span>
+                        <button type="button" onclick="diaryShuffleBank()" style="border:none; background:#f3effc; color:#7e57c2; border-radius:8px; padding:3px 10px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit;">🎲 다른 주제</button>
+                    </div>
+                    <div id="diary-tm-bank" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;"></div>
+                    <div style="display:flex; gap:10px; margin-bottom:12px;">
+                        <div style="flex:1;"><label style="font-size:13px; font-weight:700; color:#555;">날짜</label>
+                            <input id="diary-tm-date" type="date" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; margin-top:6px; box-sizing:border-box; font-family:'Pretendard';"></div>
+                        <div style="flex:1;"><label style="font-size:13px; font-weight:700; color:#555;">최소 글자 수</label>
+                            <input id="diary-tm-min" type="number" min="0" step="10" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; margin-top:6px; box-sizing:border-box; font-family:'Pretendard';"></div>
+                    </div>
+                    <label style="font-size:13px; font-weight:700; color:#555;">쓰는 방법 안내 <span style="font-weight:400; color:#aaa;">(학생 화면에 보여요)</span></label>
+                    <textarea id="diary-tm-guide" rows="4" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; margin:6px 0 16px; box-sizing:border-box; font-family:'Pretendard'; resize:vertical; line-height:1.5;"></textarea>
+                    <div style="display:flex; gap:8px;">
+                        <button class="reset-btn" style="flex:1;" onclick="diaryCloseTopicModal()">취소</button>
+                        <button class="action-btn" style="flex:1; background:#7e57c2;" onclick="diarySaveTopic()">저장</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 주제일기: 학생 글 읽기 + 도장·한마디 -->
+            <div id="diary-entry-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:2000; align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) diaryCloseEntryModal()">
+                <div style="background:#fff; border-radius:18px; max-width:520px; width:100%; max-height:90vh; overflow-y:auto; padding:22px;">
+                    <div id="diary-entry-body"></div>
+                    <button class="reset-btn" style="width:100%; margin-top:12px;" onclick="diaryCloseEntryModal()">닫기</button>
                 </div>
             </div>
 
@@ -4486,9 +4544,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.61';
-        const APP_VERSION_DATE = '2026-10-21';
+        const APP_VERSION = '1.62';
+        const APP_VERSION_DATE = '2026-10-22';
         const APP_CHANGELOG = [
+            'v1.62 (2026-10-22) — ✏️ 주제일기: 선생님이 주제를 내면 학생이 핸드폰·태블릿으로 쓰고, 도장·한마디·최고 글·상점까지 (아침칠판에 오늘 주제 칸)',
             'v1.61 (2026-10-21) — 🤖 클로드 도우미 연결(설정): 클로드가 알림장·시간표·캘린더·급식만 직접 고칠 수 있음',
             'v1.60 (2026-10-21) — 🔐 보안 강화: 비밀번호 암호화 저장, 학생별 비밀번호, 자기 번호 칸만 수정, 다른 반 접근 차단',
             'v1.59 (2026-10-21) — 🧪 데모반 추가(주소 끝에 ?demo=1 → 진짜 반과 완전히 분리된 연습용 가짜 데이터)',
@@ -4954,6 +5013,15 @@ var qrcode = function() {
             mealsData = {};
             mealsRef = db.ref('rooms/' + currentRoom + '/meals');
             mealsRef.on('value', function(s){ mealsData = s.val() || {}; renderMeal(); });
+            if(diaryRef) diaryRef.off();
+            diaryData = {};
+            diaryRef = db.ref('rooms/' + currentRoom + '/diary');
+            diaryRef.on('value', function(s){
+                diaryData = s.val() || {};
+                diaryRenderBoard();
+                if(document.getElementById('diary-tab') && document.getElementById('diary-tab').classList.contains('active')) diaryOnShow();
+                diaryRefreshEntryModal();
+            });
             battleBind();
             // 🔐 옛 방식(방 이름 직접 입력)으로 만든 방은 _meta가 없어 보안 규칙상 쓰기가 통째로 막힌다.
             //    읽기는 되는데 저장만 PERMISSION_DENIED가 나는 상태. 들어올 때마다 스스로 복구한다.
@@ -5441,6 +5509,7 @@ var qrcode = function() {
             { key:'duty',    label:'🧹 당번',       inner:'view-duty-nums' },
             { key:'notices', label:'📢 전달 사항', inner:'view-notices' },
             { key:'allim',   label:'📝 알림장',     inner:'view-allim' },
+            { key:'diary',   label:'✏️ 주제일기',   inner:'view-diary' },
             { key:'meal',    label:'🍱 급식',       inner:'view-meal' },
             { key:'birthday',label:'🎂 생일',       inner:'view-birthday' }
         ];
@@ -6524,6 +6593,7 @@ var qrcode = function() {
 
         function renderCalendar() {
             renderMeal();
+            diaryRenderBoard();
             const y = calDate.getFullYear(), m = calDate.getMonth(); document.getElementById('cal-month-title').innerText = `${y}년 ${m + 1}월`;
             const first = new Date(y, m, 1).getDay(), last = new Date(y, m + 1, 0).getDate();
             const con = document.getElementById('cal-dates'); con.innerHTML = '';
@@ -6750,6 +6820,7 @@ var qrcode = function() {
             if(t === 'rpg') rpgOnShow();
             if(t === 'board'){ applyBoardLayout(); applyHiddenBlocks(); }
             if(t === 'reading') readingOnShow();
+            if(t === 'diary') diaryOnShow();
 
             document.querySelectorAll('.tool-box-popup, .tool-box-inline').forEach(box => box.style.display = 'none');
         }
@@ -10699,11 +10770,407 @@ var qrcode = function() {
             const t = readingStudentActiveTab;
             const body = document.getElementById('student-page-body');
             const read = document.getElementById('reading-student-section');
+            const diary = document.getElementById('diary-student-section');
             if(body) body.style.display = (t === 'rpg') ? 'block' : 'none';
             if(read) read.style.display = (t === 'reading') ? 'block' : 'none';
+            if(diary) diary.style.display = (t === 'diary') ? 'block' : 'none';
             function sty(id, on, color){ const b = document.getElementById(id); if(!b) return; b.style.background = on ? color : '#e8edf3'; b.style.color = on ? '#fff' : '#8595a8'; }
             sty('stu-tab-rpg', t === 'rpg', '#7b6cd9');
             sty('stu-tab-reading', t === 'reading', '#43a047');
+            sty('stu-tab-diary', t === 'diary', '#7e57c2');
+        }
+
+        // ==========================================
+        // ✏️ 주제일기 — 선생님이 주제를 내면 학생이 자기 기기(핸드폰·태블릿)로 쓰고, 선생님이 도장·한마디·상점
+        //   diary/topics/<tid>          = { title, guide, date, minChars, createdAt }          선생님만 씀 · 학생 읽기
+        //   diary/entries/<번호>/<tid>   = { text, createdAt, updatedAt }                       그 번호 학생만 읽기·쓰기
+        //   diary/feedback/<번호>/<tid>  = { stamp, comment, best, rewarded, bestRewarded, at }  선생님만 씀 · 그 학생만 읽기
+        //   → 친구 일기는 학생끼리 서로 못 봄 (보안 규칙)
+        // ==========================================
+        var diaryRef = null, diaryData = {};
+        const DIARY_DEFAULT_MIN = 150;
+        const DIARY_DEFAULT_GUIDE = '주제에 대한 나의 생각과 그 이유를 먼저 떠올려 보아요.\n첫째, 둘째, 셋째로 나누어 쓰고, 이유는 "왜냐하면 ~ 때문이다."로 써요.\n마지막에 내 생각을 한 번 더 정리하며 마무리해요.';
+        const DIARY_TOPIC_BANK = [
+            '내가 좋아하는 음식과 그 이유', '내가 좋아하는 동물과 그 이유', '나의 매력 포인트는 무엇일까?',
+            '나에게 100만 원이 생긴다면 무엇을 할까?', '상장을 주고 싶은 친구와 그 상의 내용', '나에게 날개가 있다면 좋은 점과 불편한 점',
+            '요술램프가 있다면 빌고 싶은 세 가지 소원', '내가 생각하는 \'좋은 친구\'란?', '가장 행복한 사람은 어떤 사람일까?',
+            '내가 가장 아끼는 물건과 그 이유', '내가 잘하는 것 세 가지 소개하기', '타임머신이 있다면 가고 싶은 시간과 장소',
+            '나의 성격의 장점 세 가지', '내가 좋아하는 과목과 그 이유', '내가 좋아하는 수업 활동과 그 이유',
+            '여가 시간을 보내는 나만의 방법', '가게를 차린다면 어떤 가게를 하고 싶을까?', '내가 동물과 이야기할 수 있다면?',
+            '내가 선생님이 된다면 하고 싶은 일', '10년 뒤의 나에게 쓰는 편지', '우리 반을 더 좋은 반으로 만드는 방법',
+            '내가 만들고 싶은 발명품', '하루 동안 투명 인간이 된다면?', '무인도에 꼭 가져갈 세 가지',
+            '내가 존경하는 사람과 그 이유', '요즘 나의 고민과 해결 방법', '가장 기억에 남는 여행',
+            '내가 대통령이 된다면 바꾸고 싶은 것', '스마트폰이 없는 하루를 산다면?', '최근에 감사했던 일 세 가지',
+            '사람의 본성은 착할까?', '정의란 무엇일까?', 'AI(인공지능)와 인간을 구분하는 기준은?',
+            '세상에 절대 선과 절대 악이 존재할까?', '사람에게는 왜 사랑이 필요할까?', '우리는 어디에서 왔을까?'
+        ];
+        const DIARY_STAMPS = [
+            { id:'good',  label:'👍 잘했어요' },
+            { id:'great', label:'🌟 훌륭해요' },
+            { id:'best',  label:'💯 최고예요' },
+            { id:'retry', label:'✍️ 조금 더 써 볼까요' }
+        ];
+        function diaryTopics(){
+            const t = diaryData.topics || {};
+            return Object.keys(t).map(function(k){ return Object.assign({ id:k }, t[k]); })
+                .sort(function(a, b){ return (b.date || '').localeCompare(a.date || '') || (b.createdAt || 0) - (a.createdAt || 0); });
+        }
+        function diaryTopic(tid){ return (tid && diaryData.topics && diaryData.topics[tid]) ? Object.assign({ id:tid }, diaryData.topics[tid]) : null; }
+        // 지금 쓸 주제: 그날(기본 오늘)까지 낸 주제 중 가장 최근 것 (미리 내 둔 내일 주제는 아직 안 보임)
+        function diaryOpenTopics(dateKey){ dateKey = dateKey || getFormattedDate(new Date()); return diaryTopics().filter(function(t){ return (t.date || '') <= dateKey; }); }
+        function diaryEntry(num, tid){ const e = diaryData.entries && diaryData.entries[num]; return (e && e[tid]) || null; }
+        function diaryFeedback(num, tid){ const f = diaryData.feedback && diaryData.feedback[num]; return (f && f[tid]) || null; }
+        function diaryLen(s){ return String(s || '').replace(/\s/g, '').length; } // 띄어쓰기·줄바꿈 빼고 센 글자 수
+        function diaryStampLabel(id){ const s = DIARY_STAMPS.find(function(x){ return x.id === id; }); return s ? s.label : ''; }
+        function diaryDateLabel(d){
+            if(!d) return '';
+            const p = d.split('-'); const dt = new Date(+p[0], +p[1] - 1, +p[2]);
+            return (+p[1]) + '월 ' + (+p[2]) + '일 (' + '일월화수목금토'.charAt(dt.getDay()) + ')';
+        }
+        function diaryTextHtml(s){ return escapeHtml(s || '').replace(/\n/g, '<br>'); }
+
+        // ---- 아침칠판 칸: 그날 주제 + 낸 사람 수 ----
+        function diaryRenderBoard(){
+            const el = document.getElementById('view-diary'); if(!el) return;
+            const key = getFormattedDate(viewDate);
+            const t = diaryTopics().find(function(x){ return x.date === key; });
+            if(!t){ el.innerHTML = '<span style="color:#b9b0cf; font-size:14px;">' + (isTabletMode ? '오늘은 주제가 없어요' : '아직 주제가 없어요 · 눌러서 내기') + '</span>'; return; }
+            const roster = rpgParseRoster();
+            const done = roster.filter(function(s){ return diaryEntry(s.id, t.id); }).length;
+            el.innerHTML = '<b style="color:#5e35b1;">' + escapeHtml(t.title || '') + '</b>'
+                + (roster.length ? ' <span style="font-size:0.75em; color:#9b8fc0; font-weight:700; white-space:nowrap;">✍️ ' + done + '/' + roster.length + '명</span>' : '');
+        }
+        function diaryBoardClick(){
+            if(isTabletMode || !diaryRef) return;
+            const key = getFormattedDate(viewDate);
+            const t = diaryTopics().find(function(x){ return x.date === key; });
+            if(t){ diarySelTid = t.id; switchTab('diary'); }
+            else { switchTab('diary'); diaryOpenTopicModal(null, key); }
+        }
+
+        // ---- 선생님: 주제일기 탭 ----
+        let diarySelTid = null;
+        function diarySelect(tid){ diarySelTid = tid; diaryOnShow(); }
+        function diaryOnShow(){
+            const grid = document.getElementById('diary-grid'); if(!grid || !diaryRef) return;
+            const empty = document.getElementById('diary-empty');
+            const head = document.getElementById('diary-topic-head');
+            const topics = diaryTopics();
+            if(!diaryTopic(diarySelTid)){ const cur = diaryOpenTopics()[0] || topics[0]; diarySelTid = cur ? cur.id : null; }
+            document.getElementById('diary-topics').innerHTML = topics.map(function(t){
+                const on = t.id === diarySelTid;
+                const future = (t.date || '') > getFormattedDate(new Date());
+                return '<button onclick="diarySelect(\'' + t.id + '\')" style="flex:none; max-width:230px; text-align:left; border:1px solid ' + (on ? '#7e57c2' : '#e2dcf2') + '; background:' + (on ? '#7e57c2' : '#fff') + '; color:' + (on ? '#fff' : '#51618a') + '; border-radius:12px; padding:8px 12px; cursor:pointer; font-family:inherit;">'
+                    + '<div style="font-size:11px; opacity:0.8;">' + escapeHtml(diaryDateLabel(t.date)) + (future ? ' · 예약' : '') + '</div>'
+                    + '<div style="font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(t.title || '') + '</div></button>';
+            }).join('');
+            const t = diaryTopic(diarySelTid);
+            const roster = rpgParseRoster();
+            if(!t || roster.length === 0){
+                head.innerHTML = ''; grid.innerHTML = ''; empty.style.display = 'block';
+                empty.innerHTML = !t ? '아직 낸 주제가 없어요.<br><b>[＋ 새 주제 내기]</b>를 눌러 첫 주제를 내 보세요.'
+                    : '아직 학생 명단이 없어요.<br>먼저 <b>[성장]</b> 탭에서 명단을 등록해 주세요.';
+                diaryUpdateRewardBtn(); return;
+            }
+            empty.style.display = 'none';
+            const done = roster.filter(function(s){ return diaryEntry(s.id, t.id); });
+            const notYet = roster.filter(function(s){ return !diaryEntry(s.id, t.id); });
+            const pct = Math.round(done.length / roster.length * 100);
+            head.innerHTML = '<div style="background:#f8f5ff; border:1px solid #e2dcf2; border-radius:14px; padding:14px 16px; margin-bottom:16px;">'
+                + '<div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap;">'
+                +   '<div style="flex:1; min-width:200px;">'
+                +     '<div style="font-size:12px; color:#9b8fc0;">' + escapeHtml(diaryDateLabel(t.date)) + ' · 최소 ' + (t.minChars || 0) + '자</div>'
+                +     '<div style="font-size:19px; font-weight:800; color:#5e35b1; margin:2px 0 6px; word-break:keep-all;">' + escapeHtml(t.title || '') + '</div>'
+                +     (t.guide ? '<div style="font-size:12px; color:#7d7397; line-height:1.6;">' + diaryTextHtml(t.guide) + '</div>' : '')
+                +   '</div>'
+                +   '<div style="display:flex; gap:6px;">'
+                +     '<button onclick="diaryOpenTopicModal(\'' + t.id + '\')" style="border:1px solid #d9d0f0; background:#fff; color:#7e57c2; border-radius:9px; padding:6px 12px; cursor:pointer; font-family:inherit; font-weight:700;">고치기</button>'
+                +     '<button onclick="diaryDeleteTopic(\'' + t.id + '\')" style="border:none; background:transparent; color:#e57373; cursor:pointer; font-family:inherit;">삭제</button>'
+                +   '</div>'
+                + '</div>'
+                + '<div style="margin-top:10px; font-size:14px; font-weight:700; color:#2e7d32;">✍️ 낸 학생 ' + done.length + '/' + roster.length + '명 <span style="color:#7bb082; font-size:13px;">(' + pct + '%)</span></div>'
+                + (notYet.length ? '<div style="font-size:12px; color:#b0824a; margin-top:4px; line-height:1.5;">아직: ' + notYet.map(function(s){ return escapeHtml(s.name); }).join(', ') + '</div>' : '<div style="font-size:12px; color:#43a047; margin-top:4px;">모두 냈어요! 🎉</div>')
+                + '</div>';
+            grid.innerHTML = roster.map(function(s){ return diaryCardHtml(s, t); }).join('');
+            diaryUpdateRewardBtn();
+        }
+        function diaryCardHtml(stu, t){
+            const e = diaryEntry(stu.id, t.id);
+            const fb = diaryFeedback(stu.id, t.id) || {};
+            const edited = e && fb.at && (e.updatedAt || 0) > fb.at;
+            const badges = (fb.stamp ? '<span style="background:#f3effc; color:#7e57c2; border-radius:8px; padding:2px 7px; font-weight:700;">' + escapeHtml(diaryStampLabel(fb.stamp)) + '</span>' : '')
+                + (fb.best ? '<span style="background:#fff3e0; color:#e65100; border-radius:8px; padding:2px 7px; font-weight:700;">⭐ 최고 글</span>' : '')
+                + (edited ? '<span style="background:#e3f2fd; color:#1e88e5; border-radius:8px; padding:2px 7px; font-weight:700;">✏️ 고쳐 씀</span>' : '');
+            return '<div onclick="diaryOpenEntry(' + stu.id + ')" style="cursor:pointer; background:' + (e ? '#faf8ff' : '#fff') + '; border:1px solid ' + (e ? '#d9d0f0' : '#e6ebf3') + '; border-top:4px solid ' + (e ? '#7e57c2' : '#b0bec5') + '; border-radius:14px; padding:12px; box-shadow:0 3px 10px rgba(120,144,180,0.10);">'
+                + '<div style="display:flex; justify-content:space-between; align-items:center;"><span style="font-weight:800; color:#51618a;">' + escapeHtml(stu.name) + '</span><span style="font-size:16px;">' + (e ? '✅' : '⏳') + '</span></div>'
+                + '<div style="font-size:11px; color:#aaa;">' + stu.id + '번' + (e ? ' · ' + diaryLen(e.text) + '자' : '') + '</div>'
+                + (e ? '<div style="font-size:12px; color:#666; margin-top:8px; background:#fff; border-radius:8px; padding:6px 8px; line-height:1.5;">' + escapeHtml(readingClip(e.text, 46)) + '</div>' : '<div style="font-size:12px; color:#c8cdd4; margin-top:8px;">아직 안 썼어요</div>')
+                + (badges ? '<div style="display:flex; flex-wrap:wrap; gap:4px; font-size:11px; margin-top:8px;">' + badges + '</div>' : '')
+                + '</div>';
+        }
+
+        // ---- 주제 내기 / 고치기 / 지우기 ----
+        let diaryEditTid = null;
+        function diaryOpenTopicModal(tid, dateKey){
+            if(!diaryRef){ alert('학급에 입장한 뒤 이용해 주세요.'); return; }
+            const t = diaryTopic(tid);
+            diaryEditTid = t ? t.id : null;
+            const last = diaryTopics()[0];
+            document.getElementById('diary-tm-title').textContent = t ? '✏️ 주제 고치기' : '✏️ 새 주제 내기';
+            document.getElementById('diary-tm-name').value = t ? (t.title || '') : '';
+            document.getElementById('diary-tm-date').value = t ? (t.date || '') : (dateKey || getFormattedDate(new Date()));
+            // 새 주제는 지난번 분량·안내를 그대로 이어받음 (달마다 늘려갈 때 편하게)
+            document.getElementById('diary-tm-min').value = t ? (t.minChars || 0) : (last ? (last.minChars || 0) : DIARY_DEFAULT_MIN);
+            document.getElementById('diary-tm-guide').value = t ? (t.guide || '') : (last ? (last.guide || '') : DIARY_DEFAULT_GUIDE);
+            diaryShuffleBank();
+            document.getElementById('diary-topic-modal').style.display = 'flex';
+            setTimeout(function(){ document.getElementById('diary-tm-name').focus(); }, 50);
+        }
+        function diaryCloseTopicModal(){ document.getElementById('diary-topic-modal').style.display = 'none'; diaryEditTid = null; }
+        function diaryShuffleBank(){
+            const used = {}; diaryTopics().forEach(function(t){ used[t.title] = true; });
+            const pool = DIARY_TOPIC_BANK.filter(function(x){ return !used[x]; });
+            const list = (pool.length >= 6 ? pool : DIARY_TOPIC_BANK).slice().sort(function(){ return Math.random() - 0.5; }).slice(0, 6);
+            document.getElementById('diary-tm-bank').innerHTML = list.map(function(x){
+                return '<button type="button" onclick="document.getElementById(\'diary-tm-name\').value=this.textContent" style="border:1px solid #e2dcf2; background:#fff; color:#5e35b1; border-radius:14px; padding:5px 10px; font-size:12px; cursor:pointer; font-family:inherit;">' + escapeHtml(x) + '</button>';
+            }).join('');
+        }
+        function diarySaveTopic(){
+            if(!diaryRef) return;
+            const title = document.getElementById('diary-tm-name').value.trim();
+            const date = document.getElementById('diary-tm-date').value;
+            const minChars = Math.max(0, parseInt(document.getElementById('diary-tm-min').value, 10) || 0);
+            const guide = document.getElementById('diary-tm-guide').value.trim();
+            if(!title){ alert('주제를 적어 주세요.'); return; }
+            if(!date){ alert('날짜를 골라 주세요.'); return; }
+            const data = { title:title, date:date, minChars:minChars, guide:guide };
+            const p = diaryEditTid
+                ? diaryRef.child('topics/' + diaryEditTid).update(data).then(function(){ return diaryEditTid; })
+                : (function(){ const r = diaryRef.child('topics').push(); data.createdAt = Date.now(); return r.set(data).then(function(){ return r.key; }); })();
+            p.then(function(id){
+                diarySelTid = id; diaryCloseTopicModal(); diaryOnShow();
+                rpgToast(date > getFormattedDate(new Date()) ? ('📅 ' + diaryDateLabel(date) + '에 학생 화면에 떠요') : '✏️ 학생 화면에 주제가 떴어요!');
+            }).catch(function(e){ alert('저장 오류: ' + e.message); });
+        }
+        function diaryDeleteTopic(tid){
+            const t = diaryTopic(tid); if(!t || !diaryRef) return;
+            const writers = Object.keys(diaryData.entries || {}).filter(function(n){ return diaryEntry(n, tid); });
+            if(!confirm('「' + t.title + '」 주제를 지울까요?' + (writers.length ? '\n학생들이 쓴 일기 ' + writers.length + '개도 함께 지워져요.' : ''))) return;
+            const up = {}; up['topics/' + tid] = null;
+            Object.keys(diaryData.entries || {}).forEach(function(n){ if(diaryEntry(n, tid)) up['entries/' + n + '/' + tid] = null; });
+            Object.keys(diaryData.feedback || {}).forEach(function(n){ if(diaryFeedback(n, tid)) up['feedback/' + n + '/' + tid] = null; });
+            diaryRef.update(up).then(function(){ if(diarySelTid === tid) diarySelTid = null; diaryOnShow(); }).catch(function(e){ alert('삭제 오류: ' + e.message); });
+        }
+
+        // ---- 학생 글 읽기 + 도장·한마디·최고 글 ----
+        let diaryModalNum = null, diaryFbStamp = null, diaryFbComment = '', diaryFbBest = false, diaryFbDirty = false;
+        function diaryOpenEntry(num){
+            const t = diaryTopic(diarySelTid); if(!t) return;
+            const fb = diaryFeedback(num, t.id) || {};
+            diaryModalNum = num; diaryFbStamp = fb.stamp || null; diaryFbComment = fb.comment || ''; diaryFbBest = !!fb.best; diaryFbDirty = false;
+            document.getElementById('diary-entry-body').innerHTML = diaryEntryBody(num);
+            document.getElementById('diary-entry-modal').style.display = 'flex';
+        }
+        function diaryCloseEntryModal(){
+            if(diaryFbDirty && !confirm('저장하지 않은 도장·한마디가 있어요. 그냥 닫을까요?')) return;
+            document.getElementById('diary-entry-modal').style.display = 'none'; diaryModalNum = null; diaryFbDirty = false;
+        }
+        // 학생이 글을 고치면 열려 있는 창도 새로 (단, 선생님이 쓰는 중이면 그대로 둠)
+        function diaryRefreshEntryModal(){
+            if(diaryModalNum == null || diaryFbDirty || document.getElementById('diary-entry-modal').style.display !== 'flex') return;
+            diaryOpenEntry(diaryModalNum);
+        }
+        function diaryStepEntry(d){
+            const roster = rpgParseRoster(); if(!roster.length) return;
+            if(diaryFbDirty && !confirm('저장하지 않은 도장·한마디가 있어요. 넘어갈까요?')) return;
+            diaryFbDirty = false;
+            const i = roster.findIndex(function(s){ return s.id === diaryModalNum; });
+            diaryOpenEntry(roster[(i + d + roster.length) % roster.length].id);
+        }
+        function diaryEntryBody(num){
+            const t = diaryTopic(diarySelTid);
+            const stu = rpgParseRoster().find(function(x){ return x.id === num; });
+            const name = stu ? stu.name : (num + '번');
+            const e = t ? diaryEntry(num, t.id) : null;
+            const nav = '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">'
+                + '<button onclick="diaryStepEntry(-1)" style="border:none; background:#eef1f6; color:#51618a; border-radius:8px; padding:6px 12px; cursor:pointer; font-family:inherit;">◀ 이전</button>'
+                + '<div style="font-size:17px; font-weight:800; color:#51618a;">' + escapeHtml(name) + ' <span style="font-size:12px; color:#aaa;">' + num + '번</span></div>'
+                + '<button onclick="diaryStepEntry(1)" style="border:none; background:#eef1f6; color:#51618a; border-radius:8px; padding:6px 12px; cursor:pointer; font-family:inherit;">다음 ▶</button></div>';
+            const topicLine = '<div style="font-size:13px; color:#7e57c2; font-weight:700; margin-bottom:10px;">' + escapeHtml(diaryDateLabel(t.date)) + ' · ' + escapeHtml(t.title || '') + '</div>';
+            if(!e) return nav + topicLine + '<div style="text-align:center; color:#bbb; padding:30px 10px;">아직 이 주제로 쓴 일기가 없어요.</div>';
+            const when = new Date(e.updatedAt || e.createdAt || Date.now());
+            const stamps = DIARY_STAMPS.map(function(s){
+                const on = diaryFbStamp === s.id;
+                return '<button onclick="diaryPickStamp(\'' + s.id + '\')" style="border:1px solid ' + (on ? '#7e57c2' : '#e2dcf2') + '; background:' + (on ? '#7e57c2' : '#fff') + '; color:' + (on ? '#fff' : '#5e35b1') + '; border-radius:14px; padding:6px 10px; font-size:13px; cursor:pointer; font-family:inherit; font-weight:700;">' + s.label + '</button>';
+            }).join('');
+            return nav + topicLine
+                + '<div style="background:#fffdf7; border:1px solid #f0e6cf; border-radius:12px; padding:14px 16px; font-size:15px; line-height:1.8; color:#3e3a33; white-space:normal; word-break:keep-all;">' + diaryTextHtml(e.text) + '</div>'
+                + '<div style="font-size:11px; color:#aaa; text-align:right; margin:4px 2px 14px;">' + diaryLen(e.text) + '자 · ' + (when.getMonth() + 1) + '/' + when.getDate() + ' ' + String(when.getHours()).padStart(2, '0') + ':' + String(when.getMinutes()).padStart(2, '0') + (e.updatedAt && e.createdAt && e.updatedAt > e.createdAt + 1000 ? ' 고침' : ' 냄') + '</div>'
+                + '<div style="font-size:13px; font-weight:800; color:#51618a; margin-bottom:6px;">도장</div>'
+                + '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">' + stamps + '</div>'
+                + '<div style="font-size:13px; font-weight:800; color:#51618a; margin-bottom:6px;">선생님 한마디 <span style="font-weight:400; color:#aaa; font-size:12px;">(그 학생에게만 보여요)</span></div>'
+                + '<textarea id="diary-fb-comment" rows="3" oninput="diaryFbComment=this.value; diaryFbDirty=true;" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box; font-family:\'Pretendard\'; resize:vertical;" placeholder="예) 둘째 이유가 특히 설득력 있었어요!">' + escapeHtml(diaryFbComment) + '</textarea>'
+                + '<label style="display:flex; align-items:center; gap:6px; margin:10px 0 14px; font-size:14px; color:#e65100; font-weight:700; cursor:pointer;"><input type="checkbox" ' + (diaryFbBest ? 'checked' : '') + ' onchange="diaryFbBest=this.checked; diaryFbDirty=true;"> ⭐ 이번 주제 최고 글로 뽑기</label>'
+                + '<button onclick="diarySaveFeedback()" style="width:100%; padding:11px; background:#7e57c2; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit; font-size:15px;">저장 (학생 화면에 바로 보여요)</button>';
+        }
+        function diaryPickStamp(id){
+            diaryFbStamp = (diaryFbStamp === id) ? null : id; diaryFbDirty = true;
+            const c = document.getElementById('diary-fb-comment'); if(c) diaryFbComment = c.value;
+            document.getElementById('diary-entry-body').innerHTML = diaryEntryBody(diaryModalNum);
+        }
+        function diarySaveFeedback(){
+            const t = diaryTopic(diarySelTid); if(!t || diaryModalNum == null || !diaryRef) return;
+            const c = document.getElementById('diary-fb-comment'); if(c) diaryFbComment = c.value;
+            diaryRef.child('feedback/' + diaryModalNum + '/' + t.id).update({ stamp:diaryFbStamp || null, comment:diaryFbComment.trim(), best:diaryFbBest, at:Date.now() })
+                .then(function(){ diaryFbDirty = false; rpgToast('💌 ' + diaryModalNum + '번에게 도장·한마디를 남겼어요'); diaryStepEntry(1); })
+                .catch(function(e){ alert('저장 오류: ' + e.message); });
+        }
+
+        // ---- 상점: 낸 학생 '주제일기', 최고 글 '주제일기 최고' (주제마다 한 번씩만) ----
+        function diaryRewardTargets(t){
+            const roster = rpgParseRoster();
+            return {
+                sub: roster.filter(function(s){ return diaryEntry(s.id, t.id) && !(diaryFeedback(s.id, t.id) || {}).rewarded; }),
+                best: roster.filter(function(s){ const f = diaryFeedback(s.id, t.id) || {}; return diaryEntry(s.id, t.id) && f.best && !f.bestRewarded; })
+            };
+        }
+        function diaryUpdateRewardBtn(){
+            const btn = document.getElementById('diary-reward-btn'); if(!btn) return;
+            const t = diaryTopic(diarySelTid);
+            const r = t ? diaryRewardTargets(t) : { sub:[], best:[] };
+            const n = r.sub.length + r.best.length;
+            btn.innerHTML = '<i class="fa-solid fa-gift"></i> ' + (n ? ('상점 주기 (' + r.sub.length + '명' + (r.best.length ? ' · ⭐' + r.best.length : '') + ')') : '상점 주기');
+        }
+        function diaryReward(){
+            const t = diaryTopic(diarySelTid); if(!t || !rpgRef){ alert('먼저 주제를 골라 주세요.'); return; }
+            const acts = rpgAllActions();
+            const a = acts.find(function(x){ return x.id === 'diary'; }) || { id:'diary', label:'주제일기', xp:20, stat:'wis' };
+            const b = acts.find(function(x){ return x.id === 'diary_top'; }) || { id:'diary_top', label:'주제일기 최고', xp:30, stat:'wis' };
+            const r = diaryRewardTargets(t);
+            if(!r.sub.length && !r.best.length){ alert('이 주제로 새로 상점을 줄 학생이 없어요.\n(이미 줬거나, 아직 낸 학생이 없어요)'); return; }
+            if(!confirm('「' + t.title + '」\n' + (r.sub.length ? '· 낸 학생 ' + r.sub.length + '명에게 ' + a.label + ' +' + a.xp + ' XP\n' : '') + (r.best.length ? '· 최고 글 ' + r.best.length + '명에게 ' + b.label + ' +' + b.xp + ' XP\n' : '') + '상점을 줄까요?')) return;
+            const objs = {}, up = {}; let lv = 0;
+            function give(id, act, flag){
+                const s = objs[id] || (objs[id] = { o:rpgStudentObj(id), before:rpgLevel((rpgData.students && rpgData.students[id] || {}).xp).lv });
+                s.o.xp += act.xp; s.o.stats[act.stat] = (s.o.stats[act.stat] || 0) + 1;
+                up['diary/feedback/' + id + '/' + t.id + '/' + flag] = true;
+            }
+            r.sub.forEach(function(s){ give(s.id, a, 'rewarded'); });
+            r.best.forEach(function(s){ give(s.id, b, 'bestRewarded'); });
+            Object.keys(objs).forEach(function(id){ up['rpg/students/' + id] = objs[id].o; if(rpgLevel(objs[id].o.xp).lv > objs[id].before) lv++; });
+            db.ref('rooms/' + currentRoom).update(up).then(function(){
+                rpgToast(Object.keys(objs).length + '명에게 주제일기 상점 지급!');
+                SFX.mission();
+                if(lv > 0) setTimeout(function(){ SFX.levelup(); rpgToast('🎉 레벨 업 ' + lv + '명!', true); }, 400);
+            }).catch(function(e){ alert('지급 오류: ' + e.message); });
+        }
+
+        // ---- 모아 인쇄 (한 주제의 반 전체 일기) ----
+        function diaryPrint(){
+            const t = diaryTopic(diarySelTid); if(!t){ alert('먼저 주제를 골라 주세요.'); return; }
+            const roster = rpgParseRoster();
+            const w = window.open('', '_blank'); if(!w){ alert('팝업이 막혀 있어요. 이 사이트의 팝업을 허용해 주세요.'); return; }
+            const rows = roster.map(function(s){
+                const e = diaryEntry(s.id, t.id); const fb = diaryFeedback(s.id, t.id) || {};
+                return '<section><h3>' + s.id + '. ' + escapeHtml(s.name) + (fb.best ? ' ⭐' : '') + (fb.stamp ? ' <small>' + escapeHtml(diaryStampLabel(fb.stamp)) + '</small>' : '') + '</h3>'
+                    + (e ? '<p>' + diaryTextHtml(e.text) + '</p>' : '<p class="none">(안 씀)</p>')
+                    + (fb.comment ? '<p class="fb">💬 ' + escapeHtml(fb.comment) + '</p>' : '') + '</section>';
+            }).join('');
+            w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>주제일기 - ' + escapeHtml(t.title) + '</title>'
+                + '<style>body{font-family:"Pretendard","Malgun Gothic",sans-serif;margin:24px;color:#222}h1{font-size:20px;margin:0 0 4px}.sub{color:#777;font-size:13px;margin-bottom:18px}'
+                + 'section{border:1px solid #ddd;border-radius:8px;padding:10px 14px;margin-bottom:10px;break-inside:avoid}h3{margin:0 0 6px;font-size:15px}small{color:#7e57c2;font-weight:normal}'
+                + 'p{margin:0;line-height:1.7;font-size:14px}.none{color:#aaa}.fb{margin-top:6px;color:#5e35b1;font-size:13px}</style></head><body>'
+                + '<h1>✏️ ' + escapeHtml(t.title) + '</h1><div class="sub">' + escapeHtml(diaryDateLabel(t.date)) + ' · ' + roster.filter(function(s){ return diaryEntry(s.id, t.id); }).length + '/' + roster.length + '명</div>'
+                + rows + '</body></html>');
+            w.document.close();
+            setTimeout(function(){ try{ w.focus(); w.print(); }catch(e){} }, 300);
+        }
+
+        // ---- 학생 화면 (핸드폰·태블릿) ----
+        let diaryStuTid = null, diaryStuBoundNum = null, diaryStuRefs = [];
+        function diaryStudentUnbind(){
+            diaryStuRefs.forEach(function(r){ r.off(); }); diaryStuRefs = []; diaryStuBoundNum = null; diaryStuTid = null;
+            diaryData = {};
+            const el = document.getElementById('diary-student-section'); if(el) el.innerHTML = '';
+        }
+        function diaryStudentBind(){
+            if(!diaryRef || studentNum == null || diaryStuBoundNum === studentNum) return;
+            diaryStudentUnbind();
+            const num = studentNum; diaryStuBoundNum = num;
+            diaryData = { topics:{}, entries:{}, feedback:{} };
+            function rr(){ if(studentNum === num) diaryRenderStudentSection(num); }
+            const tRef = diaryRef.child('topics'), eRef = diaryRef.child('entries/' + num), fRef = diaryRef.child('feedback/' + num);
+            tRef.on('value', function(s){ diaryData.topics = s.val() || {}; rr(); }, function(e){ console.warn('주제일기 주제 읽기 거부', e && e.message); });
+            eRef.on('value', function(s){ diaryData.entries = {}; diaryData.entries[num] = s.val() || {}; rr(); }, function(){});
+            fRef.on('value', function(s){ diaryData.feedback = {}; diaryData.feedback[num] = s.val() || {}; rr(); }, function(){});
+            diaryStuRefs = [tRef, eRef, fRef];
+        }
+        function diaryDraftKey(num, tid){ return 'diaryDraft_' + currentRoom + '_' + num + '_' + tid; }
+        function diaryDraftGet(num, tid){ try{ return localStorage.getItem(diaryDraftKey(num, tid)); }catch(e){ return null; } }
+        function diaryDraftClear(num, tid){ try{ localStorage.removeItem(diaryDraftKey(num, tid)); }catch(e){} }
+        function diaryStuPick(tid){ diaryStuTid = tid; if(studentNum != null) diaryRenderStudentSection(studentNum); window.scrollTo(0, 0); }
+        function diaryRenderStudentSection(num){
+            const el = document.getElementById('diary-student-section'); if(!el) return;
+            // 쓰는 도중 다시 그려져도 글이 날아가지 않게: 입력은 임시저장에서 다시 채우고 커서 위치도 되돌림
+            const oldTa = document.getElementById('diary-stu-text');
+            const focusAt = (oldTa && document.activeElement === oldTa) ? oldTa.selectionStart : -1;
+            const open = diaryOpenTopics();
+            if(!open.find(function(t){ return t.id === diaryStuTid; })) diaryStuTid = open.length ? open[0].id : null;
+            const today = getFormattedDate(new Date());
+            const todo = open.filter(function(t){ return t.date === today && !diaryEntry(num, t.id); }).length;
+            const tabBtn = document.getElementById('stu-tab-diary');
+            if(tabBtn) tabBtn.innerHTML = '📝 일기' + (todo ? ' <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#ff5252; vertical-align:top;"></span>' : '');
+            if(!diaryStuTid){ el.innerHTML = '<div style="text-align:center; color:#aaa; padding:30px 10px; line-height:1.7;">✏️<br>아직 선생님이 낸 주제가 없어요.</div>'; return; }
+            const t = diaryTopic(diaryStuTid), e = diaryEntry(num, t.id), fb = diaryFeedback(num, t.id) || {};
+            const draft = diaryDraftGet(num, t.id);
+            const val = draft != null ? draft : (e ? e.text : '');
+            const fbHtml = (fb.stamp || fb.comment || fb.best)
+                ? '<div style="background:#f8f5ff; border:1px solid #e2dcf2; border-radius:12px; padding:10px 12px; margin-bottom:12px;">'
+                  + '<div style="font-size:12px; color:#9b8fc0; margin-bottom:4px;">💌 선생님이 남긴 말</div>'
+                  + (fb.stamp ? '<div style="font-size:16px; font-weight:800; color:#7e57c2;">' + escapeHtml(diaryStampLabel(fb.stamp)) + '</div>' : '')
+                  + (fb.best ? '<div style="font-size:14px; font-weight:800; color:#e65100;">⭐ 이번 주제 최고 글로 뽑혔어요!</div>' : '')
+                  + (fb.comment ? '<div style="font-size:14px; color:#51618a; line-height:1.6; margin-top:4px;">' + diaryTextHtml(fb.comment) + '</div>' : '')
+                  + '</div>'
+                : '';
+            const others = open.filter(function(x){ return x.id !== t.id; }).slice(0, 20);
+            el.innerHTML = '<div style="font-size:12px; color:#9b8fc0;">' + escapeHtml(diaryDateLabel(t.date)) + ' 주제</div>'
+                + '<div style="font-size:20px; font-weight:800; color:#5e35b1; margin:2px 0 10px; line-height:1.4; word-break:keep-all;">' + escapeHtml(t.title || '') + '</div>'
+                + (t.guide ? '<div style="background:#fafbfc; border-radius:10px; padding:10px 12px; font-size:13px; color:#666; line-height:1.6; margin-bottom:12px; word-break:keep-all;">' + diaryTextHtml(t.guide) + '</div>' : '')
+                + fbHtml
+                + '<textarea id="diary-stu-text" maxlength="5000" rows="10" oninput="diaryStuInput()" style="width:100%; padding:12px; border:2px solid #d9d0f0; border-radius:12px; box-sizing:border-box; font-family:\'Pretendard\'; font-size:16px; line-height:1.7; resize:vertical;" placeholder="여기에 일기를 써요">' + escapeHtml(val) + '</textarea>'
+                + '<div style="display:flex; justify-content:space-between; align-items:center; margin:6px 2px 12px; font-size:13px;"><span id="diary-stu-count"></span><span id="diary-stu-state" style="color:#aaa;"></span></div>'
+                + '<button onclick="diaryStuSubmit()" style="width:100%; padding:14px; background:#7e57c2; color:#fff; border:none; border-radius:12px; font-weight:800; font-size:16px; cursor:pointer; font-family:inherit;">' + (e ? '✏️ 고쳐서 다시 내기' : '📮 선생님께 내기') + '</button>'
+                + (others.length ? '<div style="font-size:14px; font-weight:800; color:#51618a; border-top:1px solid #eee; padding-top:12px; margin-top:18px; margin-bottom:8px;">📒 지난 주제</div>'
+                    + others.map(function(x){
+                        const done = !!diaryEntry(num, x.id); const f = diaryFeedback(num, x.id) || {};
+                        return '<div onclick="diaryStuPick(\'' + x.id + '\')" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:8px; border:1px solid #eef0f3; border-radius:10px; padding:9px 12px; margin-bottom:6px;">'
+                            + '<div style="min-width:0;"><div style="font-size:11px; color:#aaa;">' + escapeHtml(diaryDateLabel(x.date)) + '</div><div style="font-size:14px; color:#51618a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(x.title || '') + '</div></div>'
+                            + '<div style="flex:none; font-size:12px; font-weight:700; color:' + (done ? '#43a047' : '#e08a1e') + ';">' + (f.best ? '⭐ ' : '') + (f.stamp ? '💌 ' : '') + (done ? '✅ 냄' : '✏️ 아직') + '</div></div>';
+                    }).join('') : '');
+            diaryStuInput(true);
+            if(focusAt >= 0){ const ta = document.getElementById('diary-stu-text'); if(ta){ ta.focus(); ta.setSelectionRange(focusAt, focusAt); } }
+        }
+        function diaryStuInput(noSave){
+            const ta = document.getElementById('diary-stu-text'); const t = diaryTopic(diaryStuTid);
+            if(!ta || !t || studentNum == null) return;
+            const e = diaryEntry(studentNum, t.id);
+            if(!noSave){ try{ localStorage.setItem(diaryDraftKey(studentNum, t.id), ta.value); }catch(err){} }
+            const n = diaryLen(ta.value), min = t.minChars || 0;
+            const cnt = document.getElementById('diary-stu-count');
+            if(cnt) cnt.innerHTML = '<b style="color:' + (n >= min ? '#43a047' : '#e08a1e') + ';">' + n + '자</b>' + (min ? ' <span style="color:#aaa;">/ 최소 ' + min + '자 (띄어쓰기 빼고)</span>' : '');
+            const st = document.getElementById('diary-stu-state');
+            if(st) st.textContent = !e ? '아직 안 냄' : (ta.value.trim() === (e.text || '').trim() ? '✅ 낸 글' : '고치는 중 (아직 안 냄)');
+        }
+        function diaryStuSubmit(){
+            const num = studentNum, t = diaryTopic(diaryStuTid), ta = document.getElementById('diary-stu-text');
+            if(num == null || !t || !ta || !diaryRef) return;
+            const text = ta.value.trim(), n = diaryLen(text), min = t.minChars || 0;
+            if(!n){ alert('일기를 먼저 써 주세요.'); return; }
+            if(n < min){ alert('아직 ' + (min - n) + '자 더 써야 낼 수 있어요.\n(지금 ' + n + '자 / 최소 ' + min + '자, 띄어쓰기 빼고)'); return; }
+            const prev = diaryEntry(num, t.id), now = Date.now();
+            diaryRef.child('entries/' + num + '/' + t.id).set({ text:text, createdAt:(prev && prev.createdAt) || now, updatedAt:now })
+                .then(function(){ diaryDraftClear(num, t.id); rpgToast(prev ? '✏️ 고쳐서 다시 냈어요!' : '📮 주제일기를 냈어요!'); SFX.point(); })
+                .catch(function(err){ alert('저장이 안 됐어요: ' + err.message + '\n(쓴 글은 이 기기에 임시로 남아 있어요) 선생님께 말씀드려 주세요.'); });
         }
 
         // ---- 학생 로그인(핸드폰) ----
@@ -10720,6 +11187,7 @@ var qrcode = function() {
             document.getElementById('student-login').style.display = 'none';
             document.getElementById('student-page').style.display = 'block';
             if(_studentRpgReady && studentNum != null) rpgRenderStudentPage(studentNum);
+            diaryStudentBind(); // 같은 기기에서 다른 번호로 다시 로그인해도 그 번호 일기로 바뀌도록 매번 연결
         }
         function rpgStudentBind(){
             if(_studentBound) return; _studentBound = true;
@@ -10742,6 +11210,7 @@ var qrcode = function() {
                 settingsRef = db.ref('rooms/' + room + '/settings/dashboardDefaults');
                 rpgRef = db.ref('rooms/' + room + '/rpg');
                 readingRef = db.ref('rooms/' + room + '/reading');
+                diaryRef = db.ref('rooms/' + room + '/diary');
                 settingsRef.child('className').once('value').then(function(s){ document.getElementById('student-classname').innerText = s.val() || '우리 반'; }).catch(function(){});
                 var saved = localStorage.getItem('studentNum_' + code);
                 var sref = stuSessionRef();
@@ -10792,6 +11261,7 @@ var qrcode = function() {
         function rpgStudentLogout(){
             var sref = stuSessionRef(); if(sref) sref.remove().catch(function(){});
             localStorage.removeItem('studentNum_' + studentCodeCur); studentNum = null;
+            diaryStudentUnbind();
             document.getElementById('student-page').style.display = 'none';
             document.getElementById('student-num').value = ''; document.getElementById('student-pw').value = '';
             document.getElementById('student-login').style.display = 'flex';
@@ -11777,6 +12247,7 @@ var qrcode = function() {
                 + gearSectionHtml(num, d, L)
                 + '<div id="battle-lobby">' + battleLobbyHtml(num) + '</div>';
             readingRenderStudentSection(num);
+            diaryRenderStudentSection(num);
             readingApplyStudentTab();
         }
         // 교사용: 학생 로그인 안내(코드·링크·QR)
