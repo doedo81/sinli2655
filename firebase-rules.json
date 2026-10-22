@@ -105,7 +105,7 @@
             "$num": {
               ".read": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num",
               "$tid": {
-                ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num && root.child('rooms').child($cid).child('diary/topics').child($tid).exists() && (!newData.exists() || (newData.child('text').isString() && newData.child('text').val().length <= 5000))"
+                ".write": "auth != null && root.child('rooms').child($cid).child('studentSessions').child(auth.uid).child('num').val() === $num && root.child('rooms').child($cid).child('diary/topics').child($tid).exists() && newData.exists() && newData.child('text').isString() && newData.child('text').val().length <= 5000 && newData.child('rev').isNumber() && newData.child('rev').val() === (data.exists() ? (data.child('rev').exists() ? data.child('rev').val() : 0) + 1 : 0) && newData.child('rev').val() <= (root.child('rooms').child($cid).child('diary/topics').child($tid).child('maxRev').exists() ? root.child('rooms').child($cid).child('diary/topics').child($tid).child('maxRev').val() : 2)"
               }
             }
           },
