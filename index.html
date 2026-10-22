@@ -2576,11 +2576,65 @@ var qrcode = function() {
         #act-screens-bar { position: absolute; top: 14px; right: 14px; z-index: 35; display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.92); border: 1px solid #e6ebf3; border-radius: 20px; padding: 5px 8px; box-shadow: 0 6px 18px rgba(56,78,126,0.15); flex-wrap: wrap; max-width: 60%; justify-content: flex-end; }
         .act-screen-btn { min-width: 28px; height: 28px; border: none; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer; font-family: 'Pretendard',sans-serif; }
         /* 성장 탭 관리 드롭다운 메뉴 */
-        #rpg-menu { display: none; position: absolute; right: 0; top: calc(100% + 8px); background: #fff; border: 1px solid #e6ebf3; border-radius: 14px; box-shadow: 0 14px 36px rgba(56,78,126,0.22); padding: 8px; min-width: 232px; z-index: 60; }
-        #rpg-menu .rpg-menu-label { font-size: 11px; font-weight: 800; color: #9aa8bd; padding: 8px 10px 4px; }
-        #rpg-menu button { display: block; width: 100%; text-align: left; border: none; background: transparent; border-radius: 9px; padding: 10px 12px; font-size: 14px; font-weight: 700; color: #455a64; cursor: pointer; font-family: 'Pretendard',sans-serif; }
-        #rpg-menu button:hover { background: #f0f4fa; }
-        #rpg-menu .rpg-menu-sep { height: 1px; background: #eef1f6; margin: 6px 4px; }
+        /* ===== 성장 탭: 지급 패널·관리 메뉴 (테마 변수를 따라감) ===== */
+        #rpg-tab { --gx-ink: var(--txt, #263042); --gx-muted: var(--muted, #556073); --gx-line: rgba(81, 97, 138, 0.18); --gx-soft: rgba(91, 151, 209, 0.10); --gx-r: 8px; --gx-R: 14px; --gx-t: 150ms cubic-bezier(.2,.7,.3,1); }
+        .gx-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+        .gx-menu-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px; border: 1px solid var(--gx-line); border-radius: var(--gx-r); background: var(--pnl-in, #fff); color: var(--gx-ink); font: 700 14px 'Pretendard', sans-serif; cursor: pointer; transition: background var(--gx-t); }
+        .gx-menu-btn:hover { background: var(--gx-soft); }
+        #rpg-menu { display: none; position: absolute; right: 0; top: calc(100% + 6px); background: #fff; border: 1px solid #e3e8f0; border-radius: var(--gx-R); box-shadow: 0 16px 40px rgba(38, 48, 66, 0.18); padding: 10px; z-index: 60; width: min(480px, 92vw); text-align: left; }
+        #rpg-menu .gx-menu-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
+        #rpg-menu .rpg-menu-label { font-size: 11px; font-weight: 800; color: #6b7686; letter-spacing: 0.04em; padding: 8px 10px 4px; }
+        #rpg-menu button { display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; border: none; background: transparent; border-radius: var(--gx-r); padding: 9px 10px; font: 600 14px 'Pretendard', sans-serif; color: #263042; cursor: pointer; transition: background var(--gx-t); }
+        #rpg-menu button i { width: 16px; text-align: center; color: #6b7686; font-size: 13px; }
+        #rpg-menu button:hover { background: #f1f4f9; }
+        #rpg-menu .gx-switch-row { justify-content: space-between; }
+        #rpg-menu .gx-switch-row > span:first-child { display: inline-flex; align-items: center; gap: 9px; }
+        .gx-switch { width: 30px; height: 18px; border-radius: 9px; background: #cfd6e0; position: relative; flex: none; transition: background var(--gx-t); }
+        .gx-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform var(--gx-t); }
+        .gx-switch-row.on .gx-switch { background: #c0504d; }
+        .gx-switch-row.on .gx-switch::after { transform: translateX(12px); }
+        @media (max-width: 560px){ #rpg-menu .gx-menu-cols { grid-template-columns: 1fr; } }
+
+        .gx-give { border-top: 1px solid var(--gx-line); border-bottom: 1px solid var(--gx-line); padding: 12px 0 4px; margin-bottom: 14px; text-align: left; }
+        .gx-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+        .gx-k { flex: none; width: 58px; font-size: 13px; font-weight: 800; color: var(--gx-muted); }
+        .gx-hint { font-size: 12px; color: var(--gx-muted); }
+        .gx-seg { display: inline-flex; border: 1px solid var(--gx-line); border-radius: var(--gx-r); overflow: hidden; background: var(--pnl-in, #fff); }
+        .gx-seg button { border: none; border-right: 1px solid var(--gx-line); background: transparent; color: var(--gx-ink); font: 700 14px 'Pretendard', sans-serif; padding: 8px 14px; cursor: pointer; transition: background var(--gx-t), color var(--gx-t); }
+        .gx-seg button:last-child { border-right: none; }
+        .gx-seg button:hover { background: var(--gx-soft); }
+        .gx-seg button.on { background: var(--accent-blue); color: #fff; }
+        .gx-seg-sm button { font-size: 13px; padding: 6px 12px; }
+        .gx-actions { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+        .gx-agroup { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .gx-agroup > span { width: 34px; flex: none; font-size: 11px; font-weight: 800; color: var(--gx-muted); }
+        .gx-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 6px 11px; border: 1px solid var(--gx-line); border-radius: var(--gx-r); background: var(--pnl-in, #fff); color: var(--gx-ink); font: 600 13px 'Pretendard', sans-serif; cursor: pointer; transition: background var(--gx-t), border-color var(--gx-t); }
+        .gx-chip b { font-weight: 800; font-size: 12px; color: #2f6fae; }
+        .gx-chip.minus b { color: #b03a37; }
+        .gx-chip.good b { color: #2e7d4f; }
+        .gx-chip:hover { border-color: var(--accent-blue); }
+        .gx-chip.on { background: var(--accent-blue); border-color: var(--accent-blue); color: #fff; }
+        .gx-chip.on b { color: #fff; }
+        .gx-chip.minus.on { background: #c0504d; border-color: #c0504d; }
+        .gx-chip.good.on { background: #3a8a5c; border-color: #3a8a5c; }
+        .gx-edit { border: none; background: transparent; color: var(--gx-muted); font: 600 12px 'Pretendard', sans-serif; cursor: pointer; padding: 6px 4px; text-decoration: underline; text-underline-offset: 3px; }
+        .gx-grp { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 7px 12px; border: 1px solid var(--gx-line); border-radius: var(--gx-r); background: var(--pnl-in, #fff); color: var(--gx-ink); font: 700 13px 'Pretendard', sans-serif; cursor: pointer; text-align: left; max-width: 220px; transition: background var(--gx-t), border-color var(--gx-t); }
+        .gx-grp small { font-weight: 500; font-size: 11px; color: var(--gx-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 196px; }
+        .gx-grp.on { border-color: var(--accent-blue); background: var(--gx-soft); box-shadow: inset 0 0 0 1px var(--accent-blue); }
+        .gx-gridbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+        .gx-mini { border: 1px solid var(--gx-line); background: var(--pnl-in, #fff); color: var(--gx-ink); border-radius: var(--gx-r); padding: 6px 11px; font: 600 12px 'Pretendard', sans-serif; cursor: pointer; }
+        .gx-mini:hover { background: var(--gx-soft); }
+        .gx-applybar { position: sticky; bottom: 10px; z-index: 30; margin-top: 14px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 12px 10px 16px; background: #263042; color: #fff; border-radius: var(--gx-R); box-shadow: 0 10px 28px rgba(38, 48, 66, 0.28); text-align: left; }
+        .gx-applybar .gx-sum { flex: 1; min-width: 180px; font-size: 14px; line-height: 1.45; }
+        .gx-applybar .gx-sum small { display: block; font-size: 12px; color: #c9d2df; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .gx-applybar button { border: none; border-radius: var(--gx-r); font: 800 14px 'Pretendard', sans-serif; cursor: pointer; padding: 10px 16px; }
+        .gx-applybar .gx-go { background: #fff; color: #263042; }
+        .gx-applybar .gx-go:disabled { background: #4a5468; color: #9aa4b5; cursor: default; }
+        .gx-applybar .gx-ghost { background: transparent; color: #c9d2df; border: 1px solid #4a5468; padding: 9px 12px; font-weight: 700; }
+        .gx-applybar .gx-undo { background: transparent; color: #ffd28a; padding: 9px 8px; font-weight: 700; }
+        .gx-dash-strip { display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; padding: 2px 2px 12px; font-size: 13px; color: var(--gx-muted); text-align: left; }
+        .gx-dash-strip b { font-size: 18px; color: var(--gx-ink); font-weight: 800; margin-right: 3px; }
+        @media (prefers-reduced-motion: reduce){ #rpg-tab *, #rpg-menu * { transition: none !important; } }
         #act-hint { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 15; background: rgba(240,244,250,0.9); color: #607d8b; font-size: 13px; font-weight: 600; padding: 7px 16px; border-radius: 20px; pointer-events: none; white-space: nowrap; }
         #act-toolbar { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 40; display: flex; align-items: center; gap: 4px; background: #fff; border: 1px solid #e6ebf3; border-radius: 16px; padding: 8px 10px; box-shadow: 0 8px 26px rgba(56,78,126,0.18); max-width: 94%; flex-wrap: wrap; justify-content: center; }
         .act-tool { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 42px; height: 42px; border: none; border-radius: 10px; background: transparent; color: #546e7a; font-size: 17px; cursor: pointer; transition: 0.15s; padding: 4px 6px; }
@@ -3374,7 +3428,6 @@ var qrcode = function() {
                     <div class="column-card" style="padding-top: 45px;">
                         <div class="info-box"><span class="info-label">📢 전달 사항</span><div id="view-notices-cal" style="display:none; margin-bottom:8px; font-weight:700; font-size:var(--board-font-size); color:#2c3e50; line-height:1.5;"></div><div class="info-content" id="view-notices" contenteditable="true" spellcheck="false" data-placeholder="클릭하여 입력"></div></div>
                         <div class="info-box" style="border-left: 5px solid #a5d6a7;"><span class="info-label" style="color:#5fa267;">📝 알림장</span><div class="info-content" id="view-allim" contenteditable="true" spellcheck="false" data-placeholder="클릭하여 입력"></div></div>
-                        <div class="info-box" style="border-left: 5px solid #b39ddb; background:#f8f5ff;"><span class="info-label" style="color:#7e57c2;">✏️ 오늘의 주제일기</span><div class="info-content" id="view-diary" onclick="diaryBoardClick()" style="cursor:pointer; font-size:var(--board-font-size); line-height:1.5;"></div></div>
                         <div class="info-box" style="border-left: 5px solid #ffcc80; background:#fffaf2;"><span class="info-label" style="color:#e08a1e; display:flex; justify-content:space-between; align-items:center;">🍱 오늘의 급식 <span onclick="mealPickFile()" title="급식표 파일(PDF·한글 HWPX·사진)을 올리면 날짜별로 자동 채움" style="cursor:pointer; font-size:12px; color:#b0855a; font-weight:700; background:#fff1dc; padding:2px 8px; border-radius:8px;">📄 급식표 올리기</span></span><div class="info-content" id="view-meal" contenteditable="true" spellcheck="false" onblur="mealSaveEdit()" title="눌러서 직접 고칠 수 있어요" style="font-size:13px; font-weight:500; line-height:1.45; color:#7a6a58;" data-placeholder="📄 급식표를 올리면 날짜별로 자동으로 채워져요"></div><input type="file" id="meal-file" accept=".pdf,.hwpx,.hwp,image/*" style="display:none" onchange="mealUpload(this)"></div>
                         <div class="info-box" style="background:#fdf1f6;"><span class="info-label" style="color: #db5e90;">🎂 생일 축하해요!</span><div class="info-content" id="view-birthday" contenteditable="true" spellcheck="false" data-placeholder="클릭하여 입력"></div></div>
                         
@@ -3620,44 +3673,57 @@ var qrcode = function() {
             <!-- ⚔️ 성장 탭 (상벌점 RPG) -->
             <div id="rpg-tab" class="content-section">
                 <div class="picker-box">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
-                        <h2 style="color:var(--dark-blue); margin:0;"><i class="fa-solid fa-dragon"></i> 성장 (상벌점 RPG)</h2>
+                    <div class="gx-head">
+                        <h2 style="color:var(--dark-blue); margin:0;"><i class="fa-solid fa-dragon"></i> 성장</h2>
                         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
                             <button class="action-btn" id="rpg-exit-student" style="background:#e53935; padding:10px 18px; display:none;" onclick="rpgExitStudentMode()"><i class="fa-solid fa-chalkboard-user"></i> 선생님 모드로</button>
                             <div id="rpg-teacher-btns" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-                                <button class="action-btn" id="rpg-bulk-toggle" style="background:#5b97d1; padding:10px 18px;" onclick="rpgToggleBulk()"><i class="fa-solid fa-layer-group"></i> 일괄 지급</button>
                                 <div style="position:relative;">
-                                    <button class="action-btn" style="background:#5c6c95; padding:10px 18px;" onclick="rpgToggleMenu(event)"><i class="fa-solid fa-bars"></i> 관리 <i class="fa-solid fa-caret-down" style="margin-left:2px;"></i></button>
+                                    <button class="gx-menu-btn" onclick="rpgToggleMenu(event)"><i class="fa-solid fa-sliders"></i> 관리 <i class="fa-solid fa-chevron-down" style="font-size:11px;"></i></button>
                                     <div id="rpg-menu">
-                                        <div class="rpg-menu-label">수업 도구</div>
-                                        <button onclick="rpgOpenMissions(); rpgCloseMenu();"><i class="fa-solid fa-bullseye" style="color:#e91e8c; width:18px;"></i> 미션</button>
-                                        <button onclick="battleWatchOpen(); rpgCloseMenu();"><i class="fa-solid fa-hand-fist" style="color:#ff7a2f; width:18px;"></i> 친구 대결 현황</button>
-                                        <button onclick="battleDemoStart('team'); rpgCloseMenu();"><i class="fa-solid fa-clapperboard" style="color:#ff7a2f; width:18px;"></i> 대결 미리보기</button>
-                                        <button onclick="rpgOpenExam(); rpgCloseMenu();"><i class="fa-solid fa-file-pen" style="color:#fb8c00; width:18px;"></i> 단원평가</button>
-                                        <button id="rpg-grade-btn" style="display:none;" onclick="rpgOpenGrade(); rpgCloseMenu();"><i class="fa-solid fa-table-list" style="color:#455a64; width:18px;"></i> 평가 기록</button>
-                                        <div class="rpg-menu-sep"></div>
-                                        <div class="rpg-menu-label">관리 · 설정</div>
-                                        <button onclick="rpgOpenActions(); rpgCloseMenu();"><i class="fa-solid fa-sliders" style="color:#00897b; width:18px;"></i> 상점 항목</button>
-                                        <button onclick="rpgToggleRoster(); rpgCloseMenu();"><i class="fa-solid fa-user-pen" style="color:#7b6cd9; width:18px;"></i> 명단 입력/수정 (전출입)</button>
-                                        <button onclick="rpgOpenArchive(); rpgCloseMenu();"><i class="fa-solid fa-box-archive" style="color:#8d6e63; width:18px;"></i> 학기 정리 (보관·초기화)</button>
-                                        <button class="action-btn" id="rpg-lock-btn" style="background:#78909c; color:#fff; padding:10px 12px; margin-top:4px;" onclick="rpgToggleLock()"><i class="fa-solid fa-lock"></i> 평가 잠금</button>
-                                        <div class="rpg-menu-sep"></div>
-                                        <div class="rpg-menu-label">학생용</div>
-                                        <button onclick="rpgEnterStudentMode(); rpgCloseMenu();"><i class="fa-solid fa-child-reaching" style="color:#26a69a; width:18px;"></i> 학생 모드</button>
-                                        <button onclick="openSettingsModal(); rpgCloseMenu();"><i class="fa-solid fa-mobile-screen" style="color:#3949ab; width:18px;"></i> 학생 접속(QR) → 기초 세팅</button>
+                                        <div class="gx-menu-cols">
+                                            <div>
+                                                <div class="rpg-menu-label">수업</div>
+                                                <button onclick="rpgOpenMissions(); rpgCloseMenu();"><i class="fa-solid fa-bullseye"></i> 미션</button>
+                                                <button onclick="rpgOpenExam(); rpgCloseMenu();"><i class="fa-solid fa-file-pen"></i> 단원평가 점수 넣기</button>
+                                                <button id="rpg-grade-btn" style="display:none;" onclick="rpgOpenGrade(); rpgCloseMenu();"><i class="fa-solid fa-table-list"></i> 평가 기록</button>
+                                                <button onclick="battleWatchOpen(); rpgCloseMenu();"><i class="fa-solid fa-hand-fist"></i> 친구 대결 현황</button>
+                                                <button onclick="battleDemoStart('team'); rpgCloseMenu();"><i class="fa-solid fa-clapperboard"></i> 대결 미리보기</button>
+                                            </div>
+                                            <div>
+                                                <div class="rpg-menu-label">학급 설정</div>
+                                                <button onclick="rpgOpenActions(); rpgCloseMenu();"><i class="fa-solid fa-list-check"></i> 상점 항목 편집</button>
+                                                <button onclick="rpgToggleRoster(); rpgCloseMenu();"><i class="fa-solid fa-user-pen"></i> 명단 · 전출입</button>
+                                                <button onclick="rpgOpenArchive(); rpgCloseMenu();"><i class="fa-solid fa-box-archive"></i> 학기 정리 (보관·초기화)</button>
+                                                <button id="rpg-lock-btn" class="gx-switch-row" onclick="rpgToggleLock()"><span><i class="fa-solid fa-lock"></i> 평가 잠금</span><span class="gx-switch"></span></button>
+                                                <div class="rpg-menu-label" style="margin-top:6px;">학생 화면</div>
+                                                <button onclick="rpgOpenStudentGuide(); rpgCloseMenu();"><i class="fa-solid fa-qrcode"></i> 학생 접속 안내 (QR)</button>
+                                                <button onclick="rpgEnterStudentMode(); rpgCloseMenu();"><i class="fa-solid fa-display"></i> 학생 모드 (이 화면에서 꾸미기)</button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div id="rpg-bulk-bar" style="display:none; background:#eef4fb; border:1px solid #cfe0f3; border-radius:12px; padding:12px 14px; margin-bottom:16px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px;">
-                            <div style="font-size:12px; color:#5a6a7e;">① 줄 행동을 고르고 → ② 학생을 톡톡 눌러 선택 → ③ 아래 버튼</div>
-                            <button onclick="rpgOpenActions()" style="white-space:nowrap; border:1px solid #cfe0f3; background:#fff; color:#5b97d1; border-radius:8px; padding:6px 10px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit;"><i class="fa-solid fa-sliders"></i> 항목 추가·편집</button>
+                    <!-- 지급: 누구에게(한 명씩·골라서·모둠·반 전체) → 무엇을 → 맨 아래 지급 줄 -->
+                    <div id="rpg-bulk-bar" class="gx-give" style="display:none;">
+                        <div class="gx-row">
+                            <span class="gx-k">누구에게</span>
+                            <div class="gx-seg" id="gx-mode">
+                                <button data-m="one" onclick="rpgSetGiveMode('one')">한 명씩 바로</button>
+                                <button data-m="pick" onclick="rpgSetGiveMode('pick')">골라서</button>
+                                <button data-m="group" onclick="rpgSetGiveMode('group')">모둠</button>
+                                <button data-m="all" onclick="rpgSetGiveMode('all')">반 전체</button>
+                            </div>
+                            <span class="gx-hint" id="gx-hint"></span>
                         </div>
-                        <div id="rpg-bulk-actions" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;"></div>
-                        <button id="rpg-bulk-apply" onclick="rpgBulkApply()" style="width:100%; padding:12px; background:#5b97d1; color:#fff; border:none; border-radius:9px; font-weight:700; cursor:pointer; font-family:inherit;">선택한 0명에게 지급</button>
+                        <div class="gx-row" id="gx-groups" style="display:none;"></div>
+                        <div class="gx-row" style="align-items:flex-start;">
+                            <span class="gx-k" style="padding-top:7px;">무엇을</span>
+                            <div id="rpg-bulk-actions" class="gx-actions"></div>
+                        </div>
                     </div>
 
                     <div id="rpg-roster-box" style="display:none; background:#f6f4ff; border:1px solid #d9d2f5; border-radius:14px; padding:18px; margin-bottom:20px;">
@@ -3691,12 +3757,16 @@ var qrcode = function() {
                     </div>
 
                     <div id="rpg-dash" class="dash-wrap"></div>
-                    <div id="rpg-view-modes" style="display:none; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
-                        <button type="button" class="rpg-vm-btn" data-mode="number" onclick="rpgSetViewMode('number')">🔢 번호순</button>
-                        <button type="button" class="rpg-vm-btn" data-mode="seating" onclick="rpgSetViewMode('seating')">🪑 자리배치</button>
-                        <button type="button" class="rpg-vm-btn" data-mode="rank" onclick="rpgSetViewMode('rank')">🏆 랭킹</button>
+                    <div id="rpg-view-modes" class="gx-gridbar" style="display:none;">
+                        <div class="gx-seg gx-seg-sm">
+                            <button type="button" class="rpg-vm-btn" data-mode="number" onclick="rpgSetViewMode('number')">번호순</button>
+                            <button type="button" class="rpg-vm-btn" data-mode="seating" onclick="rpgSetViewMode('seating')">자리배치</button>
+                            <button type="button" class="rpg-vm-btn" data-mode="rank" onclick="rpgSetViewMode('rank')">랭킹</button>
+                        </div>
+                        <div id="gx-quick" style="display:flex; gap:6px;"></div>
                     </div>
                     <div id="rpg-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:14px;"></div>
+                    <div id="gx-applybar" class="gx-applybar" style="display:none;"></div>
                     <p style="text-align:center; font-size:11px; color:#cbd3dc; margin-top:16px;">캐릭터: 오리지널 AI 생성</p>
                 </div>
             </div>
@@ -3773,7 +3843,7 @@ var qrcode = function() {
                         <span id="diary-tm-min-presets" style="display:flex; gap:6px; flex-wrap:wrap;"></span>
                         <input id="diary-tm-min" type="number" min="0" step="10" oninput="diaryMinPresetsRender()" style="width:90px; padding:8px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box; font-family:'Pretendard';"><span style="font-size:13px; color:#888;">자 이상</span>
                     </div>
-                    <button type="button" id="diary-tm-ai-btn" onclick="diaryAiMakeTopic()" style="width:100%; padding:11px; background:linear-gradient(90deg,#7e57c2,#5b6fb5); color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit; font-size:14px; margin-bottom:12px;">🤖 AI로 쉬운 설명 · 쓰는 방법 · 채점 기준 만들기</button>
+                    <button type="button" id="diary-tm-ai-btn" onclick="diaryAiMakeTopic()" style="width:100%; padding:11px; background:#5e35b1; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit; font-size:14px; margin-bottom:12px;">🤖 AI로 쉬운 설명 · 쓰는 방법 · 채점 기준 만들기</button>
                     <label style="font-size:13px; font-weight:700; color:#555;">💡 주제 쉬운 설명 <span style="font-weight:400; color:#aaa;">(학생 화면에 보여요)</span></label>
                     <textarea id="diary-tm-explain" rows="3" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; margin:6px 0 12px; box-sizing:border-box; font-family:'Pretendard'; resize:vertical; line-height:1.5;"></textarea>
                     <label style="font-size:13px; font-weight:700; color:#555;">✍️ 쓰는 방법 안내</label>
@@ -4565,9 +4635,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.62';
+        const APP_VERSION = '1.63';
         const APP_VERSION_DATE = '2026-10-22';
         const APP_CHANGELOG = [
+            'v1.63 (2026-10-22) — 🛡️ 상점 줄 때 장비·펫·코인 기록이 지워지던 문제 고침 · 성장 탭 새 배치(한 명씩/골라서/모둠/반 전체, 되돌리기, 관리 메뉴 정리) · 주제일기 주제는 아침 자습 칸에 자동으로',
             'v1.62 (2026-10-22) — ✏️ 주제일기: AI가 주제 설명·쓰는 방법·채점 기준을 만들고, 학생이 핸드폰으로 쓰면 AI가 100점 만점 채점 · 60점 미만은 고쳐 쓰기 안내 · 제출/향상/최고 점수 성장 포인트 (아침칠판에 오늘 주제 칸)',
             'v1.61 (2026-10-21) — 🤖 클로드 도우미 연결(설정): 클로드가 알림장·시간표·캘린더·급식만 직접 고칠 수 있음',
             'v1.60 (2026-10-21) — 🔐 보안 강화: 비밀번호 암호화 저장, 학생별 비밀번호, 자기 번호 칸만 수정, 다른 반 접근 차단',
@@ -5388,7 +5459,7 @@ var qrcode = function() {
             boardRef.on('value', snap => {
                 if(isDashboardFocused && !isTabletMode) return; 
                 const d = snap.val() || {};
-                document.getElementById('view-date').innerText = d.date || ""; document.getElementById('view-morning').innerText = d.morning || "";
+                document.getElementById('view-date').innerText = d.date || ""; document.getElementById('view-morning').innerText = d.morning || ""; diaryMorningSync(true);
                 document.getElementById('view-duty-nums').innerText = d.dutyNums || ""; document.getElementById('view-duty-tasks').innerText = d.dutyTasks || "";
                 document.getElementById('view-notices').innerText = d.notices || ""; document.getElementById('view-allim').innerText = d.allim || "";
                 document.getElementById('view-safety').innerText = d.safety || ""; document.getElementById('view-birthday').innerText = d.birthday || getBirthdayText(viewDate); renderCalendarNotices(viewDate);
@@ -5463,7 +5534,7 @@ var qrcode = function() {
             historyRef.child(todayKey).once('value').then(snap => {
                 if(snap.exists()) {
                     const d = snap.val();
-                    document.getElementById('view-date').innerText = d.date || ""; document.getElementById('view-morning').innerText = d.morning || "";
+                    document.getElementById('view-date').innerText = d.date || ""; document.getElementById('view-morning').innerText = d.morning || ""; diaryMorningSync(true);
                     document.getElementById('view-duty-nums').innerText = d.dutyNums || ""; document.getElementById('view-duty-tasks').innerText = d.dutyTasks || "";
                     document.getElementById('view-notices').innerText = d.notices || ""; document.getElementById('view-allim').innerText = d.allim || "";
                     document.getElementById('view-safety').innerText = d.safety || ""; document.getElementById('view-birthday').innerText = d.birthday || getBirthdayText(viewDate); renderCalendarNotices(viewDate);
@@ -5531,7 +5602,6 @@ var qrcode = function() {
             { key:'duty',    label:'🧹 당번',       inner:'view-duty-nums' },
             { key:'notices', label:'📢 전달 사항', inner:'view-notices' },
             { key:'allim',   label:'📝 알림장',     inner:'view-allim' },
-            { key:'diary',   label:'✏️ 주제일기',   inner:'view-diary' },
             { key:'meal',    label:'🍱 급식',       inner:'view-meal' },
             { key:'birthday',label:'🎂 생일',       inner:'view-birthday' }
         ];
@@ -6804,7 +6874,7 @@ var qrcode = function() {
             historyRef.child(key).once('value').then(snap => {
                 if(snap.exists()) {
                     const d = snap.val();
-                    document.getElementById('view-date').innerText = d.date || ""; document.getElementById('view-morning').innerText = d.morning || "";
+                    document.getElementById('view-date').innerText = d.date || ""; document.getElementById('view-morning').innerText = d.morning || ""; diaryMorningSync(true);
                     document.getElementById('view-duty-nums').innerText = d.dutyNums || ""; document.getElementById('view-duty-tasks').innerText = d.dutyTasks || "";
                     document.getElementById('view-notices').innerText = d.notices || ""; document.getElementById('view-allim').innerText = d.allim || "";
                     document.getElementById('view-safety').innerText = d.safety || ""; document.getElementById('view-birthday').innerText = d.birthday || getBirthdayText(viewDate); renderCalendarNotices(viewDate);
@@ -8389,7 +8459,7 @@ var qrcode = function() {
                 const st = rpgStudentObj(n); const before = rpgLevel(st.xp).lv;
                 st.xp += a.xp; st.stats[a.stat] = (st.stats[a.stat] || 0) + 1;
                 if(rpgLevel(st.xp).lv > before) lv++;
-                updates['students/' + n] = st;
+                rpgStudentPut(updates, 'students/', n, st);
             });
             rpgRef.update(updates).then(function(){
                 try { if(typeof SFX !== 'undefined' && SFX.point) SFX.point(); } catch(e){}
@@ -9461,8 +9531,7 @@ var qrcode = function() {
         }
         function rpgUpdateViewModeBtns(){
             document.querySelectorAll('.rpg-vm-btn').forEach(b => {
-                const on = b.dataset.mode === rpgViewMode;
-                b.style.cssText = 'border:1px solid ' + (on ? '#5b97d1' : '#d7deea') + ';background:' + (on ? '#5b97d1' : '#fff') + ';color:' + (on ? '#fff' : '#7089a5') + ';border-radius:20px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;';
+                b.classList.toggle('on', b.dataset.mode === rpgViewMode);
             });
         }
         function rpgXpOf(id){ return (rpgData.students && rpgData.students[id] && rpgData.students[id].xp) || 0; }
@@ -9479,6 +9548,9 @@ var qrcode = function() {
             var _tb = document.getElementById('rpg-teacher-btns'); if(_tb) _tb.style.display = rpgStudentMode ? 'none' : 'flex';
             var _lb2 = document.getElementById('rpg-lock-btn'); if(_lb2 && rpgStudentMode) _lb2.style.display = 'none';
             var _es = document.getElementById('rpg-exit-student'); if(_es) _es.style.display = rpgStudentMode ? '' : 'none';
+            rpgBulkMode = !rpgStudentMode; // 학생 모드에선 지급 패널·지급 줄을 숨김
+            var _bb = document.getElementById('rpg-bulk-bar'); if(_bb) _bb.style.display = rpgStudentMode ? 'none' : 'block';
+            rpgUpdateBulkBtn();
             var _vm = document.getElementById('rpg-view-modes');
             if(students.length === 0){ grid.innerHTML = ''; empty.style.display = 'block'; if(_vm) _vm.style.display = 'none'; return; }
             empty.style.display = 'none';
@@ -9607,7 +9679,7 @@ var qrcode = function() {
             // 잠가도 상벌점은 그대로. '평가 기록' 버튼만 숨김(담임 & 잠금해제 상태에서만 보임)
             var gb = document.getElementById('rpg-grade-btn'); if(gb) gb.style.display = (currentRole === 'owner' && !rpgLocked) ? '' : 'none';
             var lb = document.getElementById('rpg-lock-btn');
-            if(lb){ lb.innerHTML = rpgLocked ? '<i class="fa-solid fa-lock-open"></i> 평가 잠금 해제' : '<i class="fa-solid fa-lock"></i> 평가 잠금'; lb.style.background = rpgLocked ? '#e57373' : '#78909c'; lb.style.display = (currentRole === 'owner') ? '' : 'none'; }
+            if(lb){ lb.classList.toggle('on', !!rpgLocked); lb.title = rpgLocked ? '켜짐 — 누르면 비밀번호로 해제' : '꺼짐 — 켜면 평가 기록이 숨겨져요'; lb.style.display = (currentRole === 'owner') ? '' : 'none'; }
         }
         function rpgToggleMenu(e){ if(e){ e.stopPropagation(); } var m = document.getElementById('rpg-menu'); if(!m) return; m.style.display = (m.style.display === 'block') ? 'none' : 'block'; }
         function rpgCloseMenu(){ var m = document.getElementById('rpg-menu'); if(m) m.style.display = 'none'; }
@@ -9694,7 +9766,7 @@ var qrcode = function() {
         function rpgExitStudentMode(){
             var done = function(){
                 rpgStudentMode = false; localStorage.removeItem('rpgStu_' + currentRoom);
-                rpgClose(); renderRpgGrid();
+                rpgClose(); rpgOnShow(); // 지급 패널(행동 칩·지급 방식)까지 다시 그림
                 rpgToast('선생님 모드');
             };
             if(!rpgHasPin()) return done();
@@ -9729,17 +9801,24 @@ var qrcode = function() {
             }
         }
 
-        // ---- 일괄 지급 ----
-        function rpgCardClick(id){ if(rpgBulkMode) rpgToggleSelect(id); else rpgOpen(id); }
+        // ---- 지급 (한 명씩 바로 · 골라서 · 모둠 · 반 전체) ----
+        // 한 명씩: 행동을 고른 채 카드를 누르면 바로 지급(행동을 안 고르면 학생 자세히 보기)
+        // 골라서·모둠: 카드/모둠을 눌러 고른 뒤 맨 아래 [지급] · 반 전체: 바로 [지급]
+        function rpgCardClick(id){
+            if(!rpgBulkMode) return rpgOpen(id);
+            if(rpgGiveMode === 'one'){ if(rpgBulkAction) rpgGiveToIds([id]); else rpgOpen(id); return; }
+            if(rpgGiveMode === 'all') return rpgOpen(id);
+            rpgToggleSelect(id);
+        }
 
         // 성장 탭 진입 시: 기본으로 '일괄 지급' 모드를 켜서 바로 점수를 줄 수 있게
         // 📊 성장 — 우리 반 현황(요약 카드 · 레벨 분포 · 반 평균 능력치 · 평균 진행률)
-        function rpgDashToggle(){ try{ localStorage.setItem('rpgDashOpen', localStorage.getItem('rpgDashOpen') === '0' ? '1' : '0'); }catch(e){} rpgRenderDash(); }
+        function rpgDashToggle(){ try{ localStorage.setItem('rpgDashOpen', localStorage.getItem('rpgDashOpen') === '1' ? '0' : '1'); }catch(e){} rpgRenderDash(); }
         function rpgRenderDash(){
             const box = document.getElementById('rpg-dash'); if(!box || !rpgRef) return;
             const roster = rpgParseRoster();
             if(!roster.length){ box.innerHTML = ''; return; }
-            let open = true; try{ open = localStorage.getItem('rpgDashOpen') !== '0'; }catch(e){}
+            let open = false; try{ open = localStorage.getItem('rpgDashOpen') === '1'; }catch(e){}
             const studs = (rpgData && rpgData.students) || {};
             const rows = roster.map(function(st){ const d = studs[st.id] || {}; const L = rpgLevel(d.xp); return { st:st, d:d, L:L, pct:rpgLevelPct(L) }; });
             const n = rows.length;
@@ -9747,7 +9826,14 @@ var qrcode = function() {
             const avgLv = rows.reduce(function(a, r){ return a + r.L.lv; }, 0) / n;
             const top = rows.slice().sort(function(a, b){ return (b.d.xp || 0) - (a.d.xp || 0); })[0];
             const avgPct = Math.round(rows.reduce(function(a, r){ return a + r.pct; }, 0) / n);
-            const head = '<div class="dash-head" onclick="rpgDashToggle()"><span>📊 우리 반 성장 현황</span><span style="font-size:13px; color:#90a4ae;">' + (open ? '접기 ▲' : '펼치기 ▼') + '</span></div>';
+            // 접혀 있을 땐 한 줄 요약만 (그래프는 눌러서 펼침)
+            const head = '<div class="gx-dash-strip">'
+                + '<span><b>' + n + '</b>명</span>'
+                + '<span>평균 <b>Lv ' + avgLv.toFixed(1) + '</b></span>'
+                + '<span>최고 <b>Lv ' + top.L.lv + '</b>' + escapeHtml(top.st.name || (top.st.id + '번')) + '</span>'
+                + '<span>반 전체 <b>' + totalXp.toLocaleString() + '</b>XP</span>'
+                + '<button class="gx-mini" style="margin-left:auto;" onclick="rpgDashToggle()">' + (open ? '그래프 접기' : '그래프 보기') + '</button>'
+                + '</div>';
             if(!open){ box.innerHTML = head; return; }
             // 다시 그릴 때 0부터가 아니라 직전 값에서 이어서 움직이도록 기억
             const prevNums = Array.from(box.querySelectorAll('[data-num-to]')).map(function(e){ return e.dataset.numTo; });
@@ -9787,76 +9873,172 @@ var qrcode = function() {
         }
         function rpgOnShow(){
             rpgStudentMode = localStorage.getItem('rpgStu_' + currentRoom) === '1';
-            if(!rpgStudentMode && !rpgBulkMode){
-                rpgBulkMode = true; rpgBulkSelected.clear(); rpgBulkAction = null;
-                var bar = document.getElementById('rpg-bulk-bar'); if(bar) bar.style.display = 'block';
-                var tg = document.getElementById('rpg-bulk-toggle');
-                if(tg){ tg.innerHTML = '<i class="fa-solid fa-xmark"></i> 일괄 지급 끄기'; tg.style.background = '#e57373'; }
-                rpgRenderBulkActions();
+            const bar = document.getElementById('rpg-bulk-bar');
+            rpgBulkMode = !rpgStudentMode; // 선생님 화면에선 지급 패널이 늘 켜져 있음
+            if(bar) bar.style.display = rpgBulkMode ? 'block' : 'none';
+            if(rpgBulkMode){
+                try{ rpgGiveMode = localStorage.getItem('rpgGiveMode') || 'one'; }catch(e){ rpgGiveMode = 'one'; }
+                rpgApplyGiveModeUI(); rpgRenderBulkActions();
             }
-            renderRpgGrid();
-        }
-
-        function rpgToggleBulk(){
-            rpgBulkMode = !rpgBulkMode;
-            rpgBulkSelected.clear(); rpgBulkAction = null;
-            document.getElementById('rpg-bulk-bar').style.display = rpgBulkMode ? 'block' : 'none';
-            const tg = document.getElementById('rpg-bulk-toggle');
-            tg.innerHTML = rpgBulkMode ? '<i class="fa-solid fa-xmark"></i> 일괄 지급 끄기' : '<i class="fa-solid fa-layer-group"></i> 일괄 지급';
-            tg.style.background = rpgBulkMode ? '#e57373' : '#5b97d1';
-            if(rpgBulkMode) rpgRenderBulkActions();
-            renderRpgGrid();
-        }
-
-        function rpgRenderBulkActions(){
-            function pill(id,label,color){ const sel = rpgBulkAction===id; return '<span onclick="rpgPickBulkAction(\''+id+'\')" style="cursor:pointer;padding:6px 12px;border-radius:20px;font-size:13px;'+(sel?('background:'+color+';color:#fff;font-weight:700;'):'background:#fff;border:1px solid #cfd8e3;color:#555;')+'">'+label+'</span>'; }
-            let html = '';
-            rpgAllActions().forEach(function(a){ html += pill(a.id, a.label+' +'+a.xp, '#5b97d1'); });
-            html += pill('__warn','벌점 +20','#e57373');
-            html += pill('__good','선행 −10','#66bb6a');
-            document.getElementById('rpg-bulk-actions').innerHTML = html;
-        }
-
-        function rpgPickBulkAction(id){ rpgBulkAction = id; rpgRenderBulkActions(); rpgUpdateBulkBtn(); }
-
-        function rpgToggleSelect(id){
-            if(rpgBulkSelected.has(id)) rpgBulkSelected.delete(id); else rpgBulkSelected.add(id);
             renderRpgGrid(); rpgUpdateBulkBtn();
         }
+        let rpgGiveMode = 'one', rpgLastGive = null;
+        const RPG_GIVE_HINT = {
+            one:'행동을 고르고 학생 카드를 누르면 바로 지급 · 행동을 안 고르고 누르면 학생 자세히 보기',
+            pick:'카드를 눌러 여러 명을 고른 뒤 아래 [지급]',
+            group:'모둠을 눌러 모둠원을 한 번에 고르기 (카드로 더하거나 빼도 돼요)',
+            all:'반 학생 모두에게 한 번에'
+        };
+        function rpgSetGiveMode(m){
+            rpgGiveMode = m; rpgBulkSelected.clear();
+            try{ localStorage.setItem('rpgGiveMode', m); }catch(e){}
+            rpgApplyGiveModeUI(); renderRpgGrid(); rpgUpdateBulkBtn();
+        }
+        function rpgApplyGiveModeUI(){
+            document.querySelectorAll('#gx-mode button').forEach(function(b){ b.classList.toggle('on', b.dataset.m === rpgGiveMode); });
+            const h = document.getElementById('gx-hint'); if(h) h.textContent = RPG_GIVE_HINT[rpgGiveMode] || '';
+            const g = document.getElementById('gx-groups'); if(g){ g.style.display = rpgGiveMode === 'group' ? 'flex' : 'none'; if(rpgGiveMode === 'group') rpgRenderGroupChips(); }
+            const q = document.getElementById('gx-quick');
+            if(q) q.innerHTML = (rpgGiveMode === 'pick' || rpgGiveMode === 'group')
+                ? '<button class="gx-mini" onclick="rpgSelectAll(true)">모두 고르기</button><button class="gx-mini" onclick="rpgSelectAll(false)">고른 것 비우기</button>' : '';
+        }
+        // 예전 버튼 호환 (다른 곳에서 부르면 패널만 다시 그림)
+        function rpgToggleBulk(){ rpgOnShow(); }
 
-        function rpgUpdateBulkBtn(){
-            const b = document.getElementById('rpg-bulk-apply'); if(!b) return;
-            const a = rpgAllActions().find(function(x){ return x.id===rpgBulkAction; });
-            const lbl = a ? (a.label+' +'+a.xp) : (rpgBulkAction==='__warn'?'벌점 +20':(rpgBulkAction==='__good'?'선행 −10':''));
-            b.textContent = '선택한 ' + rpgBulkSelected.size + '명에게 ' + (lbl?lbl+' ':'') + '지급';
+        function rpgSelectAll(on){
+            rpgBulkSelected.clear();
+            if(on) rpgParseRoster().forEach(function(s){ rpgBulkSelected.add(s.id); });
+            renderRpgGrid(); rpgUpdateBulkBtn(); if(rpgGiveMode === 'group') rpgRenderGroupChips();
+        }
+        function rpgRenderGroupChips(){
+            const box = document.getElementById('gx-groups'); if(!box) return;
+            const members = gxpMembers();
+            const nameById = {}; rpgParseRoster().forEach(function(s){ nameById[s.id] = s.name; });
+            const keys = Object.keys(members).map(Number).sort(function(a, b){ return a - b; }).filter(function(g){ return members[g].length; });
+            box.innerHTML = '<span class="gx-k">모둠</span>'
+                + (keys.length
+                    ? keys.map(function(g){
+                        const ids = members[g];
+                        const on = ids.every(function(id){ return rpgBulkSelected.has(id); });
+                        return '<button class="gx-grp' + (on ? ' on' : '') + '" onclick="rpgToggleGroup(' + g + ')">' + g + '모둠 · ' + ids.length + '명<small>' + ids.map(function(id){ return escapeHtml(nameById[id] || (id + '번')); }).join(', ') + '</small></button>';
+                    }).join('')
+                    : '<span class="gx-hint">모둠이 없어요. [자리 배치]에서 협동학습(모둠) 자리를 만들면 여기에 떠요.</span>')
+                + (keys.length ? '<button class="gx-mini" onclick="gxpOpen()" title="점수판의 모둠 점수 순위대로 XP를 다르게 줘요">모둠 점수 순위대로 차등 지급…</button>' : '');
+        }
+        function rpgToggleGroup(g){
+            const ids = gxpMembers()[g] || [];
+            const all = ids.every(function(id){ return rpgBulkSelected.has(id); });
+            ids.forEach(function(id){ if(all) rpgBulkSelected.delete(id); else rpgBulkSelected.add(id); });
+            rpgRenderGroupChips(); renderRpgGrid(); rpgUpdateBulkBtn();
         }
 
+        // 행동 칩: 습관·노력·특별(상점 항목의 묶음) + 생활(벌점·선행). 고른 칩을 한 번 더 누르면 해제
+        function rpgRenderBulkActions(){
+            const box = document.getElementById('rpg-bulk-actions'); if(!box) return;
+            const groups = {}, order = [];
+            rpgAllActions().forEach(function(a){ const g = a.group || '기타'; if(!groups[g]){ groups[g] = []; order.push(g); } groups[g].push(a); });
+            const pref = ['습관', '노력', '특별'];
+            order.sort(function(x, y){ const i = pref.indexOf(x), j = pref.indexOf(y); return (i < 0 ? 9 : i) - (j < 0 ? 9 : j); });
+            function chip(id, label, val, tone){
+                return '<button class="gx-chip' + (tone ? ' ' + tone : '') + (rpgBulkAction === id ? ' on' : '') + '" onclick="rpgPickBulkAction(\'' + id + '\')">' + escapeHtml(label) + ' <b>' + val + '</b></button>';
+            }
+            box.innerHTML = order.map(function(g){
+                return '<div class="gx-agroup"><span>' + escapeHtml(g) + '</span>' + groups[g].map(function(a){ return chip(a.id, a.label, (a.xp >= 0 ? '+' : '') + a.xp, a.xp < 0 ? 'minus' : ''); }).join('') + '</div>';
+            }).join('')
+                + '<div class="gx-agroup"><span>생활</span>' + chip('__warn', '벌점', '경고 +20', 'minus') + chip('__good', '선행', '경고 −10', 'good')
+                + '<button class="gx-edit" onclick="rpgOpenActions()">항목 추가·편집</button></div>';
+        }
+        function rpgPickBulkAction(id){ rpgBulkAction = (rpgBulkAction === id) ? null : id; rpgRenderBulkActions(); rpgUpdateBulkBtn(); }
+        function rpgToggleSelect(id){
+            if(rpgBulkSelected.has(id)) rpgBulkSelected.delete(id); else rpgBulkSelected.add(id);
+            renderRpgGrid(); rpgUpdateBulkBtn(); if(rpgGiveMode === 'group') rpgRenderGroupChips();
+        }
+        function rpgActionLabel(id){
+            if(id === '__warn') return '벌점 (경고 +20)';
+            if(id === '__good') return '선행 (경고 −10)';
+            const a = rpgAllActions().find(function(x){ return x.id === id; });
+            return a ? (a.label + ' ' + (a.xp >= 0 ? '+' : '') + a.xp + ' XP') : '';
+        }
+        function rpgTargetIds(){
+            if(rpgGiveMode === 'all') return rpgParseRoster().map(function(s){ return s.id; });
+            return Array.from(rpgBulkSelected);
+        }
+        // 맨 아래 지급 줄
+        function rpgUpdateBulkBtn(){
+            const bar = document.getElementById('gx-applybar'); if(!bar) return;
+            if(!rpgBulkMode || rpgParseRoster().length === 0){ bar.style.display = 'none'; return; }
+            bar.style.display = 'flex';
+            const nameById = {}; rpgParseRoster().forEach(function(s){ nameById[s.id] = s.name; });
+            const undo = rpgLastGive && Date.now() - rpgLastGive.at < 120000
+                ? '<button class="gx-undo" onclick="rpgUndoLastGive()" title="' + escapeHtml(rpgLastGive.desc) + '">↶ 방금 지급 되돌리기</button>' : '';
+            const lbl = rpgBulkAction ? rpgActionLabel(rpgBulkAction) : '';
+            if(rpgGiveMode === 'one'){
+                bar.innerHTML = '<div class="gx-sum">' + (lbl ? '<b>' + escapeHtml(lbl) + '</b> — 학생 카드를 누르면 바로 줘요' : '위에서 행동을 고르세요')
+                    + '<small>' + (lbl ? '다른 행동은 칩을 다시 눌러 바꿔요 · 같은 칩을 또 누르면 해제' : '행동을 안 고르고 카드를 누르면 학생 자세히 보기') + '</small></div>' + undo;
+                return;
+            }
+            const ids = rpgTargetIds();
+            const who = rpgGiveMode === 'all' ? ('반 전체 ' + ids.length + '명') : (ids.length + '명');
+            const names = ids.slice().sort(function(a, b){ return a - b; }).map(function(id){ return nameById[id] || (id + '번'); }).join(', ');
+            const ready = ids.length && rpgBulkAction;
+            bar.innerHTML = '<div class="gx-sum"><b>' + who + '</b>' + (lbl ? ' · ' + escapeHtml(lbl) : ' · <span style="color:#ffd28a;">행동을 고르세요</span>')
+                + '<small>' + (ids.length ? escapeHtml(names) : (rpgGiveMode === 'group' ? '모둠이나 카드를 눌러 고르세요' : '카드를 눌러 고르세요')) + '</small></div>'
+                + undo
+                + (rpgGiveMode !== 'all' && ids.length ? '<button class="gx-ghost" onclick="rpgSelectAll(false)">비우기</button>' : '')
+                + '<button class="gx-go" ' + (ready ? '' : 'disabled ') + 'onclick="rpgBulkApply()">' + (ready ? ids.length + '명에게 지급' : '지급') + '</button>';
+        }
         function rpgBulkApply(){
-            if(!rpgRef) return;
-            if(!rpgBulkAction){ alert('먼저 줄 행동을 골라주세요.'); return; }
-            if(rpgBulkSelected.size===0){ alert('학생을 선택해주세요. (카드를 톡톡 누르면 선택돼요)'); return; }
-            const a = rpgAllActions().find(function(x){ return x.id===rpgBulkAction; });
-            const updates = {}; let levelups = 0;
-            rpgBulkSelected.forEach(function(id){
+            if(!rpgBulkAction){ alert('먼저 줄 행동을 골라 주세요.'); return; }
+            const ids = rpgTargetIds();
+            if(!ids.length){ alert('학생을 골라 주세요. (카드를 누르면 골라져요)'); return; }
+            if(rpgGiveMode === 'all' && !confirm('반 전체 ' + ids.length + '명에게 ' + rpgActionLabel(rpgBulkAction) + '을(를) 줄까요?')) return;
+            rpgGiveToIds(ids);
+        }
+        // 실제 지급 (바뀌는 값만 저장) + 되돌리기용으로 지급 전 값 기억
+        function rpgGiveToIds(ids){
+            if(!rpgRef || !ids.length || !rpgBulkAction) return;
+            const actionId = rpgBulkAction;
+            const a = rpgAllActions().find(function(x){ return x.id === actionId; });
+            if(!a && actionId !== '__warn' && actionId !== '__good') return;
+            const updates = {}, prev = {}; let levelups = 0;
+            ids.forEach(function(id){
                 const s = rpgStudentObj(id);
-                if(rpgBulkAction==='__warn'){ s.warning = Math.max(0, Math.min(100, s.warning+20)); }
-                else if(rpgBulkAction==='__good'){ s.warning = Math.max(0, Math.min(100, s.warning-10)); }
-                else if(a){ const before = rpgLevel(s.xp).lv; s.xp += a.xp; s.stats[a.stat] = (s.stats[a.stat]||0)+1; if(rpgLevel(s.xp).lv > before) levelups++; }
-                updates['students/'+id] = s;
+                prev[id] = { xp:s.xp, stats:Object.assign({}, s.stats), warning:s.warning };
+                if(actionId === '__warn') s.warning = Math.max(0, Math.min(100, s.warning + 20));
+                else if(actionId === '__good') s.warning = Math.max(0, Math.min(100, s.warning - 10));
+                else { const before = rpgLevel(s.xp).lv; s.xp += a.xp; s.stats[a.stat] = (s.stats[a.stat] || 0) + 1; if(rpgLevel(s.xp).lv > before) levelups++; }
+                rpgStudentPut(updates, 'students/', id, s);
             });
-            const n = rpgBulkSelected.size;
+            const nameById = {}; rpgParseRoster().forEach(function(s){ nameById[s.id] = s.name; });
+            const who = ids.length === 1 ? (nameById[ids[0]] || (ids[0] + '번')) : (ids.length + '명');
+            const lbl = rpgActionLabel(actionId);
             rpgRef.update(updates).then(function(){
-                const lbl = a ? (a.label+' +'+a.xp) : (rpgBulkAction==='__warn'?'벌점 +20':'선행 −10');
-                rpgToast(n + '명에게 ' + lbl + ' 지급 완료');
-                if(levelups>0){ SFX.levelup(); setTimeout(function(){ rpgToast('🎉 레벨업 '+levelups+'명!', true); }, 400); }
-                else if(rpgBulkAction==='__warn') SFX.warn(); else SFX.point();
-                rpgBulkSelected.clear(); renderRpgGrid(); rpgUpdateBulkBtn();
-            }).catch(function(e){ alert('지급 오류: '+e.message); });
+                rpgLastGive = { prev:prev, at:Date.now(), desc:who + ' · ' + lbl };
+                rpgToast(who + ' · ' + lbl);
+                if(levelups > 0){ SFX.levelup(); setTimeout(function(){ rpgToast('🎉 레벨 업 ' + levelups + '명!', true); }, 400); }
+                else if(actionId === '__warn') SFX.warn(); else SFX.point();
+                if(rpgGiveMode !== 'one') rpgBulkSelected.clear();
+                renderRpgGrid(); rpgUpdateBulkBtn(); if(rpgGiveMode === 'group') rpgRenderGroupChips();
+                setTimeout(rpgUpdateBulkBtn, 121000); // 되돌리기 버튼 2분 뒤 사라짐
+            }).catch(function(e){ alert('지급 오류: ' + e.message); });
+        }
+        function rpgUndoLastGive(){
+            const g = rpgLastGive; if(!g || !rpgRef) return;
+            if(!confirm('방금 지급을 되돌릴까요?\n(' + g.desc + ')')) return;
+            const up = {}; Object.keys(g.prev).forEach(function(id){ rpgStudentPut(up, 'students/', id, g.prev[id]); });
+            rpgRef.update(up).then(function(){ rpgLastGive = null; rpgToast('↶ 되돌렸어요'); renderRpgGrid(); rpgUpdateBulkBtn(); })
+                .catch(function(e){ alert('되돌리기 오류: ' + e.message); });
         }
 
         function rpgStudentObj(id){
             const cur = (rpgData.students && rpgData.students[id]) || {};
             return { xp:cur.xp || 0, stats:Object.assign({}, cur.stats), job:cur.job || null, warning:cur.warning || 0 };
+        }
+        // ⚠️ 학생 칸(students/<번호>)을 통째로 덮어쓰면 머리장식·펫·프레임·장비·인벤토리·쓴 코인·대결 기록이 지워진다.
+        //    상점·벌점으로 바뀌는 값(xp·능력치·경고)만 골라 저장한다. base 예: 'students/' 또는 'rpg/students/'
+        function rpgStudentPut(up, base, id, s){
+            up[base + id + '/xp'] = s.xp; up[base + id + '/stats'] = s.stats; up[base + id + '/warning'] = s.warning;
+            return up;
         }
 
         // ===== 🌱 모둠 점수 → 성장 포인트 차등 지급 =====
@@ -9940,7 +10122,7 @@ var qrcode = function() {
             s.xp += a.xp;
             s.stats[a.stat] = (s.stats[a.stat] || 0) + 1;
             const afterLv = rpgLevel(s.xp).lv;
-            rpgRef.child('students/' + id).set(s).then(() => {
+            rpgRef.update(rpgStudentPut({}, 'students/', id, s)).then(() => {
                 rpgToast('+' + a.xp + ' XP · ' + rpgStatName(a.stat) + ' +1');
                 if(afterLv > beforeLv){ SFX.levelup(); setTimeout(() => rpgToast('🎉 레벨 업! Lv.' + afterLv, true), 400); }
                 else if(a.xp < 0) SFX.warn(); else SFX.point();
@@ -9951,7 +10133,7 @@ var qrcode = function() {
             if(!rpgRef) return;
             const s = rpgStudentObj(id);
             s.warning = Math.max(0, Math.min(100, s.warning + delta));
-            rpgRef.child('students/' + id).set(s).then(() => {
+            rpgRef.update(rpgStudentPut({}, 'students/', id, s)).then(() => {
                 rpgToast(delta > 0 ? '⚠️ 경고 +' + delta : '💚 선행 회복 ' + delta);
                 if(s.warning >= 60 && delta > 0) setTimeout(() => rpgToast('🚨 경고 게이지 60 이상!', true), 400);
             });
@@ -10048,7 +10230,7 @@ var qrcode = function() {
                 if(actionId === '__warn'){ s.warning = Math.max(0, Math.min(100, s.warning + 20)); }
                 else if(actionId === '__good'){ s.warning = Math.max(0, Math.min(100, s.warning - 10)); }
                 else if(a){ const before = rpgLevel(s.xp).lv; s.xp += a.xp; s.stats[a.stat] = (s.stats[a.stat] || 0) + 1; if(rpgLevel(s.xp).lv > before) levelups++; }
-                updates['students/' + id] = s;
+                rpgStudentPut(updates, 'students/', id, s);
             });
             return rpgRef.update(updates).then(function(){
                 const lbl = a ? (a.label + ' +' + a.xp) : (actionId === '__warn' ? '벌점 +20' : '선행 −10');
@@ -10167,7 +10349,7 @@ var qrcode = function() {
                 if(a.perfect && p.fullA){ s.xp += p.fullA.xp; s.stats[p.fullA.stat] = (s.stats[p.fullA.stat] || 0) + 1; }
                 if(a.improved && p.upA){ s.xp += p.upA.xp; s.stats[p.upA.stat] = (s.stats[p.upA.stat] || 0) + 1; }
                 if(rpgLevel(s.xp).lv > before) levelups++;
-                updates['students/' + a.num] = s;
+                rpgStudentPut(updates, 'students/', a.num, s);
             });
             const examKey = rpgRef.child('exams/' + p.subject).push().key;
             updates['exams/' + p.subject + '/' + examKey] = { title:p.title || '', scores:p.scores, createdAt:Date.now() };
@@ -10324,7 +10506,7 @@ var qrcode = function() {
             if(m.done && m.done[num]){ rpgRef.child('missions/' + mid + '/done/' + num).remove(); return; }
             const s = rpgStudentObj(num); const before = rpgLevel(s.xp).lv;
             s.xp += (m.xp || 0); if(m.stat) s.stats[m.stat] = (s.stats[m.stat] || 0) + 1;
-            const up = {}; up['students/' + num] = s; up['missions/' + mid + '/done/' + num] = true;
+            const up = rpgStudentPut({}, 'students/', num, s); up['missions/' + mid + '/done/' + num] = true;
             rpgRef.update(up).then(function(){ rpgToast(num + '번 미션 완료! +' + (m.xp || 0) + ' XP'); SFX.mission(); if(rpgLevel(s.xp).lv > before) setTimeout(function(){ SFX.levelup(); rpgToast('🎉 레벨 업!', true); }, 400); });
         }
         function rpgMissionAll(mid){
@@ -10335,7 +10517,7 @@ var qrcode = function() {
             if(targets.length === 0){ alert('이미 전원 완료예요.'); return; }
             if(!confirm(targets.length + '명에게 미션 보상을 줄까요?')) return;
             const up = {}; let lv = 0;
-            targets.forEach(function(st){ const s = rpgStudentObj(st.id); const b = rpgLevel(s.xp).lv; s.xp += (m.xp || 0); if(m.stat) s.stats[m.stat] = (s.stats[m.stat] || 0) + 1; if(rpgLevel(s.xp).lv > b) lv++; up['students/' + st.id] = s; up['missions/' + mid + '/done/' + st.id] = true; });
+            targets.forEach(function(st){ const s = rpgStudentObj(st.id); const b = rpgLevel(s.xp).lv; s.xp += (m.xp || 0); if(m.stat) s.stats[m.stat] = (s.stats[m.stat] || 0) + 1; if(rpgLevel(s.xp).lv > b) lv++; rpgStudentPut(up, 'students/', st.id, s); up['missions/' + mid + '/done/' + st.id] = true; });
             rpgRef.update(up).then(function(){ rpgToast(targets.length + '명 미션 완료 보상!'); SFX.mission(); if(lv > 0) setTimeout(function(){ SFX.levelup(); rpgToast('🎉 레벨 업 ' + lv + '명!', true); }, 400); });
         }
 
@@ -10654,7 +10836,7 @@ var qrcode = function() {
                 const s = rpgStudentObj(st.id); const before = rpgLevel(s.xp).lv;
                 s.xp += a.xp; s.stats[a.stat] = (s.stats[a.stat] || 0) + 1;
                 if(rpgLevel(s.xp).lv > before) lv++;
-                up['rpg/students/' + st.id] = s;
+                rpgStudentPut(up, 'rpg/students/', st.id, s);
                 up['reading/students/' + st.id + '/rewardedDates/' + today] = true;
             });
             db.ref('rooms/' + currentRoom).update(up).then(function(){
@@ -10922,24 +11104,26 @@ var qrcode = function() {
         }
         function diaryNoKeyAlert(){ alert('먼저 [기초 세팅]에서 구글(Gemini) API 키를 입력해 주세요.'); }
 
-        // ---- 아침칠판 칸: 그날 주제 + 낸 사람 수 ----
-        function diaryRenderBoard(){
-            const el = document.getElementById('view-diary'); if(!el) return;
+        // ---- 아침칠판 '아침 자습' 칸에 그날 주제 넣기 ----
+        //   그날 아침칠판 내용을 다 불러온 뒤에만, 주제마다 한 번만(boardAdded) 맨 위에 '주제일기: 주제' 한 줄을 넣는다.
+        //   선생님이 그 줄을 지워도 다시 넣지 않음. 미리 예약한 주제는 그날 아침칠판을 열 때 들어감.
+        let diaryBoardReadyKey = null; // 아침칠판 내용이 실제로 불러와진 날짜 (그 전엔 넣지 않음 — 불러온 내용에 덮이니까)
+        function diaryMorningSync(fromBoardLoad){
             const key = getFormattedDate(viewDate);
-            const t = diaryTopics().find(function(x){ return x.date === key; });
-            if(!t){ el.innerHTML = '<span style="color:#b9b0cf; font-size:14px;">' + (isTabletMode ? '오늘은 주제가 없어요' : '아직 주제가 없어요 · 눌러서 내기') + '</span>'; return; }
-            const roster = rpgParseRoster();
-            const done = roster.filter(function(s){ return diaryEntry(s.id, t.id); }).length;
-            el.innerHTML = '<b style="color:#5e35b1;">' + escapeHtml(t.title || '') + '</b>'
-                + (roster.length ? ' <span style="font-size:0.75em; color:#9b8fc0; font-weight:700; white-space:nowrap;">✍️ ' + done + '/' + roster.length + '명</span>' : '');
+            if(fromBoardLoad) diaryBoardReadyKey = key;
+            if(isTabletMode || !diaryRef || !diaryData.topics || diaryBoardReadyKey !== key) return;
+            const t = diaryTopics().find(function(x){ return x.date === key && !x.boardAdded; });
+            const el = document.getElementById('view-morning');
+            if(!t || !el || document.activeElement === el) return;
+            diaryData.topics[t.id].boardAdded = true; // 저장 응답 오기 전에 또 불려도 두 번 넣지 않게
+            const cur = el.innerText || '';
+            if(cur.indexOf(t.title) < 0){
+                el.innerText = '주제일기: ' + t.title + (cur.trim() ? '\n' + cur : '');
+                saveDashboard(true);
+            }
+            diaryRef.child('topics/' + t.id + '/boardAdded').set(true);
         }
-        function diaryBoardClick(){
-            if(isTabletMode || !diaryRef) return;
-            const key = getFormattedDate(viewDate);
-            const t = diaryTopics().find(function(x){ return x.date === key; });
-            if(t){ diarySelTid = t.id; switchTab('diary'); }
-            else { switchTab('diary'); diaryOpenTopicModal(null, key); }
-        }
+        function diaryRenderBoard(){ diaryMorningSync(); }
 
         // ---- 선생님: 주제일기 탭 ----
         let diarySelTid = null;
@@ -11403,7 +11587,7 @@ var qrcode = function() {
             r.sub.forEach(function(s){ give(s.id, a, 'rewarded'); });
             r.up.forEach(function(s){ give(s.id, u, 'upRewarded'); });
             r.best.forEach(function(s){ give(s.id, b, 'bestRewarded'); });
-            Object.keys(objs).forEach(function(id){ up['rpg/students/' + id] = objs[id].o; if(rpgLevel(objs[id].o.xp).lv > objs[id].before) lv++; });
+            Object.keys(objs).forEach(function(id){ rpgStudentPut(up, 'rpg/students/', id, objs[id].o); if(rpgLevel(objs[id].o.xp).lv > objs[id].before) lv++; });
             db.ref('rooms/' + currentRoom).update(up).then(function(){
                 rpgToast(Object.keys(objs).length + '명에게 주제일기 상점 지급!');
                 SFX.mission();
