@@ -2577,7 +2577,7 @@ var qrcode = function() {
         .act-screen-btn { min-width: 28px; height: 28px; border: none; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer; font-family: 'Pretendard',sans-serif; }
         /* 성장 탭 관리 드롭다운 메뉴 */
         /* ===== 성장 탭: 지급 패널·관리 메뉴 (테마 변수를 따라감) ===== */
-        #rpg-tab { --gx-ink: var(--txt, #263042); --gx-muted: var(--muted, #556073); --gx-line: rgba(81, 97, 138, 0.18); --gx-soft: rgba(91, 151, 209, 0.10); --gx-r: 8px; --gx-R: 14px; --gx-t: 150ms cubic-bezier(.2,.7,.3,1); }
+        #rpg-tab, #homework-tab, #rpg-mcheck, #rpg-mwin, #rpg-mission-modal { --gx-ink: var(--txt, #263042); --gx-muted: var(--muted, #556073); --gx-line: rgba(81, 97, 138, 0.18); --gx-soft: rgba(91, 151, 209, 0.10); --gx-r: 8px; --gx-R: 14px; --gx-t: 150ms cubic-bezier(.2,.7,.3,1); }
         .gx-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
         .gx-menu-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px; border: 1px solid var(--gx-line); border-radius: var(--gx-r); background: var(--pnl-in, #fff); color: var(--gx-ink); font: 700 14px 'Pretendard', sans-serif; cursor: pointer; transition: background var(--gx-t); }
         .gx-menu-btn:hover { background: var(--gx-soft); }
@@ -2632,6 +2632,21 @@ var qrcode = function() {
         .gx-applybar .gx-go:disabled { background: #4a5468; color: #9aa4b5; cursor: default; }
         .gx-applybar .gx-ghost { background: transparent; color: #c9d2df; border: 1px solid #4a5468; padding: 9px 12px; font-weight: 700; }
         .gx-applybar .gx-undo { background: transparent; color: #ffd28a; padding: 9px 8px; font-weight: 700; }
+        .gx-mstrip { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 9px 12px; margin-bottom: 10px; border: 1px solid rgba(233, 30, 140, 0.25); border-radius: var(--gx-r); background: rgba(233, 30, 140, 0.05); font-size: 14px; color: var(--gx-ink); text-align: left; }
+        .gx-mstrip b { color: #ad1457; }
+        .gx-mstrip .gx-mini { font-weight: 800; }
+        .mck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+        .mck-btn { position: relative; border: 2px solid #dfe5ee; background: #fff; border-radius: 14px; padding: 14px 10px 12px; cursor: pointer; font-family: 'Pretendard', sans-serif; text-align: center; transition: background 150ms, border-color 150ms, transform 120ms; }
+        .mck-btn:active { transform: scale(0.97); }
+        .mck-btn .n { font-size: 13px; color: #7a8698; font-weight: 700; }
+        .mck-btn .nm { font-size: 24px; font-weight: 900; color: #263042; margin: 2px 0 8px; }
+        .mck-btn .dots { display: flex; justify-content: center; gap: 5px; }
+        .mck-btn .dots i { width: 12px; height: 12px; border-radius: 50%; background: #e3e8ef; }
+        .mck-btn .dots i.f { background: #43a047; }
+        .mck-btn .cnt { font-size: 13px; font-weight: 800; color: #607086; margin-top: 6px; }
+        .mck-btn.on { background: #e8f5e9; border-color: #43a047; }
+        .mck-btn.on .nm { color: #1b5e20; }
+        .mck-btn.win::after { content: '성공'; position: absolute; top: -9px; right: -6px; background: #ad1457; color: #fff; font-size: 12px; font-weight: 800; padding: 3px 8px; border-radius: 10px; }
         .gx-dash-strip { display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; padding: 2px 2px 12px; font-size: 13px; color: var(--gx-muted); text-align: left; }
         .gx-dash-strip b { font-size: 18px; color: var(--gx-ink); font-weight: 800; margin-right: 3px; }
         @media (prefers-reduced-motion: reduce){ #rpg-tab *, #rpg-menu * { transition: none !important; } }
@@ -3583,6 +3598,13 @@ var qrcode = function() {
                 </div>
 
                 <div id="hw-list-section">
+                    <div class="picker-box" style="text-align:left; margin-bottom:20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
+                            <h2 style="margin:0; color:var(--dark-blue);">🎯 기간 미션 <span style="font-size:14px; color:#7a8698; font-weight:600;">— 기간 동안 체크해서 기준 넘으면 성공 (예: 급식 다 먹기 3번)</span></h2>
+                            <button class="action-btn" style="background:#ad1457; padding:9px 16px;" onclick="rpgOpenMissions(); rpgMiSetType('period');"><i class="fa-solid fa-plus"></i> 새 기간 미션</button>
+                        </div>
+                        <div id="hw-missions"></div>
+                    </div>
                     <div class="picker-box" style="text-align:left;">
                         <h2 style="margin:0 0 15px 0; color:var(--dark-blue); border-bottom:2px solid #eee; padding-bottom:10px;">📋 과제 체크 리스트</h2>
                         <label style="font-size:15px; color:#546e7a; font-weight:bold; margin-bottom:15px; display:block;"><input type="checkbox" id="show-archived" onchange="renderHomeworkList()"> 보관된 완료 과제도 보기</label>
@@ -3720,6 +3742,7 @@ var qrcode = function() {
                         </div>
                     </div>
 
+                    <div id="gx-missions"></div>
                     <!-- 지급: 누구에게(한 명씩·골라서·모둠·반 전체) → 무엇을 → 맨 아래 지급 줄 -->
                     <div id="rpg-bulk-bar" class="gx-give" style="display:none;">
                         <div class="gx-row">
@@ -4090,8 +4113,25 @@ var qrcode = function() {
                         <button onclick="rpgCloseMissions()" style="border:none; background:#f0f2f5; border-radius:50%; width:32px; height:32px; cursor:pointer; font-size:16px;">✕</button>
                     </div>
                     <div style="background:#fdf0f6; border:1px solid #f6d4e6; border-radius:12px; padding:12px 14px; margin-bottom:14px;">
-                        <div style="font-weight:700; color:#c2185b; margin-bottom:8px; font-size:14px;">➕ 새 미션</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
+                            <div style="font-weight:700; color:#c2185b; font-size:14px;">➕ 새 미션</div>
+                            <div class="gx-seg gx-seg-sm" id="rpg-mi-type">
+                                <button type="button" data-t="once" class="on" onclick="rpgMiSetType('once')">한 번 완료형</button>
+                                <button type="button" data-t="period" onclick="rpgMiSetType('period')">기간 체크형</button>
+                            </div>
+                        </div>
                         <input id="rpg-mi-title" placeholder="미션 제목 (예: 독서록 3편 쓰기)" style="width:100%; padding:9px; border:1px solid #ccc; border-radius:8px; margin-bottom:8px; box-sizing:border-box; font-family:'Pretendard';">
+                        <div id="rpg-mi-period" style="display:none; margin-bottom:8px;">
+                            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; font-size:13px; color:#555; margin-bottom:6px;">
+                                <input id="rpg-mi-start" type="date" style="padding:8px; border:1px solid #ccc; border-radius:8px; font-family:'Pretendard';"> ~
+                                <input id="rpg-mi-end" type="date" style="padding:8px; border:1px solid #ccc; border-radius:8px; font-family:'Pretendard';">
+                                <span style="margin-left:6px;">기간 안에</span>
+                                <input id="rpg-mi-target" type="number" min="1" value="3" style="width:56px; padding:8px; border:1px solid #ccc; border-radius:8px; text-align:center;">
+                                <span>번 이상이면 성공</span>
+                            </div>
+                            <input id="rpg-mi-prize" placeholder="상품 (선택, 예: 간식 · 자리 바꾸기 우선권)" style="width:100%; padding:9px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box; font-family:'Pretendard';">
+                            <div style="font-size:11px; color:#999; margin-top:5px;">학생이 매일 전자칠판의 [오늘 체크] 화면에서 자기 이름을 눌러요. 성공하면 아래 XP를 상점으로 줄 수 있어요.</div>
+                        </div>
                         <div style="display:flex; gap:8px;">
                             <input id="rpg-mi-xp" type="number" value="30" min="0" style="width:78px; padding:9px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box;" title="보상 XP">
                             <select id="rpg-mi-stat" style="flex:1; padding:9px; border:1px solid #ccc; border-radius:8px;"></select>
@@ -4100,6 +4140,15 @@ var qrcode = function() {
                     </div>
                     <div id="rpg-mission-list"></div>
                 </div>
+            </div>
+
+            <!-- 성장: 기간 미션 '오늘 체크' (전자칠판에서 학생이 자기 이름을 누름) -->
+            <div id="rpg-mcheck" style="display:none; position:fixed; inset:0; z-index:2600; background:#f4f6f9; overflow-y:auto;">
+                <div style="max-width:1400px; margin:0 auto; padding:22px 24px 40px;" id="rpg-mcheck-body"></div>
+            </div>
+            <!-- 성장: 기간 미션 성공 명단 -->
+            <div id="rpg-mwin" style="display:none; position:fixed; inset:0; z-index:2700; background:rgba(20,26,38,0.55); align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) rpgMissionWinClose()">
+                <div style="background:#fff; border-radius:18px; max-width:720px; width:100%; max-height:90vh; overflow:auto; padding:26px;" id="rpg-mwin-body"></div>
             </div>
 
             <!-- 성장: 학생 로그인 안내(교사용) -->
@@ -4648,9 +4697,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.64';
+        const APP_VERSION = '1.65';
         const APP_VERSION_DATE = '2026-10-22';
         const APP_CHANGELOG = [
+            'v1.65 (2026-10-22) — 🎯 기간 미션: 기간·성공 기준(예: 이번 주 급식 다 먹기 3번)·상품을 정하면 전자칠판 체크 팝업(학생이 이름 누르기 / 기간 전체 표)으로 체크, 성공 명단 + 상점 (과제관리·성장 탭)',
             'v1.64 (2026-10-22) — 🤝 협동학습 뽑기 새 판: 모둠 전체가 늘 보이고, 한 번 누르면 모둠+역할이 띵! (지금=주황 · 전에=연한 파랑 ✓ · 이번 바퀴에 나온 모둠=회색) · 긴급협동은 합쳐서 없앰',
             'v1.63 (2026-10-22) — 🛡️ 상점 줄 때 장비·펫·코인 기록이 지워지던 문제 고침 · 성장 탭 새 배치(한 명씩/골라서/모둠/반 전체, 되돌리기, 관리 메뉴 정리) · 주제일기 주제는 아침 자습 칸에 자동으로',
             'v1.62 (2026-10-22) — ✏️ 주제일기: AI가 주제 설명·쓰는 방법·채점 기준을 만들고, 학생이 핸드폰으로 쓰면 AI가 100점 만점 채점 · 60점 미만은 고쳐 쓰기 안내 · 제출/향상/최고 점수 성장 포인트 (아침칠판에 오늘 주제 칸)',
@@ -5142,6 +5192,9 @@ var qrcode = function() {
                 var _gm = document.getElementById('rpg-grade-modal'); if(_gm && _gm.style.display === 'flex') rpgRenderGrade();
                 var _sm = document.getElementById('rpg-subject-modal'); if(_sm && _sm.style.display === 'flex') rpgRenderSubjectList();
                 var _mm = document.getElementById('rpg-mission-modal'); if(_mm && _mm.style.display === 'flex') rpgRenderMissions();
+                if(rpgMcheckId) rpgMissionCheckRender();
+                rpgRenderHwMissions();
+                if(rpgMwinId) rpgMissionWinRender();
             });
             readingRef.on('value', snap => {
                 readingData = snap.val() || {};
@@ -6917,7 +6970,7 @@ var qrcode = function() {
             
             document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
             if(t === 'stats') { document.getElementById('homework-tab').classList.add('active'); toggleHwView('stats'); } 
-            else if(t === 'homework') { document.getElementById('homework-tab').classList.add('active'); toggleHwView('list'); } 
+            else if(t === 'homework') { document.getElementById('homework-tab').classList.add('active'); toggleHwView('list'); rpgRenderHwMissions(); } 
             else { document.getElementById(t + '-tab').classList.add('active'); }
 
             if(t === 'calendar') renderCalendarTab();
@@ -9565,6 +9618,7 @@ var qrcode = function() {
             var _tb = document.getElementById('rpg-teacher-btns'); if(_tb) _tb.style.display = rpgStudentMode ? 'none' : 'flex';
             var _lb2 = document.getElementById('rpg-lock-btn'); if(_lb2 && rpgStudentMode) _lb2.style.display = 'none';
             var _es = document.getElementById('rpg-exit-student'); if(_es) _es.style.display = rpgStudentMode ? '' : 'none';
+            rpgRenderMissionStrip();
             rpgBulkMode = !rpgStudentMode; // 학생 모드에선 지급 패널·지급 줄을 숨김
             var _bb = document.getElementById('rpg-bulk-bar'); if(_bb) _bb.style.display = rpgStudentMode ? 'none' : 'block';
             rpgUpdateBulkBtn();
@@ -10479,6 +10533,10 @@ var qrcode = function() {
         function rpgOpenMissions(){
             document.getElementById('rpg-mi-stat').innerHTML = '<option value="">능력치 없음</option>' + RPG_STATS.map(function(s){ return '<option value="' + s.key + '">' + s.emoji + ' ' + s.name + '</option>'; }).join('');
             document.getElementById('rpg-mi-title').value = ''; document.getElementById('rpg-mi-xp').value = '30';
+            const wk = rpgThisWeek();
+            document.getElementById('rpg-mi-start').value = wk[0]; document.getElementById('rpg-mi-end').value = wk[1];
+            document.getElementById('rpg-mi-target').value = '3'; document.getElementById('rpg-mi-prize').value = '';
+            rpgMiSetType('once');
             rpgRenderMissions();
             document.getElementById('rpg-mission-modal').style.display = 'flex';
         }
@@ -10489,7 +10547,15 @@ var qrcode = function() {
             const xp = parseInt(document.getElementById('rpg-mi-xp').value) || 0;
             const stat = document.getElementById('rpg-mi-stat').value;
             const key = rpgRef.child('missions').push().key;
-            rpgRef.child('missions/' + key).set({ title:title, xp:xp, stat:stat || null, createdAt:Date.now() }).then(function(){ document.getElementById('rpg-mi-title').value = ''; rpgToast('미션 추가: ' + title); });
+            const m = { title:title, xp:xp, stat:stat || null, createdAt:Date.now() };
+            if(rpgMiType === 'period'){
+                const st = document.getElementById('rpg-mi-start').value, en = document.getElementById('rpg-mi-end').value;
+                const target = parseInt(document.getElementById('rpg-mi-target').value, 10) || 0;
+                if(!st || !en || en < st){ alert('기간을 확인해 주세요. (끝나는 날이 시작하는 날보다 뒤여야 해요)'); return; }
+                if(target < 1){ alert('성공 기준을 1번 이상으로 정해 주세요.'); return; }
+                Object.assign(m, { type:'period', start:st, end:en, target:target, prize:document.getElementById('rpg-mi-prize').value.trim() });
+            }
+            rpgRef.child('missions/' + key).set(m).then(function(){ document.getElementById('rpg-mi-title').value = ''; rpgToast('미션 추가: ' + title); });
         }
         function rpgDeleteMission(id){ if(!rpgRef || !confirm('이 미션을 삭제할까요?')) return; rpgRef.child('missions/' + id).remove().then(function(){ rpgToast('미션 삭제'); }); }
         function rpgRenderMissions(){
@@ -10500,6 +10566,7 @@ var qrcode = function() {
             const roster = rpgParseRoster();
             el.innerHTML = keys.map(function(k){
                 const m = ms[k], done = m.done || {};
+                if(m.type === 'period') return rpgPeriodMissionCard(k, m, roster);
                 const rew = (m.xp ? '+' + m.xp + ' XP' : '') + (m.stat ? ' · ' + rpgStatName(m.stat) + ' +1' : '');
                 const doneCnt = roster.filter(function(st){ return done[st.id]; }).length;
                 const btns = roster.map(function(st){
@@ -10517,6 +10584,233 @@ var qrcode = function() {
                     + '</div>';
             }).join('');
         }
+        // ===== 🎯 기간 체크형 미션 (예: 이번 주 급식 다 먹기 3번 이상) =====
+        //   missions/<id> = { type:'period', title, start, end, target, prize, xp, stat, checks:{ 'YYYY-MM-DD': { 번호:true } }, done:{ 번호:true }(상점 받음) }
+        //   학생은 전자칠판(선생님 화면)의 [오늘 체크]에서 자기 이름을 눌러 체크. 기간 안 체크 수가 target 이상이면 성공.
+        let rpgMiType = 'once';
+        function rpgMiSetType(t){
+            rpgMiType = t;
+            document.querySelectorAll('#rpg-mi-type button').forEach(function(b){ b.classList.toggle('on', b.dataset.t === t); });
+            const box = document.getElementById('rpg-mi-period'); if(box) box.style.display = t === 'period' ? 'block' : 'none';
+            const ti = document.getElementById('rpg-mi-title'); if(ti) ti.placeholder = t === 'period' ? '미션 제목 (예: 급식 다 먹기)' : '미션 제목 (예: 독서록 3편 쓰기)';
+        }
+        function rpgThisWeek(){
+            const d = new Date(); const dow = d.getDay(); // 0=일
+            const mon = new Date(d); mon.setDate(d.getDate() - ((dow + 6) % 7));
+            const fri = new Date(mon); fri.setDate(mon.getDate() + 4);
+            return [getFormattedDate(mon), getFormattedDate(fri)];
+        }
+        function rpgMdShort(k){ const p = (k || '').split('-'); return p.length === 3 ? (+p[1]) + '/' + (+p[2]) : k; }
+        function rpgMissionCount(m, num){
+            let c = 0; const ch = m.checks || {};
+            Object.keys(ch).forEach(function(d){ if(d >= m.start && d <= m.end && ch[d] && ch[d][num]) c++; });
+            return c;
+        }
+        function rpgMissionWinners(m){ return rpgParseRoster().filter(function(st){ return rpgMissionCount(m, st.id) >= (m.target || 1); }); }
+        function rpgMissionActive(m){ const t = getFormattedDate(new Date()); return m.type === 'period' && t >= m.start && t <= m.end; }
+        function rpgPeriodMissionCard(k, m, roster){
+            const wins = rpgMissionWinners(m);
+            const toReward = wins.filter(function(st){ return !(m.done && m.done[st.id]); });
+            const rew = (m.xp ? '+' + m.xp + ' XP' : '') + (m.stat ? ' · ' + rpgStatName(m.stat) + ' +1' : '');
+            const today = getFormattedDate(new Date());
+            const state = today < m.start ? '시작 전' : (today > m.end ? '끝남' : '진행 중');
+            return '<div style="border:1px solid #f3cfe2;border-radius:12px;padding:12px;margin-bottom:10px;background:#fffafd;">'
+                + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;flex-wrap:wrap;">'
+                + '<div><b style="color:#51618a;">' + escapeHtml(m.title) + '</b> <span style="font-size:11px;font-weight:800;color:#fff;background:' + (state === '진행 중' ? '#ad1457' : '#9aa4b2') + ';border-radius:8px;padding:2px 7px;">' + state + '</span>'
+                + '<div style="font-size:12px;color:#7a8698;margin-top:3px;">' + rpgMdShort(m.start) + ' ~ ' + rpgMdShort(m.end) + ' · ' + m.target + '번 이상이면 성공' + (m.prize ? ' · 🎁 ' + escapeHtml(m.prize) : '') + (rew ? ' · <span style="color:#e91e8c;font-weight:700;">' + rew + '</span>' : '') + '</div></div>'
+                + '<button onclick="rpgDeleteMission(\'' + k + '\')" style="border:none;background:transparent;color:#e57373;font-size:12px;cursor:pointer;">삭제</button></div>'
+                + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">'
+                + '<button class="gx-mini" style="font-weight:800;" onclick="rpgMissionCheckOpen(\'' + k + '\')">✋ 체크 팝업 열기</button>'
+                + '<button class="gx-mini" onclick="rpgMissionWinOpen(\'' + k + '\')">🏆 성공 명단 ' + wins.length + '명</button>'
+                + (toReward.length ? '<button class="gx-mini" style="border-color:#e91e8c;color:#ad1457;font-weight:800;" onclick="rpgMissionReward(\'' + k + '\')">성공 ' + toReward.length + '명 상점 주기</button>' : '')
+                + '</div>'
+                + '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;">' + roster.map(function(st){
+                    const c = rpgMissionCount(m, st.id), win = c >= m.target;
+                    return '<span title="' + escapeHtml(st.name) + '" style="font-size:12px;padding:3px 7px;border-radius:7px;border:1px solid ' + (win ? '#ad1457' : '#e3e8ef') + ';background:' + (win ? '#fde7f1' : '#fff') + ';color:' + (win ? '#ad1457' : '#607086') + ';font-weight:700;">' + st.id + ' ' + c + '/' + m.target + '</span>';
+                }).join('') + '</div></div>';
+        }
+        // 성장 탭 맨 위: 진행 중(또는 상점을 아직 안 준) 기간 미션 한 줄씩
+        function rpgRenderMissionStrip(){
+            const box = document.getElementById('gx-missions'); if(!box) return;
+            if(rpgStudentMode){ box.innerHTML = ''; return; }
+            const ms = rpgData.missions || {};
+            const today = getFormattedDate(new Date());
+            const keys = Object.keys(ms).filter(function(k){
+                const m = ms[k]; if(m.type !== 'period') return false;
+                if(rpgMissionActive(m)) return true;
+                // 끝났어도 상점을 안 준 성공자가 있으면 7일 동안 보여줌
+                return today > m.end && today <= getFormattedDate(new Date(new Date(m.end).getTime() + 7 * 86400000)) && rpgMissionWinners(m).some(function(st){ return !(m.done && m.done[st.id]); });
+            });
+            box.innerHTML = keys.map(function(k){
+                const m = ms[k], wins = rpgMissionWinners(m), act = rpgMissionActive(m);
+                return '<div class="gx-mstrip"><span>🎯 <b>' + escapeHtml(m.title) + '</b> · ' + rpgMdShort(m.start) + '~' + rpgMdShort(m.end) + ' · ' + m.target + '번 이상' + (m.prize ? ' · 🎁 ' + escapeHtml(m.prize) : '') + ' · 성공 <b>' + wins.length + '</b>명' + (act ? '' : ' <span style="color:#7a8698;">(끝남)</span>') + '</span>'
+                    + '<span style="margin-left:auto; display:flex; gap:6px;">'
+                    + (act ? '<button class="gx-mini" onclick="rpgMissionCheckOpen(\'' + k + '\')">✋ 오늘 체크</button>' : '')
+                    + '<button class="gx-mini" onclick="rpgMissionWinOpen(\'' + k + '\')">🏆 성공 명단</button></span></div>';
+            }).join('');
+        }
+        // 과제관리 탭의 '기간 미션' 칸 (성장 탭과 같은 미션 데이터)
+        function rpgRenderHwMissions(){
+            const box = document.getElementById('hw-missions'); if(!box) return;
+            if(!rpgRef){ box.innerHTML = ''; return; }
+            const ms = rpgData.missions || {};
+            const keys = Object.keys(ms).filter(function(k){ return ms[k].type === 'period'; })
+                .sort(function(a, b){ return (ms[b].start || '').localeCompare(ms[a].start || '') || (ms[b].createdAt || 0) - (ms[a].createdAt || 0); });
+            const roster = rpgParseRoster();
+            box.innerHTML = keys.length ? keys.map(function(k){ return rpgPeriodMissionCard(k, ms[k], roster); }).join('')
+                : '<div style="color:#999; padding:14px; text-align:center;">아직 기간 미션이 없어요. 오른쪽 위 <b>[새 기간 미션]</b>으로 만들어 보세요.</div>';
+        }
+        // ✋ 체크 팝업 (전자칠판에 크게) — '오늘 체크'(학생이 자기 이름 누름) / '기간 전체 표'(날짜별 칸을 바로 누름)
+        let rpgMcheckId = null, rpgMcheckDate = null, rpgMcheckView = 'board';
+        function rpgMissionCheckView(v){ rpgMcheckView = v; rpgMissionCheckRender(); }
+        function rpgMissionDates(m){
+            const out = []; const d = new Date(m.start), end = new Date(m.end);
+            for(let i = 0; d <= end && i < 62; i++){ out.push(getFormattedDate(d)); d.setDate(d.getDate() + 1); }
+            return out;
+        }
+        function rpgMissionCellToggle(num, dateKey){ const keep = rpgMcheckDate; rpgMcheckDate = dateKey; rpgMissionCheckToggle(num); rpgMcheckDate = keep; } // 표에서 누른 날짜로 체크하고 '오늘 체크' 날짜는 그대로
+        function rpgMissionTableHtml(m){
+            const roster = rpgParseRoster();
+            const dates = rpgMissionDates(m);
+            const today = getFormattedDate(new Date());
+            const head = '<tr><th style="text-align:left; padding:8px 10px; position:sticky; left:0; background:#f4f6f9;">학생</th>' + dates.map(function(d){
+                const dt = new Date(d), we = dt.getDay() === 0 || dt.getDay() === 6;
+                return '<th style="padding:8px 6px; font-size:13px; color:' + (d === today ? '#2e7d32' : (we ? '#b0b8c4' : '#455064')) + '; white-space:nowrap;">' + (dt.getMonth() + 1) + '/' + dt.getDate() + '<br><span style="font-weight:600;">' + '일월화수목금토'.charAt(dt.getDay()) + (d === today ? ' · 오늘' : '') + '</span></th>';
+            }).join('') + '<th style="padding:8px 10px;">횟수</th></tr>';
+            const rows = roster.map(function(st){
+                const c = rpgMissionCount(m, st.id), win = c >= m.target;
+                return '<tr style="border-top:1px solid #e6eaf0;"><td style="padding:6px 10px; font-weight:800; color:#263042; white-space:nowrap; position:sticky; left:0; background:' + (win ? '#fde7f1' : '#fff') + ';">' + st.id + ' ' + escapeHtml(st.name) + '</td>'
+                    + dates.map(function(d){
+                        const on = !!(m.checks && m.checks[d] && m.checks[d][st.id]);
+                        return '<td style="text-align:center; padding:4px;"><button onclick="rpgMissionCellToggle(' + st.id + ',\'' + d + '\')" style="width:44px; height:36px; border-radius:8px; border:1px solid ' + (on ? '#43a047' : '#dfe5ee') + '; background:' + (on ? '#43a047' : '#fff') + '; color:#fff; font-size:18px; font-weight:900; cursor:pointer;">' + (on ? '✓' : '') + '</button></td>';
+                    }).join('')
+                    + '<td style="text-align:center; font-weight:900; color:' + (win ? '#ad1457' : '#607086') + '; white-space:nowrap;">' + c + ' / ' + m.target + (win ? ' 🏆' : '') + '</td></tr>';
+            }).join('');
+            return '<div style="overflow-x:auto; background:#fff; border:1px solid #e3e8ef; border-radius:14px;"><table style="border-collapse:collapse; width:100%; font-size:15px;">' + head + rows + '</table></div>';
+        }
+        function rpgMissionCheckOpen(k){
+            const m = rpgData.missions && rpgData.missions[k]; if(!m) return;
+            rpgMcheckId = k;
+            const today = getFormattedDate(new Date());
+            rpgMcheckDate = today < m.start ? m.start : (today > m.end ? m.end : today);
+            const ov = document.getElementById('rpg-mcheck'); if(ov.parentElement !== document.body) document.body.appendChild(ov);
+            ov.style.display = 'block';
+            rpgCloseMissions();
+            rpgMissionCheckRender();
+        }
+        function rpgMissionCheckClose(){ document.getElementById('rpg-mcheck').style.display = 'none'; rpgMcheckId = null; }
+        function rpgMissionCheckDay(d){
+            const m = rpgData.missions && rpgData.missions[rpgMcheckId]; if(!m) return;
+            const dt = new Date(rpgMcheckDate); dt.setDate(dt.getDate() + d);
+            const k = getFormattedDate(dt);
+            if(k < m.start || k > m.end) return;
+            rpgMcheckDate = k; rpgMissionCheckRender();
+        }
+        function rpgMissionCheckRender(){
+            const body = document.getElementById('rpg-mcheck-body'); if(!body || !rpgMcheckId) return;
+            const m = rpgData.missions && rpgData.missions[rpgMcheckId];
+            if(!m){ rpgMissionCheckClose(); return; }
+            const day = (m.checks && m.checks[rpgMcheckDate]) || {};
+            const roster = rpgParseRoster();
+            const isToday = rpgMcheckDate === getFormattedDate(new Date());
+            const dt = new Date(rpgMcheckDate);
+            const dayLbl = (dt.getMonth() + 1) + '월 ' + dt.getDate() + '일 (' + '일월화수목금토'.charAt(dt.getDay()) + ')';
+            const checkedN = roster.filter(function(st){ return day[st.id]; }).length;
+            const wins = rpgMissionWinners(m).length;
+            const viewSeg = '<div class="gx-seg" style="margin-bottom:14px;"><button class="' + (rpgMcheckView === 'board' ? 'on' : '') + '" onclick="rpgMissionCheckView(\'board\')">✋ 오늘 체크 (학생용)</button><button class="' + (rpgMcheckView === 'table' ? 'on' : '') + '" onclick="rpgMissionCheckView(\'table\')">📅 기간 전체 표</button></div>';
+            if(rpgMcheckView === 'table'){
+                body.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px;">'
+                    + '<div><div style="font-size:15px; color:#7a8698; font-weight:700;">🎯 미션 · ' + rpgMdShort(m.start) + '~' + rpgMdShort(m.end) + ' 동안 ' + m.target + '번 이상' + (m.prize ? ' · 🎁 ' + escapeHtml(m.prize) : '') + '</div>'
+                    + '<div style="font-size:30px; font-weight:900; color:#263042; margin-top:2px;">' + escapeHtml(m.title) + '</div></div>'
+                    + '<div style="display:flex; gap:8px;"><button class="gx-mini" style="font-size:15px; padding:9px 14px; border-color:#ad1457; color:#ad1457; font-weight:800;" onclick="rpgMissionWinOpen(\'' + rpgMcheckId + '\')">🏆 성공 명단 ' + wins + '명</button>'
+                    + '<button class="gx-mini" style="font-size:15px; padding:9px 14px;" onclick="rpgMissionCheckClose()">닫기</button></div></div>'
+                    + viewSeg
+                    + '<div style="font-size:14px; color:#455064; margin-bottom:10px;">칸을 누르면 그날 체크 · 다시 누르면 취소</div>'
+                    + rpgMissionTableHtml(m);
+                return;
+            }
+            body.innerHTML = viewSeg + '<div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:18px;">'
+                + '<div><div style="font-size:15px; color:#7a8698; font-weight:700;">🎯 미션 · ' + rpgMdShort(m.start) + '~' + rpgMdShort(m.end) + ' 동안 ' + m.target + '번 이상' + (m.prize ? ' · 🎁 ' + escapeHtml(m.prize) : '') + '</div>'
+                + '<div style="font-size:34px; font-weight:900; color:#263042; margin-top:2px;">' + escapeHtml(m.title) + '</div></div>'
+                + '<div style="display:flex; align-items:center; gap:8px;">'
+                + '<button class="gx-mini" style="font-size:18px; padding:8px 14px;" onclick="rpgMissionCheckDay(-1)"' + (rpgMcheckDate <= m.start ? ' disabled' : '') + '>◀</button>'
+                + '<div style="text-align:center; min-width:150px;"><div style="font-size:22px; font-weight:900; color:' + (isToday ? '#2e7d32' : '#b45309') + ';">' + dayLbl + '</div><div style="font-size:12px; color:#7a8698;">' + (isToday ? '오늘' : '다른 날 (선생님 수정용)') + '</div></div>'
+                + '<button class="gx-mini" style="font-size:18px; padding:8px 14px;" onclick="rpgMissionCheckDay(1)"' + (rpgMcheckDate >= m.end ? ' disabled' : '') + '>▶</button>'
+                + '<button class="gx-mini" style="margin-left:10px; font-size:15px; padding:9px 14px; border-color:#ad1457; color:#ad1457; font-weight:800;" onclick="rpgMissionWinOpen(\'' + rpgMcheckId + '\')">🏆 성공 명단 ' + wins + '명</button>'
+                + '<button class="gx-mini" style="font-size:15px; padding:9px 14px;" onclick="rpgMissionCheckClose()">닫기</button>'
+                + '</div></div>'
+                + '<div style="font-size:16px; color:#455064; margin-bottom:14px;">✋ <b>자기 이름</b>을 눌러 체크해요. 잘못 눌렀으면 한 번 더 누르면 취소돼요. <span style="color:#2e7d32; font-weight:800;">오늘 ' + checkedN + '명 체크</span></div>'
+                + '<div class="mck-grid">' + roster.map(function(st){
+                    const on = !!day[st.id]; const c = rpgMissionCount(m, st.id); const win = c >= m.target;
+                    let dots = ''; for(let i = 0; i < Math.max(m.target, c); i++) dots += '<i' + (i < c ? ' class="f"' : '') + '></i>';
+                    return '<button class="mck-btn' + (on ? ' on' : '') + (win ? ' win' : '') + '" onclick="rpgMissionCheckToggle(' + st.id + ')">'
+                        + '<div class="n">' + st.id + '번</div><div class="nm">' + escapeHtml(st.name) + '</div><div class="dots">' + dots + '</div>'
+                        + '<div class="cnt">' + (on ? '✅ 체크함 · ' : '') + c + ' / ' + m.target + '</div></button>';
+                }).join('') + '</div>';
+        }
+        function rpgMissionCheckToggle(num){
+            const m = rpgData.missions && rpgData.missions[rpgMcheckId]; if(!m || !rpgRef) return;
+            const path = 'missions/' + rpgMcheckId + '/checks/' + rpgMcheckDate + '/' + num;
+            const on = !!(m.checks && m.checks[rpgMcheckDate] && m.checks[rpgMcheckDate][num]);
+            const before = rpgMissionCount(m, num);
+            const p = on ? rpgRef.child(path).remove() : rpgRef.child(path).set(true);
+            p.then(function(){
+                const st = rpgParseRoster().find(function(x){ return x.id === num; });
+                const name = st ? st.name : num + '번';
+                if(on){ rpgToast(name + ' 체크 취소'); return; }
+                if(before + 1 === (m.target || 1)){ try{ SFX.mission(); }catch(e){} rpgToast('🎉 ' + name + ' 미션 성공!', true); }
+                else { try{ SFX.ding(); }catch(e){} rpgToast('✅ ' + name + ' 체크 (' + (before + 1) + '/' + m.target + ')'); }
+            }).catch(function(e){ alert('체크 오류: ' + e.message); });
+        }
+        // 🏆 성공 명단
+        let rpgMwinId = null;
+        function rpgMissionWinOpen(k){
+            rpgMwinId = k;
+            const ov = document.getElementById('rpg-mwin'); if(ov.parentElement !== document.body) document.body.appendChild(ov);
+            ov.style.display = 'flex'; rpgMissionWinRender();
+        }
+        function rpgMissionWinClose(){ document.getElementById('rpg-mwin').style.display = 'none'; rpgMwinId = null; }
+        function rpgMissionWinRender(){
+            const body = document.getElementById('rpg-mwin-body'); if(!body || !rpgMwinId) return;
+            const m = rpgData.missions && rpgData.missions[rpgMwinId]; if(!m){ rpgMissionWinClose(); return; }
+            const wins = rpgMissionWinners(m);
+            const toReward = wins.filter(function(st){ return !(m.done && m.done[st.id]); });
+            const rest = rpgParseRoster().filter(function(st){ return rpgMissionCount(m, st.id) < m.target; });
+            const ended = getFormattedDate(new Date()) > m.end;
+            body.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;"><div style="font-size:14px; color:#7a8698; font-weight:700;">🏆 미션 성공 명단' + (ended ? '' : ' (진행 중 · 지금까지)') + '</div>'
+                + '<button onclick="rpgMissionWinClose()" style="border:none; background:#f0f2f5; border-radius:50%; width:32px; height:32px; cursor:pointer; font-size:16px;">✕</button></div>'
+                + '<div style="font-size:26px; font-weight:900; color:#263042;">' + escapeHtml(m.title) + '</div>'
+                + '<div style="font-size:13px; color:#7a8698; margin:4px 0 16px;">' + rpgMdShort(m.start) + ' ~ ' + rpgMdShort(m.end) + ' · ' + m.target + '번 이상' + (m.prize ? ' · 🎁 <b style="color:#ad1457;">' + escapeHtml(m.prize) + '</b>' : '') + '</div>'
+                + (wins.length
+                    ? '<div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px;">' + wins.map(function(st){
+                        const got = m.done && m.done[st.id];
+                        return '<div style="border:2px solid #ad1457; background:#fde7f1; border-radius:14px; padding:10px 16px; text-align:center;"><div style="font-size:22px; font-weight:900; color:#880e4f;">' + escapeHtml(st.name) + '</div><div style="font-size:12px; color:#ad1457; font-weight:700;">' + rpgMissionCount(m, st.id) + '번' + (got ? ' · 상점 받음' : '') + '</div></div>';
+                    }).join('') + '</div>'
+                    : '<div style="text-align:center; color:#999; padding:24px;">아직 성공한 학생이 없어요.</div>')
+                + (toReward.length && (m.xp || m.stat)
+                    ? '<button onclick="rpgMissionReward(\'' + rpgMwinId + '\')" style="width:100%; padding:13px; background:#ad1457; color:#fff; border:none; border-radius:10px; font-weight:800; font-size:15px; cursor:pointer; font-family:inherit;">성공 ' + toReward.length + '명에게 상점 주기 (' + (m.xp ? '+' + m.xp + ' XP' : '') + (m.stat ? ' · ' + rpgStatName(m.stat) + ' +1' : '') + ')</button>'
+                    : '')
+                + (rest.length ? '<div style="font-size:12px; color:#7a8698; margin-top:14px; line-height:1.7;">아직: ' + rest.map(function(st){ return escapeHtml(st.name) + ' ' + rpgMissionCount(m, st.id) + '/' + m.target; }).join(' · ') + '</div>' : '');
+        }
+        function rpgMissionReward(k){
+            const m = rpgData.missions && rpgData.missions[k]; if(!m || !rpgRef) return;
+            const targets = rpgMissionWinners(m).filter(function(st){ return !(m.done && m.done[st.id]); });
+            if(!targets.length){ alert('새로 상점을 줄 성공자가 없어요.'); return; }
+            if(!m.xp && !m.stat){ alert('이 미션에는 상점 XP가 정해져 있지 않아요. (상품만 있는 미션)'); return; }
+            if(getFormattedDate(new Date()) <= m.end && !confirm('아직 미션 기간이에요. 지금까지 성공한 ' + targets.length + '명에게 먼저 줄까요?\n(나중에 성공한 학생은 그때 다시 주면 돼요)')) return;
+            const up = {}; let lv = 0;
+            targets.forEach(function(st){
+                const s = rpgStudentObj(st.id); const b = rpgLevel(s.xp).lv;
+                s.xp += (m.xp || 0); if(m.stat) s.stats[m.stat] = (s.stats[m.stat] || 0) + 1;
+                if(rpgLevel(s.xp).lv > b) lv++;
+                rpgStudentPut(up, 'students/', st.id, s); up['missions/' + k + '/done/' + st.id] = true;
+            });
+            rpgRef.update(up).then(function(){
+                rpgToast('🏆 미션 성공 ' + targets.length + '명 상점 지급!'); SFX.mission();
+                if(lv > 0) setTimeout(function(){ SFX.levelup(); rpgToast('🎉 레벨 업 ' + lv + '명!', true); }, 400);
+            }).catch(function(e){ alert('지급 오류: ' + e.message); });
+        }
+
         function rpgMissionToggle(mid, num){
             if(!rpgRef) return;
             const m = rpgData.missions && rpgData.missions[mid]; if(!m) return;
