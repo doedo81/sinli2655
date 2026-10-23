@@ -2611,6 +2611,15 @@ var qrcode = function() {
         .gx-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 6px 11px; border: 1px solid var(--gx-line); border-radius: var(--gx-r); background: var(--pnl-in, #fff); color: var(--gx-ink); font: 600 13px 'Pretendard', sans-serif; cursor: pointer; transition: background var(--gx-t), border-color var(--gx-t); }
         .gx-chip b { font-weight: 800; font-size: 12px; color: #2f6fae; }
         .gx-chip.minus b { color: #b03a37; }
+        #gx-sign button[data-s="-1"].on { background: #c0504d; }
+        .gx-give.sub .gx-chip b { color: #b03a37; }
+        .gx-give.sub .gx-chip.on { background: #c0504d; border-color: #c0504d; }
+        .gx-give.sub .gx-chip.on b { color: #fff; }
+        .gx-log-row { border-bottom: 1px solid #eef1f5; padding: 10px 2px; display: flex; gap: 10px; align-items: flex-start; }
+        .gx-log-row.undone { opacity: .5; }
+        .gx-log-name { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; padding: 3px 4px 3px 8px; border: 1px solid #e3e8ef; border-radius: 7px; background: #fff; color: #33415c; margin: 2px 4px 2px 0; }
+        .gx-log-name.x { text-decoration: line-through; color: #a0a8b5; padding-right: 8px; }
+        .gx-log-name button { border: none; background: #f1f3f6; color: #b03a37; border-radius: 5px; font-size: 11px; font-weight: 800; padding: 2px 6px; cursor: pointer; }
         .gx-chip.good b { color: #2e7d4f; }
         .gx-chip:hover { border-color: var(--accent-blue); }
         .gx-chip.on { background: var(--accent-blue); border-color: var(--accent-blue); color: #fff; }
@@ -3727,6 +3736,7 @@ var qrcode = function() {
                                             </div>
                                             <div>
                                                 <div class="rpg-menu-label">학급 설정</div>
+                                                <button onclick="rpgLogOpen(); rpgCloseMenu();"><i class="fa-solid fa-clock-rotate-left"></i> 지급 기록 · 취소</button>
                                                 <button onclick="rpgOpenActions(); rpgCloseMenu();"><i class="fa-solid fa-list-check"></i> 상점 항목 편집</button>
                                                 <button onclick="rpgToggleRoster(); rpgCloseMenu();"><i class="fa-solid fa-user-pen"></i> 명단 · 전출입</button>
                                                 <button onclick="rpgOpenArchive(); rpgCloseMenu();"><i class="fa-solid fa-box-archive"></i> 학기 정리 (보관·초기화)</button>
@@ -3758,7 +3768,13 @@ var qrcode = function() {
                         <div class="gx-row" id="gx-groups" style="display:none;"></div>
                         <div class="gx-row" style="align-items:flex-start;">
                             <span class="gx-k" style="padding-top:7px;">무엇을</span>
-                            <div id="rpg-bulk-actions" class="gx-actions"></div>
+                            <div style="flex:1; min-width:0;">
+                                <div class="gx-seg gx-seg-sm" id="gx-sign" style="margin-bottom:8px;">
+                                    <button data-s="1" class="on" onclick="rpgSetGiveSign(1)">＋ 주기</button>
+                                    <button data-s="-1" onclick="rpgSetGiveSign(-1)">− 빼기 (잘못 준 점수 고치기)</button>
+                                </div>
+                                <div id="rpg-bulk-actions" class="gx-actions"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -4139,6 +4155,18 @@ var qrcode = function() {
                         </div>
                     </div>
                     <div id="rpg-mission-list"></div>
+                </div>
+            </div>
+
+            <!-- 성장: 지급 기록 · 취소 -->
+            <div id="rpg-log-modal" style="display:none; position:fixed; inset:0; background:rgba(20,26,38,0.45); z-index:2050; align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) rpgLogClose()">
+                <div style="background:#fff; border-radius:18px; max-width:680px; width:100%; max-height:90vh; overflow:auto; padding:22px; text-align:left;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <div style="font-size:17px; font-weight:800; color:#33415c;">지급 기록 · 취소</div>
+                        <button onclick="rpgLogClose()" style="border:none; background:#f0f2f5; border-radius:50%; width:32px; height:32px; cursor:pointer; font-size:16px;">✕</button>
+                    </div>
+                    <div style="font-size:12px; color:#6b7686; margin-bottom:10px;">잘못 준 점수는 [취소]를 누르면 그때 더한 만큼만 빠져요(그 뒤에 받은 점수는 그대로). 학생 이름 옆 [취소]는 그 학생만.</div>
+                    <div id="rpg-log-list"></div>
                 </div>
             </div>
 
@@ -4697,9 +4725,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.65';
+        const APP_VERSION = '1.66';
         const APP_VERSION_DATE = '2026-10-22';
         const APP_CHANGELOG = [
+            'v1.66 (2026-10-23) — ↶ 잘못 준 점수 고치기: 지급 기록(관리 → 지급 기록·취소, 학생 자세히 창 "최근 받은 점수")에서 언제든 취소 · 지급 패널 [− 빼기]로 기록 없는 예전 실수도 고침',
             'v1.65 (2026-10-22) — 🎯 기간 미션: 기간·성공 기준(예: 이번 주 급식 다 먹기 3번)·상품을 정하면 전자칠판 체크 팝업(학생이 이름 누르기 / 기간 전체 표)으로 체크, 성공 명단 + 상점 (과제관리·성장 탭)',
             'v1.64 (2026-10-22) — 🤝 협동학습 뽑기 새 판: 모둠 전체가 늘 보이고, 한 번 누르면 모둠+역할이 띵! (지금=주황 · 전에=연한 파랑 ✓ · 이번 바퀴에 나온 모둠=회색) · 긴급협동은 합쳐서 없앰',
             'v1.63 (2026-10-22) — 🛡️ 상점 줄 때 장비·펫·코인 기록이 지워지던 문제 고침 · 성장 탭 새 배치(한 명씩/골라서/모둠/반 전체, 되돌리기, 관리 메뉴 정리) · 주제일기 주제는 아침 자습 칸에 자동으로',
@@ -5160,6 +5189,14 @@ var qrcode = function() {
             seatingHistoryRef = db.ref('rooms/' + currentRoom + '/seatingHistory');
             seatingCurrentRef = db.ref('rooms/' + currentRoom + '/seatingV2/current'); seatingSavesRef = db.ref('rooms/' + currentRoom + '/seatingV2/saves');
             rpgRef = db.ref('rooms/' + currentRoom + '/rpg');
+            if(rpgLogRef) rpgLogRef.off();
+            rpgLogData = {};
+            rpgLogRef = db.ref('rooms/' + currentRoom + '/rpgLog');
+            rpgLogRef.on('value', function(snap){
+                rpgLogData = snap.val() || {};
+                if(document.getElementById('rpg-log-modal') && document.getElementById('rpg-log-modal').style.display === 'flex') rpgLogRender();
+                if(rpgModalId != null && document.getElementById('rpg-modal').style.display === 'flex') rpgModalHistoryRender(rpgModalId);
+            }, function(){});
             readingRef = db.ref('rooms/' + currentRoom + '/reading');
             if(secretsRef) secretsRef.off();
             rpgSecrets = {}; _secMigrated = false; _secLoaded = false;
@@ -9728,6 +9765,7 @@ var qrcode = function() {
                 + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:14px 0;">' + statHtml + '</div>'
                 + headPick
                 + jobSection
+                + (rpgStudentMode ? '' : '<div id="rpg-modal-history"></div>')
                 + (rpgStudentMode ? '' : (
                   '<div style="font-size:12px;color:#888;margin:14px 0 6px;">🟢 매일 습관 +5</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' + grp('습관') + '</div>'
                 + '<div style="font-size:12px;color:#888;margin:12px 0 6px;">💪 노력·성취 +10~20</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' + grp('노력') + '</div>'
@@ -9741,6 +9779,7 @@ var qrcode = function() {
                 + '<p style="font-size:11px;color:#bbb;margin:6px 0 0;">선행: 쓰레기 줍기, 친구 1인1역 돕기 등</p></div>'));
 
             document.getElementById('rpg-modal').style.display = 'flex';
+            if(!rpgStudentMode) rpgModalHistoryRender(id);
         }
 
         function rpgClose(){ document.getElementById('rpg-modal').style.display = 'none'; rpgModalId = null; }
@@ -10014,9 +10053,9 @@ var qrcode = function() {
                 return '<button class="gx-chip' + (tone ? ' ' + tone : '') + (rpgBulkAction === id ? ' on' : '') + '" onclick="rpgPickBulkAction(\'' + id + '\')">' + escapeHtml(label) + ' <b>' + val + '</b></button>';
             }
             box.innerHTML = order.map(function(g){
-                return '<div class="gx-agroup"><span>' + escapeHtml(g) + '</span>' + groups[g].map(function(a){ return chip(a.id, a.label, (a.xp >= 0 ? '+' : '') + a.xp, a.xp < 0 ? 'minus' : ''); }).join('') + '</div>';
+                return '<div class="gx-agroup"><span>' + escapeHtml(g) + '</span>' + groups[g].map(function(a){ const v = a.xp * rpgGiveSign; return chip(a.id, a.label, (v >= 0 ? '+' : '−') + Math.abs(v), a.xp < 0 ? 'minus' : ''); }).join('') + '</div>';
             }).join('')
-                + '<div class="gx-agroup"><span>생활</span>' + chip('__warn', '벌점', '경고 +20', 'minus') + chip('__good', '선행', '경고 −10', 'good')
+                + '<div class="gx-agroup"><span>생활</span>' + chip('__warn', '벌점', rpgGiveSign < 0 ? '경고 −20' : '경고 +20', 'minus') + chip('__good', '선행', rpgGiveSign < 0 ? '경고 +10' : '경고 −10', 'good')
                 + '<button class="gx-edit" onclick="rpgOpenActions()">항목 추가·편집</button></div>';
         }
         function rpgPickBulkAction(id){ rpgBulkAction = (rpgBulkAction === id) ? null : id; rpgRenderBulkActions(); rpgUpdateBulkBtn(); }
@@ -10024,11 +10063,14 @@ var qrcode = function() {
             if(rpgBulkSelected.has(id)) rpgBulkSelected.delete(id); else rpgBulkSelected.add(id);
             renderRpgGrid(); rpgUpdateBulkBtn(); if(rpgGiveMode === 'group') rpgRenderGroupChips();
         }
-        function rpgActionLabel(id){
-            if(id === '__warn') return '벌점 (경고 +20)';
-            if(id === '__good') return '선행 (경고 −10)';
+        function rpgActionLabel(id, sign){
+            sign = sign || rpgGiveSign;
+            if(id === '__warn') return '벌점 (경고 ' + (sign < 0 ? '−' : '+') + '20)';
+            if(id === '__good') return '선행 (경고 ' + (sign < 0 ? '+' : '−') + '10)';
             const a = rpgAllActions().find(function(x){ return x.id === id; });
-            return a ? (a.label + ' ' + (a.xp >= 0 ? '+' : '') + a.xp + ' XP') : '';
+            if(!a) return '';
+            const v = a.xp * sign;
+            return a.label + ' ' + (v >= 0 ? '+' : '−') + Math.abs(v) + ' XP';
         }
         function rpgTargetIds(){
             if(rpgGiveMode === 'all') return rpgParseRoster().map(function(s){ return s.id; });
@@ -10044,7 +10086,7 @@ var qrcode = function() {
                 ? '<button class="gx-undo" onclick="rpgUndoLastGive()" title="' + escapeHtml(rpgLastGive.desc) + '">↶ 방금 지급 되돌리기</button>' : '';
             const lbl = rpgBulkAction ? rpgActionLabel(rpgBulkAction) : '';
             if(rpgGiveMode === 'one'){
-                bar.innerHTML = '<div class="gx-sum">' + (lbl ? '<b>' + escapeHtml(lbl) + '</b> — 학생 카드를 누르면 바로 줘요' : '위에서 행동을 고르세요')
+                bar.innerHTML = '<div class="gx-sum">' + (lbl ? '<b>' + (rpgGiveSign < 0 ? '빼기 · ' : '') + escapeHtml(lbl) + '</b> — 학생 카드를 누르면 바로 ' + (rpgGiveSign < 0 ? '빼요' : '줘요') : '위에서 행동을 고르세요')
                     + '<small>' + (lbl ? '다른 행동은 칩을 다시 눌러 바꿔요 · 같은 칩을 또 누르면 해제' : '행동을 안 고르고 카드를 누르면 학생 자세히 보기') + '</small></div>' + undo;
                 return;
             }
@@ -10052,53 +10094,132 @@ var qrcode = function() {
             const who = rpgGiveMode === 'all' ? ('반 전체 ' + ids.length + '명') : (ids.length + '명');
             const names = ids.slice().sort(function(a, b){ return a - b; }).map(function(id){ return nameById[id] || (id + '번'); }).join(', ');
             const ready = ids.length && rpgBulkAction;
-            bar.innerHTML = '<div class="gx-sum"><b>' + who + '</b>' + (lbl ? ' · ' + escapeHtml(lbl) : ' · <span style="color:#ffd28a;">행동을 고르세요</span>')
+            bar.innerHTML = '<div class="gx-sum"><b>' + who + '</b>' + (lbl ? ' · ' + (rpgGiveSign < 0 ? '빼기 · ' : '') + escapeHtml(lbl) : ' · <span style="color:#ffd28a;">행동을 고르세요</span>')
                 + '<small>' + (ids.length ? escapeHtml(names) : (rpgGiveMode === 'group' ? '모둠이나 카드를 눌러 고르세요' : '카드를 눌러 고르세요')) + '</small></div>'
                 + undo
                 + (rpgGiveMode !== 'all' && ids.length ? '<button class="gx-ghost" onclick="rpgSelectAll(false)">비우기</button>' : '')
-                + '<button class="gx-go" ' + (ready ? '' : 'disabled ') + 'onclick="rpgBulkApply()">' + (ready ? ids.length + '명에게 지급' : '지급') + '</button>';
+                + '<button class="gx-go" ' + (ready ? '' : 'disabled ') + 'onclick="rpgBulkApply()">' + (ready ? ids.length + '명' + (rpgGiveSign < 0 ? '에게서 빼기' : '에게 지급') : '지급') + '</button>';
         }
         function rpgBulkApply(){
             if(!rpgBulkAction){ alert('먼저 줄 행동을 골라 주세요.'); return; }
             const ids = rpgTargetIds();
             if(!ids.length){ alert('학생을 골라 주세요. (카드를 누르면 골라져요)'); return; }
-            if(rpgGiveMode === 'all' && !confirm('반 전체 ' + ids.length + '명에게 ' + rpgActionLabel(rpgBulkAction) + '을(를) 줄까요?')) return;
+            if(rpgGiveMode === 'all' && !confirm('반 전체 ' + ids.length + '명' + (rpgGiveSign < 0 ? '에게서 ' : '에게 ') + rpgActionLabel(rpgBulkAction) + '을(를) ' + (rpgGiveSign < 0 ? '뺄까요?' : '줄까요?'))) return;
             rpgGiveToIds(ids);
         }
-        // 실제 지급 (바뀌는 값만 저장) + 되돌리기용으로 지급 전 값 기억
-        function rpgGiveToIds(ids){
-            if(!rpgRef || !ids.length || !rpgBulkAction) return;
-            const actionId = rpgBulkAction;
+        // ===== 지급 기록 (rooms/<반>/rpgLog — 학생은 못 읽음) =====
+        //   rpgLog/<key> = { at, action, label, sign, stat, per:{ 번호:{x:XP변화, s:능력치변화, w:경고변화} }, undone:{ 번호:true } }
+        //   취소 = 그때 바뀐 만큼만 거꾸로(그 뒤에 받은 점수는 그대로)
+        var rpgLogRef = null, rpgLogData = {};
+        let rpgGiveSign = 1;
+        function rpgSetGiveSign(v){
+            rpgGiveSign = v;
+            document.querySelectorAll('#gx-sign button').forEach(function(b){ b.classList.toggle('on', String(b.dataset.s) === String(v)); });
+            const bar = document.getElementById('rpg-bulk-bar'); if(bar) bar.classList.toggle('sub', v < 0);
+            rpgRenderBulkActions(); rpgUpdateBulkBtn();
+        }
+        function rpgGiveToIds(ids){ if(rpgBulkAction) rpgGiveApply(ids, rpgBulkAction, rpgGiveSign); }
+        function rpgGiveApply(ids, actionId, sign){
+            if(!rpgRef || !ids.length || !actionId) return;
             const a = rpgAllActions().find(function(x){ return x.id === actionId; });
             if(!a && actionId !== '__warn' && actionId !== '__good') return;
-            const updates = {}, prev = {}; let levelups = 0;
+            const up = {}, per = {}; let levelups = 0;
             ids.forEach(function(id){
-                const s = rpgStudentObj(id);
-                prev[id] = { xp:s.xp, stats:Object.assign({}, s.stats), warning:s.warning };
-                if(actionId === '__warn') s.warning = Math.max(0, Math.min(100, s.warning + 20));
-                else if(actionId === '__good') s.warning = Math.max(0, Math.min(100, s.warning - 10));
-                else { const before = rpgLevel(s.xp).lv; s.xp += a.xp; s.stats[a.stat] = (s.stats[a.stat] || 0) + 1; if(rpgLevel(s.xp).lv > before) levelups++; }
-                rpgStudentPut(updates, 'students/', id, s);
+                const s = rpgStudentObj(id), x0 = s.xp, w0 = s.warning;
+                let ds = 0;
+                if(actionId === '__warn') s.warning = Math.max(0, Math.min(100, s.warning + 20 * sign));
+                else if(actionId === '__good') s.warning = Math.max(0, Math.min(100, s.warning - 10 * sign));
+                else if(sign > 0){ const before = rpgLevel(s.xp).lv; s.xp += a.xp; s.stats[a.stat] = (s.stats[a.stat] || 0) + 1; ds = 1; if(rpgLevel(s.xp).lv > before) levelups++; }
+                else { s.xp = Math.max(0, s.xp - a.xp); if((s.stats[a.stat] || 0) > 0){ s.stats[a.stat] -= 1; ds = -1; } }
+                per[id] = { x:s.xp - x0, s:ds, w:s.warning - w0 };
+                rpgStudentPut(up, 'rpg/students/', id, s);
             });
             const nameById = {}; rpgParseRoster().forEach(function(s){ nameById[s.id] = s.name; });
             const who = ids.length === 1 ? (nameById[ids[0]] || (ids[0] + '번')) : (ids.length + '명');
-            const lbl = rpgActionLabel(actionId);
-            rpgRef.update(updates).then(function(){
-                rpgLastGive = { prev:prev, at:Date.now(), desc:who + ' · ' + lbl };
+            const lbl = (sign < 0 ? '빼기 · ' : '') + rpgActionLabel(actionId, sign);
+            const key = db.ref('rooms/' + currentRoom + '/rpgLog').push().key;
+            up['rpgLog/' + key] = { at:Date.now(), action:actionId, label:lbl, sign:sign, stat:(a && a.stat) || null, per:per };
+            db.ref('rooms/' + currentRoom).update(up).then(function(){
+                rpgLastGive = { key:key, at:Date.now(), desc:who + ' · ' + lbl };
                 rpgToast(who + ' · ' + lbl);
                 if(levelups > 0){ SFX.levelup(); setTimeout(function(){ rpgToast('🎉 레벨 업 ' + levelups + '명!', true); }, 400); }
-                else if(actionId === '__warn') SFX.warn(); else SFX.point();
+                else if(actionId === '__warn' || sign < 0) SFX.warn(); else SFX.point();
                 if(rpgGiveMode !== 'one') rpgBulkSelected.clear();
+                if(sign < 0 && rpgGiveSign < 0){ rpgBulkAction = null; rpgSetGiveSign(1); } // 빼기는 한 번만 — 켜 둔 채 잊고 점수를 빼는 실수 방지
                 renderRpgGrid(); rpgUpdateBulkBtn(); if(rpgGiveMode === 'group') rpgRenderGroupChips();
-                setTimeout(rpgUpdateBulkBtn, 121000); // 되돌리기 버튼 2분 뒤 사라짐
+                if(rpgModalId != null && document.getElementById('rpg-modal').style.display === 'flex' && ids.indexOf(rpgModalId) >= 0) rpgOpen(rpgModalId);
+                setTimeout(rpgUpdateBulkBtn, 121000); // 되돌리기 버튼 2분 뒤 사라짐(지급 기록에서는 계속 취소 가능)
+                rpgLogPrune();
             }).catch(function(e){ alert('지급 오류: ' + e.message); });
         }
-        function rpgUndoLastGive(){
-            const g = rpgLastGive; if(!g || !rpgRef) return;
-            if(!confirm('방금 지급을 되돌릴까요?\n(' + g.desc + ')')) return;
-            const up = {}; Object.keys(g.prev).forEach(function(id){ rpgStudentPut(up, 'students/', id, g.prev[id]); });
-            rpgRef.update(up).then(function(){ rpgLastGive = null; rpgToast('↶ 되돌렸어요'); renderRpgGrid(); rpgUpdateBulkBtn(); })
-                .catch(function(e){ alert('되돌리기 오류: ' + e.message); });
+        // 기록 취소: onlyId가 있으면 그 학생만
+        function rpgLogUndo(key, onlyId, silent){
+            const e = rpgLogData[key]; if(!e || !rpgRef) return Promise.resolve();
+            const ids = Object.keys(e.per || {}).filter(function(id){ return !(e.undone && e.undone[id]) && (onlyId == null || String(onlyId) === String(id)); });
+            if(!ids.length) return Promise.resolve();
+            const nameById = {}; rpgParseRoster().forEach(function(s){ nameById[s.id] = s.name; });
+            if(!silent && !confirm('취소할까요?\n' + e.label + '\n' + ids.map(function(id){ return nameById[id] || (id + '번'); }).join(', '))) return Promise.resolve();
+            const up = {};
+            ids.forEach(function(id){
+                const d = e.per[id], s = rpgStudentObj(id);
+                s.xp = Math.max(0, s.xp - (d.x || 0));
+                if(d.s && e.stat) s.stats[e.stat] = Math.max(0, (s.stats[e.stat] || 0) - d.s);
+                s.warning = Math.max(0, Math.min(100, s.warning - (d.w || 0)));
+                rpgStudentPut(up, 'rpg/students/', id, s);
+                up['rpgLog/' + key + '/undone/' + id] = true;
+            });
+            return db.ref('rooms/' + currentRoom).update(up).then(function(){
+                if(rpgLastGive && rpgLastGive.key === key) rpgLastGive = null;
+                rpgToast('↶ 취소했어요 (' + ids.length + '명)');
+                renderRpgGrid(); rpgUpdateBulkBtn();
+                if(rpgModalId != null && document.getElementById('rpg-modal').style.display === 'flex') rpgOpen(rpgModalId);
+            }).catch(function(err){ alert('취소 오류: ' + err.message); });
+        }
+        function rpgUndoLastGive(){ if(rpgLastGive) rpgLogUndo(rpgLastGive.key, null); }
+        function rpgLogPrune(){ // 400개 넘으면 오래된 것부터 정리
+            const keys = Object.keys(rpgLogData || {}); if(keys.length <= 400 || !rpgLogRef) return;
+            keys.sort(function(a, b){ return (rpgLogData[a].at || 0) - (rpgLogData[b].at || 0); });
+            const up = {}; keys.slice(0, keys.length - 400).forEach(function(k){ up[k] = null; });
+            rpgLogRef.update(up);
+        }
+        function rpgLogTime(t){ const d = new Date(t || 0); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+        function rpgLogSorted(){ return Object.keys(rpgLogData || {}).map(function(k){ return Object.assign({ key:k }, rpgLogData[k]); }).sort(function(a, b){ return (b.at || 0) - (a.at || 0); }); }
+        function rpgLogOpen(){ document.getElementById('rpg-log-modal').style.display = 'flex'; rpgLogRender(); }
+        function rpgLogClose(){ document.getElementById('rpg-log-modal').style.display = 'none'; }
+        function rpgLogRender(){
+            const box = document.getElementById('rpg-log-list'); if(!box) return;
+            const list = rpgLogSorted().slice(0, 120);
+            const nameById = {}; rpgParseRoster().forEach(function(s){ nameById[s.id] = s.name; });
+            if(!list.length){ box.innerHTML = '<div style="color:#999; text-align:center; padding:24px;">아직 기록이 없어요. (이 기능을 넣은 뒤부터 성장 탭에서 준 점수가 기록돼요)</div>'; return; }
+            box.innerHTML = list.map(function(e){
+                const ids = Object.keys(e.per || {}).sort(function(a, b){ return a - b; });
+                const live = ids.filter(function(id){ return !(e.undone && e.undone[id]); });
+                return '<div class="gx-log-row' + (live.length ? '' : ' undone') + '">'
+                    + '<div style="flex:none; width:78px; font-size:12px; color:#6b7686; padding-top:3px;">' + rpgLogTime(e.at) + '</div>'
+                    + '<div style="flex:1; min-width:0;"><div style="font-size:14px; font-weight:800; color:' + (e.sign < 0 || e.action === '__warn' ? '#b03a37' : '#263042') + '; margin-bottom:3px;">' + escapeHtml(e.label || '') + ' <span style="font-size:12px; color:#6b7686; font-weight:600;">· ' + ids.length + '명</span></div>'
+                    + '<div>' + ids.map(function(id){
+                        const x = e.undone && e.undone[id];
+                        return '<span class="gx-log-name' + (x ? ' x' : '') + '">' + escapeHtml(nameById[id] || (id + '번')) + (x ? '' : ' <button onclick="rpgLogUndo(\'' + e.key + '\',' + id + ')">취소</button>') + '</span>';
+                    }).join('') + '</div></div>'
+                    + (live.length > 1 ? '<button class="gx-mini" style="flex:none;" onclick="rpgLogUndo(\'' + e.key + '\', null)">모두 취소</button>' : (live.length ? '' : '<span style="flex:none; font-size:12px; color:#9aa4b2;">취소됨</span>'))
+                    + '</div>';
+            }).join('');
+        }
+        // 학생 자세히 창: 이 학생이 최근 받은 점수 + 취소
+        function rpgModalHistoryRender(id){
+            const box = document.getElementById('rpg-modal-history'); if(!box) return;
+            const list = rpgLogSorted().filter(function(e){ return e.per && e.per[id] != null; }).slice(0, 8);
+            box.innerHTML = '<div style="border-top:1px solid #eee; margin-top:14px; padding-top:10px; text-align:left;">'
+                + '<div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#6b7686; font-weight:700; margin-bottom:6px;"><span>최근 받은 점수</span><button onclick="rpgLogOpen()" style="border:none; background:transparent; color:#6b7686; text-decoration:underline; cursor:pointer; font-size:12px; font-family:inherit;">전체 기록</button></div>'
+                + (list.length ? list.map(function(e){
+                    const x = e.undone && e.undone[id];
+                    return '<div style="display:flex; align-items:center; gap:8px; padding:5px 0; font-size:13px;' + (x ? ' opacity:.45; text-decoration:line-through;' : '') + '">'
+                        + '<span style="color:#9aa4b2; width:72px; flex:none; font-size:12px;">' + rpgLogTime(e.at) + '</span>'
+                        + '<span style="flex:1; font-weight:700; color:' + (e.sign < 0 || e.action === '__warn' ? '#b03a37' : '#33415c') + ';">' + escapeHtml(e.label || '') + '</span>'
+                        + (x ? '' : '<button onclick="rpgLogUndo(\'' + e.key + '\',' + id + ')" style="border:1px solid #f0c9c8; background:#fff5f5; color:#b03a37; border-radius:7px; padding:3px 9px; font-size:12px; font-weight:800; cursor:pointer;">취소</button>')
+                        + '</div>';
+                }).join('') : '<div style="font-size:12px; color:#aaa; padding:4px 0;">아직 기록이 없어요. 기록이 생기기 전에 잘못 준 점수는 지급 패널의 <b>[− 빼기]</b>로 고쳐요.</div>')
+                + '</div>';
         }
 
         function rpgStudentObj(id){
@@ -10186,29 +10307,9 @@ var qrcode = function() {
             }).catch(function(e){ alert('지급 오류: ' + e.message); });
         }
 
-        function rpgGive(id, actionId){
-            const a = rpgAllActions().find(x => x.id === actionId); if(!a || !rpgRef) return;
-            const s = rpgStudentObj(id);
-            const beforeLv = rpgLevel(s.xp).lv;
-            s.xp += a.xp;
-            s.stats[a.stat] = (s.stats[a.stat] || 0) + 1;
-            const afterLv = rpgLevel(s.xp).lv;
-            rpgRef.update(rpgStudentPut({}, 'students/', id, s)).then(() => {
-                rpgToast('+' + a.xp + ' XP · ' + rpgStatName(a.stat) + ' +1');
-                if(afterLv > beforeLv){ SFX.levelup(); setTimeout(() => rpgToast('🎉 레벨 업! Lv.' + afterLv, true), 400); }
-                else if(a.xp < 0) SFX.warn(); else SFX.point();
-            });
-        }
-
-        function rpgWarn(id, delta){
-            if(!rpgRef) return;
-            const s = rpgStudentObj(id);
-            s.warning = Math.max(0, Math.min(100, s.warning + delta));
-            rpgRef.update(rpgStudentPut({}, 'students/', id, s)).then(() => {
-                rpgToast(delta > 0 ? '⚠️ 경고 +' + delta : '💚 선행 회복 ' + delta);
-                if(s.warning >= 60 && delta > 0) setTimeout(() => rpgToast('🚨 경고 게이지 60 이상!', true), 400);
-            });
-        }
+        // 학생 자세히 창의 버튼 → 지급 패널과 같은 길(기록·되돌리기 포함)
+        function rpgGive(id, actionId){ rpgGiveApply([id], actionId, 1); }
+        function rpgWarn(id, delta){ rpgGiveApply([id], delta > 0 ? '__warn' : '__good', 1); }
 
         function rpgSetJob(id, jobKey){
             if(!rpgRef) return;
