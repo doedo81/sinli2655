@@ -2626,6 +2626,9 @@ var qrcode = function() {
         .gx-chip.on b { color: #fff; }
         .gx-chip.minus.on { background: #c0504d; border-color: #c0504d; }
         .gx-chip.good.on { background: #3a8a5c; border-color: #3a8a5c; }
+        .gx-chip.gauge { border-style: dashed; background: transparent; }
+        .gx-chip.gauge.on { border-style: solid; }
+        .gx-gauge-note { width: auto !important; font-size: 11px; font-weight: 600 !important; color: var(--gx-muted); margin-left: 4px; }
         .gx-edit { border: none; background: transparent; color: var(--gx-muted); font: 600 12px 'Pretendard', sans-serif; cursor: pointer; padding: 6px 4px; text-decoration: underline; text-underline-offset: 3px; }
         .gx-grp { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 7px 12px; border: 1px solid var(--gx-line); border-radius: var(--gx-r); background: var(--pnl-in, #fff); color: var(--gx-ink); font: 700 13px 'Pretendard', sans-serif; cursor: pointer; text-align: left; max-width: 220px; transition: background var(--gx-t), border-color var(--gx-t); }
         .gx-grp small { font-weight: 500; font-size: 11px; color: var(--gx-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 196px; }
@@ -4728,7 +4731,7 @@ var qrcode = function() {
         const APP_VERSION = '1.66';
         const APP_VERSION_DATE = '2026-10-22';
         const APP_CHANGELOG = [
-            'v1.66 (2026-10-23) — ↶ 잘못 준 점수 고치기: 지급 기록(관리 → 지급 기록·취소, 학생 자세히 창 "최근 받은 점수")에서 언제든 취소 · 지급 패널 [− 빼기]로 기록 없는 예전 실수도 고침',
+            'v1.66 (2026-10-23) — ⚠ 벌점·선행은 "경고 게이지"로 이름·모양 구분(XP와 따로) · ↶ 잘못 준 점수 고치기: 지급 기록(관리 → 지급 기록·취소, 학생 자세히 창 "최근 받은 점수")에서 언제든 취소 · 지급 패널 [− 빼기]로 기록 없는 예전 실수도 고침',
             'v1.65 (2026-10-22) — 🎯 기간 미션: 기간·성공 기준(예: 이번 주 급식 다 먹기 3번)·상품을 정하면 전자칠판 체크 팝업(학생이 이름 누르기 / 기간 전체 표)으로 체크, 성공 명단 + 상점 (과제관리·성장 탭)',
             'v1.64 (2026-10-22) — 🤝 협동학습 뽑기 새 판: 모둠 전체가 늘 보이고, 한 번 누르면 모둠+역할이 띵! (지금=주황 · 전에=연한 파랑 ✓ · 이번 바퀴에 나온 모둠=회색) · 긴급협동은 합쳐서 없앰',
             'v1.63 (2026-10-22) — 🛡️ 상점 줄 때 장비·펫·코인 기록이 지워지던 문제 고침 · 성장 탭 새 배치(한 명씩/골라서/모둠/반 전체, 되돌리기, 관리 메뉴 정리) · 주제일기 주제는 아침 자습 칸에 자동으로',
@@ -9774,9 +9777,9 @@ var qrcode = function() {
                 + '<div style="display:flex;justify-content:space-between;font-size:12px;color:#888;margin-bottom:5px;"><span>⚠️ 경고 게이지</span><span>' + warn + '/100</span></div>'
                 + '<div style="height:8px;background:#f0e0e0;border-radius:20px;overflow:hidden;"><div style="width:' + warn + '%;height:100%;background:#e57373;"></div></div>'
                 + '<div style="display:flex;gap:8px;margin-top:10px;">'
-                + '<button onclick="rpgWarn(' + id + ',20)" style="flex:1;border:1px solid #ef9a9a;background:#fff5f5;color:#c62828;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">벌점 +20</button>'
-                + '<button onclick="rpgWarn(' + id + ',-10)" style="flex:1;border:1px solid #a5d6a7;background:#f4fbf4;color:#2e7d32;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">선행 −10</button></div>'
-                + '<p style="font-size:11px;color:#bbb;margin:6px 0 0;">선행: 쓰레기 줍기, 친구 1인1역 돕기 등</p></div>'));
+                + '<button onclick="rpgWarn(' + id + ',20)" style="flex:1;border:1px dashed #ef9a9a;background:#fff5f5;color:#c62828;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">벌점 · ⚠ 경고 +20</button>'
+                + '<button onclick="rpgWarn(' + id + ',-10)" style="flex:1;border:1px dashed #a5d6a7;background:#f4fbf4;color:#2e7d32;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">선행 · ✨ 경고 −10 (회복)</button></div>'
+                + '<p style="font-size:11px;color:#999;margin:6px 0 0;">벌점·선행은 점수(XP)를 깎거나 주지 않고 경고 게이지만 움직여요 · 선행 예: 쓰레기 줍기, 친구 1인1역 돕기</p></div>'));
 
             document.getElementById('rpg-modal').style.display = 'flex';
             if(!rpgStudentMode) rpgModalHistoryRender(id);
@@ -10055,7 +10058,9 @@ var qrcode = function() {
             box.innerHTML = order.map(function(g){
                 return '<div class="gx-agroup"><span>' + escapeHtml(g) + '</span>' + groups[g].map(function(a){ const v = a.xp * rpgGiveSign; return chip(a.id, a.label, (v >= 0 ? '+' : '−') + Math.abs(v), a.xp < 0 ? 'minus' : ''); }).join('') + '</div>';
             }).join('')
-                + '<div class="gx-agroup"><span>생활</span>' + chip('__warn', '벌점', rpgGiveSign < 0 ? '경고 −20' : '경고 +20', 'minus') + chip('__good', '선행', rpgGiveSign < 0 ? '경고 +10' : '경고 −10', 'good')
+                // 벌점·선행은 XP가 아니라 '경고 게이지(0~100)'를 움직임 — 점선 칩으로 XP 칩과 구분
+                + '<div class="gx-agroup"><span>경고</span>' + chip('__warn', '벌점', '⚠ 경고 ' + (rpgGiveSign < 0 ? '−' : '+') + '20', 'minus gauge') + chip('__good', '선행', '✨ 경고 ' + (rpgGiveSign < 0 ? '+' : '−') + '10 (회복)', 'good gauge')
+                + '<span class="gx-gauge-note">점수(XP)와 따로 쌓여요 · 카드 아래 빨간 막대</span>'
                 + '<button class="gx-edit" onclick="rpgOpenActions()">항목 추가·편집</button></div>';
         }
         function rpgPickBulkAction(id){ rpgBulkAction = (rpgBulkAction === id) ? null : id; rpgRenderBulkActions(); rpgUpdateBulkBtn(); }
@@ -10065,8 +10070,8 @@ var qrcode = function() {
         }
         function rpgActionLabel(id, sign){
             sign = sign || rpgGiveSign;
-            if(id === '__warn') return '벌점 (경고 ' + (sign < 0 ? '−' : '+') + '20)';
-            if(id === '__good') return '선행 (경고 ' + (sign < 0 ? '+' : '−') + '10)';
+            if(id === '__warn') return '벌점 · 경고 게이지 ' + (sign < 0 ? '−' : '+') + '20';
+            if(id === '__good') return '선행 · 경고 게이지 ' + (sign < 0 ? '+' : '−') + '10 (회복)';
             const a = rpgAllActions().find(function(x){ return x.id === id; });
             if(!a) return '';
             const v = a.xp * sign;
