@@ -2659,6 +2659,13 @@ var qrcode = function() {
         .mck-btn.on { background: #e8f5e9; border-color: #43a047; }
         .mck-btn.on .nm { color: #1b5e20; }
         .mck-btn.win::after { content: '성공'; position: absolute; top: -9px; right: -6px; background: #ad1457; color: #fff; font-size: 12px; font-weight: 800; padding: 3px 8px; border-radius: 10px; }
+        #view-rank .rk-row { display: flex; align-items: baseline; gap: 10px; line-height: 1.6; }
+        #view-rank .rk-row + .rk-row { margin-top: 4px; }
+        #view-rank .rk-k { flex: none; width: 34px; font-size: 12px; font-weight: 700; color: #7a8698; }
+        #view-rank .rk-v { font-weight: 700; }
+        #view-rank .rk-v .sep { color: #b0b8c4; font-weight: 500; padding: 0 3px; }
+        #view-rank .rk-v small { font-size: 0.72em; color: #7a8698; font-weight: 600; }
+        #view-rank .rk-empty { color: #a0a8b5; font-weight: 500; font-size: 0.85em; }
         .gx-dash-strip { display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; padding: 2px 2px 12px; font-size: 13px; color: var(--gx-muted); text-align: left; }
         .gx-dash-strip b { font-size: 18px; color: var(--gx-ink); font-weight: 800; margin-right: 3px; }
         @media (prefers-reduced-motion: reduce){ #rpg-tab *, #rpg-menu * { transition: none !important; } }
@@ -3371,7 +3378,8 @@ var qrcode = function() {
                         <div class="info-box"><span class="info-label">📅 날짜 및 날씨</span><div class="info-content large-text" id="view-date" contenteditable="true" spellcheck="false" data-placeholder="날짜와 날씨 입력"></div></div>
                         <div class="info-box"><span class="info-label" style="color:#d96a6a;">❗️ 안전 수칙</span><div class="info-content" id="view-safety" contenteditable="true" spellcheck="false" data-placeholder="안전 수칙 입력"></div></div>
                         <div class="info-box"><span class="info-label" style="color:#e0964a;">⭐ 아침 자습</span><div class="info-content" id="view-morning" contenteditable="true" spellcheck="false" data-placeholder="아침 자습 입력"></div></div>
-                        <div class="info-box" style="margin-bottom:0;"><span class="info-label" style="color:#8e5bb5;">🧹 당번 (& 할 일)</span><div class="info-content large-text" id="view-duty-nums" contenteditable="true" spellcheck="false" data-placeholder="당번 번호"></div><div class="info-content" id="view-duty-tasks" contenteditable="true" spellcheck="false" data-placeholder="할 일 목록" style="font-size:calc(var(--board-font-size) - 2px); margin-top:5px; border-top:1px dashed #eee; padding-top:5px;"></div></div>
+                        <div class="info-box"><span class="info-label" style="color:#8e5bb5;">🧹 당번 (& 할 일)</span><div class="info-content large-text" id="view-duty-nums" contenteditable="true" spellcheck="false" data-placeholder="당번 번호"></div><div class="info-content" id="view-duty-tasks" contenteditable="true" spellcheck="false" data-placeholder="할 일 목록" style="font-size:calc(var(--board-font-size) - 2px); margin-top:5px; border-top:1px dashed #eee; padding-top:5px;"></div></div>
+                        <div class="info-box" style="margin-bottom:0;"><span class="info-label" style="color:#6b7686;">🏅 순위</span><div class="info-content" id="view-rank"></div></div>
                     </div>
 
                     <div class="column-card" style="position: relative; padding-top: 20px;">
@@ -4728,9 +4736,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.66';
-        const APP_VERSION_DATE = '2026-10-22';
+        const APP_VERSION = '1.67';
+        const APP_VERSION_DATE = '2026-10-27';
         const APP_CHANGELOG = [
+            'v1.67 (2026-10-27) — 🏅 아침칠판 당번 아래 "순위" 칸: 모둠 순위(5-6-2…, 동점이면 성장 XP 높은 학생 있는 모둠 먼저) + 성장 TOP 3',
             'v1.66 (2026-10-23) — ⚠ 벌점·선행은 "경고 게이지"로 이름·모양 구분(XP와 따로) · ↶ 잘못 준 점수 고치기: 지급 기록(관리 → 지급 기록·취소, 학생 자세히 창 "최근 받은 점수")에서 언제든 취소 · 지급 패널 [− 빼기]로 기록 없는 예전 실수도 고침',
             'v1.65 (2026-10-22) — 🎯 기간 미션: 기간·성공 기준(예: 이번 주 급식 다 먹기 3번)·상품을 정하면 전자칠판 체크 팝업(학생이 이름 누르기 / 기간 전체 표)으로 체크, 성공 명단 + 상점 (과제관리·성장 탭)',
             'v1.64 (2026-10-22) — 🤝 협동학습 뽑기 새 판: 모둠 전체가 늘 보이고, 한 번 누르면 모둠+역할이 띵! (지금=주황 · 전에=연한 파랑 ✓ · 이번 바퀴에 나온 모둠=회색) · 긴급협동은 합쳐서 없앰',
@@ -5225,6 +5234,7 @@ var qrcode = function() {
             ensureRoomWritable(auth.currentUser, currentRoom);
             rpgRef.on('value', snap => {
                 rpgData = snap.val() || {};
+                boardRankRender();
                 rpgSecurityMigrate();
                 if(document.getElementById('rpg-grid')) renderRpgGrid();
                 if(rpgBulkMode) rpgRenderBulkActions();
@@ -5284,6 +5294,7 @@ var qrcode = function() {
                     const savedNames = nameSnap && nameSnap.val();
                     globalTotalStudents = s.totalStudents || 24;
                     globalStudentRosterStr = savedNames || s.roster || ""; if(typeof rpgSecurityMigrate === "function") setTimeout(rpgSecurityMigrate, 0);
+                    setTimeout(boardRankRender, 0);
                     globalWeatherLat = (typeof s.weatherLat === 'number') ? s.weatherLat : null;
                     globalWeatherLon = (typeof s.weatherLon === 'number') ? s.weatherLon : null;
                     globalWeatherPlace = s.weatherPlace || "";
@@ -5588,6 +5599,7 @@ var qrcode = function() {
                 const data = snap.val() || {};
                 for (let i = 0; i < numberOfGroups; i++) { currentScores[i] = data[i] || 0; animateNumber(document.getElementById(`score-${i}`), currentScores[i]); }
                 updateRankings();
+                boardRankRender();
             });
             miniScoresRef.on('value', snap => {
                 const data = snap.val() || {};
@@ -5707,6 +5719,7 @@ var qrcode = function() {
             { key:'safety',  label:'❗️ 안전 수칙', inner:'view-safety' },
             { key:'morning', label:'⭐ 아침 자습', inner:'view-morning' },
             { key:'duty',    label:'🧹 당번',       inner:'view-duty-nums' },
+            { key:'rank',    label:'🏅 순위',       inner:'view-rank' },
             { key:'notices', label:'📢 전달 사항', inner:'view-notices' },
             { key:'allim',   label:'📝 알림장',     inner:'view-allim' },
             { key:'meal',    label:'🍱 급식',       inner:'view-meal' },
@@ -7927,6 +7940,27 @@ var qrcode = function() {
         // ==========================================
         function changeGroupCount(id) { const v = parseInt(document.getElementById(id).value); if(v>=2 && v<=12) groupSettingsRef.set(v); }
         
+        // 🏅 아침칠판 '순위' 칸: 모둠 순위(점수판 점수, 동점이면 모둠원 중 성장 XP가 가장 높은 학생이 있는 모둠이 앞) + 성장 TOP 3
+        function boardRankRender(){
+            const el = document.getElementById('view-rank'); if(!el) return;
+            const roster = (typeof rpgParseRoster === 'function') ? rpgParseRoster() : [];
+            const xpOf = function(id){ return (typeof rpgData !== 'undefined' && rpgData && rpgData.students && rpgData.students[id] && rpgData.students[id].xp) || 0; };
+            const n = numberOfGroups || 0;
+            let groupHtml = '<span class="rk-empty">아직 모둠 점수가 없어요</span>';
+            if(n && currentScores.slice(0, n).some(function(v){ return (v || 0) !== 0; })){
+                const members = (typeof gxpMembers === 'function' && roster.length) ? gxpMembers() : {};
+                const best = function(g){ return Math.max.apply(null, [0].concat((members[g] || []).map(xpOf))); };
+                const order = [];
+                for(let g = 1; g <= n; g++) order.push(g);
+                order.sort(function(a, b){ return ((currentScores[b - 1] || 0) - (currentScores[a - 1] || 0)) || (best(b) - best(a)) || (a - b); });
+                groupHtml = order.map(function(g, i){ return i === 0 ? '<b>' + g + '</b>' : String(g); }).join('<span class="sep">-</span>');
+            }
+            let topHtml = '<span class="rk-empty">아직 성장 기록이 없어요</span>';
+            const ranked = roster.filter(function(s){ return xpOf(s.id) > 0; }).sort(function(a, b){ return (xpOf(b.id) - xpOf(a.id)) || (a.id - b.id); }).slice(0, 3);
+            if(ranked.length) topHtml = ranked.map(function(s, i){ return '<span style="white-space:nowrap;">' + (i + 1) + ' ' + escapeHtml(s.name) + '</span>'; }).join('<span class="sep">·</span>');
+            el.innerHTML = '<div class="rk-row"><span class="rk-k">모둠</span><span class="rk-v">' + groupHtml + '</span></div>'
+                + (roster.length ? '<div class="rk-row"><span class="rk-k">성장</span><span class="rk-v">' + topHtml + '</span></div>' : '');
+        }
         function buildScoreboardHTML() { 
             const div = document.getElementById('scoreboard'); div.innerHTML = ''; 
             for (let i = 0; i < numberOfGroups; i++) {
