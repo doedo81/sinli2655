@@ -2684,6 +2684,11 @@ var qrcode = function() {
         .rt-it.on .ic { background: #5b97d1; border-color: #5b97d1; color: #fff; }
         .rt-it.on .tx { color: #1f5f99; }
         .rt-card.done { background: #f3faf4; border-color: #bfe3c4; }
+        .rt-card .rt-x { margin-left: 6px; border: 1px solid #e3e8ef; background: #fff; color: #8a94a3; border-radius: 8px; font: 700 11px 'Pretendard', sans-serif; padding: 3px 8px; cursor: pointer; }
+        .rt-card .rt-x:hover { color: #b03a37; border-color: #f0c9c8; }
+        .rt-card .pill + .rt-x { margin-left: 6px; }
+        .rt-card .hd b + .rt-x { margin-left: auto; }
+        .rt-card.got .pill { background: #2e7d32; color: #fff; }
         .rt-card.done .bar i.f { background: #43a047; }
         .rt-card.done .rt-it .ic { background: #43a047; border-color: #43a047; color: #fff; }
         .rt-card.done .rt-it .tx { color: #2e7d32; }
@@ -4774,9 +4779,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.68';
+        const APP_VERSION = '1.69';
         const APP_VERSION_DATE = '2026-10-28';
         const APP_CHANGELOG = [
+            'v1.69 (2026-10-28) — ☀️ 아침 준비: 학생은 체크만, 점수는 선생님이 [완료한 학생 점수 주기]로 일괄 · 칸마다 [취소](체크+받은 점수 함께 되돌림)',
             'v1.68 (2026-10-28) — ☀️ 아침 준비 체크(번호별 4가지를 학생이 직접 누르면 정신 +1·성실 점수 자동) · 🎨 "미술 과제 완성"(민첩) 상점 항목',
             'v1.67 (2026-10-27) — 🏅 아침칠판 당번 아래 "순위" 칸: 모둠 순위(5-6-2…, 동점이면 성장 XP 높은 학생 있는 모둠 먼저) + 성장 TOP 3',
             'v1.66 (2026-10-23) — ⚠ 벌점·선행은 "경고 게이지"로 이름·모양 구분(XP와 따로) · ↶ 잘못 준 점수 고치기: 지급 기록(관리 → 지급 기록·취소, 학생 자세히 창 "최근 받은 점수")에서 언제든 취소 · 지급 패널 [− 빼기]로 기록 없는 예전 실수도 고침',
@@ -10790,7 +10796,9 @@ var qrcode = function() {
             }).join('');
         }
         // ===== ☀️ 아침 준비 체크 (정신·성실) =====
-        //   rpg/routine/config = { items:[4개], xp, stat }  ·  rpg/routine/days/<날짜>/<번호> = { 0:true, 1:true, …, _done:<지급 기록 키> }
+        //   rpg/routine/config = { items:[4개], xp, stat }  ·  rpg/routine/days/<날짜>/<번호> = { 0:true, 1:true, …, _rw:<지급 기록 키> }
+        //   학생은 체크만, 점수는 선생님이 마지막에 [완료한 학생 점수 주기]로 일괄(_rw 표시). 카드 [취소] = 체크 + 받은 점수까지 되돌림.
+        //   (v1.68은 다 누르는 순간 자동 지급하며 _done에 기록 키를 남겼음 → 받은 것으로 취급)
         //   학생이 전자칠판 팝업에서 자기 칸의 항목을 하나씩 누르고, 다 누르는 순간 '아침 준비 완료' 상점(기본 +5 XP·정신 +1)이 자동으로 들어감(하루 한 번).
         const RT_DEFAULT_ITEMS = ['책상 서랍 정리', '책가방 지퍼 닫기', '사물함 정리', '알짜정리 쓰기'];
         function rtArr(x){ if(Array.isArray(x)) return x; if(!x || typeof x !== 'object') return []; return Object.keys(x).sort(function(a, b){ return a - b; }).map(function(k){ return x[k]; }); }
@@ -10802,6 +10810,8 @@ var qrcode = function() {
         function rtToday(){ return getFormattedDate(new Date()); }
         function rtRow(num, date){ const d = rpgData.routine && rpgData.routine.days && rpgData.routine.days[date || rtToday()]; return (d && d[num]) || {}; }
         function rtCount(row, n){ let c = 0; for(let i = 0; i < n; i++) if(row[i]) c++; return c; }
+        function rtRewardKey(row){ return row._rw || row._done || null; }
+        function rtComplete(row, n){ return !!rtRewardKey(row) || rtCount(row, n) >= n; }
         // 할 일 이름으로 아이콘 고르기 (선생님이 이름을 바꿔도 어울리게)
         function rtIcon(t){
             const m = [[/서랍/, 'fa-inbox'], [/가방|지퍼/, 'fa-briefcase'], [/사물함/, 'fa-door-closed'], [/알짜|알림장|공책|쓰기|일기|기록/, 'fa-pen'],
@@ -10823,12 +10833,14 @@ var qrcode = function() {
             const cfg = rtCfg(), roster = rpgParseRoster(), n = cfg.items.length;
             const dt = new Date();
             const dayLbl = (dt.getMonth() + 1) + '월 ' + dt.getDate() + '일 (' + '일월화수목금토'.charAt(dt.getDay()) + ')';
-            const done = roster.filter(function(st){ return !!rtRow(st.id)._done; }).length;
+            const done = roster.filter(function(st){ return rtComplete(rtRow(st.id), n); }).length;
+            const pending = roster.filter(function(st){ const r = rtRow(st.id); return rtComplete(r, n) && !rtRewardKey(r); }).length;
             const pct = roster.length ? Math.round(done / roster.length * 100) : 0;
             let html = '<div class="rt-top"><div><div class="rt-meta">' + dayLbl + ' · 다 하면 ' + rpgStatName(cfg.stat) + ' +1 · ' + cfg.xp + ' XP</div>'
                 + '<h2><i class="fa-solid fa-sun"></i>아침 준비</h2></div>'
                 + '<div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">'
-                + '<div class="rt-prog"><span class="trk"><i style="width:' + pct + '%;"></i></span>' + done + ' / ' + roster.length + '명</div>'
+                + '<div class="rt-prog"><span class="trk"><i style="width:' + pct + '%;"></i></span>완료 ' + done + ' / ' + roster.length + '명</div>'
+                + '<button class="gx-mini" style="font-size:14px; padding:9px 14px; font-weight:800;' + (pending ? ' background:#2e7d32; border-color:#2e7d32; color:#fff;' : '') + '"' + (pending ? '' : ' disabled') + ' onclick="rpgRoutineRewardAll()"><i class="fa-solid fa-gift"></i> ' + (pending ? '완료한 ' + pending + '명에게 점수 주기' : '점수 줄 학생 없음') + '</button>'
                 + '<button class="gx-mini" style="font-size:14px; padding:9px 14px;" onclick="rtEditing=!rtEditing; rpgRoutineRender();"><i class="fa-solid fa-sliders"></i> ' + (rtEditing ? '설정 닫기' : '항목 바꾸기') + '</button>'
                 + '<button class="gx-mini" style="font-size:14px; padding:9px 14px;" onclick="rpgRoutineClose()">닫기</button></div></div>';
             if(rtEditing){
@@ -10841,16 +10853,19 @@ var qrcode = function() {
                     + '<button class="gx-mini" style="font-weight:800; border-color:#5b97d1; color:#1f5f99;" onclick="rpgRoutineSaveCfg()">저장</button>'
                     + '<span style="color:#7a8698;">· 오늘 이미 누른 칸은 그대로예요</span></div></div>';
             }
-            html += '<div style="font-size:15px; color:#455064; margin-bottom:14px;"><b>자기 번호 칸</b>의 동그라미를 하나씩 누르세요. 다 누르면 점수가 들어가요 · 잘못 눌렀으면 다시 누르면 취소</div>'
+            html += '<div style="font-size:15px; color:#455064; margin-bottom:14px;"><b>자기 번호 칸</b>의 동그라미를 하나씩 누르세요 · 잘못 눌렀으면 다시 누르면 취소 · 점수는 선생님이 마지막에 한꺼번에 줘요</div>'
                 + '<div class="rt-grid">' + roster.map(function(st){
-                    const row = rtRow(st.id), c = rtCount(row, n), isDone = !!row._done;
-                    let bar = ''; for(let i = 0; i < n; i++) bar += '<i' + ((row[i] || isDone) ? ' class="f"' : '') + '></i>';
-                    return '<div class="rt-card' + (isDone ? ' done' : '') + '">'
-                        + '<div class="hd"><span class="no">' + st.id + '</span><b>' + escapeHtml(st.name) + '</b>' + (isDone ? '<span class="pill">완료</span>' : '') + '</div>'
+                    const row = rtRow(st.id), isDone = rtComplete(row, n), got = !!rtRewardKey(row), any = got || rtCount(row, n) > 0;
+                    let bar = ''; for(let i = 0; i < n; i++) bar += '<i' + ((row[i] || got) ? ' class="f"' : '') + '></i>';
+                    return '<div class="rt-card' + (isDone ? ' done' : '') + (got ? ' got' : '') + '">'
+                        + '<div class="hd"><span class="no">' + st.id + '</span><b>' + escapeHtml(st.name) + '</b>'
+                        + (got ? '<span class="pill">점수 받음</span>' : (isDone ? '<span class="pill">완료</span>' : ''))
+                        + (any ? '<button class="rt-x" title="이 학생 오늘 체크' + (got ? '와 받은 점수' : '') + '를 처음으로" onclick="rpgRoutineReset(' + st.id + ')">취소</button>' : '')
+                        + '</div>'
                         + '<div class="bar" style="grid-template-columns:repeat(' + n + ',1fr);">' + bar + '</div>'
                         + '<div class="its" style="grid-template-columns:repeat(' + n + ',1fr);">'
                         + cfg.items.map(function(t, i){
-                            const on = row[i] || isDone;
+                            const on = row[i] || got;
                             return '<button class="rt-it' + (on ? ' on' : '') + '" onclick="rpgRoutineToggle(' + st.id + ',' + i + ')" title="' + escapeHtml(t) + '"><span class="ic"><i class="fa-solid ' + (on ? 'fa-check' : rtIcon(t)) + '"></i></span><span class="tx">' + escapeHtml(t) + '</span></button>';
                         }).join('')
                         + '</div></div>';
@@ -10869,30 +10884,49 @@ var qrcode = function() {
             const cfg = rtCfg(), n = cfg.items.length, date = rtToday();
             const row = rtRow(num, date);
             const st = rpgParseRoster().find(function(x){ return x.id === num; }); const name = st ? st.name : num + '번';
-            if(row._done){ rpgToast(name + ' 오늘은 이미 완료했어요 👍'); return; }
+            if(rtRewardKey(row)){ rpgToast(name + ' 오늘은 이미 점수를 받았어요 👍'); return; }
             const on = !row[i];
-            const base = 'routine/days/' + date + '/' + num + '/';
             const next = Object.assign({}, row); if(on) next[i] = true; else delete next[i];
             const allDone = on && rtCount(next, n) === n;
-            const up = {}; up[base + i] = on ? true : null;
-            if(allDone){
-                // 다 했으면 같은 저장에서 점수까지 (지급 기록에도 남겨서 나중에 취소 가능)
-                const s = rpgStudentObj(num), x0 = s.xp, before = rpgLevel(s.xp).lv;
+            rpgRef.child('routine/days/' + date + '/' + num + '/' + i).set(on ? true : null).then(function(){
+                if(allDone){ try{ SFX.mission(); }catch(e){} rpgToast('☀️ ' + name + ' 아침 준비 완료!', true); }
+                else if(on){ try{ SFX.ding(); }catch(e){} }
+            }).catch(function(e){ alert('저장 오류: ' + e.message); });
+        }
+        // 선생님: 오늘 다 한 학생에게 한꺼번에 점수 (기록 한 줄, 나중에 학생별 취소 가능)
+        function rpgRoutineRewardAll(){
+            if(!rpgRef) return;
+            const cfg = rtCfg(), n = cfg.items.length, date = rtToday();
+            const targets = rpgParseRoster().filter(function(st){ const r = rtRow(st.id, date); return rtComplete(r, n) && !rtRewardKey(r); });
+            if(!targets.length){ alert('점수를 줄 학생이 없어요. (다 한 학생이 없거나 이미 줬어요)'); return; }
+            if(!confirm('아침 준비를 다 한 ' + targets.length + '명에게 +' + cfg.xp + ' XP · ' + rpgStatName(cfg.stat) + ' +1을 줄까요?\n' + targets.map(function(st){ return st.name; }).join(', '))) return;
+            const key = db.ref('rooms/' + currentRoom + '/rpgLog').push().key;
+            const up = {}, per = {}; let lv = 0;
+            targets.forEach(function(st){
+                const s = rpgStudentObj(st.id), x0 = s.xp, before = rpgLevel(s.xp).lv;
                 s.xp += cfg.xp; s.stats[cfg.stat] = (s.stats[cfg.stat] || 0) + 1;
-                const key = db.ref('rooms/' + currentRoom + '/rpgLog').push().key;
-                const rootUp = {};
-                rootUp['rpg/' + base + i] = true;
-                rootUp['rpg/' + base + '_done'] = key;
-                rpgStudentPut(rootUp, 'rpg/students/', num, s);
-                rootUp['rpgLog/' + key] = { at:Date.now(), action:'morning', label:'아침 준비 완료 +' + cfg.xp + ' XP', sign:1, stat:cfg.stat, per:(function(){ const o = {}; o[num] = { x:s.xp - x0, s:1, w:0 }; return o; })() };
-                db.ref('rooms/' + currentRoom).update(rootUp).then(function(){
-                    try{ SFX.mission(); }catch(e){}
-                    rpgToast('☀️ ' + name + ' 아침 준비 완료! ' + rpgStatName(cfg.stat) + ' +1', true);
-                    if(rpgLevel(s.xp).lv > before) setTimeout(function(){ try{ SFX.levelup(); }catch(e){} rpgToast('🎉 ' + name + ' 레벨 업!', true); }, 500);
-                }).catch(function(e){ alert('저장 오류: ' + e.message); });
-                return;
-            }
-            rpgRef.update(up).then(function(){ if(on){ try{ SFX.ding(); }catch(e){} } }).catch(function(e){ alert('저장 오류: ' + e.message); });
+                if(rpgLevel(s.xp).lv > before) lv++;
+                per[st.id] = { x:s.xp - x0, s:1, w:0 };
+                rpgStudentPut(up, 'rpg/students/', st.id, s);
+                up['rpg/routine/days/' + date + '/' + st.id + '/_rw'] = key;
+            });
+            up['rpgLog/' + key] = { at:Date.now(), action:'morning', label:'아침 준비 완료 +' + cfg.xp + ' XP', sign:1, stat:cfg.stat, per:per };
+            db.ref('rooms/' + currentRoom).update(up).then(function(){
+                try{ SFX.mission(); }catch(e){}
+                rpgToast('☀️ ' + targets.length + '명에게 아침 준비 점수!', true);
+                if(lv > 0) setTimeout(function(){ try{ SFX.levelup(); }catch(e){} rpgToast('🎉 레벨 업 ' + lv + '명!', true); }, 500);
+            }).catch(function(e){ alert('지급 오류: ' + e.message); });
+        }
+        // 카드 [취소]: 오늘 체크를 처음으로 + 이미 받은 점수가 있으면 그 점수만 되돌림
+        function rpgRoutineReset(num){
+            if(!rpgRef) return;
+            const date = rtToday(), row = rtRow(num, date), key = rtRewardKey(row);
+            const st = rpgParseRoster().find(function(x){ return x.id === num; }); const name = st ? st.name : num + '번';
+            if(!confirm(name + ' 오늘 아침 준비를 처음으로 되돌릴까요?' + (key ? '\n받은 점수(XP·능력치)도 함께 취소돼요.' : ''))) return;
+            const clear = function(){ return rpgRef.child('routine/days/' + date + '/' + num).remove().then(function(){ rpgToast('↺ ' + name + ' 아침 준비 취소'); }); };
+            const p = (key && rpgLogData[key] && rpgLogData[key].per && rpgLogData[key].per[num] && !(rpgLogData[key].undone && rpgLogData[key].undone[num]))
+                ? rpgLogUndo(key, num, true) : Promise.resolve();
+            p.then(clear).catch(function(e){ alert('취소 오류: ' + e.message); });
         }
 
         // ===== 🎯 기간 체크형 미션 (예: 이번 주 급식 다 먹기 3번 이상) =====
@@ -10952,7 +10986,7 @@ var qrcode = function() {
                 // 끝났어도 상점을 안 준 성공자가 있으면 7일 동안 보여줌
                 return today > m.end && today <= getFormattedDate(new Date(new Date(m.end).getTime() + 7 * 86400000)) && rpgMissionWinners(m).some(function(st){ return !(m.done && m.done[st.id]); });
             });
-            const rtDone = rpgParseRoster().filter(function(st){ return !!rtRow(st.id)._done; }).length;
+            const rtDone = rpgParseRoster().filter(function(st){ return rtComplete(rtRow(st.id), rtCfg().items.length); }).length;
             const rtStrip = '<div class="gx-mstrip" style="border-color:rgba(91,151,209,0.35); background:rgba(91,151,209,0.07);"><span>☀️ <b style="color:#1f5f99;">아침 준비</b> · 오늘 완료 <b style="color:#1f5f99;">' + rtDone + '</b> / ' + rpgParseRoster().length + '명 · 다 하면 ' + rpgStatName(rtCfg().stat) + ' +1</span>'
                 + '<span style="margin-left:auto;"><button class="gx-mini" onclick="rpgRoutineOpen()">✋ 아침 준비 체크</button></span></div>';
             box.innerHTML = rtStrip + keys.map(function(k){
