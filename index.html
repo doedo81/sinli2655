@@ -2611,7 +2611,6 @@ var qrcode = function() {
         .gx-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 6px 11px; border: 1px solid var(--gx-line); border-radius: var(--gx-r); background: var(--pnl-in, #fff); color: var(--gx-ink); font: 600 13px 'Pretendard', sans-serif; cursor: pointer; transition: background var(--gx-t), border-color var(--gx-t); }
         .gx-chip b { font-weight: 800; font-size: 12px; color: #2f6fae; }
         .gx-chip.minus b { color: #b03a37; }
-        #gx-sign button[data-s="-1"].on { background: #c0504d; }
         .gx-give.sub .gx-chip b { color: #b03a37; }
         .gx-give.sub .gx-chip.on { background: #c0504d; border-color: #c0504d; }
         .gx-give.sub .gx-chip.on b { color: #fff; }
@@ -2633,6 +2632,30 @@ var qrcode = function() {
         .gx-grp { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 7px 12px; border: 1px solid var(--gx-line); border-radius: var(--gx-r); background: var(--pnl-in, #fff); color: var(--gx-ink); font: 700 13px 'Pretendard', sans-serif; cursor: pointer; text-align: left; max-width: 220px; transition: background var(--gx-t), border-color var(--gx-t); }
         .gx-grp small { font-weight: 500; font-size: 11px; color: var(--gx-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 196px; }
         .gx-grp.on { border-color: var(--accent-blue); background: var(--gx-soft); box-shadow: inset 0 0 0 1px var(--accent-blue); }
+        .gx-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 12px 0; border-top: 1px solid var(--gx-line); border-bottom: 1px solid var(--gx-line); margin-bottom: 14px; }
+        .gx-tb { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border: 1px solid var(--gx-line); border-radius: var(--gx-r); background: var(--pnl-in, #fff); color: var(--gx-ink); font: 700 15px 'Pretendard', sans-serif; cursor: pointer; transition: background var(--gx-t), border-color var(--gx-t); }
+        .gx-tb i { font-size: 14px; color: var(--gx-muted); }
+        .gx-tb:hover { border-color: var(--accent-blue); }
+        .gx-tb.main { background: var(--accent-blue); border-color: var(--accent-blue); color: #fff; padding: 10px 20px; }
+        .gx-tb.main i { color: #fff; }
+        .gx-tb-hint { margin-left: auto; font-size: 12px; color: var(--gx-muted); }
+        .gx-tb-checks { display: contents; }
+        .gx-tb-checks > .gx-tb:first-child { margin-left: 6px; }
+        .gx-tb-chk.rt i { color: #e0a100; }
+        .gx-tb-chk.ms i { color: #ad1457; }
+        .gx-tb-n { font-size: 12px; font-weight: 800; padding: 2px 7px; border-radius: 999px; background: var(--gx-soft, #f1f4f8); color: var(--gx-muted); }
+        .gx-tb-chk.ms .gx-tb-n { background: #fde7f1; color: #ad1457; }
+        #gx-pick .gx-actions { gap: 12px; }
+        #gx-pick .gx-agroup { gap: 8px; }
+        #gx-pick .gx-agroup > span { width: 40px; font-size: 12px; color: #6b7686; }
+        #gx-pick .gx-chip { font-size: 15px; padding: 10px 14px; }
+        #gx-pick .gx-chip b { font-size: 14px; }
+        #gx-pick.sub .gx-chip b { color: #b03a37; }
+        #rpg-grid.selecting > div { cursor: copy; }
+        #rpg-grid.selecting > div:not(.gx-sel)::after { content: ''; position: absolute; top: -7px; right: -7px; width: 18px; height: 18px; border-radius: 50%; border: 2px solid #b8c4d4; background: #fff; }
+        .gx-applybar .gx-grpbtns { display: flex; gap: 4px; flex-wrap: wrap; }
+        .gx-applybar .gx-grpbtns button { background: transparent; color: #dfe6ef; border: 1px solid #4a5468; padding: 6px 10px; font-size: 12px; font-weight: 700; }
+        .gx-applybar .gx-grpbtns button.on { background: #fff; color: #263042; }
         .gx-gridbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
         .gx-mini { border: 1px solid var(--gx-line); background: var(--pnl-in, #fff); color: var(--gx-ink); border-radius: var(--gx-r); padding: 6px 11px; font: 600 12px 'Pretendard', sans-serif; cursor: pointer; }
         .gx-mini:hover { background: var(--gx-soft); }
@@ -3802,29 +3825,14 @@ var qrcode = function() {
                     </div>
 
                     <div id="gx-missions"></div>
-                    <!-- 지급: 누구에게(한 명씩·골라서·모둠·반 전체) → 무엇을 → 맨 아래 지급 줄 -->
-                    <div id="rpg-bulk-bar" class="gx-give" style="display:none;">
-                        <div class="gx-row">
-                            <span class="gx-k">누구에게</span>
-                            <div class="gx-seg" id="gx-mode">
-                                <button data-m="one" onclick="rpgSetGiveMode('one')">한 명씩 바로</button>
-                                <button data-m="pick" onclick="rpgSetGiveMode('pick')">골라서</button>
-                                <button data-m="group" onclick="rpgSetGiveMode('group')">모둠</button>
-                                <button data-m="all" onclick="rpgSetGiveMode('all')">반 전체</button>
-                            </div>
-                            <span class="gx-hint" id="gx-hint"></span>
-                        </div>
-                        <div class="gx-row" id="gx-groups" style="display:none;"></div>
-                        <div class="gx-row" style="align-items:flex-start;">
-                            <span class="gx-k" style="padding-top:7px;">무엇을</span>
-                            <div style="flex:1; min-width:0;">
-                                <div class="gx-seg gx-seg-sm" id="gx-sign" style="margin-bottom:8px;">
-                                    <button data-s="1" class="on" onclick="rpgSetGiveSign(1)">＋ 주기</button>
-                                    <button data-s="-1" onclick="rpgSetGiveSign(-1)">− 빼기 (잘못 준 점수 고치기)</button>
-                                </div>
-                                <div id="rpg-bulk-actions" class="gx-actions"></div>
-                            </div>
-                        </div>
+                    <!-- 지급: [상점 주기] → 팝업에서 항목 고르기 → 카드를 눌러 학생 고르기 → 아래 [지급] -->
+                    <div id="rpg-bulk-bar" class="gx-toolbar" style="display:none;">
+                        <button class="gx-tb main" onclick="rpgOpenPick('give')"><i class="fa-solid fa-gift"></i> 상점 주기</button>
+                        <button class="gx-tb" onclick="rpgOpenPick('warn')"><i class="fa-solid fa-triangle-exclamation"></i> 경고 · 선행</button>
+                        <button class="gx-tb" onclick="rpgOpenPick('sub')"><i class="fa-solid fa-minus"></i> 점수 빼기</button>
+                        <button class="gx-tb" onclick="gxpOpen()"><i class="fa-solid fa-people-group"></i> 모둠 차등 지급</button>
+                        <span id="gx-tb-checks" class="gx-tb-checks"></span>
+                        <span class="gx-tb-hint">카드를 누르면 그 학생 자세히 보기</span>
                     </div>
 
                     <div id="rpg-roster-box" style="display:none; background:#f6f4ff; border:1px solid #d9d2f5; border-radius:14px; padding:18px; margin-bottom:20px;">
@@ -3864,7 +3872,6 @@ var qrcode = function() {
                             <button type="button" class="rpg-vm-btn" data-mode="seating" onclick="rpgSetViewMode('seating')">자리배치</button>
                             <button type="button" class="rpg-vm-btn" data-mode="rank" onclick="rpgSetViewMode('rank')">랭킹</button>
                         </div>
-                        <div id="gx-quick" style="display:flex; gap:6px;"></div>
                     </div>
                     <div id="rpg-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:14px;"></div>
                     <div id="gx-applybar" class="gx-applybar" style="display:none;"></div>
@@ -4210,6 +4217,18 @@ var qrcode = function() {
             <!-- 성장: ☀️ 아침 준비 체크 (학생이 전자칠판에서 자기 칸 4개를 누르면 성실 점수) -->
             <div id="rpg-routine" style="display:none; position:fixed; inset:0; z-index:2600; background:#f4f6f9; overflow-y:auto;">
                 <div style="max-width:1500px; margin:0 auto; padding:22px 24px 40px;" id="rpg-routine-body"></div>
+            </div>
+
+            <!-- 성장: 무엇을 줄지 고르는 팝업 -->
+            <div id="gx-pick" style="display:none; position:fixed; inset:0; z-index:2050; background:rgba(20,26,38,0.45); align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) rpgClosePick()">
+                <div style="background:#fff; border-radius:18px; max-width:640px; width:100%; max-height:90vh; overflow:auto; padding:22px 22px 18px; text-align:left;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <div id="gx-pick-title" style="font-size:19px; font-weight:800; color:#263042;"></div>
+                        <button onclick="rpgClosePick()" style="border:none; background:#f0f2f5; border-radius:50%; width:32px; height:32px; cursor:pointer; font-size:16px;">✕</button>
+                    </div>
+                    <div id="gx-pick-sub" style="font-size:13px; color:#6b7686; margin-bottom:14px;"></div>
+                    <div id="rpg-bulk-actions" class="gx-actions"></div>
+                </div>
             </div>
 
             <!-- 성장: 지급 기록 · 취소 -->
@@ -4779,9 +4798,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.69';
+        const APP_VERSION = '1.70';
         const APP_VERSION_DATE = '2026-10-28';
         const APP_CHANGELOG = [
+            'v1.70 (2026-10-28) — 🎁 성장 지급 방식 변경: [상점 주기] → 항목 고르기 → 카드로 학생 고르기 → [N명에게 지급] · 아침 준비·기간 미션 버튼을 같은 줄에',
             'v1.69 (2026-10-28) — ☀️ 아침 준비: 학생은 체크만, 점수는 선생님이 [완료한 학생 점수 주기]로 일괄 · 칸마다 [취소](체크+받은 점수 함께 되돌림)',
             'v1.68 (2026-10-28) — ☀️ 아침 준비 체크(번호별 4가지를 학생이 직접 누르면 정신 +1·성실 점수 자동) · 🎨 "미술 과제 완성"(민첩) 상점 항목',
             'v1.67 (2026-10-27) — 🏅 아침칠판 당번 아래 "순위" 칸: 모둠 순위(5-6-2…, 동점이면 성장 XP 높은 학생 있는 모둠 먼저) + 성장 TOP 3',
@@ -5282,7 +5302,7 @@ var qrcode = function() {
                 boardRankRender();
                 rpgSecurityMigrate();
                 if(document.getElementById('rpg-grid')) renderRpgGrid();
-                if(rpgBulkMode) rpgRenderBulkActions();
+                if(document.getElementById('gx-pick') && document.getElementById('gx-pick').style.display === 'flex') rpgRenderBulkActions();
                 var _am = document.getElementById('rpg-actions-modal'); if(_am && _am.style.display === 'flex') rpgRenderActionsList();
                 var _gm = document.getElementById('rpg-grade-modal'); if(_gm && _gm.style.display === 'flex') rpgRenderGrade();
                 var _sm = document.getElementById('rpg-subject-modal'); if(_sm && _sm.style.display === 'flex') rpgRenderSubjectList();
@@ -9716,9 +9736,9 @@ var qrcode = function() {
             const warnBar = warn > 0
                 ? '<div style="height:5px;background:#f0d5d5;border-radius:20px;margin-top:6px;overflow:hidden;"><div style="width:' + warn + '%;height:100%;background:#e57373;"></div></div>'
                 : '';
-            const _sel = rpgBulkMode && rpgBulkSelected.has(stu.id);
+            const _sel = rpgSelecting && rpgBulkSelected.has(stu.id);
             const _check = _sel ? '<span style="position:absolute;top:-7px;right:-7px;background:#5b97d1;color:#fff;border-radius:50%;width:20px;height:20px;font-size:12px;line-height:20px;text-align:center;">✓</span>' : '';
-            return '<div onclick="rpgCardClick(' + stu.id + ')" style="position:relative;cursor:pointer;background:' + (_sel?'#eaf2fb':'#fff') + ';border:' + (_sel?'2px solid #5b97d1':'1px solid #e6ebf3') + ';border-top:4px solid ' + (job ? '#7b6cd9' : '#b0bec5') + ';border-radius:14px;padding:12px;box-shadow:0 3px 10px rgba(120,144,180,0.10);transition:transform .12s;' + rpgFrameStyle(d.frame) + '" onmouseover="this.style.transform=\'translateY(-3px)\'" onmouseout="this.style.transform=\'\'">'
+            return '<div onclick="rpgCardClick(' + stu.id + ')"' + (_sel ? ' class="gx-sel"' : '') + ' style="position:relative;cursor:pointer;background:' + (_sel?'#eaf2fb':'#fff') + ';border:' + (_sel?'2px solid #5b97d1':'1px solid #e6ebf3') + ';border-top:4px solid ' + (job ? '#7b6cd9' : '#b0bec5') + ';border-radius:14px;padding:12px;box-shadow:0 3px 10px rgba(120,144,180,0.10);transition:transform .12s;' + rpgFrameStyle(d.frame) + '" onmouseover="this.style.transform=\'translateY(-3px)\'" onmouseout="this.style.transform=\'\'">'
                 + rankBadge
                 + _check
                 + (d.head ? '<div style="position:absolute;top:-3px;left:50%;transform:translateX(-50%);z-index:4;">' + rpgHeadVisual(d.head, 42) + '</div>' : '')
@@ -9764,7 +9784,8 @@ var qrcode = function() {
             var _es = document.getElementById('rpg-exit-student'); if(_es) _es.style.display = rpgStudentMode ? '' : 'none';
             rpgRenderMissionStrip();
             rpgBulkMode = !rpgStudentMode; // 학생 모드에선 지급 패널·지급 줄을 숨김
-            var _bb = document.getElementById('rpg-bulk-bar'); if(_bb) _bb.style.display = rpgStudentMode ? 'none' : 'block';
+            var _bb = document.getElementById('rpg-bulk-bar'); if(_bb) _bb.style.display = rpgStudentMode ? 'none' : 'flex';
+            if(rpgStudentMode) rpgSelecting = false;
             rpgUpdateBulkBtn();
             var _vm = document.getElementById('rpg-view-modes');
             if(students.length === 0){ grid.innerHTML = ''; empty.style.display = 'block'; if(_vm) _vm.style.display = 'none'; return; }
@@ -10022,10 +10043,8 @@ var qrcode = function() {
         // 한 명씩: 행동을 고른 채 카드를 누르면 바로 지급(행동을 안 고르면 학생 자세히 보기)
         // 골라서·모둠: 카드/모둠을 눌러 고른 뒤 맨 아래 [지급] · 반 전체: 바로 [지급]
         function rpgCardClick(id){
-            if(!rpgBulkMode) return rpgOpen(id);
-            if(rpgGiveMode === 'one'){ if(rpgBulkAction) rpgGiveToIds([id]); else rpgOpen(id); return; }
-            if(rpgGiveMode === 'all') return rpgOpen(id);
-            rpgToggleSelect(id);
+            if(rpgSelecting) return rpgToggleSelect(id);   // 상점을 고른 뒤: 학생 고르기
+            rpgOpen(id);                                   // 평소: 그 학생 자세히(한 명에게 바로 주기)
         }
 
         // 성장 탭 진입 시: 기본으로 '일괄 지급' 모드를 켜서 바로 점수를 줄 수 있게
@@ -10092,86 +10111,67 @@ var qrcode = function() {
             rpgStudentMode = localStorage.getItem('rpgStu_' + currentRoom) === '1';
             rpgAddLateDefaults();
             const bar = document.getElementById('rpg-bulk-bar');
-            rpgBulkMode = !rpgStudentMode; // 선생님 화면에선 지급 패널이 늘 켜져 있음
-            if(bar) bar.style.display = rpgBulkMode ? 'block' : 'none';
-            if(rpgBulkMode){
-                try{ rpgGiveMode = localStorage.getItem('rpgGiveMode') || 'one'; }catch(e){ rpgGiveMode = 'one'; }
-                rpgApplyGiveModeUI(); rpgRenderBulkActions();
-            }
+            rpgBulkMode = !rpgStudentMode; // 선생님 화면에선 버튼 줄이 늘 보임
+            if(bar) bar.style.display = rpgBulkMode ? 'flex' : 'none';
             renderRpgGrid(); rpgUpdateBulkBtn();
         }
-        let rpgGiveMode = 'one', rpgLastGive = null;
-        const RPG_GIVE_HINT = {
-            one:'행동을 고르고 학생 카드를 누르면 바로 지급 · 행동을 안 고르고 누르면 학생 자세히 보기',
-            pick:'카드를 눌러 여러 명을 고른 뒤 아래 [지급]',
-            group:'모둠을 눌러 모둠원을 한 번에 고르기 (카드로 더하거나 빼도 돼요)',
-            all:'반 학생 모두에게 한 번에'
-        };
-        function rpgSetGiveMode(m){
-            rpgGiveMode = m; rpgBulkSelected.clear();
-            try{ localStorage.setItem('rpgGiveMode', m); }catch(e){}
-            rpgApplyGiveModeUI(); renderRpgGrid(); rpgUpdateBulkBtn();
+        // 지급 흐름: [상점 주기]/[경고·선행]/[점수 빼기] → 팝업에서 항목 → 카드를 눌러 학생 고르기 → 아래 [지급]
+        let rpgSelecting = false, rpgPickKind = 'give', rpgLastGive = null;
+        function rpgToggleBulk(){ rpgOnShow(); } // 예전 버튼 호환
+        function rpgOpenPick(kind){
+            rpgPickKind = kind;
+            rpgSetGiveSign(kind === 'sub' ? -1 : 1);
+            const t = { give:['어떤 상점을 줄까요?', '고른 뒤 카드를 눌러 학생을 골라요'], warn:['경고 · 선행', '점수(XP)와 따로 쌓이는 경고 게이지예요 · 카드 아래 빨간 막대'], sub:['어떤 점수를 뺄까요?', '잘못 준 점수를 고칠 때 써요 · 0점 아래로는 안 내려가요'] }[kind];
+            document.getElementById('gx-pick-title').textContent = t[0];
+            document.getElementById('gx-pick-sub').textContent = t[1];
+            const ov = document.getElementById('gx-pick'); if(ov.parentElement !== document.body) document.body.appendChild(ov);
+            ov.classList.toggle('sub', kind === 'sub');
+            ov.style.display = 'flex';
+            rpgRenderBulkActions();
         }
-        function rpgApplyGiveModeUI(){
-            document.querySelectorAll('#gx-mode button').forEach(function(b){ b.classList.toggle('on', b.dataset.m === rpgGiveMode); });
-            const h = document.getElementById('gx-hint'); if(h) h.textContent = RPG_GIVE_HINT[rpgGiveMode] || '';
-            const g = document.getElementById('gx-groups'); if(g){ g.style.display = rpgGiveMode === 'group' ? 'flex' : 'none'; if(rpgGiveMode === 'group') rpgRenderGroupChips(); }
-            const q = document.getElementById('gx-quick');
-            if(q) q.innerHTML = (rpgGiveMode === 'pick' || rpgGiveMode === 'group')
-                ? '<button class="gx-mini" onclick="rpgSelectAll(true)">모두 고르기</button><button class="gx-mini" onclick="rpgSelectAll(false)">고른 것 비우기</button>' : '';
+        function rpgClosePick(){ document.getElementById('gx-pick').style.display = 'none'; }
+        function rpgCancelSelect(){
+            rpgSelecting = false; rpgBulkAction = null; rpgBulkSelected.clear(); rpgSetGiveSign(1);
+            renderRpgGrid(); rpgUpdateBulkBtn();
         }
-        // 예전 버튼 호환 (다른 곳에서 부르면 패널만 다시 그림)
-        function rpgToggleBulk(){ rpgOnShow(); }
-
         function rpgSelectAll(on){
             rpgBulkSelected.clear();
             if(on) rpgParseRoster().forEach(function(s){ rpgBulkSelected.add(s.id); });
-            renderRpgGrid(); rpgUpdateBulkBtn(); if(rpgGiveMode === 'group') rpgRenderGroupChips();
-        }
-        function rpgRenderGroupChips(){
-            const box = document.getElementById('gx-groups'); if(!box) return;
-            const members = gxpMembers();
-            const nameById = {}; rpgParseRoster().forEach(function(s){ nameById[s.id] = s.name; });
-            const keys = Object.keys(members).map(Number).sort(function(a, b){ return a - b; }).filter(function(g){ return members[g].length; });
-            box.innerHTML = '<span class="gx-k">모둠</span>'
-                + (keys.length
-                    ? keys.map(function(g){
-                        const ids = members[g];
-                        const on = ids.every(function(id){ return rpgBulkSelected.has(id); });
-                        return '<button class="gx-grp' + (on ? ' on' : '') + '" onclick="rpgToggleGroup(' + g + ')">' + g + '모둠 · ' + ids.length + '명<small>' + ids.map(function(id){ return escapeHtml(nameById[id] || (id + '번')); }).join(', ') + '</small></button>';
-                    }).join('')
-                    : '<span class="gx-hint">모둠이 없어요. [자리 배치]에서 협동학습(모둠) 자리를 만들면 여기에 떠요.</span>')
-                + (keys.length ? '<button class="gx-mini" onclick="gxpOpen()" title="점수판의 모둠 점수 순위대로 XP를 다르게 줘요">모둠 점수 순위대로 차등 지급…</button>' : '');
+            renderRpgGrid(); rpgUpdateBulkBtn();
         }
         function rpgToggleGroup(g){
             const ids = gxpMembers()[g] || [];
-            const all = ids.every(function(id){ return rpgBulkSelected.has(id); });
+            const all = ids.length && ids.every(function(id){ return rpgBulkSelected.has(id); });
             ids.forEach(function(id){ if(all) rpgBulkSelected.delete(id); else rpgBulkSelected.add(id); });
-            rpgRenderGroupChips(); renderRpgGrid(); rpgUpdateBulkBtn();
+            renderRpgGrid(); rpgUpdateBulkBtn();
         }
 
-        // 행동 칩: 습관·노력·특별(상점 항목의 묶음) + 생활(벌점·선행). 고른 칩을 한 번 더 누르면 해제
+        // 팝업 안 항목: 습관·노력·특별(상점 항목의 묶음), 경고·선행은 따로
         function rpgRenderBulkActions(){
             const box = document.getElementById('rpg-bulk-actions'); if(!box) return;
+            function chip(id, label, val, tone){
+                return '<button class="gx-chip' + (tone ? ' ' + tone : '') + '" onclick="rpgPickBulkAction(\'' + id + '\')">' + escapeHtml(label) + ' <b>' + val + '</b></button>';
+            }
+            if(rpgPickKind === 'warn'){
+                box.innerHTML = '<div class="gx-agroup">' + chip('__warn', '벌점', '⚠ 경고 +20', 'minus gauge') + chip('__good', '선행', '✨ 경고 −10 (회복)', 'good gauge') + '</div>';
+                return;
+            }
             const groups = {}, order = [];
             rpgAllActions().forEach(function(a){ const g = a.group || '기타'; if(!groups[g]){ groups[g] = []; order.push(g); } groups[g].push(a); });
             const pref = ['습관', '노력', '특별'];
             order.sort(function(x, y){ const i = pref.indexOf(x), j = pref.indexOf(y); return (i < 0 ? 9 : i) - (j < 0 ? 9 : j); });
-            function chip(id, label, val, tone){
-                return '<button class="gx-chip' + (tone ? ' ' + tone : '') + (rpgBulkAction === id ? ' on' : '') + '" onclick="rpgPickBulkAction(\'' + id + '\')">' + escapeHtml(label) + ' <b>' + val + '</b></button>';
-            }
             box.innerHTML = order.map(function(g){
                 return '<div class="gx-agroup"><span>' + escapeHtml(g) + '</span>' + groups[g].map(function(a){ const v = a.xp * rpgGiveSign; return chip(a.id, a.label, (v >= 0 ? '+' : '−') + Math.abs(v), a.xp < 0 ? 'minus' : ''); }).join('') + '</div>';
             }).join('')
-                // 벌점·선행은 XP가 아니라 '경고 게이지(0~100)'를 움직임 — 점선 칩으로 XP 칩과 구분
-                + '<div class="gx-agroup"><span>경고</span>' + chip('__warn', '벌점', '⚠ 경고 ' + (rpgGiveSign < 0 ? '−' : '+') + '20', 'minus gauge') + chip('__good', '선행', '✨ 경고 ' + (rpgGiveSign < 0 ? '+' : '−') + '10 (회복)', 'good gauge')
-                + '<span class="gx-gauge-note">점수(XP)와 따로 쌓여요 · 카드 아래 빨간 막대</span>'
-                + '<button class="gx-edit" onclick="rpgOpenActions()">항목 추가·편집</button></div>';
+                + '<div style="text-align:right; margin-top:4px;"><button class="gx-edit" onclick="rpgClosePick(); rpgOpenActions();">항목 추가·편집</button></div>';
         }
-        function rpgPickBulkAction(id){ rpgBulkAction = (rpgBulkAction === id) ? null : id; rpgRenderBulkActions(); rpgUpdateBulkBtn(); }
+        function rpgPickBulkAction(id){
+            rpgBulkAction = id; rpgSelecting = true; rpgBulkSelected.clear();
+            rpgClosePick(); renderRpgGrid(); rpgUpdateBulkBtn();
+        }
         function rpgToggleSelect(id){
             if(rpgBulkSelected.has(id)) rpgBulkSelected.delete(id); else rpgBulkSelected.add(id);
-            renderRpgGrid(); rpgUpdateBulkBtn(); if(rpgGiveMode === 'group') rpgRenderGroupChips();
+            renderRpgGrid(); rpgUpdateBulkBtn();
         }
         function rpgActionLabel(id, sign){
             sign = sign || rpgGiveSign;
@@ -10182,52 +10182,48 @@ var qrcode = function() {
             const v = a.xp * sign;
             return a.label + ' ' + (v >= 0 ? '+' : '−') + Math.abs(v) + ' XP';
         }
-        function rpgTargetIds(){
-            if(rpgGiveMode === 'all') return rpgParseRoster().map(function(s){ return s.id; });
-            return Array.from(rpgBulkSelected);
-        }
-        // 맨 아래 지급 줄
+        function rpgTargetIds(){ return Array.from(rpgBulkSelected); }
+        // 맨 아래 줄: 고르는 중이면 [반 전체·모둠·비우기·취소·지급], 아니면 방금 지급 되돌리기만
         function rpgUpdateBulkBtn(){
             const bar = document.getElementById('gx-applybar'); if(!bar) return;
-            if(!rpgBulkMode || rpgParseRoster().length === 0){ bar.style.display = 'none'; return; }
+            const grid = document.getElementById('rpg-grid'); if(grid) grid.classList.toggle('selecting', !!rpgSelecting);
+            const undoOk = rpgLastGive && Date.now() - rpgLastGive.at < 120000;
+            const undo = undoOk ? '<button class="gx-undo" onclick="rpgUndoLastGive()" title="' + escapeHtml(rpgLastGive.desc) + '">↶ 방금 지급 되돌리기</button>' : '';
+            if(!rpgBulkMode || rpgParseRoster().length === 0 || (!rpgSelecting && !undoOk)){ bar.style.display = 'none'; return; }
             bar.style.display = 'flex';
-            const nameById = {}; rpgParseRoster().forEach(function(s){ nameById[s.id] = s.name; });
-            const undo = rpgLastGive && Date.now() - rpgLastGive.at < 120000
-                ? '<button class="gx-undo" onclick="rpgUndoLastGive()" title="' + escapeHtml(rpgLastGive.desc) + '">↶ 방금 지급 되돌리기</button>' : '';
-            const lbl = rpgBulkAction ? rpgActionLabel(rpgBulkAction) : '';
-            if(rpgGiveMode === 'one'){
-                bar.innerHTML = '<div class="gx-sum">' + (lbl ? '<b>' + (rpgGiveSign < 0 ? '빼기 · ' : '') + escapeHtml(lbl) + '</b> — 학생 카드를 누르면 바로 ' + (rpgGiveSign < 0 ? '빼요' : '줘요') : '위에서 행동을 고르세요')
-                    + '<small>' + (lbl ? '다른 행동은 칩을 다시 눌러 바꿔요 · 같은 칩을 또 누르면 해제' : '행동을 안 고르고 카드를 누르면 학생 자세히 보기') + '</small></div>' + undo;
+            if(!rpgSelecting){
+                bar.innerHTML = '<div class="gx-sum">' + escapeHtml(rpgLastGive.desc) + '<small>잘못 줬으면 되돌릴 수 있어요 (관리 → 지급 기록에서도 가능)</small></div>' + undo;
                 return;
             }
+            const nameById = {}; rpgParseRoster().forEach(function(s){ nameById[s.id] = s.name; });
             const ids = rpgTargetIds();
-            const who = rpgGiveMode === 'all' ? ('반 전체 ' + ids.length + '명') : (ids.length + '명');
+            const lbl = (rpgGiveSign < 0 ? '빼기 · ' : '') + rpgActionLabel(rpgBulkAction);
             const names = ids.slice().sort(function(a, b){ return a - b; }).map(function(id){ return nameById[id] || (id + '번'); }).join(', ');
-            const ready = ids.length && rpgBulkAction;
-            bar.innerHTML = '<div class="gx-sum"><b>' + who + '</b>' + (lbl ? ' · ' + (rpgGiveSign < 0 ? '빼기 · ' : '') + escapeHtml(lbl) : ' · <span style="color:#ffd28a;">행동을 고르세요</span>')
-                + '<small>' + (ids.length ? escapeHtml(names) : (rpgGiveMode === 'group' ? '모둠이나 카드를 눌러 고르세요' : '카드를 눌러 고르세요')) + '</small></div>'
-                + undo
-                + (rpgGiveMode !== 'all' && ids.length ? '<button class="gx-ghost" onclick="rpgSelectAll(false)">비우기</button>' : '')
-                + '<button class="gx-go" ' + (ready ? '' : 'disabled ') + 'onclick="rpgBulkApply()">' + (ready ? ids.length + '명' + (rpgGiveSign < 0 ? '에게서 빼기' : '에게 지급') : '지급') + '</button>';
+            const members = gxpMembers();
+            const gkeys = Object.keys(members).map(Number).sort(function(a, b){ return a - b; }).filter(function(g){ return members[g].length; });
+            const allOn = ids.length === rpgParseRoster().length;
+            bar.innerHTML = '<div class="gx-sum"><b>' + escapeHtml(lbl) + '</b> · ' + (ids.length ? ids.length + '명' : '<span style="color:#ffd28a;">카드를 눌러 학생을 고르세요</span>')
+                + '<small>' + (ids.length ? escapeHtml(names) : '모둠이나 반 전체로 한 번에 고를 수도 있어요') + '</small></div>'
+                + '<div class="gx-grpbtns"><button class="' + (allOn ? 'on' : '') + '" onclick="rpgSelectAll(' + (allOn ? 'false' : 'true') + ')">반 전체</button>'
+                + gkeys.map(function(g){ const on = members[g].every(function(id){ return rpgBulkSelected.has(id); }); return '<button class="' + (on ? 'on' : '') + '" onclick="rpgToggleGroup(' + g + ')">' + g + '모둠</button>'; }).join('')
+                + '</div>'
+                + '<button class="gx-ghost" onclick="rpgCancelSelect()">취소</button>'
+                + '<button class="gx-go" ' + (ids.length ? '' : 'disabled ') + 'onclick="rpgBulkApply()">' + (ids.length ? ids.length + '명' + (rpgGiveSign < 0 ? '에게서 빼기' : '에게 지급') : '지급') + '</button>';
         }
         function rpgBulkApply(){
-            if(!rpgBulkAction){ alert('먼저 줄 행동을 골라 주세요.'); return; }
+            if(!rpgBulkAction){ alert('먼저 무엇을 줄지 골라 주세요.'); return; }
             const ids = rpgTargetIds();
             if(!ids.length){ alert('학생을 골라 주세요. (카드를 누르면 골라져요)'); return; }
-            if(rpgGiveMode === 'all' && !confirm('반 전체 ' + ids.length + '명' + (rpgGiveSign < 0 ? '에게서 ' : '에게 ') + rpgActionLabel(rpgBulkAction) + '을(를) ' + (rpgGiveSign < 0 ? '뺄까요?' : '줄까요?'))) return;
-            rpgGiveToIds(ids);
+            if(ids.length === rpgParseRoster().length && ids.length > 1 && !confirm('반 전체 ' + ids.length + '명' + (rpgGiveSign < 0 ? '에게서 ' : '에게 ') + rpgActionLabel(rpgBulkAction) + '을(를) ' + (rpgGiveSign < 0 ? '뺄까요?' : '줄까요?'))) return;
+            rpgGiveApply(ids, rpgBulkAction, rpgGiveSign);
         }
+
         // ===== 지급 기록 (rooms/<반>/rpgLog — 학생은 못 읽음) =====
         //   rpgLog/<key> = { at, action, label, sign, stat, per:{ 번호:{x:XP변화, s:능력치변화, w:경고변화} }, undone:{ 번호:true } }
         //   취소 = 그때 바뀐 만큼만 거꾸로(그 뒤에 받은 점수는 그대로)
         var rpgLogRef = null, rpgLogData = {};
         let rpgGiveSign = 1;
-        function rpgSetGiveSign(v){
-            rpgGiveSign = v;
-            document.querySelectorAll('#gx-sign button').forEach(function(b){ b.classList.toggle('on', String(b.dataset.s) === String(v)); });
-            const bar = document.getElementById('rpg-bulk-bar'); if(bar) bar.classList.toggle('sub', v < 0);
-            rpgRenderBulkActions(); rpgUpdateBulkBtn();
-        }
+        function rpgSetGiveSign(v){ rpgGiveSign = v; }
         function rpgGiveToIds(ids){ if(rpgBulkAction) rpgGiveApply(ids, rpgBulkAction, rpgGiveSign); }
         function rpgGiveApply(ids, actionId, sign){
             if(!rpgRef || !ids.length || !actionId) return;
@@ -10254,9 +10250,8 @@ var qrcode = function() {
                 rpgToast(who + ' · ' + lbl);
                 if(levelups > 0){ SFX.levelup(); setTimeout(function(){ rpgToast('🎉 레벨 업 ' + levelups + '명!', true); }, 400); }
                 else if(actionId === '__warn' || sign < 0) SFX.warn(); else SFX.point();
-                if(rpgGiveMode !== 'one') rpgBulkSelected.clear();
-                if(sign < 0 && rpgGiveSign < 0){ rpgBulkAction = null; rpgSetGiveSign(1); } // 빼기는 한 번만 — 켜 둔 채 잊고 점수를 빼는 실수 방지
-                renderRpgGrid(); rpgUpdateBulkBtn(); if(rpgGiveMode === 'group') rpgRenderGroupChips();
+                if(rpgSelecting){ rpgSelecting = false; rpgBulkAction = null; rpgBulkSelected.clear(); rpgSetGiveSign(1); } // 한 번 주면 고르기 끝
+                renderRpgGrid(); rpgUpdateBulkBtn();
                 if(rpgModalId != null && document.getElementById('rpg-modal').style.display === 'flex' && ids.indexOf(rpgModalId) >= 0) rpgOpen(rpgModalId);
                 setTimeout(rpgUpdateBulkBtn, 121000); // 되돌리기 버튼 2분 뒤 사라짐(지급 기록에서는 계속 취소 가능)
                 rpgLogPrune();
@@ -10986,16 +10981,18 @@ var qrcode = function() {
                 // 끝났어도 상점을 안 준 성공자가 있으면 7일 동안 보여줌
                 return today > m.end && today <= getFormattedDate(new Date(new Date(m.end).getTime() + 7 * 86400000)) && rpgMissionWinners(m).some(function(st){ return !(m.done && m.done[st.id]); });
             });
-            const rtDone = rpgParseRoster().filter(function(st){ return rtComplete(rtRow(st.id), rtCfg().items.length); }).length;
-            const rtStrip = '<div class="gx-mstrip" style="border-color:rgba(91,151,209,0.35); background:rgba(91,151,209,0.07);"><span>☀️ <b style="color:#1f5f99;">아침 준비</b> · 오늘 완료 <b style="color:#1f5f99;">' + rtDone + '</b> / ' + rpgParseRoster().length + '명 · 다 하면 ' + rpgStatName(rtCfg().stat) + ' +1</span>'
-                + '<span style="margin-left:auto;"><button class="gx-mini" onclick="rpgRoutineOpen()">✋ 아침 준비 체크</button></span></div>';
-            box.innerHTML = rtStrip + keys.map(function(k){
-                const m = ms[k], wins = rpgMissionWinners(m), act = rpgMissionActive(m);
-                return '<div class="gx-mstrip"><span>🎯 <b>' + escapeHtml(m.title) + '</b> · ' + rpgMdShort(m.start) + '~' + rpgMdShort(m.end) + ' · ' + m.target + '번 이상' + (m.prize ? ' · 🎁 ' + escapeHtml(m.prize) : '') + ' · 성공 <b>' + wins.length + '</b>명' + (act ? '' : ' <span style="color:#7a8698;">(끝남)</span>') + '</span>'
-                    + '<span style="margin-left:auto; display:flex; gap:6px;">'
-                    + (act ? '<button class="gx-mini" onclick="rpgMissionCheckOpen(\'' + k + '\')">✋ 오늘 체크</button>' : '')
-                    + '<button class="gx-mini" onclick="rpgMissionWinOpen(\'' + k + '\')">🏆 성공 명단</button></span></div>';
-            }).join('');
+            // 아침 준비·기간 미션 체크 버튼은 지급 버튼 줄에 같이 놓음
+            const tb = document.getElementById('gx-tb-checks');
+            box.innerHTML = '';
+            if(!tb) return;
+            const roster = rpgParseRoster();
+            const rtDone = roster.filter(function(st){ return rtComplete(rtRow(st.id), rtCfg().items.length); }).length;
+            tb.innerHTML = '<button class="gx-tb gx-tb-chk rt" onclick="rpgRoutineOpen()" title="다 하면 ' + rpgStatName(rtCfg().stat) + ' +1"><i class="fa-solid fa-sun"></i> 아침 준비 <span class="gx-tb-n">' + rtDone + '/' + roster.length + '</span></button>'
+                + keys.map(function(k){
+                    const m = ms[k], wins = rpgMissionWinners(m), act = rpgMissionActive(m);
+                    const tip = rpgMdShort(m.start) + '~' + rpgMdShort(m.end) + ' · ' + m.target + '번 이상' + (m.prize ? ' · ' + m.prize : '');
+                    return '<button class="gx-tb gx-tb-chk ms" title="' + escapeHtml(tip) + '" onclick="' + (act ? 'rpgMissionCheckOpen' : 'rpgMissionWinOpen') + '(\'' + k + '\')"><i class="fa-solid ' + (act ? 'fa-bullseye' : 'fa-trophy') + '"></i> ' + escapeHtml(m.title) + ' <span class="gx-tb-n">' + (act ? '성공 ' + wins.length : '끝남 · 명단') + '</span></button>';
+                }).join('');
         }
         // 과제관리 탭의 '기간 미션' 칸 (성장 탭과 같은 미션 데이터)
         function rpgRenderHwMissions(){
