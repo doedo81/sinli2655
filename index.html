@@ -3374,8 +3374,10 @@ var qrcode = function() {
                     <button class="tab-btn" style="margin-bottom:14px;" onclick="classSwitchPopupToggle()" title="다른 학급으로 이동 · 새 학급 만들기"><i class="fa-solid fa-school"></i> <span class="tab-text">학급 전환·추가</span></button>
                     <div id="class-switch-pop" style="display:none; position:absolute; bottom:100%; left:0; right:0; margin-bottom:6px; background:#fff; border:1px solid #e6ebf3; border-radius:12px; box-shadow:0 10px 28px rgba(56,78,126,0.2); padding:10px; z-index:300; max-height:320px; overflow-y:auto;"></div>
                 </div>
-                <div id="user-profile" class="user-profile-text" style="font-size:13px; font-weight:bold; color:#666; padding:0 6px; margin-bottom:4px;"></div>
-                <div class="user-profile-text" style="font-size:12px; font-weight:700; color:#6b7a90; padding:2px 6px 6px; cursor:pointer; text-decoration:underline dotted;" onclick="showVersionInfo()" title="변경 기록 보기">버전 <span id="app-version">-</span></div>
+                <div style="display:flex; align-items:baseline; flex-wrap:wrap; gap:2px 8px; padding:0 6px;">
+                    <div id="user-profile" class="user-profile-text" style="font-size:13px; font-weight:bold; color:#666;"></div>
+                    <div class="user-profile-text" style="font-size:12px; font-weight:700; color:#6b7a90; cursor:pointer; text-decoration:underline dotted;" onclick="showVersionInfo()" title="변경 기록 보기">버전 <span id="app-version">-</span></div>
+                </div>
             </div>
         </nav>
 
