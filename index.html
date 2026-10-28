@@ -2666,6 +2666,35 @@ var qrcode = function() {
         #view-rank .rk-v .sep { color: #b0b8c4; font-weight: 500; padding: 0 3px; }
         #view-rank .rk-v small { font-size: 0.72em; color: #7a8698; font-weight: 600; }
         #view-rank .rk-empty { color: #a0a8b5; font-weight: 500; font-size: 0.85em; }
+        .rt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 12px; }
+        .rt-card { background: #fff; border: 1px solid #e3e8ef; border-radius: 16px; padding: 12px 12px 10px; box-shadow: 0 1px 2px rgba(38, 48, 66, 0.05); transition: background 160ms, border-color 160ms; }
+        .rt-card .hd { display: flex; align-items: center; gap: 8px; }
+        .rt-card .no { flex: none; width: 26px; height: 26px; border-radius: 50%; background: #eef2f7; color: #455064; font-size: 13px; font-weight: 800; display: grid; place-items: center; }
+        .rt-card .hd b { font-size: 19px; font-weight: 800; color: #263042; letter-spacing: -0.01em; }
+        .rt-card .pill { margin-left: auto; font-size: 12px; font-weight: 800; color: #2e7d32; background: #e3f3e5; border-radius: 10px; padding: 3px 9px; }
+        .rt-card .bar { display: grid; gap: 4px; margin: 9px 2px 10px; }
+        .rt-card .bar i { height: 4px; border-radius: 2px; background: #e8edf3; transition: background 160ms; }
+        .rt-card .bar i.f { background: #5b97d1; }
+        .rt-card .its { display: grid; gap: 4px; }
+        .rt-it { border: none; background: transparent; padding: 2px 1px 4px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; font-family: 'Pretendard', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .rt-it .ic { width: 46px; height: 46px; border-radius: 50%; border: 1.5px solid #d5dde8; background: #f7f9fc; color: #6b7a8f; font-size: 18px; display: grid; place-items: center; transition: background 140ms, border-color 140ms, color 140ms, transform 120ms; }
+        .rt-it:hover .ic { border-color: #5b97d1; }
+        .rt-it:active .ic { transform: scale(0.93); }
+        .rt-it .tx { font-size: 12px; font-weight: 700; color: #455064; line-height: 1.25; word-break: keep-all; text-align: center; }
+        .rt-it.on .ic { background: #5b97d1; border-color: #5b97d1; color: #fff; }
+        .rt-it.on .tx { color: #1f5f99; }
+        .rt-card.done { background: #f3faf4; border-color: #bfe3c4; }
+        .rt-card.done .bar i.f { background: #43a047; }
+        .rt-card.done .rt-it .ic { background: #43a047; border-color: #43a047; color: #fff; }
+        .rt-card.done .rt-it .tx { color: #2e7d32; }
+        .rt-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+        .rt-top h2 { margin: 2px 0 0; font-size: 32px; font-weight: 800; color: #263042; letter-spacing: -0.02em; display: flex; align-items: center; gap: 10px; }
+        .rt-top h2 i { color: #e9a23b; font-size: 26px; }
+        .rt-meta { font-size: 14px; color: #6b7686; font-weight: 600; }
+        .rt-prog { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 800; color: #2e7d32; }
+        .rt-prog .trk { width: 160px; height: 8px; border-radius: 4px; background: #e3e8ef; overflow: hidden; }
+        .rt-prog .trk i { display: block; height: 100%; background: #43a047; border-radius: 4px; transition: width 200ms; }
+        @media (prefers-reduced-motion: reduce){ .rt-it .ic, .rt-card, .rt-prog .trk i { transition: none; } }
         .gx-dash-strip { display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; padding: 2px 2px 12px; font-size: 13px; color: var(--gx-muted); text-align: left; }
         .gx-dash-strip b { font-size: 18px; color: var(--gx-ink); font-weight: 800; margin-right: 3px; }
         @media (prefers-reduced-motion: reduce){ #rpg-tab *, #rpg-menu * { transition: none !important; } }
@@ -3621,7 +3650,10 @@ var qrcode = function() {
                     <div class="picker-box" style="text-align:left; margin-bottom:20px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
                             <h2 style="margin:0; color:var(--dark-blue);">🎯 기간 미션 <span style="font-size:14px; color:#7a8698; font-weight:600;">— 기간 동안 체크해서 기준 넘으면 성공 (예: 급식 다 먹기 3번)</span></h2>
-                            <button class="action-btn" style="background:#ad1457; padding:9px 16px;" onclick="rpgOpenMissions(); rpgMiSetType('period');"><i class="fa-solid fa-plus"></i> 새 기간 미션</button>
+                            <span style="display:flex; gap:8px; flex-wrap:wrap;">
+                                <button class="action-btn" style="background:#5b97d1; padding:9px 16px;" onclick="rpgRoutineOpen()"><i class="fa-solid fa-sun"></i> 아침 준비 체크</button>
+                                <button class="action-btn" style="background:#ad1457; padding:9px 16px;" onclick="rpgOpenMissions(); rpgMiSetType('period');"><i class="fa-solid fa-plus"></i> 새 기간 미션</button>
+                            </span>
                         </div>
                         <div id="hw-missions"></div>
                     </div>
@@ -3739,6 +3771,7 @@ var qrcode = function() {
                                         <div class="gx-menu-cols">
                                             <div>
                                                 <div class="rpg-menu-label">수업</div>
+                                                <button onclick="rpgRoutineOpen(); rpgCloseMenu();"><i class="fa-solid fa-sun"></i> 아침 준비 체크</button>
                                                 <button onclick="rpgOpenMissions(); rpgCloseMenu();"><i class="fa-solid fa-bullseye"></i> 미션</button>
                                                 <button onclick="rpgOpenExam(); rpgCloseMenu();"><i class="fa-solid fa-file-pen"></i> 단원평가 점수 넣기</button>
                                                 <button id="rpg-grade-btn" style="display:none;" onclick="rpgOpenGrade(); rpgCloseMenu();"><i class="fa-solid fa-table-list"></i> 평가 기록</button>
@@ -4167,6 +4200,11 @@ var qrcode = function() {
                     </div>
                     <div id="rpg-mission-list"></div>
                 </div>
+            </div>
+
+            <!-- 성장: ☀️ 아침 준비 체크 (학생이 전자칠판에서 자기 칸 4개를 누르면 성실 점수) -->
+            <div id="rpg-routine" style="display:none; position:fixed; inset:0; z-index:2600; background:#f4f6f9; overflow-y:auto;">
+                <div style="max-width:1500px; margin:0 auto; padding:22px 24px 40px;" id="rpg-routine-body"></div>
             </div>
 
             <!-- 성장: 지급 기록 · 취소 -->
@@ -4736,9 +4774,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.67';
-        const APP_VERSION_DATE = '2026-10-27';
+        const APP_VERSION = '1.68';
+        const APP_VERSION_DATE = '2026-10-28';
         const APP_CHANGELOG = [
+            'v1.68 (2026-10-28) — ☀️ 아침 준비 체크(번호별 4가지를 학생이 직접 누르면 정신 +1·성실 점수 자동) · 🎨 "미술 과제 완성"(민첩) 상점 항목',
             'v1.67 (2026-10-27) — 🏅 아침칠판 당번 아래 "순위" 칸: 모둠 순위(5-6-2…, 동점이면 성장 XP 높은 학생 있는 모둠 먼저) + 성장 TOP 3',
             'v1.66 (2026-10-23) — ⚠ 벌점·선행은 "경고 게이지"로 이름·모양 구분(XP와 따로) · ↶ 잘못 준 점수 고치기: 지급 기록(관리 → 지급 기록·취소, 학생 자세히 창 "최근 받은 점수")에서 언제든 취소 · 지급 패널 [− 빼기]로 기록 없는 예전 실수도 고침',
             'v1.65 (2026-10-22) — 🎯 기간 미션: 기간·성공 기준(예: 이번 주 급식 다 먹기 3번)·상품을 정하면 전자칠판 체크 팝업(학생이 이름 누르기 / 기간 전체 표)으로 체크, 성공 명단 + 상점 (과제관리·성장 탭)',
@@ -5243,6 +5282,7 @@ var qrcode = function() {
                 var _sm = document.getElementById('rpg-subject-modal'); if(_sm && _sm.style.display === 'flex') rpgRenderSubjectList();
                 var _mm = document.getElementById('rpg-mission-modal'); if(_mm && _mm.style.display === 'flex') rpgRenderMissions();
                 if(rpgMcheckId) rpgMissionCheckRender();
+                if(rpgRoutineOpenNow() && !rtEditing) rpgRoutineRender();
                 rpgRenderHwMissions();
                 if(rpgMwinId) rpgMissionWinRender();
             });
@@ -9118,9 +9158,11 @@ var qrcode = function() {
             { id:'duty',      label:'1인1역',        xp:5,  stat:'cha', group:'습관' },
             { id:'meal',      label:'밥 완료',       xp:5,  stat:'str', group:'습관' },
             { id:'milk',      label:'우유 완료',     xp:5,  stat:'str', group:'습관' },
+            { id:'morning',   label:'아침 준비 완료', xp:5, stat:'mnd', group:'습관' },
             { id:'reading',   label:'독서 인증',     xp:10, stat:'wis', group:'습관' },
             { id:'present',   label:'발표',          xp:10, stat:'cha', group:'노력' },
             { id:'hw',        label:'숙제',          xp:10, stat:'mnd', group:'노력' },
+            { id:'art',       label:'미술 과제 완성', xp:10, stat:'dex', group:'노력' },
             { id:'diary',     label:'주제일기',      xp:20, stat:'wis', group:'노력' },
             { id:'diary_up',  label:'주제일기 향상', xp:15, stat:'wis', group:'노력' },
             { id:'diary_top', label:'주제일기 최고', xp:30, stat:'wis', group:'특별' },
@@ -9348,6 +9390,28 @@ var qrcode = function() {
             let i = RPG_ACTIONS.length;
             Object.keys(legacy).forEach(function(k){ seed[k] = { label:legacy[k].label, xp:legacy[k].xp, stat:legacy[k].stat, group:legacy[k].group, order:i++ }; });
             return rpgRef.child('config/actions').set(seed).then(function(){ return rpgRef.child('config/customActions').remove(); });
+        }
+
+        // 상점 항목을 직접 편집해 둔 반(config/actions)에는 새 기본 항목이 자동으로 안 생기므로, 한 번만 끼워 넣는다.
+        // (선생님이 나중에 지워도 다시 생기지 않게 config/addedDefaults/<id> 표시)
+        const RPG_LATE_DEFAULTS = ['morning', 'art'];
+        let _rpgLateDefaultsDone = false;
+        function rpgAddLateDefaults(){
+            if(_rpgLateDefaultsDone || !rpgRef || currentRole !== 'owner') return;
+            const cfg = rpgData.config && rpgData.config.actions;
+            if(!cfg || !Object.keys(cfg).length){ _rpgLateDefaultsDone = true; return; } // 기본 목록을 쓰는 반은 이미 보임
+            const added = (rpgData.config && rpgData.config.addedDefaults) || {};
+            let order = Math.max.apply(null, [0].concat(Object.keys(cfg).map(function(k){ return cfg[k].order || 0; })));
+            const up = {};
+            RPG_LATE_DEFAULTS.forEach(function(id){
+                if(added[id]) return;
+                up['config/addedDefaults/' + id] = true;
+                if(cfg[id]) return;
+                const a = RPG_ACTIONS.find(function(x){ return x.id === id; });
+                up['config/actions/' + id] = { label:a.label, xp:a.xp, stat:a.stat, group:a.group, order:++order };
+            });
+            _rpgLateDefaultsDone = true;
+            if(Object.keys(up).length) rpgRef.update(up);
         }
 
         // 레벨 곡선: 기본은 기존 50/30을 유지. 1년 운영에서 더 빠른 성장을 원하면 RPG_LEVEL_CURVE_PRESET을 'gentle'로 바꾸면 됨.
@@ -10020,6 +10084,7 @@ var qrcode = function() {
         }
         function rpgOnShow(){
             rpgStudentMode = localStorage.getItem('rpgStu_' + currentRoom) === '1';
+            rpgAddLateDefaults();
             const bar = document.getElementById('rpg-bulk-bar');
             rpgBulkMode = !rpgStudentMode; // 선생님 화면에선 지급 패널이 늘 켜져 있음
             if(bar) bar.style.display = rpgBulkMode ? 'block' : 'none';
@@ -10724,6 +10789,112 @@ var qrcode = function() {
                     + '</div>';
             }).join('');
         }
+        // ===== ☀️ 아침 준비 체크 (정신·성실) =====
+        //   rpg/routine/config = { items:[4개], xp, stat }  ·  rpg/routine/days/<날짜>/<번호> = { 0:true, 1:true, …, _done:<지급 기록 키> }
+        //   학생이 전자칠판 팝업에서 자기 칸의 항목을 하나씩 누르고, 다 누르는 순간 '아침 준비 완료' 상점(기본 +5 XP·정신 +1)이 자동으로 들어감(하루 한 번).
+        const RT_DEFAULT_ITEMS = ['책상 서랍 정리', '책가방 지퍼 닫기', '사물함 정리', '알짜정리 쓰기'];
+        function rtArr(x){ if(Array.isArray(x)) return x; if(!x || typeof x !== 'object') return []; return Object.keys(x).sort(function(a, b){ return a - b; }).map(function(k){ return x[k]; }); }
+        function rtCfg(){
+            const c = (rpgData.routine && rpgData.routine.config) || {};
+            const items = rtArr(c.items).map(function(t){ return String(t || '').trim(); }).filter(Boolean);
+            return { items:items.length ? items : RT_DEFAULT_ITEMS, xp:(typeof c.xp === 'number') ? c.xp : 5, stat:c.stat || 'mnd' };
+        }
+        function rtToday(){ return getFormattedDate(new Date()); }
+        function rtRow(num, date){ const d = rpgData.routine && rpgData.routine.days && rpgData.routine.days[date || rtToday()]; return (d && d[num]) || {}; }
+        function rtCount(row, n){ let c = 0; for(let i = 0; i < n; i++) if(row[i]) c++; return c; }
+        // 할 일 이름으로 아이콘 고르기 (선생님이 이름을 바꿔도 어울리게)
+        function rtIcon(t){
+            const m = [[/서랍/, 'fa-inbox'], [/가방|지퍼/, 'fa-briefcase'], [/사물함/, 'fa-door-closed'], [/알짜|알림장|공책|쓰기|일기|기록/, 'fa-pen'],
+                [/양치|이/, 'fa-tooth'], [/손|씻/, 'fa-hands-bubbles'], [/책|독서|읽/, 'fa-book-open'], [/물|우유/, 'fa-glass-water'],
+                [/교과서|준비물|필통/, 'fa-pencil'], [/의자|자리|책상/, 'fa-chair'], [/청소|쓸|정리/, 'fa-broom'], [/인사/, 'fa-face-smile']];
+            for(let i = 0; i < m.length; i++) if(m[i][0].test(t)) return m[i][1];
+            return 'fa-check';
+        }
+        let rtEditing = false;
+        function rpgRoutineOpen(){
+            if(!rpgRef){ alert('먼저 학급에 입장해 주세요.'); return; }
+            const ov = document.getElementById('rpg-routine'); if(ov.parentElement !== document.body) document.body.appendChild(ov);
+            ov.style.display = 'block'; rtEditing = false; rpgRoutineRender();
+        }
+        function rpgRoutineClose(){ document.getElementById('rpg-routine').style.display = 'none'; }
+        function rpgRoutineOpenNow(){ const ov = document.getElementById('rpg-routine'); return ov && ov.style.display === 'block'; }
+        function rpgRoutineRender(){
+            const body = document.getElementById('rpg-routine-body'); if(!body) return;
+            const cfg = rtCfg(), roster = rpgParseRoster(), n = cfg.items.length;
+            const dt = new Date();
+            const dayLbl = (dt.getMonth() + 1) + '월 ' + dt.getDate() + '일 (' + '일월화수목금토'.charAt(dt.getDay()) + ')';
+            const done = roster.filter(function(st){ return !!rtRow(st.id)._done; }).length;
+            const pct = roster.length ? Math.round(done / roster.length * 100) : 0;
+            let html = '<div class="rt-top"><div><div class="rt-meta">' + dayLbl + ' · 다 하면 ' + rpgStatName(cfg.stat) + ' +1 · ' + cfg.xp + ' XP</div>'
+                + '<h2><i class="fa-solid fa-sun"></i>아침 준비</h2></div>'
+                + '<div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">'
+                + '<div class="rt-prog"><span class="trk"><i style="width:' + pct + '%;"></i></span>' + done + ' / ' + roster.length + '명</div>'
+                + '<button class="gx-mini" style="font-size:14px; padding:9px 14px;" onclick="rtEditing=!rtEditing; rpgRoutineRender();"><i class="fa-solid fa-sliders"></i> ' + (rtEditing ? '설정 닫기' : '항목 바꾸기') + '</button>'
+                + '<button class="gx-mini" style="font-size:14px; padding:9px 14px;" onclick="rpgRoutineClose()">닫기</button></div></div>';
+            if(rtEditing){
+                html += '<div style="background:#fff; border:1px solid #e3e8ef; border-radius:14px; padding:14px 16px; margin-bottom:16px;">'
+                    + '<div style="font-size:13px; font-weight:800; color:#455064; margin-bottom:8px;">할 일 (2~6개, 순서대로)</div>'
+                    + '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:8px; margin-bottom:10px;">'
+                    + [0, 1, 2, 3, 4, 5].map(function(i){ return '<input class="rt-in" value="' + escapeHtml(cfg.items[i] || '') + '" placeholder="' + (i < 4 ? '할 일 ' + (i + 1) : '(비워 두면 없음)') + '" style="padding:9px; border:1px solid #ccc; border-radius:8px; font-family:\'Pretendard\';">'; }).join('')
+                    + '</div><div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:13px; color:#455064;">다 하면 <input id="rt-xp" type="number" min="0" value="' + cfg.xp + '" style="width:64px; padding:8px; border:1px solid #ccc; border-radius:8px; text-align:center;"> XP · 능력치 '
+                    + '<select id="rt-stat" style="padding:8px; border:1px solid #ccc; border-radius:8px;">' + RPG_STATS.map(function(st){ return '<option value="' + st.key + '"' + (st.key === cfg.stat ? ' selected' : '') + '>' + st.emoji + ' ' + st.name + '</option>'; }).join('') + '</select>'
+                    + '<button class="gx-mini" style="font-weight:800; border-color:#5b97d1; color:#1f5f99;" onclick="rpgRoutineSaveCfg()">저장</button>'
+                    + '<span style="color:#7a8698;">· 오늘 이미 누른 칸은 그대로예요</span></div></div>';
+            }
+            html += '<div style="font-size:15px; color:#455064; margin-bottom:14px;"><b>자기 번호 칸</b>의 동그라미를 하나씩 누르세요. 다 누르면 점수가 들어가요 · 잘못 눌렀으면 다시 누르면 취소</div>'
+                + '<div class="rt-grid">' + roster.map(function(st){
+                    const row = rtRow(st.id), c = rtCount(row, n), isDone = !!row._done;
+                    let bar = ''; for(let i = 0; i < n; i++) bar += '<i' + ((row[i] || isDone) ? ' class="f"' : '') + '></i>';
+                    return '<div class="rt-card' + (isDone ? ' done' : '') + '">'
+                        + '<div class="hd"><span class="no">' + st.id + '</span><b>' + escapeHtml(st.name) + '</b>' + (isDone ? '<span class="pill">완료</span>' : '') + '</div>'
+                        + '<div class="bar" style="grid-template-columns:repeat(' + n + ',1fr);">' + bar + '</div>'
+                        + '<div class="its" style="grid-template-columns:repeat(' + n + ',1fr);">'
+                        + cfg.items.map(function(t, i){
+                            const on = row[i] || isDone;
+                            return '<button class="rt-it' + (on ? ' on' : '') + '" onclick="rpgRoutineToggle(' + st.id + ',' + i + ')" title="' + escapeHtml(t) + '"><span class="ic"><i class="fa-solid ' + (on ? 'fa-check' : rtIcon(t)) + '"></i></span><span class="tx">' + escapeHtml(t) + '</span></button>';
+                        }).join('')
+                        + '</div></div>';
+                }).join('') + '</div>';
+            body.innerHTML = html;
+        }
+        function rpgRoutineSaveCfg(){
+            const items = Array.from(document.querySelectorAll('#rpg-routine-body .rt-in')).map(function(e){ return e.value.trim(); }).filter(Boolean);
+            if(items.length < 2){ alert('할 일을 2개 이상 적어 주세요.'); return; }
+            const xp = Math.max(0, parseInt(document.getElementById('rt-xp').value, 10) || 0);
+            const stat = document.getElementById('rt-stat').value;
+            rpgRef.child('routine/config').set({ items:items, xp:xp, stat:stat }).then(function(){ rtEditing = false; rpgToast('아침 준비 항목 저장'); rpgRoutineRender(); });
+        }
+        function rpgRoutineToggle(num, i){
+            if(!rpgRef) return;
+            const cfg = rtCfg(), n = cfg.items.length, date = rtToday();
+            const row = rtRow(num, date);
+            const st = rpgParseRoster().find(function(x){ return x.id === num; }); const name = st ? st.name : num + '번';
+            if(row._done){ rpgToast(name + ' 오늘은 이미 완료했어요 👍'); return; }
+            const on = !row[i];
+            const base = 'routine/days/' + date + '/' + num + '/';
+            const next = Object.assign({}, row); if(on) next[i] = true; else delete next[i];
+            const allDone = on && rtCount(next, n) === n;
+            const up = {}; up[base + i] = on ? true : null;
+            if(allDone){
+                // 다 했으면 같은 저장에서 점수까지 (지급 기록에도 남겨서 나중에 취소 가능)
+                const s = rpgStudentObj(num), x0 = s.xp, before = rpgLevel(s.xp).lv;
+                s.xp += cfg.xp; s.stats[cfg.stat] = (s.stats[cfg.stat] || 0) + 1;
+                const key = db.ref('rooms/' + currentRoom + '/rpgLog').push().key;
+                const rootUp = {};
+                rootUp['rpg/' + base + i] = true;
+                rootUp['rpg/' + base + '_done'] = key;
+                rpgStudentPut(rootUp, 'rpg/students/', num, s);
+                rootUp['rpgLog/' + key] = { at:Date.now(), action:'morning', label:'아침 준비 완료 +' + cfg.xp + ' XP', sign:1, stat:cfg.stat, per:(function(){ const o = {}; o[num] = { x:s.xp - x0, s:1, w:0 }; return o; })() };
+                db.ref('rooms/' + currentRoom).update(rootUp).then(function(){
+                    try{ SFX.mission(); }catch(e){}
+                    rpgToast('☀️ ' + name + ' 아침 준비 완료! ' + rpgStatName(cfg.stat) + ' +1', true);
+                    if(rpgLevel(s.xp).lv > before) setTimeout(function(){ try{ SFX.levelup(); }catch(e){} rpgToast('🎉 ' + name + ' 레벨 업!', true); }, 500);
+                }).catch(function(e){ alert('저장 오류: ' + e.message); });
+                return;
+            }
+            rpgRef.update(up).then(function(){ if(on){ try{ SFX.ding(); }catch(e){} } }).catch(function(e){ alert('저장 오류: ' + e.message); });
+        }
+
         // ===== 🎯 기간 체크형 미션 (예: 이번 주 급식 다 먹기 3번 이상) =====
         //   missions/<id> = { type:'period', title, start, end, target, prize, xp, stat, checks:{ 'YYYY-MM-DD': { 번호:true } }, done:{ 번호:true }(상점 받음) }
         //   학생은 전자칠판(선생님 화면)의 [오늘 체크]에서 자기 이름을 눌러 체크. 기간 안 체크 수가 target 이상이면 성공.
@@ -10781,7 +10952,10 @@ var qrcode = function() {
                 // 끝났어도 상점을 안 준 성공자가 있으면 7일 동안 보여줌
                 return today > m.end && today <= getFormattedDate(new Date(new Date(m.end).getTime() + 7 * 86400000)) && rpgMissionWinners(m).some(function(st){ return !(m.done && m.done[st.id]); });
             });
-            box.innerHTML = keys.map(function(k){
+            const rtDone = rpgParseRoster().filter(function(st){ return !!rtRow(st.id)._done; }).length;
+            const rtStrip = '<div class="gx-mstrip" style="border-color:rgba(91,151,209,0.35); background:rgba(91,151,209,0.07);"><span>☀️ <b style="color:#1f5f99;">아침 준비</b> · 오늘 완료 <b style="color:#1f5f99;">' + rtDone + '</b> / ' + rpgParseRoster().length + '명 · 다 하면 ' + rpgStatName(rtCfg().stat) + ' +1</span>'
+                + '<span style="margin-left:auto;"><button class="gx-mini" onclick="rpgRoutineOpen()">✋ 아침 준비 체크</button></span></div>';
+            box.innerHTML = rtStrip + keys.map(function(k){
                 const m = ms[k], wins = rpgMissionWinners(m), act = rpgMissionActive(m);
                 return '<div class="gx-mstrip"><span>🎯 <b>' + escapeHtml(m.title) + '</b> · ' + rpgMdShort(m.start) + '~' + rpgMdShort(m.end) + ' · ' + m.target + '번 이상' + (m.prize ? ' · 🎁 ' + escapeHtml(m.prize) : '') + ' · 성공 <b>' + wins.length + '</b>명' + (act ? '' : ' <span style="color:#7a8698;">(끝남)</span>') + '</span>'
                     + '<span style="margin-left:auto; display:flex; gap:6px;">'
