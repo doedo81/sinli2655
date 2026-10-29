@@ -4800,9 +4800,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.72';
+        const APP_VERSION = '1.73';
         const APP_VERSION_DATE = '2026-10-28';
         const APP_CHANGELOG = [
+            'v1.73 (2026-10-29) — ✏️ 주제일기: 목표 글자 수보다 짧으면 내용 점수도 70~100%만(긴 글이 더 높게)',
             'v1.72 (2026-10-29) — ✏️ 주제일기 AI 채점: 6명씩 묶어 한 번에(무료 하루 한도 아끼기) · 한도 다 쓰면 다른 AI 모델로 · 다 쓰면 ⛔ 안내 후 한도 풀리면 자동 이어서 · 버전 표시를 이름 옆에',
             'v1.71 (2026-10-29) — ✏️ 주제일기 채점: 📏 분량 기준(글자 수로 자동 계산, 짧으면 감점) · 채점 빨라짐(3명씩 동시에, 멈추면 다시) · [이 주제 모두 다시 채점]',
             'v1.70 (2026-10-28) — 🎁 성장 지급 방식 변경: [상점 주기] → 항목 고르기 → 카드로 학생 고르기 → [N명에게 지급] · 아침 준비·기간 미션 버튼을 같은 줄에',
@@ -11680,6 +11681,16 @@ var qrcode = function() {
             const ratio = min > 0 ? 0.5 + 0.5 * (len - min) / (goal - min) : len / goal;
             return Math.round(points * Math.min(1, ratio));
         }
+        // 📏 짧은 글은 내용 점수도 덜 받게: 목표 글자 수에 못 미치면 AI가 준 내용 점수에 0.7~1을 곱한다
+        //    (최소만 채운 글은 내용 점수의 70%까지, 목표까지 쓰면 100%) → 같은 수준이면 긴 글이 늘 더 높게
+        function diaryLenFactor(len, min){
+            min = min || 0;
+            const goal = diaryLenGoal(min);
+            if(len >= goal) return 1;
+            if(len < min) return 0.6;
+            const prog = min > 0 ? (len - min) / (goal - min) : len / goal;
+            return 0.7 + 0.3 * Math.max(0, Math.min(1, prog));
+        }
         // 예전에 만든 주제(분량 기준 없음)는 나머지 기준을 줄여서 분량 기준을 붙인다
         function diaryWithLen(list){
             const r = list.map(function(x){ return Object.assign({}, x); });
@@ -11987,7 +11998,7 @@ var qrcode = function() {
             const min = parseInt(document.getElementById('diary-tm-min').value, 10) || 0;
             box.innerHTML = diaryTmRubric.map(function(r, i){
                 if(r.auto === 'len') return '<div style="display:flex; gap:6px; align-items:center; margin-bottom:6px; padding:7px 9px; background:#f6f3fd; border:1px dashed #d9d0f0; border-radius:7px;">'
-                    + '<div style="flex:1; min-width:0; font-size:13px;"><b style="color:#5e35b1;">📏 분량</b> <span style="font-size:12px; color:#888;">· 글자 수로 자동 계산(AI 아님) · ' + min + '자 채우면 절반, ' + diaryLenGoal(min) + '자 넘으면 만점</span></div>'
+                    + '<div style="flex:1; min-width:0; font-size:13px;"><b style="color:#5e35b1;">📏 분량</b> <span style="font-size:12px; color:#888;">· 글자 수로 자동 계산(AI 아님) · ' + min + '자 채우면 절반, ' + diaryLenGoal(min) + '자 넘으면 만점 · 목표보다 짧으면 다른 기준 점수도 70~100%만</span></div>'
                     + '<input type="number" min="0" max="100" value="' + (r.points || 0) + '" oninput="diaryTmRubric[' + i + '].points=parseInt(this.value,10)||0; diaryRubricSum();" style="width:58px; padding:7px; border:1px solid #d9d0f0; border-radius:7px; box-sizing:border-box; font-family:inherit; text-align:center;">'
                     + '<span style="font-size:12px; color:#888;">점</span><span style="width:22px;"></span></div>';
                 return '<div style="display:flex; gap:6px; align-items:flex-start; margin-bottom:6px;">'
@@ -12201,13 +12212,15 @@ var qrcode = function() {
                 const o = byNum[String(x.num)];
                 if(!o){ missing.push(x.num); continue; }
                 const outItems = diaryArr(o.items); let ai = 0;
+                const lf = diaryLenFactor(x.len, t.minChars);
                 const items = rubric.map(function(r){
                     if(r.auto === 'len'){
                         const goal = diaryLenGoal(t.minChars), got = diaryLenScore(x.len, t.minChars, r.points);
-                        return { name:r.name, max:r.points, got:got, auto:'len', comment: x.len >= goal ? '지금 ' + x.len + '자예요. 넉넉하게 잘 썼어요!' : '지금 ' + x.len + '자예요. ' + goal + '자까지 쓰면 분량 만점이에요.' };
+                        return { name:r.name, max:r.points, got:got, auto:'len', comment: x.len >= goal ? '지금 ' + x.len + '자예요. 넉넉하게 잘 썼어요!' : '지금 ' + x.len + '자예요. ' + goal + '자까지 쓰면 분량 만점이고, 다른 기준 점수도 다 받을 수 있어요.' };
                     }
                     const it = outItems[ai++] || {};
-                    return { name:r.name, max:r.points, got:Math.max(0, Math.min(r.points, Math.round(+it.got || 0))), comment:String(it.comment || '').slice(0, 300) };
+                    const raw = Math.max(0, Math.min(r.points, Math.round(+it.got || 0)));
+                    return { name:r.name, max:r.points, got:Math.round(raw * lf), comment:String(it.comment || '').slice(0, 300) };
                 });
                 const score = Math.min(100, items.reduce(function(a, v){ return a + v.got; }, 0));
                 await diaryRef.child('feedback/' + x.num + '/' + tid).update({
