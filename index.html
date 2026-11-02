@@ -4803,9 +4803,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.75';
+        const APP_VERSION = '1.76';
         const APP_VERSION_DATE = '2026-10-28';
         const APP_CHANGELOG = [
+            'v1.76 (2026-11-02) — 🛡️ 아침칠판: 다른 날짜를 눌렀다 돌아오면 오늘 내용이 지워지던 버그 · 다른 날짜 칠판이 태블릿·다른 기기 오늘 화면을 덮던 버그 수정',
             'v1.75 (2026-10-29) — ✏️ 주제일기(원래 앱 기능): 맞춤법 꼼꼼 검사 한 번 더 · 고쳐 쓴 글은 직전 글과 비교해 점수가 함부로 안 내려감 · 맞춤법만 고친 글은 다시 못 냄 · 🧩 내가 틀렸던 맞춤법 퀴즈',
             'v1.74 (2026-10-29) — ✏️ 주제일기: 맞춤법 검사(글에 빨간 물결 밑줄·이유, 틀린 개수로 감점) · AI 피드백 풍부하게(기준별 이유, 잘한 점 2·발전할 점 2, 바꿔 쓰기 예시)',
             'v1.73 (2026-10-29) — ✏️ 주제일기: 목표 글자 수보다 짧으면 내용 점수도 70~100%만(긴 글이 더 높게) · AI 평가 기준을 원래 앱 방식(핵심 능력·감정 표현·짜임새·문법, 35:30:25:10)으로',
@@ -5653,6 +5654,10 @@ var qrcode = function() {
             boardRef.on('value', snap => {
                 if(isDashboardFocused && !isTabletMode) return; 
                 const d = snap.val() || {};
+                // 🛡️ 다른 날짜 칠판이 들어오면 무시 (전에는 다른 날짜를 보고 저장한 내용이 태블릿·다른 기기 오늘 화면을 덮었음)
+                const vk = getFormattedDate(viewDate), tk = getFormattedDate(new Date());
+                if(d.day ? d.day !== vk : vk !== tk) return;
+                if(!d.day && d.date && !String(d.date).startsWith((viewDate.getMonth() + 1) + '월 ' + viewDate.getDate() + '일')) return; // 예전 기록: 날짜 글자로 확인
                 document.getElementById('view-date').innerText = d.date || ""; document.getElementById('view-morning').innerText = d.morning || ""; diaryMorningSync(true);
                 document.getElementById('view-duty-nums').innerText = d.dutyNums || ""; document.getElementById('view-duty-tasks').innerText = d.dutyTasks || "";
                 document.getElementById('view-notices').innerText = d.notices || ""; document.getElementById('view-allim').innerText = d.allim || "";
@@ -5727,6 +5732,7 @@ var qrcode = function() {
         function loadTodayBoard() {
             const todayKey = getFormattedDate(new Date());
             historyRef.child(todayKey).once('value').then(snap => {
+                if(getFormattedDate(viewDate) !== todayKey) return; // 그 사이 다른 날짜를 보고 있으면 버림
                 if(snap.exists()) {
                     const d = snap.val();
                     document.getElementById('view-date').innerText = d.date || ""; document.getElementById('view-morning').innerText = d.morning || ""; diaryMorningSync(true);
@@ -6149,7 +6155,11 @@ var qrcode = function() {
                 let noteEl = document.getElementById(`view-tt-note-${i}`);
                 if(noteEl) d[`ttNote${i}`] = noteEl.innerText;
             }
-            boardRef.set(d); historyRef.child(getFormattedDate(viewDate)).set(d);
+            const saveKey = getFormattedDate(viewDate);
+            d.day = saveKey;
+            // 다른 기기(태블릿·노트북)가 보는 '지금 칠판'은 오늘 칠판만. 다른 날짜를 고칠 땐 그 날짜 기록에만 저장.
+            if(saveKey === getFormattedDate(new Date())) boardRef.set(d);
+            historyRef.child(saveKey).set(d);
             if (window.tempDutyNum !== undefined) {
                 // 자동 채우기로 정해진 당번 → 마지막 번호와 날짜 기록
                 db.ref('rooms/' + currentRoom + '/settings/lastDutyNum').set(window.tempDutyNum);
@@ -6695,7 +6705,12 @@ var qrcode = function() {
         function autoFillDashboard(isInitial = false) {
             if(isTabletMode) return;
             if(!isInitial && !confirm("오늘 요일에 맞는 기본값으로 덮어씌웁니까?")) return;
+            // 🛡️ 채우는 사이 선생님이 다른 날짜를 누르면(=viewDate가 바뀌면) 늦게 도착한 결과는 버린다.
+            //    (전에는 빈 날짜를 눌렀다 바로 오늘로 돌아오면 그 날짜 틀이 오늘 칸에 덮여 저장되어 오늘 내용이 사라졌음)
+            const fillKey = getFormattedDate(viewDate);
+            const stillHere = function(){ return getFormattedDate(viewDate) === fillKey; };
             settingsRef.once('value').then(snap => {
+                if(!stillHere()) return;
                 const def = snap.val() || {}; const days = ['일','월','화','수','목','금','토']; const dayStr = days[viewDate.getDay()];
                 const baseDateText = `${viewDate.getMonth()+1}월 ${viewDate.getDate()}일 ${dayStr}요일`;
                 document.getElementById('view-date').innerText = baseDateText;
@@ -6703,7 +6718,7 @@ var qrcode = function() {
                 const wLat = (typeof globalWeatherLat === 'number') ? globalWeatherLat : WEATHER_DEFAULT.lat;
                 const wLon = (typeof globalWeatherLon === 'number') ? globalWeatherLon : WEATHER_DEFAULT.lon;
                 fetchWeatherText(wLat, wLon).then(function(w) {
-                    if (!w) return;
+                    if (!w || !stillHere()) return;
                     const el = document.getElementById('view-date');
                     // 그 사이 선생님이 직접 고쳤다면 덮어쓰지 않는다.
                     if (el.innerText !== baseDateText) return;
@@ -6743,6 +6758,7 @@ var qrcode = function() {
                     db.ref('rooms/' + currentRoom + '/settings/lastDutyDate').once('value'),
                     db.ref('rooms/' + currentRoom + '/settings/lastDutyNum').once('value')
                 ]).then(([ds, ns]) => {
+                    if(!stillHere()) return;
                     const lastDate = ds.val() || "";
                     const lastNum = parseInt(ns.val()) || 0;
                     const advance = (!lastDate) || (todayKey > lastDate); // 새(이후) 날짜일 때만 다음 번호로
@@ -7068,6 +7084,7 @@ var qrcode = function() {
             if(window.flushDashboardSave) window.flushDashboardSave();
             viewDate = new Date(key);
             historyRef.child(key).once('value').then(snap => {
+                if(getFormattedDate(viewDate) !== key) return; // 그 사이 다른 날짜를 눌렀으면 버림
                 if(snap.exists()) {
                     const d = snap.val();
                     document.getElementById('view-date').innerText = d.date || ""; document.getElementById('view-morning').innerText = d.morning || ""; diaryMorningSync(true);
