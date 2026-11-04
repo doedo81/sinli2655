@@ -4617,7 +4617,13 @@ var qrcode = function() {
             if (nowKey === lastKnownDay) return;            // 날짜 안 바뀜 → 아무것도 안 함(1초마다 여기서 즉시 반환)
             const wasViewingToday = getFormattedDate(viewDate) === lastKnownDay; // 과거 날짜를 보던 중이면 건드리지 않음
             lastKnownDay = nowKey;
-            if (!wasViewingToday || isDashboardFocused || isTabletMode) return; // 과거 조회중·편집중·태블릿뷰면 자동 이동 안 함
+            if (!wasViewingToday) return;
+            // 🛡️ 전에는 칸에 커서가 있거나(편집 중) 태블릿 보기면 날짜를 아예 안 넘겼다 → 그 기기는 다음 날에도 어제 칠판에 머물러
+            //    아침에 고친 내용이 어제 날짜로 저장되는 등 날짜가 꼬였다. 이제는 커서를 빼서(어제 쓰던 건 어제에 저장) 오늘로 넘긴다.
+            const ae = document.activeElement;
+            if (isDashboardFocused && ae && ae.blur) ae.blur();       // blur → 쓰던 내용은 어제(아직 viewDate)로 저장
+            if (window.flushDashboardSave) window.flushDashboardSave();
+            isDashboardFocused = false;
             viewDate = new Date();                          // 오늘로 갱신 → 이제 저장이 올바른 날짜로 감
             const dow = viewDate.getDay();
             if (dow >= 1 && dow <= 5) { if (typeof loadTodayBoard === 'function') loadTodayBoard(); } // 평일만 자동 채우기(주말 중복 저장 방지)
@@ -4690,7 +4696,20 @@ var qrcode = function() {
         let listenersSet = false, numberOfGroups = 6;
         let currentScores = [], currentMiniScores = [], currentTasks = [], historyCheck = {}, allHomeworks = [], allBookmarks = {};
         let viewDate = new Date(); let calDate = new Date();
-        let lastKnownDay = getFormattedDate(new Date()); // 하루 넘어감 감지용(브라우저 켜둔 채 날짜 바뀌면 viewDate 자동 갱신)
+        let lastKnownDay = getFormattedDate(new Date());
+        // 🔄 켜 둔 기기(전자칠판·태블릿)가 옛 버전으로 며칠씩 도는 것을 막기: 30분마다 새 버전이 있는지 보고, 쓰는 중이 아니면 새로고침
+        setInterval(function(){
+            if (/[?&]demo=1/.test(location.search)) return;
+            fetch(location.pathname + '?v=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.text() : ''; }).then(function(t){
+                const m = t.match(/const APP_VERSION = '([^']+)'/);
+                if (!m || m[1] === APP_VERSION) return;
+                const ae = document.activeElement, busy = ae && (ae.isContentEditable || /^(TEXTAREA|INPUT|SELECT)$/.test(ae.tagName));
+                const modal = Array.prototype.some.call(document.querySelectorAll('.modal, [id$="-modal"], #gx-pick, #dy-quiz, #rpg-routine, #rpg-mcheck'), function(el){ return el.offsetParent !== null; });
+                if (busy || modal) return; // 다음 확인 때 다시
+                if (window.flushDashboardSave) window.flushDashboardSave();
+                setTimeout(function(){ location.reload(); }, 800);
+            }).catch(function(){});
+        }, 30 * 60000); // 하루 넘어감 감지용(브라우저 켜둔 채 날짜 바뀌면 viewDate 자동 갱신)
         let isDashboardFocused = false;
         
         let globalTotalStudents = 24;
@@ -4803,9 +4822,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.76';
+        const APP_VERSION = '1.77';
         const APP_VERSION_DATE = '2026-10-28';
         const APP_CHANGELOG = [
+            'v1.77 (2026-11-04) — 🛡️ 날짜 꼬임 방지: 켜 둔 기기가 밤사이 칸에 커서가 있거나 태블릿 보기여도 자정에 오늘로 넘어감 · 새 버전이 올라오면 켜 둔 기기도 30분 안에 저절로 새로고침 · 클로드 도우미가 어제 칠판을 오늘로 옮기지 않게',
             'v1.76 (2026-11-02) — 🛡️ 아침칠판: 다른 날짜를 눌렀다 돌아오면 오늘 내용이 지워지던 버그 · 다른 날짜 칠판이 태블릿·다른 기기 오늘 화면을 덮던 버그 수정',
             'v1.75 (2026-10-29) — ✏️ 주제일기(원래 앱 기능): 맞춤법 꼼꼼 검사 한 번 더 · 고쳐 쓴 글은 직전 글과 비교해 점수가 함부로 안 내려감 · 맞춤법만 고친 글은 다시 못 냄 · 🧩 내가 틀렸던 맞춤법 퀴즈',
             'v1.74 (2026-10-29) — ✏️ 주제일기: 맞춤법 검사(글에 빨간 물결 밑줄·이유, 틀린 개수로 감점) · AI 피드백 풍부하게(기준별 이유, 잘한 점 2·발전할 점 2, 바꿔 쓰기 예시)',

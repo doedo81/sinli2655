@@ -79,8 +79,11 @@ const tools = {
     description: '아침칠판 내용을 읽는다(알림장·전달 사항·시간표 등). date를 주면 그날 기록, 없으면 지금 칠판.',
     inputSchema: { type: 'object', properties: { date: { type: 'string', description: 'YYYY-MM-DD (생략 시 오늘 칠판)' } } },
     async run({ date }) {
-      if (date && checkDate(date) !== today()) return readable(await rest('GET', 'boardHistory/' + date));
-      return readable(await rest('GET', 'skyDashboard'));
+      const d = date ? checkDate(date) : today();
+      if (d !== today()) return readable(await rest('GET', 'boardHistory/' + d));
+      // '지금 칠판'이 어제 것이면(아직 오늘 칠판을 안 열었으면) 오늘 기록을 읽는다
+      const live = await rest('GET', 'skyDashboard') || {};
+      return readable(live.day === d ? live : (await rest('GET', 'boardHistory/' + d)) || {});
     }
   },
   board_update: {
@@ -97,9 +100,13 @@ const tools = {
       (a.tt || []).forEach(r => { const p = Number(r.period); if (!(p >= 1 && p <= 6)) throw new Error('교시는 1~6'); Object.keys(TT).forEach(k => { if (typeof r[k] === 'string') upd[TT[k] + p] = r[k]; }); });
       if (!Object.keys(upd).length) throw new Error('바꿀 칸이 없어요');
       const isToday = date === today();
-      const before = await rest('GET', isToday ? 'skyDashboard' : 'boardHistory/' + date) || {};
+      // '지금 칠판'(skyDashboard)은 day가 오늘일 때만 같이 고친다. 어제 칠판이 남아 있으면 오늘 기록만 고쳐서 어제 내용이 오늘로 섞이지 않게.
+      const live = isToday ? (await rest('GET', 'skyDashboard') || {}) : null;
+      const liveIsToday = !!(live && live.day === date);
+      const before = (liveIsToday ? live : await rest('GET', 'boardHistory/' + date)) || {};
       if (!before.date) upd.date = koDate(date);
-      if (isToday) await rest('PATCH', 'skyDashboard', upd);
+      upd.day = date;
+      if (liveIsToday) await rest('PATCH', 'skyDashboard', upd);
       await rest('PATCH', 'boardHistory/' + date, upd);
       const prev = {}; Object.keys(upd).forEach(k => { prev[k] = before[k] === undefined ? null : before[k]; });
       logChange('board ' + date, prev, upd);
