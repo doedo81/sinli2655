@@ -4822,9 +4822,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.77';
+        const APP_VERSION = '1.78';
         const APP_VERSION_DATE = '2026-10-28';
         const APP_CHANGELOG = [
+            'v1.78 (2026-11-05) — 💾 활동&뽑기 칠판 기억: 필기·글상자·점수판·타이머·뽑기·협동학습을 마지막 모습 그대로 저장(새로고침·다음 날·다른 기기에서도 이어서)',
             'v1.77 (2026-11-04) — 🛡️ 날짜 꼬임 방지: 켜 둔 기기가 밤사이 칸에 커서가 있거나 태블릿 보기여도 자정에 오늘로 넘어감 · 새 버전이 올라오면 켜 둔 기기도 30분 안에 저절로 새로고침 · 클로드 도우미가 어제 칠판을 오늘로 옮기지 않게',
             'v1.76 (2026-11-02) — 🛡️ 아침칠판: 다른 날짜를 눌렀다 돌아오면 오늘 내용이 지워지던 버그 · 다른 날짜 칠판이 태블릿·다른 기기 오늘 화면을 덮던 버그 수정',
             'v1.75 (2026-10-29) — ✏️ 주제일기(원래 앱 기능): 맞춤법 꼼꼼 검사 한 번 더 · 고쳐 쓴 글은 직전 글과 비교해 점수가 함부로 안 내려감 · 맞춤법만 고친 글은 다시 못 냄 · 🧩 내가 틀렸던 맞춤법 퀴즈',
@@ -8172,7 +8173,7 @@ var qrcode = function() {
         function actOnShow() {
             if (!actInit) { actBindCanvas(); actInit = true; }
             actInitScreens();
-            requestAnimationFrame(() => { actResize(); actSetMode('cursor'); });
+            requestAnimationFrame(() => { actResize(); actSetMode('cursor'); actRestore(); });
         }
 
         // ===== 🖥️ 다중 화면 (여러 칠판 페이지) =====
@@ -8200,6 +8201,7 @@ var qrcode = function() {
             });
             html += '<button class="act-screen-btn" onclick="actAddScreen()" title="화면 추가" style="background:#26a69a;color:#fff;">＋</button>';
             if (actScreens.length > 1) html += '<button class="act-screen-btn" onclick="actDeleteScreen()" title="이 화면 삭제" style="background:#ef9a9a;color:#fff;font-size:13px;">🗑</button>';
+            html += '<button class="act-screen-btn" onclick="actNewBoard()" title="필기·글상자·위젯을 모두 지우고 새로 시작" style="background:#eef2f8;color:#607d8b;width:auto;padding:0 10px;font-size:12px;font-weight:800;">새 칠판</button>';
             bar.innerHTML = html;
         }
         function actAddScreen() {
@@ -8211,7 +8213,7 @@ var qrcode = function() {
             actScreenIdx = actScreens.length - 1;
             actStrokes = actScreens[actScreenIdx].strokes;
             layer.style.display = 'block';
-            actRedraw(); actRenderScreens();
+            actRedraw(); actRenderScreens(); actSaveSoon();
         }
         function actGoScreen(i) {
             actInitScreens();
@@ -8234,7 +8236,7 @@ var qrcode = function() {
             const now = actScreens[actScreenIdx];
             now.layer.style.display = 'block';
             actStrokes = now.strokes;
-            actRedraw(); actRenderScreens();
+            actRedraw(); actRenderScreens(); actSaveSoon();
         }
         function actResize() {
             const c = actCv(), board = document.getElementById('act-board');
@@ -8254,7 +8256,7 @@ var qrcode = function() {
             if (m && m.style.display === 'block' && e.target.closest && !e.target.closest('#act-bg-menu') && !e.target.closest('[onclick*="actToggleBgMenu"]')) actCloseBgMenu();
         });
         function actSetBg(type) {
-            actBg = type; actCloseBgMenu(); actDrawBg();
+            actBg = type; actCloseBgMenu(); actDrawBg(); actSaveSoon();
             const btn = document.querySelector('#act-toolbar [data-role="bg"]');
             if (btn) btn.classList.toggle('active', type !== 'none');
         }
@@ -8330,7 +8332,7 @@ var qrcode = function() {
             const hint = document.getElementById('act-hint');
             if (hint) hint.innerHTML = '⌨️ 빈 곳을 <b>클릭</b>한 뒤 키보드로 입력하세요 · 상자는 <b>✥</b>로 옮기고 <b>✕</b>로 지워요 · 그림은 <b>그리기</b>';
         }
-        function actAddTextbox(x, y, style) {
+        function actAddTextbox(x, y, style, restore) {
             const layer = actCurrentLayer();
             const box = document.createElement('div');
             box.className = 'act-textbox' + (style === 'english' ? ' eng' : '');
@@ -8347,6 +8349,12 @@ var qrcode = function() {
             txt.addEventListener('blur', () => { box.classList.remove('editing'); if (!txt.textContent.trim()) box.remove(); });
             txt.addEventListener('mousedown', e => e.stopPropagation());
             actTbDrag(box, bar.querySelector('.act-tb-grip'));
+            if (restore) {
+                txt.innerHTML = restore.html || '';
+                if (restore.fs) { txt.style.fontSize = restore.fs; if (box.classList.contains('eng')) { const n = parseFloat(restore.fs); txt.style.lineHeight = Math.round(n * 1.65) + 'px'; txt.style.backgroundSize = '100% ' + Math.round(n * 1.65) + 'px'; } }
+                if (restore.z) { box.style.zIndex = restore.z; actZ = Math.max(actZ, restore.z); }
+                return box;
+            }
             setTimeout(() => txt.focus(), 0);
         }
         function actTbFont(txt, delta) {
@@ -8388,7 +8396,7 @@ var qrcode = function() {
             const sel = col === 'eraser' ? '#act-toolbar [data-role="eraser"]' : `#act-toolbar [onclick="actSetColor('${col}')"]`;
             const b = document.querySelector(sel); if (b) b.classList.add('active');
         }
-        function actClear() { if (actStrokes.length && !confirm('이 화면 필기를 모두 지울까요?')) return; actStrokes.length = 0; actRedraw(); }
+        function actClear() { if (actStrokes.length && !confirm('이 화면 필기를 모두 지울까요?')) return; actStrokes.length = 0; actRedraw(); actSaveSoon(); }
         function actToggleFullscreen() {
             const el = document.getElementById('act-board');
             if (!document.fullscreenElement) { el.requestFullscreen ? el.requestFullscreen() : (el.webkitRequestFullscreen && el.webkitRequestFullscreen()); }
@@ -8398,7 +8406,7 @@ var qrcode = function() {
         document.addEventListener('fullscreenchange', () => setTimeout(actResize, 200));
 
         // ----- 위젯 공통 -----
-        function actCloseWidget(id) { const el = document.getElementById(id); if (el) el.remove(); delete actState[id]; }
+        function actCloseWidget(id) { const el = document.getElementById(id); if (el) el.remove(); const st = actState[id]; if (st && st.iv) clearInterval(st.iv); delete actState[id]; actSaveSoon(); }
         function actMakeDraggable(w) {
             const head = w.querySelector('.act-w-head');
             let sx, sy, ox, oy, drag = false;
@@ -8455,13 +8463,13 @@ var qrcode = function() {
             handle.addEventListener('mousedown', start); window.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
             handle.addEventListener('touchstart', start, { passive: false }); window.addEventListener('touchmove', move, { passive: false }); window.addEventListener('touchend', end);
         }
-        function actAddWidget(type) {
-            actSetMode('cursor'); // 위젯을 쓰려면 커서 모드
+        function actAddWidget(type, restore) {
+            if (!restore) actSetMode('cursor'); // 위젯을 쓰려면 커서 모드
             const layer = actCurrentLayer();
             const id = 'actw' + (++actSeq);
             const titles = { score: '⭐ 점수판', timer: '⏱️ 타이머', draw: '🎲 뽑기', rpgdraw: '🐉 캐릭터 뽑기', coop: '🤝 협동학습 뽑기', coopfast: '🤝 협동학습 뽑기' };
             const w = document.createElement('div');
-            w.className = 'act-widget'; w.id = id;
+            w.className = 'act-widget'; w.id = id; w.dataset.type = type;
             w.style.left = (40 + (actSeq % 6) * 34) + 'px';
             w.style.top = (60 + (actSeq % 6) * 30) + 'px';
             w.style.zIndex = ++actZ;
@@ -8475,7 +8483,122 @@ var qrcode = function() {
             else if (type === 'rpgdraw') actInitRpgDraw(id);
             else if (type === 'coop') actInitCoop(id);
             else if (type === 'coopfast') actInitCoop(id); // 긴급협동은 협동뽑기로 합쳐짐
+            if (restore) actWidgetRestore(id, type, w, restore);
+            else actSaveSoon();
         }
+
+        // ===== 💾 활동 칠판 기억하기: 필기·글상자·위젯(점수판·타이머·뽑기·협동학습)을 마지막 모습 그대로 =====
+        //   이 기기(localStorage)에 바로, 반 데이터(rooms/<반>/actBoard)에도 몇 초 뒤 저장 → 새로고침·다음 날·다른 기기에서도 이어서.
+        let actSaveTimer = null, actRestored = false, actRemoteTimer = null;
+        const ACT_RENDER = { score: 'actRenderScore', timer: 'actRenderTimer', draw: 'actRenderDraw', rpgdraw: 'actRenderRpgDraw', coop: 'actRenderCoop', coopfast: 'actRenderCoop' };
+        function actStoreKey() { return 'actBoard_' + (currentRoom || 'none'); }
+        function actWidgetRestore(id, type, w, r) {
+            if (r.left != null) w.style.left = r.left + 'px';
+            if (r.top != null) w.style.top = r.top + 'px';
+            if (r.z) { w.style.zIndex = r.z; actZ = Math.max(actZ, r.z); }
+            const st = actState[id]; if (!st || !r.state) return;
+            Object.keys(r.state).forEach(function (k) { st[k] = r.state[k]; });
+            if (type === 'timer') {
+                st.iv = null;
+                const wasRunning = st.running; st.running = false;
+                if (wasRunning && st.endAt) { st.remain = Math.max(0, Math.ceil((st.endAt - Date.now()) / 1000)); }
+                try { window[ACT_RENDER[type]](id); } catch (e) {}
+                if (wasRunning && st.remain > 0) actTimerStart(id);
+                return;
+            }
+            try { window[ACT_RENDER[type]](id); } catch (e) { console.warn('위젯 되살리기 실패', type, e); }
+            try { actApplyScale(id); } catch (e) {}
+        }
+        function actSnapshot() {
+            if (!actScreens.length) return null;
+            actScreens[actScreenIdx].strokes = actStrokes;
+            const R = function (n) { return Math.round(n); };
+            const screens = actScreens.map(function (sc) {
+                const strokes = (sc.strokes || []).map(function (st) { return { c: st.color, s: st.size, e: st.erase ? 1 : 0, p: st.points.map(function (q) { return [R(q.x), R(q.y)]; }) }; });
+                const texts = [], widgets = [];
+                sc.layer.querySelectorAll(':scope > .act-textbox').forEach(function (b) {
+                    const t = b.querySelector('.act-tb-text'); if (!t || !t.textContent.trim()) return;
+                    texts.push({ x: b.offsetLeft || parseFloat(b.style.left) || 0, y: b.offsetTop || parseFloat(b.style.top) || 0, eng: b.classList.contains('eng') ? 1 : 0, html: t.innerHTML, fs: t.style.fontSize || '', z: +b.style.zIndex || 0 });
+                });
+                sc.layer.querySelectorAll(':scope > .act-widget').forEach(function (w) {
+                    const st = actState[w.id]; if (!st || !w.dataset.type) return;
+                    const state = {};
+                    Object.keys(st).forEach(function (k) { const v = st[k]; if (k === 'iv' || typeof v === 'function' || (v && v.nodeType)) return; state[k] = v; });
+                    if (w.dataset.type === 'timer' && st.running) state.endAt = Date.now() + st.remain * 1000;
+                    widgets.push({ type: w.dataset.type, left: parseFloat(w.style.left) || 0, top: parseFloat(w.style.top) || 0, z: +w.style.zIndex || 0, state: JSON.parse(JSON.stringify(state)) });
+                });
+                return { strokes: strokes, texts: texts, widgets: widgets };
+            });
+            return { v: 1, savedAt: Date.now(), idx: actScreenIdx, bg: actBg, screens: screens };
+        }
+        function actSaveNow() {
+            if (!actRestored || typeof currentRoom === 'undefined' || !currentRoom) return;
+            clearTimeout(actSaveTimer); actSaveTimer = null;
+            const snap = actSnapshot(); if (!snap) return;
+            const json = JSON.stringify(snap);
+            try { localStorage.setItem(actStoreKey(), json); } catch (e) { console.warn('활동 칠판 기기 저장 실패(용량)', e && e.message); }
+            clearTimeout(actRemoteTimer);
+            actRemoteTimer = setTimeout(function () {
+                if (json.length > 4 * 1024 * 1024 || typeof db === 'undefined') return; // 너무 크면 이 기기에만
+                db.ref('rooms/' + currentRoom + '/actBoard').set(json).catch(function (e) { console.warn('활동 칠판 반 저장 실패', e && e.message); });
+            }, 3000);
+        }
+        // 🧹 새 칠판: 모든 화면의 필기·글상자·위젯을 지우고 1번 화면만 남김 (자동 저장되므로 지우고 싶을 때 한 번에)
+        function actNewBoard() {
+            if (!confirm('활동 칠판을 모두 지우고 새로 시작할까요?\n(필기·글상자·점수판·타이머·뽑기 모두 지워져요)')) return;
+            Object.keys(actState).forEach(function (id) { const st = actState[id]; if (st && st.iv) clearInterval(st.iv); delete actState[id]; });
+            actScreens.forEach(function (sc) { if (sc.layer) sc.layer.remove(); });
+            actScreens = []; actScreenIdx = 0; actStrokes = [];
+            actInitScreens(); actSetBg('none'); actRedraw(); actRenderScreens(); actSaveNow();
+        }
+        function actSaveSoon() { if (!actRestored) return; clearTimeout(actSaveTimer); actSaveTimer = setTimeout(actSaveNow, 1200); }
+        function actApplySnapshot(snap) {
+            if (!snap || !Array.isArray(snap.screens) || !snap.screens.length) return;
+            actInitScreens();
+            snap.screens.forEach(function (sc, i) {
+                if (i > 0) { actScreens.push({ strokes: [], layer: actNewLayer() }); }
+                const cur = actScreens[i];
+                cur.strokes.length = 0;
+                (sc.strokes || []).forEach(function (st) { cur.strokes.push({ color: st.c, size: st.s, erase: !!st.e, points: (st.p || []).map(function (q) { return { x: q[0], y: q[1] }; }) }); });
+                actScreenIdx = i; // 위젯·글상자를 이 화면에 넣기
+                (sc.texts || []).forEach(function (t) { actAddTextbox(t.x, t.y, t.eng ? 'english' : 'plain', t); });
+                (sc.widgets || []).forEach(function (w) { actAddWidget(w.type, w); });
+            });
+            actScreenIdx = Math.min(Math.max(0, snap.idx || 0), actScreens.length - 1);
+            actScreens.forEach(function (sc, i) { sc.layer.style.display = i === actScreenIdx ? 'block' : 'none'; });
+            actStrokes = actScreens[actScreenIdx].strokes;
+            if (snap.bg) actSetBg(snap.bg);
+            actRedraw(); actRenderScreens();
+        }
+        function actRestore() {
+            if (actRestored) return;
+            let local = null;
+            try { local = JSON.parse(localStorage.getItem(actStoreKey()) || 'null'); } catch (e) {}
+            const done = function (remote) {
+                if (actRestored) return;
+                const pick = (remote && (!local || (remote.savedAt || 0) > (local.savedAt || 0))) ? remote : local;
+                try { actApplySnapshot(pick); } catch (e) { console.warn('활동 칠판 되살리기 실패', e); }
+                actRestored = true;
+            };
+            if (typeof db === 'undefined' || !currentRoom) { done(null); return; }
+            let fired = false;
+            const t = setTimeout(function () { fired = true; done(null); }, 2500); // 인터넷이 느리면 이 기기 것으로
+            db.ref('rooms/' + currentRoom + '/actBoard').once('value').then(function (s) {
+                if (fired) return; clearTimeout(t);
+                let remote = null; try { remote = s.val() ? JSON.parse(s.val()) : null; } catch (e) {}
+                done(remote);
+            }).catch(function () { if (!fired) { clearTimeout(t); done(null); } });
+        }
+        // 무엇이든 바뀌면 조금 뒤 저장 (필기 끝·글자 입력·버튼·위젯 이동)
+        (function () {
+            const hook = function () {
+                const b = document.getElementById('act-board'); if (!b) return;
+                ['mouseup', 'touchend', 'input', 'click', 'keyup', 'change'].forEach(function (ev) { b.addEventListener(ev, function () { actSaveSoon(); }, true); });
+            };
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hook); else hook();
+            window.addEventListener('beforeunload', function () { if (actRestored) actSaveNow(); });
+            document.addEventListener('visibilitychange', function () { if (document.hidden && actRestored) actSaveNow(); });
+        })();
 
         // ----- 점수판 위젯 -----
         function actInitScore(id) { actState[id] = { mode: 'group', n: numberOfGroups || 4, vals: {}, scale: 1, baseW: 260 }; actRenderScore(id); }
