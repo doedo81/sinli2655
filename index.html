@@ -2640,6 +2640,8 @@ var qrcode = function() {
         .gx-tb.main i { color: #fff; }
         .gx-tb-hint { margin-left: auto; font-size: 12px; color: var(--gx-muted); }
         .gx-tb-checks { display: contents; }
+        .gx-bonus { border: 1px solid rgba(255,255,255,0.35); background: transparent; color: #cfd8e3; border-radius: 10px; padding: 7px 11px; font: 700 13px 'Pretendard', sans-serif; cursor: pointer; white-space: nowrap; }
+        .gx-bonus.on { background: #ffd54f; border-color: #ffd54f; color: #3e2723; }
         .rt-groups { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
         .rt-grp { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #e3e8ef; border-radius: 12px; background: #fff; font-size: 14px; color: #455064; }
         .rt-grp .cnt { font-weight: 800; color: #7a8698; }
@@ -4833,7 +4835,7 @@ var qrcode = function() {
         const APP_VERSION = '1.79';
         const APP_VERSION_DATE = '2026-10-28';
         const APP_CHANGELOG = [
-            'v1.79 (2026-11-11) — 👥 아침 준비 모둠 보너스: 모둠 학생이 모두 다 하면 한 명당 +5 XP · 모둠 점수 +1 (선생님 [점수 주기] 때 함께, 취소 가능)',
+            'v1.79 (2026-11-11) — 👥 모둠 보너스: 아침 준비를 모둠 학생이 모두 다 하거나, 상점을 줄 때 한 모둠 학생이 모두 받으면 한 명당 +5 XP · 모둠 점수 +1 (취소 가능)',
             'v1.78 (2026-11-05) — 💾 활동&뽑기 칠판 기억: 필기·글상자·점수판·타이머·뽑기·협동학습을 마지막 모습 그대로 저장(새로고침·다음 날·다른 기기에서도 이어서)',
             'v1.77 (2026-11-04) — 🛡️ 날짜 꼬임 방지: 켜 둔 기기가 밤사이 칸에 커서가 있거나 태블릿 보기여도 자정에 오늘로 넘어감 · 새 버전이 올라오면 켜 둔 기기도 30분 안에 저절로 새로고침 · 클로드 도우미가 어제 칠판을 오늘로 옮기지 않게',
             'v1.76 (2026-11-02) — 🛡️ 아침칠판: 다른 날짜를 눌렀다 돌아오면 오늘 내용이 지워지던 버그 · 다른 날짜 칠판이 태블릿·다른 기기 오늘 화면을 덮던 버그 수정',
@@ -10381,11 +10383,13 @@ var qrcode = function() {
             const members = gxpMembers();
             const gkeys = Object.keys(members).map(Number).sort(function(a, b){ return a - b; }).filter(function(g){ return members[g].length; });
             const allOn = ids.length === rpgParseRoster().length;
+            const full = rpgBonusGroups(ids, rpgBulkAction, rpgGiveSign), bc = rtCfg();
+            const bonusHtml = full.length ? '<button class="gx-bonus' + (rpgBonusOn() ? ' on' : '') + '" onclick="rpgBonusToggle()" title="모둠 학생이 모두 받으면 모둠 보너스">👥 ' + full.join('·') + '모둠 모두 → ' + (rpgBonusOn() ? '보너스 +' + bc.gxp + ' XP · 모둠 +' + bc.gscore : '보너스 끔') + '</button>' : '';
             bar.innerHTML = '<div class="gx-sum"><b>' + escapeHtml(lbl) + '</b> · ' + (ids.length ? ids.length + '명' : '<span style="color:#ffd28a;">카드를 눌러 학생을 고르세요</span>')
                 + '<small>' + (ids.length ? escapeHtml(names) : '모둠이나 반 전체로 한 번에 고를 수도 있어요') + '</small></div>'
                 + '<div class="gx-grpbtns"><button class="' + (allOn ? 'on' : '') + '" onclick="rpgSelectAll(' + (allOn ? 'false' : 'true') + ')">반 전체</button>'
                 + gkeys.map(function(g){ const on = members[g].every(function(id){ return rpgBulkSelected.has(id); }); return '<button class="' + (on ? 'on' : '') + '" onclick="rpgToggleGroup(' + g + ')">' + g + '모둠</button>'; }).join('')
-                + '</div>'
+                + '</div>' + bonusHtml
                 + '<button class="gx-ghost" onclick="rpgCancelSelect()">취소</button>'
                 + '<button class="gx-go" ' + (ids.length ? '' : 'disabled ') + 'onclick="rpgBulkApply()">' + (ids.length ? ids.length + '명' + (rpgGiveSign < 0 ? '에게서 빼기' : '에게 지급') : '지급') + '</button>';
         }
@@ -10404,29 +10408,49 @@ var qrcode = function() {
         let rpgGiveSign = 1;
         function rpgSetGiveSign(v){ rpgGiveSign = v; }
         function rpgGiveToIds(ids){ if(rpgBulkAction) rpgGiveApply(ids, rpgBulkAction, rpgGiveSign); }
+        // 👥 모둠 보너스: 상점을 줄 때 한 모둠 학생이 모두 받으면 → 그 모둠 학생마다 +gxp XP, 모둠 점수 +gscore
+        //   (숫자는 아침 준비 [항목 바꾸기]의 모둠 보너스와 같음 · 지급 줄의 👥 버튼으로 이번만 끌 수 있음)
+        function rpgBonusOn(){ try{ return localStorage.getItem('rpgGroupBonus') !== 'off'; }catch(e){ return true; } }
+        function rpgBonusToggle(){ try{ localStorage.setItem('rpgGroupBonus', rpgBonusOn() ? 'off' : 'on'); }catch(e){} rpgUpdateBulkBtn(); }
+        function rpgBonusGroups(ids, actionId, sign){
+            if(!(sign > 0) || !actionId || actionId === '__warn' || actionId === '__good' || !ids || !ids.length) return [];
+            const set = {}; ids.forEach(function(id){ set[id] = true; });
+            const mem = gxpMembers();
+            return Object.keys(mem).map(Number).filter(function(g){ return (mem[g] || []).length && mem[g].every(function(id){ return set[id]; }); }).sort(function(a, b){ return a - b; });
+        }
         function rpgGiveApply(ids, actionId, sign){
             if(!rpgRef || !ids.length || !actionId) return;
             const a = rpgAllActions().find(function(x){ return x.id === actionId; });
             if(!a && actionId !== '__warn' && actionId !== '__good') return;
             const up = {}, per = {}; let levelups = 0;
+            const bonusGroups = rpgBonusOn() ? rpgBonusGroups(ids, actionId, sign) : [], bc = rtCfg(), sObj = {};
             ids.forEach(function(id){
-                const s = rpgStudentObj(id), x0 = s.xp, w0 = s.warning;
+                const s = sObj[id] = rpgStudentObj(id), x0 = s.xp, w0 = s.warning;
                 let ds = 0;
                 if(actionId === '__warn') s.warning = Math.max(0, Math.min(100, s.warning + 20 * sign));
                 else if(actionId === '__good') s.warning = Math.max(0, Math.min(100, s.warning - 10 * sign));
                 else if(sign > 0){ const before = rpgLevel(s.xp).lv; s.xp += a.xp; s.stats[a.stat] = (s.stats[a.stat] || 0) + 1; ds = 1; if(rpgLevel(s.xp).lv > before) levelups++; }
                 else { s.xp = Math.max(0, s.xp - a.xp); if((s.stats[a.stat] || 0) > 0){ s.stats[a.stat] -= 1; ds = -1; } }
                 per[id] = { x:s.xp - x0, s:ds, w:s.warning - w0 };
-                rpgStudentPut(up, 'rpg/students/', id, s);
             });
             const nameById = {}; rpgParseRoster().forEach(function(s){ nameById[s.id] = s.name; });
             const who = ids.length === 1 ? (nameById[ids[0]] || (ids[0] + '번')) : (ids.length + '명');
             const lbl = (sign < 0 ? '빼기 · ' : '') + rpgActionLabel(actionId, sign);
             const key = db.ref('rooms/' + currentRoom + '/rpgLog').push().key;
-            up['rpgLog/' + key] = { at:Date.now(), action:actionId, label:lbl, sign:sign, stat:(a && a.stat) || null, per:per };
+            const bonusKeys = {}, mem = bonusGroups.length ? gxpMembers() : {};
+            bonusGroups.forEach(function(g){
+                const gk = db.ref('rooms/' + currentRoom + '/rpgLog').push().key, gper = {};
+                mem[g].forEach(function(id){ const s = sObj[id], before = rpgLevel(s.xp).lv; s.xp += bc.gxp; if(rpgLevel(s.xp).lv > before) levelups++; gper[id] = { x:bc.gxp, s:0, w:0 }; });
+                up['rpgLog/' + gk] = { at:Date.now(), action:'group-bonus', label:g + '모둠 모두 · ' + lbl + ' 보너스 +' + bc.gxp + ' XP', sign:1, per:gper, gscore:bc.gscore, group:g, parent:key };
+                bonusKeys[g] = gk;
+            });
+            ids.forEach(function(id){ rpgStudentPut(up, 'rpg/students/', id, sObj[id]); });
+            up['rpgLog/' + key] = { at:Date.now(), action:actionId, label:lbl, sign:sign, stat:(a && a.stat) || null, per:per, bonus:bonusGroups.length ? bonusKeys : null };
             db.ref('rooms/' + currentRoom).update(up).then(function(){
-                rpgLastGive = { key:key, at:Date.now(), desc:who + ' · ' + lbl };
-                rpgToast(who + ' · ' + lbl);
+                return Promise.all(bonusGroups.map(function(g){ return bc.gscore ? scoresRef.child(String(g - 1)).transaction(function(v){ return (v || 0) + bc.gscore; }) : null; }));
+            }).then(function(){
+                rpgLastGive = { key:key, at:Date.now(), desc:who + ' · ' + lbl + (bonusGroups.length ? ' · 👥 ' + bonusGroups.join('·') + '모둠 보너스' : '') };
+                rpgToast(who + ' · ' + lbl + (bonusGroups.length ? '  👥 ' + bonusGroups.join('·') + '모둠 보너스!' : ''), !!bonusGroups.length);
                 if(levelups > 0){ SFX.levelup(); setTimeout(function(){ rpgToast('🎉 레벨 업 ' + levelups + '명!', true); }, 400); }
                 else if(actionId === '__warn' || sign < 0) SFX.warn(); else SFX.point();
                 if(rpgSelecting){ rpgSelecting = false; rpgBulkAction = null; rpgBulkSelected.clear(); rpgSetGiveSign(1); } // 한 번 주면 고르기 끝
@@ -10437,24 +10461,38 @@ var qrcode = function() {
             }).catch(function(e){ alert('지급 오류: ' + e.message); });
         }
         // 기록 취소: onlyId가 있으면 그 학생만
-        function rpgLogUndo(key, onlyId, silent){
+        // 기록 취소: onlyId가 있으면 그 학생만. 딸린 모둠 보너스(e.bonus)와 alsoKeys(함께 취소할 기록)도 한 번에 저장
+        //   (따로따로 저장하면 앞 저장이 화면 데이터에 반영되기 전에 뒤 저장이 옛 값으로 덮을 수 있어서)
+        function rpgLogUndo(key, onlyId, silent, alsoKeys){
             const e = rpgLogData[key]; if(!e || !rpgRef) return Promise.resolve();
             const ids = Object.keys(e.per || {}).filter(function(id){ return !(e.undone && e.undone[id]) && (onlyId == null || String(onlyId) === String(id)); });
-            if(!ids.length) return Promise.resolve();
+            // 딸린 모둠 보너스: 전체 취소면 모두, 한 학생 취소면 그 학생 모둠 보너스(이제 '모두'가 아니니까)
+            const extra = Object.keys(e.bonus || {}).filter(function(g){
+                const be = rpgLogData[e.bonus[g]]; if(!be || be.scoreUndone) return false;
+                return onlyId == null || (be.per && be.per[onlyId] != null);
+            }).map(function(g){ return e.bonus[g]; }).concat((alsoKeys || []).filter(function(k){ return k && rpgLogData[k] && k !== key; }));
+            if(!ids.length && !extra.length) return Promise.resolve();
             const nameById = {}; rpgParseRoster().forEach(function(s){ nameById[s.id] = s.name; });
-            if(!silent && !confirm('취소할까요?\n' + e.label + '\n' + ids.map(function(id){ return nameById[id] || (id + '번'); }).join(', '))) return Promise.resolve();
-            const up = {};
-            ids.forEach(function(id){
-                const d = e.per[id], s = rpgStudentObj(id);
-                s.xp = Math.max(0, s.xp - (d.x || 0));
-                if(d.s && e.stat) s.stats[e.stat] = Math.max(0, (s.stats[e.stat] || 0) - d.s);
-                s.warning = Math.max(0, Math.min(100, s.warning - (d.w || 0)));
-                rpgStudentPut(up, 'rpg/students/', id, s);
-                up['rpgLog/' + key + '/undone/' + id] = true;
-            });
+            if(ids.length && !silent && !confirm('취소할까요?\n' + e.label + (extra.length ? ' (+ 모둠 보너스)' : '') + '\n' + ids.map(function(id){ return nameById[id] || (id + '번'); }).join(', '))) return Promise.resolve();
+            const up = {}, cache = {}, drops = [];
+            const undoEntry = function(k, ent, list){
+                list.forEach(function(id){
+                    const d = ent.per[id], s = cache[id] || (cache[id] = rpgStudentObj(id));
+                    s.xp = Math.max(0, s.xp - (d.x || 0));
+                    if(d.s && ent.stat) s.stats[ent.stat] = Math.max(0, (s.stats[ent.stat] || 0) - d.s);
+                    s.warning = Math.max(0, Math.min(100, s.warning - (d.w || 0)));
+                    up['rpgLog/' + k + '/undone/' + id] = true;
+                });
+                if(ent.gscore && ent.group && !ent.scoreUndone){ up['rpgLog/' + k + '/scoreUndone'] = true; drops.push({ g:ent.group, n:ent.gscore }); } // 모둠 점수도 한 번만 빼기
+            };
+            undoEntry(key, e, ids);
+            extra.forEach(function(k){ const be = rpgLogData[k]; undoEntry(k, be, Object.keys(be.per || {}).filter(function(id){ return !(be.undone && be.undone[id]); })); });
+            Object.keys(cache).forEach(function(id){ rpgStudentPut(up, 'rpg/students/', id, cache[id]); });
             return db.ref('rooms/' + currentRoom).update(up).then(function(){
+                return Promise.all(drops.map(function(d){ return scoresRef.child(String(d.g - 1)).transaction(function(v){ return Math.max(0, (v || 0) - d.n); }); }));
+            }).then(function(){
                 if(rpgLastGive && rpgLastGive.key === key) rpgLastGive = null;
-                rpgToast('↶ 취소했어요 (' + ids.length + '명)');
+                rpgToast('↶ 취소했어요 (' + Object.keys(cache).length + '명' + (drops.length ? ' · 모둠 점수 -' + drops.reduce(function(a, d){ return a + d.n; }, 0) : '') + ')');
                 renderRpgGrid(); rpgUpdateBulkBtn();
                 if(rpgModalId != null && document.getElementById('rpg-modal').style.display === 'flex') rpgOpen(rpgModalId);
             }).catch(function(err){ alert('취소 오류: ' + err.message); });
@@ -10998,10 +11036,7 @@ var qrcode = function() {
             const date = rtToday(), grp = rtGroups(date).find(function(x){ return x.g === g; });
             if(!grp || !grp.key) return Promise.resolve();
             if(!silent && !confirm(g + '모둠 아침 준비 보너스를 취소할까요?\n(모둠 학생 XP와 모둠 점수 ' + rtCfg().gscore + '점이 빠져요)')) return Promise.resolve();
-            const e = rpgLogData[grp.key] || {};
-            const gs = (e.gscore != null) ? e.gscore : rtCfg().gscore;
-            return rpgLogUndo(grp.key, null, true)
-                .then(function(){ return gs ? scoresRef.child(String(g - 1)).transaction(function(v){ return Math.max(0, (v || 0) - gs); }) : null; })
+            return rpgLogUndo(grp.key, null, true) // 학생 XP와 모둠 점수(기록의 gscore)를 함께 되돌림
                 .then(function(){ return rpgRef.child('routine/days/' + date + '/_grp/' + g).remove(); })
                 .then(function(){ rpgToast('↺ ' + g + '모둠 아침 준비 보너스 취소'); });
         }
@@ -11050,7 +11085,7 @@ var qrcode = function() {
                     + [0, 1, 2, 3, 4, 5].map(function(i){ return '<input class="rt-in" value="' + escapeHtml(cfg.items[i] || '') + '" placeholder="' + (i < 4 ? '할 일 ' + (i + 1) : '(비워 두면 없음)') + '" style="padding:9px; border:1px solid #ccc; border-radius:8px; font-family:\'Pretendard\';">'; }).join('')
                     + '</div><div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:13px; color:#455064;">다 하면 <input id="rt-xp" type="number" min="0" value="' + cfg.xp + '" style="width:64px; padding:8px; border:1px solid #ccc; border-radius:8px; text-align:center;"> XP · 능력치 '
                     + '<select id="rt-stat" style="padding:8px; border:1px solid #ccc; border-radius:8px;">' + RPG_STATS.map(function(st){ return '<option value="' + st.key + '"' + (st.key === cfg.stat ? ' selected' : '') + '>' + st.emoji + ' ' + st.name + '</option>'; }).join('') + '</select>'
-                    + '<span style="margin-left:6px;">· 모둠이 모두 하면 한 명당 +<input id="rt-gxp" type="number" min="0" value="' + cfg.gxp + '" style="width:56px; padding:7px; border:1px solid #ccc; border-radius:8px;"> XP, 모둠 점수 +<input id="rt-gscore" type="number" min="0" value="' + cfg.gscore + '" style="width:48px; padding:7px; border:1px solid #ccc; border-radius:8px;"></span>'
+                    + '<span style="margin-left:6px;">· 모둠 보너스(아침 준비·상점 주기 공통): 모둠이 모두 하면 한 명당 +<input id="rt-gxp" type="number" min="0" value="' + cfg.gxp + '" style="width:56px; padding:7px; border:1px solid #ccc; border-radius:8px;"> XP, 모둠 점수 +<input id="rt-gscore" type="number" min="0" value="' + cfg.gscore + '" style="width:48px; padding:7px; border:1px solid #ccc; border-radius:8px;"></span>'
                     + '<button class="gx-mini" style="font-weight:800; border-color:#5b97d1; color:#1f5f99;" onclick="rpgRoutineSaveCfg()">저장</button>'
                     + '<span style="color:#7a8698;">· 오늘 이미 누른 칸은 그대로예요</span></div></div>';
             }
@@ -11154,10 +11189,11 @@ var qrcode = function() {
             if(!confirm(name + ' 오늘 아침 준비를 처음으로 되돌릴까요?' + (key ? '\n받은 점수(XP·능력치)도 함께 취소돼요.' : '') + (_gg && _gg.key ? '\n' + _g + '모둠 보너스(모둠 점수 포함)도 함께 취소돼요.' : ''))) return;
             const clear = function(){ return rpgRef.child('routine/days/' + date + '/' + num).remove().then(function(){ rpgToast('↺ ' + name + ' 아침 준비 취소'); }); };
             const g = rtGroupOf(num), gg = g ? rtGroups(date).find(function(x){ return x.g === g; }) : null;
-            const p = (key && rpgLogData[key] && rpgLogData[key].per && rpgLogData[key].per[num] && !(rpgLogData[key].undone && rpgLogData[key].undone[num]))
-                ? rpgLogUndo(key, num, true) : Promise.resolve();
-            // 이 학생 모둠이 보너스를 받았으면 이제 '모두 완료'가 아니므로 모둠 보너스도 함께 취소
-            p.then(function(){ return (gg && gg.key) ? rtGroupUndo(g, true) : null; }).then(clear).catch(function(e){ alert('취소 오류: ' + e.message); });
+            // 이 학생 모둠이 보너스를 받았으면 이제 '모두 완료'가 아니므로 모둠 보너스도 함께 취소 (한 번에 저장)
+            const gKey = (gg && gg.key) ? gg.key : null;
+            const mine = key && rpgLogData[key] && rpgLogData[key].per && rpgLogData[key].per[num] && !(rpgLogData[key].undone && rpgLogData[key].undone[num]);
+            const p = mine ? rpgLogUndo(key, num, true, gKey ? [gKey] : null) : (gKey ? rpgLogUndo(gKey, null, true) : Promise.resolve());
+            p.then(function(){ return gKey ? rpgRef.child('routine/days/' + date + '/_grp/' + g).remove() : null; }).then(clear).catch(function(e){ alert('취소 오류: ' + e.message); });
         }
 
         // ===== 🎯 기간 체크형 미션 (예: 이번 주 급식 다 먹기 3번 이상) =====
