@@ -2658,12 +2658,26 @@ var qrcode = function() {
         .gx-tb-chk.ms i { color: #ad1457; }
         .gx-tb-n { font-size: 12px; font-weight: 800; padding: 2px 7px; border-radius: 999px; background: var(--gx-soft, #f1f4f8); color: var(--gx-muted); }
         .gx-tb-chk.ms .gx-tb-n { background: #fde7f1; color: #ad1457; }
-        #gx-pick .gx-actions { gap: 12px; }
-        #gx-pick .gx-agroup { gap: 8px; }
-        #gx-pick .gx-agroup > span { width: 40px; font-size: 12px; color: #6b7686; }
-        #gx-pick .gx-chip { font-size: 15px; padding: 10px 14px; }
-        #gx-pick .gx-chip b { font-size: 14px; }
-        #gx-pick.sub .gx-chip b { color: #b03a37; }
+        #gx-pick .gx-actions { display: block; }
+        .gx-sec { margin-bottom: 14px; }
+        .gx-sec-h { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: #6b7686; margin: 0 2px 8px; }
+        .gx-sec.hab .gx-sec-h i { color: #2e9e6b; } .gx-sec.eff .gx-sec-h i { color: #e8743b; } .gx-sec.spc .gx-sec-h i { color: #d4a017; } .gx-sec.etc .gx-sec-h i { color: #7a8698; }
+        .gx-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+        .gx-tiles.two { grid-template-columns: 1fr 1fr; }
+        .gx-tile { display: flex !important; flex-direction: column; align-items: flex-start !important; gap: 6px !important; padding: 12px 12px 11px !important; border-radius: 14px !important; border: 1px solid #e6eaf0 !important; background: #fff !important; color: #263042 !important; text-align: left; min-height: 108px; transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease; }
+        .gx-tile:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(30, 45, 70, 0.10); }
+        .gx-tile .ic { width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+        .gx-tile .nm { font-size: 15px; font-weight: 800; line-height: 1.3; word-break: keep-all; }
+        .gx-tile .vl { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; margin-top: auto; }
+        .gx-tile .vl b { font-size: 13px; font-weight: 800; }
+        .gx-tile .vl em { font-style: normal; font-size: 11px; color: #8a94a3; }
+        .gx-tile.hab .ic { background: #e6f6ee; color: #2e9e6b; } .gx-tile.hab:hover { border-color: #2e9e6b !important; } .gx-tile.hab .vl b { color: #2e9e6b; }
+        .gx-tile.eff .ic { background: #fdeee4; color: #e8743b; } .gx-tile.eff:hover { border-color: #e8743b !important; } .gx-tile.eff .vl b { color: #d2622a; }
+        .gx-tile.spc .ic { background: #fdf5d8; color: #c99a06; } .gx-tile.spc:hover { border-color: #d4a017 !important; } .gx-tile.spc .vl b { color: #b7880a; }
+        .gx-tile.etc .ic { background: #eef1f6; color: #5d6b80; } .gx-tile.etc .vl b { color: #4d5b70; }
+        .gx-tile.minus .vl b { color: #c0504d !important; }
+        .gx-tile.warn .ic { background: #fdecea; color: #d64541; } .gx-tile.warn .vl b { color: #d64541; } .gx-tile.warn:hover { border-color: #d64541 !important; }
+        .gx-tile.good .ic { background: #fde8f0; color: #d63f79; } .gx-tile.good .vl b { color: #2e7d4f; } .gx-tile.good:hover { border-color: #d63f79 !important; }
         #rpg-grid.selecting > div { cursor: copy; }
         #rpg-grid.selecting > div:not(.gx-sel)::after { content: ''; position: absolute; top: -7px; right: -7px; width: 18px; height: 18px; border-radius: 50%; border: 2px solid #b8c4d4; background: #fff; }
         .gx-applybar .gx-grpbtns { display: flex; gap: 4px; flex-wrap: wrap; }
@@ -4236,7 +4250,7 @@ var qrcode = function() {
 
             <!-- 성장: 무엇을 줄지 고르는 팝업 -->
             <div id="gx-pick" style="display:none; position:fixed; inset:0; z-index:2050; background:rgba(20,26,38,0.45); align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) rpgClosePick()">
-                <div style="background:#fff; border-radius:18px; max-width:640px; width:100%; max-height:90vh; overflow:auto; padding:22px 22px 18px; text-align:left;">
+                <div style="background:#f7f8fb; border-radius:20px; max-width:780px; width:100%; max-height:90vh; overflow:auto; padding:22px 22px 18px; text-align:left;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                         <div id="gx-pick-title" style="font-size:19px; font-weight:800; color:#263042;"></div>
                         <button onclick="rpgClosePick()" style="border:none; background:#f0f2f5; border-radius:50%; width:32px; height:32px; cursor:pointer; font-size:16px;">✕</button>
@@ -4832,9 +4846,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.79';
+        const APP_VERSION = '1.80';
         const APP_VERSION_DATE = '2026-10-28';
         const APP_CHANGELOG = [
+            'v1.80 (2026-11-11) — 👥 주제일기·독서도 모둠 보너스(모둠이 모두 내면/인증하면 +5 XP · 모둠 +1) · 🎁 상점 고르기 창을 아이콘 카드로',
             'v1.79 (2026-11-11) — 👥 모둠 보너스: 아침 준비를 모둠 학생이 모두 다 하거나, 상점을 줄 때 한 모둠 학생이 모두 받으면 한 명당 +5 XP · 모둠 점수 +1 (취소 가능)',
             'v1.78 (2026-11-05) — 💾 활동&뽑기 칠판 기억: 필기·글상자·점수판·타이머·뽑기·협동학습을 마지막 모습 그대로 저장(새로고침·다음 날·다른 기기에서도 이어서)',
             'v1.77 (2026-11-04) — 🛡️ 날짜 꼬임 방지: 켜 둔 기기가 밤사이 칸에 커서가 있거나 태블릿 보기여도 자정에 오늘로 넘어감 · 새 버전이 올라오면 켜 둔 기기도 30분 안에 저절로 새로고침 · 클로드 도우미가 어제 칠판을 오늘로 옮기지 않게',
@@ -10328,23 +10343,45 @@ var qrcode = function() {
         }
 
         // 팝업 안 항목: 습관·노력·특별(상점 항목의 묶음), 경고·선행은 따로
+        // 상점 항목 아이콘 (이름으로 고름 → 선생님이 새로 만든 항목도 어울리게)
+        const RPG_ACT_ICONS = [ // 앞에 있는 것이 먼저 (최고·향상·만점처럼 꾸미는 말 → 미술·수학 같은 과목 → 일반)
+            [/만점|완벽/, 'fa-crown'], [/최고|1등|우승/, 'fa-trophy'], [/향상|성장|올랐/, 'fa-arrow-trend-up'],
+            [/아침\s*준비/, 'fa-sun'], [/미술|그림|만들기/, 'fa-palette'], [/음악|노래|리코더/, 'fa-music'], [/체육|운동|달리기|줄넘기/, 'fa-person-running'],
+            [/수학|익힘|연산|계산/, 'fa-calculator'], [/주제\s*일기|일기|글쓰기/, 'fa-feather-pointed'], [/독서|책/, 'fa-book'],
+            [/수업\s*준비|교과서|준비물/, 'fa-book-open'], [/1인\s*1역|청소|정리|당번/, 'fa-broom'],
+            [/밥|급식|식사/, 'fa-bowl-rice'], [/우유/, 'fa-glass-water'], [/양치|이\s*닦/, 'fa-tooth'], [/발표|손\s*들/, 'fa-hand'],
+            [/숙제|과제/, 'fa-pencil'], [/평가|시험|단원/, 'fa-clipboard-check'], [/도움|친절|배려|양보/, 'fa-hand-holding-heart'],
+            [/협동|모둠|함께/, 'fa-people-group'], [/질서|줄|조용/, 'fa-person-walking'], [/인사|예절/, 'fa-face-smile']
+        ];
+        const RPG_GROUP_TONE = { '습관': 'hab', '노력': 'eff', '특별': 'spc' };
+        const RPG_GROUP_ICON = { '습관': 'fa-seedling', '노력': 'fa-fire', '특별': 'fa-star' };
+        function rpgActIcon(label, group){ const m = RPG_ACT_ICONS.find(function(x){ return x[0].test(label || ''); }); return m ? m[1] : (RPG_GROUP_ICON[group] || 'fa-gift'); }
         function rpgRenderBulkActions(){
             const box = document.getElementById('rpg-bulk-actions'); if(!box) return;
-            function chip(id, label, val, tone){
-                return '<button class="gx-chip' + (tone ? ' ' + tone : '') + '" onclick="rpgPickBulkAction(\'' + id + '\')">' + escapeHtml(label) + ' <b>' + val + '</b></button>';
+            function tile(id, label, val, icon, tone, sub){
+                return '<button class="gx-chip gx-tile ' + (tone || '') + '" onclick="rpgPickBulkAction(\'' + id + '\')">'
+                    + '<span class="ic"><i class="fa-solid ' + icon + '"></i></span>'
+                    + '<span class="nm">' + escapeHtml(label) + '</span>'
+                    + '<span class="vl"><b>' + val + '</b>' + (sub ? '<em>' + escapeHtml(sub) + '</em>' : '') + '</span></button>';
             }
             if(rpgPickKind === 'warn'){
-                box.innerHTML = '<div class="gx-agroup">' + chip('__warn', '벌점', '⚠ 경고 +20', 'minus gauge') + chip('__good', '선행', '✨ 경고 −10 (회복)', 'good gauge') + '</div>';
+                box.innerHTML = '<div class="gx-tiles two">' + tile('__warn', '벌점', '경고 +20', 'fa-triangle-exclamation', 'warn', '경고 게이지가 올라가요') + tile('__good', '선행', '경고 −10', 'fa-heart', 'good', '경고 게이지가 내려가요(회복)') + '</div>';
                 return;
             }
             const groups = {}, order = [];
             rpgAllActions().forEach(function(a){ const g = a.group || '기타'; if(!groups[g]){ groups[g] = []; order.push(g); } groups[g].push(a); });
             const pref = ['습관', '노력', '특별'];
             order.sort(function(x, y){ const i = pref.indexOf(x), j = pref.indexOf(y); return (i < 0 ? 9 : i) - (j < 0 ? 9 : j); });
+            const sub = rpgGiveSign < 0;
             box.innerHTML = order.map(function(g){
-                return '<div class="gx-agroup"><span>' + escapeHtml(g) + '</span>' + groups[g].map(function(a){ const v = a.xp * rpgGiveSign; return chip(a.id, a.label, (v >= 0 ? '+' : '−') + Math.abs(v), a.xp < 0 ? 'minus' : ''); }).join('') + '</div>';
+                const tone = RPG_GROUP_TONE[g] || 'etc';
+                return '<div class="gx-sec ' + tone + '"><div class="gx-sec-h"><i class="fa-solid ' + (RPG_GROUP_ICON[g] || 'fa-tag') + '"></i>' + escapeHtml(g) + '</div><div class="gx-tiles">'
+                    + groups[g].map(function(a){
+                        const v = a.xp * rpgGiveSign;
+                        return tile(a.id, a.label, (v >= 0 ? '+' : '−') + Math.abs(v) + ' XP', rpgActIcon(a.label, g), tone + (a.xp < 0 || sub ? ' minus' : ''), a.stat ? rpgStatName(a.stat) + (sub ? ' −1' : ' +1') : '');
+                    }).join('') + '</div></div>';
             }).join('')
-                + '<div style="text-align:right; margin-top:4px;"><button class="gx-edit" onclick="rpgClosePick(); rpgOpenActions();">항목 추가·편집</button></div>';
+                + '<div style="text-align:right; margin-top:2px;"><button class="gx-edit" onclick="rpgClosePick(); rpgOpenActions();"><i class="fa-solid fa-sliders"></i> 항목 추가·편집</button></div>';
         }
         function rpgPickBulkAction(id){
             rpgBulkAction = id; rpgSelecting = true; rpgBulkSelected.clear();
@@ -10410,6 +10447,27 @@ var qrcode = function() {
         function rpgGiveToIds(ids){ if(rpgBulkAction) rpgGiveApply(ids, rpgBulkAction, rpgGiveSign); }
         // 👥 모둠 보너스: 상점을 줄 때 한 모둠 학생이 모두 받으면 → 그 모둠 학생마다 +gxp XP, 모둠 점수 +gscore
         //   (숫자는 아침 준비 [항목 바꾸기]의 모둠 보너스와 같음 · 지급 줄의 👥 버튼으로 이번만 끌 수 있음)
+        // 모둠 보너스 공통: isDone(학생번호)이 모둠 학생 모두 참이고 아직 안 준 모둠에 보너스를 up에 넣는다.
+        //   getS(번호)는 같은 저장에 쓰는 학생 객체(캐시). given = { 모둠: 기록키 } 이미 준 표시, markPath(모둠) = 준 표시를 쓸 경로.
+        //   돌려주는 값: [{ g, key }] — 저장 뒤 rpgGroupScoreUp으로 모둠 점수를 올린다.
+        function rpgGroupBonusBuild(up, getS, isDone, given, label, markPath){
+            const mem = gxpMembers(), bc = rtCfg(), out = [];
+            Object.keys(mem).map(Number).sort(function(a, b){ return a - b; }).forEach(function(g){
+                const ids = mem[g] || [];
+                if(!ids.length || (given && given[g]) || !ids.every(function(id){ return isDone(id); })) return;
+                const gk = db.ref('rooms/' + currentRoom + '/rpgLog').push().key, gper = {};
+                ids.forEach(function(id){ getS(id).xp += bc.gxp; gper[id] = { x:bc.gxp, s:0, w:0 }; });
+                up['rpgLog/' + gk] = { at:Date.now(), action:'group-bonus', label:g + '모둠 모두 · ' + label + ' 보너스 +' + bc.gxp + ' XP', sign:1, per:gper, gscore:bc.gscore, group:g };
+                if(markPath) up[markPath(g)] = gk;
+                out.push({ g:g, key:gk });
+            });
+            return out;
+        }
+        function rpgGroupScoreUp(list){ const n = rtCfg().gscore; return Promise.all((list || []).map(function(x){ return n ? scoresRef.child(String(x.g - 1)).transaction(function(v){ return (v || 0) + n; }) : null; })); }
+        function rpgGroupBonusPending(isDone, given){
+            const mem = gxpMembers();
+            return Object.keys(mem).map(Number).filter(function(g){ const ids = mem[g] || []; return ids.length && !(given && given[g]) && ids.every(function(id){ return isDone(id); }); }).sort(function(a, b){ return a - b; });
+        }
         function rpgBonusOn(){ try{ return localStorage.getItem('rpgGroupBonus') !== 'off'; }catch(e){ return true; } }
         function rpgBonusToggle(){ try{ localStorage.setItem('rpgGroupBonus', rpgBonusOn() ? 'off' : 'on'); }catch(e){} rpgUpdateBulkBtn(); }
         function rpgBonusGroups(ids, actionId, sign){
@@ -11757,18 +11815,22 @@ var qrcode = function() {
             const today = readingTodayKey();
             const a = rpgAllActions().find(function(x){ return x.id === 'reading'; }) || { id:'reading', label:'독서 인증', xp:10, stat:'wis' };
             const targets = roster.filter(function(st){ return readingHasEntryToday(st.id) && !readingRewardedToday(st.id); });
-            if(targets.length === 0){ alert('오늘 새로 상점을 줄 학생이 없어요.'); return; }
-            if(!confirm(targets.length + '명에게 독서 인증 상점(+' + a.xp + ' XP)을 줄까요?')) return;
-            const up = {}; let lv = 0;
+            const gGiven = (readingData.gbonus && readingData.gbonus[today]) || {}, bc = rtCfg();
+            const gDone = function(id){ return readingHasEntryToday(id); };
+            const gPend = rpgGroupBonusPending(gDone, gGiven);
+            if(targets.length === 0 && !gPend.length){ alert('오늘 새로 상점을 줄 학생이 없어요.'); return; }
+            if(!confirm((targets.length ? targets.length + '명에게 독서 인증 상점(+' + a.xp + ' XP)' : '') + (gPend.length ? (targets.length ? '\n' : '') + '👥 오늘 모두 인증한 ' + gPend.join('·') + '모둠: 학생마다 +' + bc.gxp + ' XP, 모둠 점수 +' + bc.gscore : '') + '\n줄까요?')) return;
+            const up = {}, sObj = {}, before = {}; let lv = 0;
+            const getS = function(id){ if(!sObj[id]){ sObj[id] = rpgStudentObj(id); before[id] = rpgLevel(sObj[id].xp).lv; } return sObj[id]; };
             targets.forEach(function(st){
-                const s = rpgStudentObj(st.id); const before = rpgLevel(s.xp).lv;
+                const s = getS(st.id);
                 s.xp += a.xp; s.stats[a.stat] = (s.stats[a.stat] || 0) + 1;
-                if(rpgLevel(s.xp).lv > before) lv++;
-                rpgStudentPut(up, 'rpg/students/', st.id, s);
                 up['reading/students/' + st.id + '/rewardedDates/' + today] = true;
             });
-            db.ref('rooms/' + currentRoom).update(up).then(function(){
-                rpgToast(targets.length + '명에게 독서 상점 지급!');
+            const gList = rpgGroupBonusBuild(up, getS, gDone, gGiven, '독서 인증 ' + today.slice(5).replace('-', '/'), function(g){ return 'reading/gbonus/' + today + '/' + g; });
+            Object.keys(sObj).forEach(function(id){ if(rpgLevel(sObj[id].xp).lv > before[id]) lv++; rpgStudentPut(up, 'rpg/students/', id, sObj[id]); });
+            db.ref('rooms/' + currentRoom).update(up).then(function(){ return rpgGroupScoreUp(gList); }).then(function(){
+                rpgToast((targets.length ? targets.length + '명에게 독서 상점 지급!' : '') + (gList.length ? ' 👥 ' + gList.map(function(x){ return x.g; }).join('·') + '모둠 보너스!' : ''));
                 SFX.mission();
                 if(lv > 0) setTimeout(function(){ SFX.levelup(); rpgToast('🎉 레벨 업 ' + lv + '명!', true); }, 400);
             }).catch(function(e){ alert('지급 오류: ' + e.message); });
@@ -12742,8 +12804,9 @@ var qrcode = function() {
             const btn = document.getElementById('diary-reward-btn'); if(!btn) return;
             const t = diaryTopic(diarySelTid);
             const r = t ? diaryRewardTargets(t) : { sub:[], up:[], best:[] };
-            const n = r.sub.length + r.up.length + r.best.length;
-            btn.innerHTML = '<i class="fa-solid fa-gift"></i> ' + (n ? ('상점 주기 (' + r.sub.length + '명' + (r.up.length ? ' · 📈' + r.up.length : '') + (r.best.length ? ' · 🏆' + r.best.length : '') + ')') : '상점 주기');
+            const gp = t ? rpgGroupBonusPending(function(id){ return !!diaryEntry(id, t.id); }, (diaryData.gbonus && diaryData.gbonus[t.id]) || {}).length : 0;
+            const n = r.sub.length + r.up.length + r.best.length + gp;
+            btn.innerHTML = '<i class="fa-solid fa-gift"></i> ' + (n ? ('상점 주기 (' + r.sub.length + '명' + (r.up.length ? ' · 📈' + r.up.length : '') + (r.best.length ? ' · 🏆' + r.best.length : '') + (gp ? ' · 👥' + gp : '') + ')') : '상점 주기');
         }
         function diaryReward(){
             const t = diaryTopic(diarySelTid); if(!t || !rpgRef){ alert('먼저 주제를 골라 주세요.'); return; }
@@ -12752,16 +12815,21 @@ var qrcode = function() {
             const b = acts.find(function(x){ return x.id === 'diary_top'; }) || { id:'diary_top', label:'주제일기 최고', xp:30, stat:'wis' };
             const u = acts.find(function(x){ return x.id === 'diary_up'; }) || { id:'diary_up', label:'주제일기 향상', xp:15, stat:'wis' };
             const r = diaryRewardTargets(t);
-            if(!r.sub.length && !r.up.length && !r.best.length){ alert('이 주제로 새로 상점을 줄 학생이 없어요.\n(이미 줬거나, 아직 낸 학생이 없어요)'); return; }
+            const gGiven = (diaryData.gbonus && diaryData.gbonus[t.id]) || {}, bc = rtCfg();
+            const gDone = function(id){ return !!diaryEntry(id, t.id); };
+            const gPend = rpgGroupBonusPending(gDone, gGiven);
+            if(!r.sub.length && !r.up.length && !r.best.length && !gPend.length){ alert('이 주제로 새로 상점을 줄 학생이 없어요.\n(이미 줬거나, 아직 낸 학생이 없어요)'); return; }
             const grading = diaryAiOn(t) ? diaryPendingList().filter(function(x){ return x.tid === t.id; }).length : 0;
             const bestNames = r.best.map(function(s){ return s.name + '(' + (diaryScore(s.id, t) != null ? diaryScore(s.id, t) + '점' : '선생님 선정') + ')'; }).join(', ');
             if(!confirm('「' + t.title + '」\n'
                 + (r.sub.length ? '· 낸 학생 ' + r.sub.length + '명에게 ' + a.label + ' +' + a.xp + ' XP\n' : '')
                 + (r.up.length ? '· 📈 지난번보다 오른 ' + r.up.map(function(s){ return s.name + '(' + diaryPrevScore(s.id, t) + '→' + diaryScore(s.id, t) + ')'; }).join(', ') + '에게 ' + u.label + ' +' + u.xp + ' XP\n' : '')
                 + (r.best.length ? '· 🏆 최고 ' + bestNames + '에게 ' + b.label + ' +' + b.xp + ' XP\n' : '')
+                + (gPend.length ? '· 👥 모두 낸 ' + gPend.join('·') + '모둠: 학생마다 +' + bc.gxp + ' XP, 모둠 점수 +' + bc.gscore + '\n' : '')
                 + (grading ? '\n⚠️ 아직 채점 중인 글이 ' + grading + '개 있어요. 향상·최고 점수가 바뀔 수 있어요.\n' : '')
                 + '상점을 줄까요?')) return;
             const objs = {}, up = {}; let lv = 0;
+            const getS = function(id){ return (objs[id] || (objs[id] = { o:rpgStudentObj(id), before:rpgLevel((rpgData.students && rpgData.students[id] || {}).xp).lv })).o; };
             function give(id, act, flag){
                 const s = objs[id] || (objs[id] = { o:rpgStudentObj(id), before:rpgLevel((rpgData.students && rpgData.students[id] || {}).xp).lv });
                 s.o.xp += act.xp; s.o.stats[act.stat] = (s.o.stats[act.stat] || 0) + 1;
@@ -12770,9 +12838,10 @@ var qrcode = function() {
             r.sub.forEach(function(s){ give(s.id, a, 'rewarded'); });
             r.up.forEach(function(s){ give(s.id, u, 'upRewarded'); });
             r.best.forEach(function(s){ give(s.id, b, 'bestRewarded'); });
+            const gList = rpgGroupBonusBuild(up, getS, gDone, gGiven, '주제일기 「' + t.title + '」', function(g){ return 'diary/gbonus/' + t.id + '/' + g; });
             Object.keys(objs).forEach(function(id){ rpgStudentPut(up, 'rpg/students/', id, objs[id].o); if(rpgLevel(objs[id].o.xp).lv > objs[id].before) lv++; });
-            db.ref('rooms/' + currentRoom).update(up).then(function(){
-                rpgToast(Object.keys(objs).length + '명에게 주제일기 상점 지급!');
+            db.ref('rooms/' + currentRoom).update(up).then(function(){ return rpgGroupScoreUp(gList); }).then(function(){
+                rpgToast(Object.keys(objs).length + '명에게 주제일기 상점 지급!' + (gList.length ? ' 👥 ' + gList.map(function(x){ return x.g; }).join('·') + '모둠 보너스!' : ''));
                 SFX.mission();
                 if(lv > 0) setTimeout(function(){ SFX.levelup(); rpgToast('🎉 레벨 업 ' + lv + '명!', true); }, 400);
             }).catch(function(e){ alert('지급 오류: ' + e.message); });
