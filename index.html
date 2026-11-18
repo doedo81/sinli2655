@@ -4846,9 +4846,10 @@ var qrcode = function() {
         };
 
         // 📌 앱 버전 / 변경 기록 (업데이트 때마다 갱신)
-        const APP_VERSION = '1.80';
+        const APP_VERSION = '1.81';
         const APP_VERSION_DATE = '2026-10-28';
         const APP_CHANGELOG = [
+            'v1.81 (2026-11-18) — ⚡ 주제일기 AI 주제 만들기·주제 추천을 빠른 모드로 (전엔 AI가 오래 생각해 수십 초 걸림) · 만드는 중 걸린 시간 표시',
             'v1.80 (2026-11-11) — 👥 주제일기·독서도 모둠 보너스(모둠이 모두 내면/인증하면 +5 XP · 모둠 +1) · 🎁 상점 고르기 창을 아이콘 카드로',
             'v1.79 (2026-11-11) — 👥 모둠 보너스: 아침 준비를 모둠 학생이 모두 다 하거나, 상점을 줄 때 한 모둠 학생이 모두 받으면 한 명당 +5 XP · 모둠 점수 +1 (취소 가능)',
             'v1.78 (2026-11-05) — 💾 활동&뽑기 칠판 기억: 필기·글상자·점수판·타이머·뽑기·협동학습을 마지막 모습 그대로 저장(새로고침·다음 날·다른 기기에서도 이어서)',
@@ -12419,7 +12420,7 @@ var qrcode = function() {
                 + '- 이미 낸 주제와 겹치지 않게: ' + diaryTopics().slice(0, 30).map(function(t){ return t.title; }).join(' / ') + '\n'
                 + 'JSON만: {"topics":["..."]}';
             try {
-                const out = await diaryGemini(prompt, 0.9, function(n){ btn.innerHTML = '🤖 혼잡… 재시도 ' + n + '/3'; });
+                const out = await diaryGemini(prompt, 0.9, function(n){ btn.innerHTML = '🤖 혼잡… 재시도 ' + n + '/3'; }, true);
                 const list = (out.topics || []).map(function(x){ return String(x || '').trim(); }).filter(Boolean).slice(0, 6);
                 if(!list.length){ alert('AI가 주제를 만들지 못했어요. 다시 눌러 주세요.'); return; }
                 diaryRenderBank(list);
@@ -12451,7 +12452,8 @@ var qrcode = function() {
                 + '   name은 10자 이내. desc는 "~했는가"/"~인가" 꼴의 한 문장으로, 주제 속 장면·인물·상황을 넣어 무엇을 보는지 구체적으로(예: "강화도 승려의 하루를 생생하게 상상하여 표현했는가"). 분량(글자 수) 기준은 따로 있으니 넣지 마라.\n'
                 + 'JSON만: {"explain":"","guide":"","rubric":[{"name":"","desc":"","points":0}]}';
             try {
-                const out = await diaryGemini(prompt, 0.5, function(n){ btn.innerHTML = '🤖 혼잡… 재시도 ' + n + '/3'; });
+                const t0 = Date.now(), tick = setInterval(function(){ if(!/재시도/.test(btn.innerHTML)) btn.innerHTML = '🤖 AI가 만드는 중... ' + Math.round((Date.now() - t0) / 1000) + '초'; }, 1000);
+                let out; try { out = await diaryGemini(prompt, 0.5, function(n){ btn.innerHTML = '🤖 혼잡… 재시도 ' + n + '/3'; }, true); } finally { clearInterval(tick); } // 빠른 모드: 오래 생각하지 않게(전엔 수십 초 걸렸음)
                 if(out.explain) document.getElementById('diary-tm-explain').value = String(out.explain).trim();
                 if(out.guide) document.getElementById('diary-tm-guide').value = String(out.guide).replace(/\\n/g, '\n').trim();
                 let rb = diaryArr(out.rubric).map(function(r){ return { name:String(r.name || '').slice(0, 20), desc:String(r.desc || '').slice(0, 80), points:Math.max(0, Math.round(+r.points || 0)) }; }).filter(function(r){ return r.name && !/분량|글자\s*수/.test(r.name); }).slice(0, 5);
